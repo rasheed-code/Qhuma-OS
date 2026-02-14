@@ -1,0 +1,68 @@
+import { Competency } from "@/types";
+
+export const competencies: Competency[] = [
+  {
+    key: "CLC",
+    name: "Comunicación Lingüística",
+    shortName: "Linguistic",
+    color: "#4F8EF7",
+    progress: 81,
+    previousProgress: 74,
+  },
+  {
+    key: "CPL",
+    name: "Plurilingüe",
+    shortName: "Plurilingual",
+    color: "#A78BFA",
+    progress: 68,
+    previousProgress: 65,
+  },
+  {
+    key: "STEM",
+    name: "STEM",
+    shortName: "STEM",
+    color: "#34D399",
+    progress: 88,
+    previousProgress: 82,
+  },
+  {
+    key: "CD",
+    name: "Digital",
+    shortName: "Digital",
+    color: "#60A5FA",
+    progress: 85,
+    previousProgress: 78,
+  },
+  {
+    key: "CPSAA",
+    name: "Personal, Social y Aprender a Aprender",
+    shortName: "Personal",
+    color: "#FBBF24",
+    progress: 76,
+    previousProgress: 72,
+  },
+  {
+    key: "CC",
+    name: "Ciudadana",
+    shortName: "Citizenship",
+    color: "#F87171",
+    progress: 72,
+    previousProgress: 68,
+  },
+  {
+    key: "CE",
+    name: "Emprendedora",
+    shortName: "Entrepreneurial",
+    color: "#FB923C",
+    progress: 91,
+    previousProgress: 83,
+  },
+  {
+    key: "CCEC",
+    name: "Conciencia y Expresión Culturales",
+    shortName: "Cultural",
+    color: "#E879F9",
+    progress: 70,
+    previousProgress: 66,
+  },
+];

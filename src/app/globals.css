@@ -1,26 +1,89 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* QHUMA Brand Colors */
+  --primary: rgb(47, 87, 77);         /* #2f574d — dark teal */
+  --secondary: rgb(17, 17, 17);       /* #111111 — near black */
+  --light-green: rgb(195, 244, 153);  /* #c3f499 — lime accent */
+  --green: rgb(55, 100, 89);          /* #376459 — medium green */
+  --green-dark: rgb(31, 81, 76);      /* #1f514c — deep green */
+  --green-light-bg: rgb(237, 255, 227); /* #edffe3 — soft green bg */
+  --black: rgb(20, 20, 20);           /* #141414 */
+  --body-color: rgb(102, 102, 102);   /* #666666 */
+  --stroke: rgb(237, 237, 237);       /* #ededed */
+  --stroke-warm: rgb(212, 204, 190);  /* #d4ccbe */
+  --light-bg: rgb(244, 240, 233);     /* #f4f0e9 — warm cream */
+
+  /* Semantic mappings */
+  --background: var(--light-bg);
+  --foreground: var(--secondary);
+  --sidebar: var(--green-dark);
+  --sidebar-hover: var(--primary);
+  --card: #ffffff;
+  --card-border: var(--stroke);
+  --accent: var(--light-green);
+  --accent-text: var(--primary);         /* for text on light bg */
+  --accent-light: var(--green-light-bg);
+  --accent-dark: var(--green);
+  --success: #22c55e;
+  --success-light: #f0fdf4;
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --urgent: #ef4444;
+  --urgent-light: #fef2f2;
+  --text-primary: var(--black);
+  --text-secondary: var(--body-color);
+  --text-muted: #9ca3af;
+  --border: var(--stroke);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-accent-light: var(--accent-light);
+  --color-accent-dark: var(--accent-dark);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-warning-light: var(--warning-light);
+  --color-urgent: var(--urgent);
+  --color-urgent-light: var(--urgent-light);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-stroke-warm: var(--stroke-warm);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--stroke-warm) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--stroke-warm);
+  border-radius: 3px;
 }
