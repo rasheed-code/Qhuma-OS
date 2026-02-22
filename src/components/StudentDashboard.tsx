@@ -58,9 +58,10 @@ const toolIconMap: Record<string, React.ComponentType<{ size?: number; className
 
 interface StudentDashboardProps {
   onOpenProject?: () => void;
+  onOpenTask?: (taskId: string) => void;
 }
 
-export default function StudentDashboard({ onOpenProject }: StudentDashboardProps) {
+export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentDashboardProps) {
   const today = weekSchedule.find((d) => d.status === "current")!;
   const [selectedTask, setSelectedTask] = useState<Task | null>(
     today.tasks.find((t) => t.status === "in_progress") || null
@@ -341,6 +342,17 @@ export default function StudentDashboard({ onOpenProject }: StudentDashboardProp
               <FileText size={12} />
               <span className="text-[11px]">{selectedTask.evidence}</span>
             </div>
+
+            {/* Open Task Workspace button */}
+            {(selectedTask.status === "in_progress" || selectedTask.status === "completed") && onOpenTask && (
+              <button
+                onClick={() => onOpenTask(selectedTask.id)}
+                className="w-full mb-4 py-3 bg-sidebar text-white text-[13px] font-semibold rounded-xl hover:bg-accent-dark transition-colors cursor-pointer flex items-center justify-center gap-2"
+              >
+                Open Task Workspace
+                <ChevronRight size={16} />
+              </button>
+            )}
 
             {/* CD3: Tool Choice Selector — only for in_progress tasks */}
             {selectedTask.status === "in_progress" && (

@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Role, StudentView, TeacherView } from "@/types";
+import { Role, StudentView, TeacherView, ParentView } from "@/types";
 import Sidebar from "@/components/Sidebar";
 import RoleSelector from "@/components/RoleSelector";
 import StudentDashboard from "@/components/StudentDashboard";
 import ParentDashboard from "@/components/ParentDashboard";
+import ParentProgress from "@/components/ParentProgress";
+import ParentCalendar from "@/components/ParentCalendar";
+import ParentTeachers from "@/components/ParentTeachers";
+import ParentProfile from "@/components/ParentProfile";
+import ParentSettings from "@/components/ParentSettings";
 import TeacherDashboard from "@/components/TeacherDashboard";
 import TeacherProjects from "@/components/TeacherProjects";
 import TeacherAnalytics from "@/components/TeacherAnalytics";
@@ -18,16 +23,20 @@ import StudentCalendar from "@/components/StudentCalendar";
 import StudentQCoins from "@/components/StudentQCoins";
 import StudentProfile from "@/components/StudentProfile";
 import StudentSettings from "@/components/StudentSettings";
+import TaskWorkspace from "@/components/TaskWorkspace";
 
 export default function Home() {
   const [role, setRole] = useState<Role>("student");
   const [activeView, setActiveView] = useState<StudentView>("dashboard");
   const [activeTeacherView, setActiveTeacherView] = useState<TeacherView>("dashboard");
+  const [activeParentView, setActiveParentView] = useState<ParentView>("overview");
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const handleRoleChange = (newRole: Role) => {
     setRole(newRole);
     setActiveView("dashboard");
     setActiveTeacherView("dashboard");
+    setActiveParentView("overview");
   };
 
   return (
@@ -38,6 +47,8 @@ export default function Home() {
         onNavigate={setActiveView}
         activeTeacherView={activeTeacherView}
         onTeacherNavigate={setActiveTeacherView}
+        activeParentView={activeParentView}
+        onParentNavigate={setActiveParentView}
       />
 
       {/* Main panel — one big white rounded card */}
@@ -75,7 +86,19 @@ export default function Home() {
 
           {/* Dashboard content */}
           {role === "student" && activeView === "dashboard" && (
-            <StudentDashboard onOpenProject={() => setActiveView("project")} />
+            <StudentDashboard
+              onOpenProject={() => setActiveView("project")}
+              onOpenTask={(taskId) => {
+                setSelectedTaskId(taskId);
+                setActiveView("task");
+              }}
+            />
+          )}
+          {role === "student" && activeView === "task" && selectedTaskId && (
+            <TaskWorkspace
+              taskId={selectedTaskId}
+              onBack={() => setActiveView("dashboard")}
+            />
           )}
           {role === "student" && activeView === "project" && (
             <ProjectDetail onBack={() => setActiveView("dashboard")} />
@@ -85,7 +108,14 @@ export default function Home() {
           {role === "student" && activeView === "qcoins" && <StudentQCoins />}
           {role === "student" && activeView === "profile" && <StudentProfile />}
           {role === "student" && activeView === "settings" && <StudentSettings />}
-          {role === "parent" && <ParentDashboard />}
+          {role === "parent" && activeParentView === "overview" && (
+            <ParentDashboard onNavigate={setActiveParentView} />
+          )}
+          {role === "parent" && activeParentView === "progress" && <ParentProgress />}
+          {role === "parent" && activeParentView === "calendar" && <ParentCalendar />}
+          {role === "parent" && activeParentView === "teachers" && <ParentTeachers />}
+          {role === "parent" && activeParentView === "profile" && <ParentProfile />}
+          {role === "parent" && activeParentView === "settings" && <ParentSettings />}
           {role === "teacher" && activeTeacherView === "dashboard" && <TeacherDashboard />}
           {role === "teacher" && activeTeacherView === "projects" && (
             <TeacherProjects onNavigateToDashboard={() => setActiveTeacherView("dashboard")} />

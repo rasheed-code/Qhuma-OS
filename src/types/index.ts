@@ -2,8 +2,9 @@ export type TaskStatus = "completed" | "in_progress" | "upcoming" | "locked";
 export type DayStatus = "completed" | "current" | "upcoming";
 export type Role = "student" | "parent" | "teacher";
 export type ViewMode = "daily" | "kanban";
-export type StudentView = "dashboard" | "project" | "competencies" | "calendar" | "qcoins" | "profile" | "settings";
+export type StudentView = "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings";
 export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings";
+export type ParentView = "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings";
 
 export type EvidenceType =
   | "spreadsheet"
@@ -150,4 +151,43 @@ export interface ProjectImpact {
   label: string;
   guests: string;
   rating: string;
+}
+
+// Task Workspace types
+export type StepStatus = "not_started" | "working" | "done";
+
+export interface TaskStep {
+  id: string;
+  title: string;
+  instruction: string;
+  duration: string;
+  tips?: string[];
+  example?: {
+    label: string;
+    content: string;
+  };
+  resources?: {
+    label: string;
+    type: "link" | "template" | "reference" | "tool";
+  }[];
+}
+
+export interface SuccessCriterion {
+  id: string;
+  label: string;
+}
+
+export interface TaskWorkspaceData {
+  taskId: string;
+  brief: {
+    whyItMatters: string;
+    whatYouLearn: string;
+    realWorldConnection: string;
+  };
+  steps: TaskStep[];
+  successCriteria: SuccessCriterion[];
+  evidenceSubmission: {
+    description: string;
+    format: string;
+  };
 }

@@ -1,25 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import {
   TrendingUp,
   Bell,
   CheckCircle2,
   AlertTriangle,
   AlertCircle,
-  FileText,
+  BarChart3,
   Calendar,
+  Lightbulb,
+  ArrowRight,
+  FileText,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { weekSchedule } from "@/data/tasks";
-import CompetencyProgress from "./CompetencyProgress";
+import { competencies } from "@/data/competencies";
 import TeacherChat from "./TeacherChat";
-import TrimesterTimeline from "./TrimesterTimeline";
+import { ParentView } from "@/types";
+
+type CardTab = "overview" | "progress" | "calendar";
+
+interface ParentDashboardProps {
+  onNavigate: (view: ParentView) => void;
+}
 
 const notifications = [
   {
     type: "success" as const,
     message:
-      "Lucas completed his landing page — the design quality was highlighted by Prof. Ana as excellent work.",
+      "Lucas completed his landing page — Prof. Ana highlighted it as one of the best in class.",
     time: "Today, 10:30 AM",
   },
   {
@@ -31,7 +41,7 @@ const notifications = [
   {
     type: "warning" as const,
     message:
-      "Lucas's profitability calculations are scheduled for this afternoon. He may need help reviewing percentages at home.",
+      "Profitability calculations this afternoon involve percentages and tax — he may benefit from a quick review at home.",
     time: "Today, 8:00 AM",
   },
 ];
@@ -57,194 +67,304 @@ const notificationConfig = {
   },
 };
 
-export default function ParentDashboard() {
+// Top 3 competency movers this week
+const topMovers = competencies
+  .map((c) => ({ ...c, delta: c.progress - c.previousProgress }))
+  .sort((a, b) => b.delta - a.delta)
+  .slice(0, 3);
+
+// Next 3 upcoming deliverables
+const upcomingDeliverables = [
+  { title: "Profitability Spreadsheet", due: "Today, 1 PM", subject: "Math + Finance", urgent: true },
+  { title: "Tax Calculation Worksheet", due: "Today, 3 PM", subject: "Math + Civic Ed.", urgent: true },
+  { title: "Good Host Guide (10 FAQs)", due: "Thursday", subject: "Language Arts", urgent: false },
+];
+
+export default function ParentDashboard({ onNavigate }: ParentDashboardProps) {
+  const [activeTab, setActiveTab] = useState<CardTab>("overview");
+
   const completedTasks = weekSchedule
     .flatMap((d) => d.tasks)
     .filter((t) => t.status === "completed").length;
   const totalTasks = weekSchedule.flatMap((d) => d.tasks).length;
 
+  const tabs: { id: CardTab; label: string; icon: typeof BarChart3 }[] = [
+    { id: "overview", label: "Overview", icon: Bell },
+    { id: "progress", label: "Progress", icon: BarChart3 },
+    { id: "calendar", label: "Calendar", icon: Calendar },
+  ];
+
   return (
     <div className="flex gap-5">
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* AI Weekly Summary */}
-        <div className="bg-card rounded-2xl p-6 border border-card-border mb-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-[28px] font-semibold text-text-primary leading-tight mb-1">
-                Lucas&apos;s Week
-              </h1>
-              <p className="text-[14px] text-text-secondary">
-                Project:{" "}
-                <span className="font-semibold text-accent-text">
-                  Launch Your Airbnb
-                </span>{" "}
-                — Week 3 of Trimester 1
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 bg-success-light px-3 py-1.5 rounded-full">
-              <TrendingUp size={12} className="text-success" />
-              <span className="text-[11px] font-semibold text-success">
-                On Track
-              </span>
-            </div>
-          </div>
 
-          {/* AI Summary Card */}
-          <div className="bg-accent-light rounded-xl p-4 mb-4 border border-accent-text/10">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center">
-                <span className="text-accent text-[9px] font-bold">AI</span>
-              </div>
-              <span className="text-[11px] font-semibold text-accent-text">
-                Weekly Intelligence Summary
-              </span>
-            </div>
-            <p className="text-[13px] text-text-primary leading-relaxed">
-              Lucas had a <strong>strong start</strong> to Phase 2 this week.
-              He completed his landing page with excellent design quality — Prof. Ana
-              highlighted it as one of the best in the class. He&apos;s currently
-              working on the hygiene protocol and has{" "}
-              <strong>profitability calculations</strong> coming up this
-              afternoon, which involves percentages and tax calculations. His{" "}
-              <strong>Entrepreneurial competency (+8%)</strong> saw the biggest
-              jump this week. Demo Day is Friday — he&apos;ll need to prepare a
-              5-slide pitch by Thursday.
-            </p>
-          </div>
-
-          {/* Quick stats */}
-          <div className="grid grid-cols-4 gap-3">
-            <div className="text-center p-3 bg-background rounded-xl">
-              <span className="text-[20px] font-bold text-text-primary block">
-                {completedTasks}
-              </span>
-              <span className="text-[10px] text-text-muted">Tasks Done</span>
-            </div>
-            <div className="text-center p-3 bg-background rounded-xl">
-              <span className="text-[20px] font-bold text-text-primary block">
-                {totalTasks - completedTasks}
-              </span>
-              <span className="text-[10px] text-text-muted">Remaining</span>
-            </div>
-            <div className="text-center p-3 bg-accent-light rounded-xl">
-              <span className="text-[20px] font-bold text-accent-text block">
-                {currentStudent.evidencesSubmitted}
-              </span>
-              <span className="text-[10px] text-text-muted">Evidences</span>
-            </div>
-            <div className="text-center p-3 bg-background rounded-xl">
-              <span className="text-[20px] font-bold text-text-primary block">
-                {currentStudent.streak}
-              </span>
-              <span className="text-[10px] text-text-muted">Day Streak</span>
-            </div>
-          </div>
+        {/* Tab navigation */}
+        <div className="flex gap-1 bg-background rounded-xl p-1 mb-5">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-[12px] font-medium transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? "bg-card text-text-primary shadow-sm"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                <Icon size={13} />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Two columns: Notifications + Upcoming */}
-        <div className="grid grid-cols-2 gap-5 mb-5">
-          {/* Notifications */}
-          <div className="bg-card rounded-2xl p-5 border border-card-border">
-            <div className="flex items-center gap-2 mb-4">
-              <Bell size={15} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">
-                Notifications
-              </h3>
-            </div>
-            <div className="flex flex-col gap-3">
-              {notifications.map((notif, i) => {
-                const config = notificationConfig[notif.type];
-                const Icon = config.icon;
-                return (
-                  <div
-                    key={i}
-                    className={`flex gap-3 p-3 rounded-xl border ${config.border} ${config.bg}`}
-                  >
-                    <Icon
-                      size={16}
-                      className={`${config.color} flex-shrink-0 mt-0.5`}
-                    />
-                    <div>
-                      <p className="text-[12px] text-text-primary leading-relaxed">
-                        {notif.message}
-                      </p>
-                      <span className="text-[10px] text-text-muted mt-1 block">
-                        {notif.time}
-                      </span>
-                    </div>
+        {/* ── OVERVIEW ── */}
+        {activeTab === "overview" && (
+          <div>
+            <div className="bg-card rounded-2xl p-6 border border-card-border mb-5">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-[11px] text-text-muted mb-1 uppercase tracking-wide">
+                    Wednesday · Week 3 of 12
+                  </p>
+                  <h1 className="text-[26px] font-semibold text-text-primary leading-tight">
+                    Lucas is having a strong week.
+                  </h1>
+                  <p className="text-[13px] text-text-secondary mt-1">
+                    Project:{" "}
+                    <span className="font-semibold text-accent-text">
+                      Launch Your Airbnb
+                    </span>{" "}
+                    · Trimester 1 of 4
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 bg-success-light px-3 py-1.5 rounded-full flex-shrink-0">
+                  <TrendingUp size={12} className="text-success" />
+                  <span className="text-[11px] font-semibold text-success">On Track</span>
+                </div>
+              </div>
+
+              <div className="bg-accent-light rounded-xl p-4 mb-4 border border-accent-text/10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center">
+                    <span className="text-accent text-[9px] font-bold">AI</span>
                   </div>
-                );
-              })}
+                  <span className="text-[11px] font-semibold text-accent-text">
+                    Weekly Intelligence Summary
+                  </span>
+                </div>
+                <p className="text-[13px] text-text-primary leading-relaxed">
+                  Lucas had a <strong>strong start</strong> to Phase 2. His
+                  landing page was highlighted by Prof. Ana as one of the best
+                  in class — excellent design and copy. This afternoon he moves
+                  into <strong>financial calculations</strong>: pricing, profit
+                  margins, and IVA applied to a real Airbnb. His{" "}
+                  <strong>Entrepreneurial competency jumped +8%</strong> this
+                  week. Demo Day is Friday — he needs to prepare a 5-slide pitch
+                  by Thursday.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-4 gap-3">
+                <div className="text-center p-3 bg-background rounded-xl">
+                  <span className="text-[20px] font-bold text-text-primary block">{completedTasks}</span>
+                  <span className="text-[10px] text-text-muted">Tasks Done</span>
+                </div>
+                <div className="text-center p-3 bg-background rounded-xl">
+                  <span className="text-[20px] font-bold text-text-primary block">{totalTasks - completedTasks}</span>
+                  <span className="text-[10px] text-text-muted">Remaining</span>
+                </div>
+                <div className="text-center p-3 bg-accent-light rounded-xl">
+                  <span className="text-[20px] font-bold text-accent-text block">{currentStudent.evidencesSubmitted}</span>
+                  <span className="text-[10px] text-text-muted">Evidences</span>
+                </div>
+                <div className="text-center p-3 bg-background rounded-xl">
+                  <span className="text-[20px] font-bold text-text-primary block">{currentStudent.streak}</span>
+                  <span className="text-[10px] text-text-muted">Day Streak</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl p-5 border border-card-border mb-5">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Lightbulb size={15} className="text-accent-text" />
+                </div>
+                <div>
+                  <p className="text-[13px] font-semibold text-text-primary mb-1">
+                    How to support Lucas tonight
+                  </p>
+                  <p className="text-[13px] text-text-secondary leading-relaxed">
+                    He&apos;s working on{" "}
+                    <strong>profitability and IVA calculations</strong> today —
+                    real percentages applied to his Airbnb pricing. At dinner,
+                    try asking:{" "}
+                    <em>
+                      &ldquo;If a night costs €80 and the IVA is 10%, what does
+                      a guest actually pay?&rdquo;
+                    </em>{" "}
+                    That kind of real conversation reinforces what he practiced
+                    better than any worksheet.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-2xl p-5 border border-card-border">
+              <div className="flex items-center gap-2 mb-4">
+                <Bell size={15} className="text-text-primary" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Notifications</h3>
+                <span className="ml-auto text-[10px] text-text-muted">Today</span>
+              </div>
+              <div className="flex flex-col gap-3">
+                {notifications.map((notif, i) => {
+                  const config = notificationConfig[notif.type];
+                  const Icon = config.icon;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex gap-3 p-3 rounded-xl border ${config.border} ${config.bg}`}
+                    >
+                      <Icon size={16} className={`${config.color} flex-shrink-0 mt-0.5`} />
+                      <div>
+                        <p className="text-[12px] text-text-primary leading-relaxed">{notif.message}</p>
+                        <span className="text-[10px] text-text-muted mt-1 block">{notif.time}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Upcoming deliverables */}
-          <div className="bg-card rounded-2xl p-5 border border-card-border">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar size={15} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">
-                Upcoming Deliverables
-              </h3>
+        {/* ── PROGRESS SNEAK PEEK ── */}
+        {activeTab === "progress" && (
+          <div className="bg-card rounded-2xl p-6 border border-card-border">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <p className="text-[11px] text-text-muted mb-0.5 uppercase tracking-wide">This week</p>
+                <h2 className="text-[18px] font-semibold text-text-primary">Top movers</h2>
+              </div>
+              <button
+                onClick={() => onNavigate("progress")}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-accent-text hover:underline cursor-pointer"
+              >
+                Full progress report
+                <ArrowRight size={13} />
+              </button>
             </div>
-            <div className="flex flex-col gap-2.5">
-              {[
-                {
-                  title: "Profitability Spreadsheet",
-                  due: "Today, 1:00 PM",
-                  subject: "Math + Finance",
-                },
-                {
-                  title: "Tax Calculation Worksheet",
-                  due: "Today, 3:00 PM",
-                  subject: "Math + Civic Ed.",
-                },
-                {
-                  title: "Good Host Guide (10 FAQs)",
-                  due: "Thursday",
-                  subject: "Language Arts",
-                },
-                {
-                  title: "Demo Day Pitch (5 slides)",
-                  due: "Thursday",
-                  subject: "Social + Tutoring",
-                },
-                {
-                  title: "Digital Portfolio Upload",
-                  due: "Friday",
-                  subject: "Digital Skills",
-                },
-              ].map((item, i) => (
+
+            {/* Top 3 competencies */}
+            <div className="flex flex-col gap-4 mb-6">
+              {topMovers.map((c) => (
+                <div key={c.key}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12px] font-medium text-text-primary">{c.shortName}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-semibold text-success">+{c.delta}%</span>
+                      <span className="text-[12px] font-semibold text-text-primary">{c.progress}%</span>
+                    </div>
+                  </div>
+                  <div className="h-2 bg-background rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${c.progress}%`, backgroundColor: c.color }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Teaser */}
+            <div className="bg-background rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-text-primary">
+                  +5 more competencies · trimester timeline · evidence history
+                </p>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  See how Lucas is building real skills over time
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate("progress")}
+                className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-semibold px-4 py-2 rounded-xl hover:brightness-110 transition-all cursor-pointer flex-shrink-0 ml-4"
+              >
+                View all
+                <ArrowRight size={12} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── CALENDAR SNEAK PEEK ── */}
+        {activeTab === "calendar" && (
+          <div className="bg-card rounded-2xl p-6 border border-card-border">
+            <div className="flex items-start justify-between mb-5">
+              <div>
+                <p className="text-[11px] text-text-muted mb-0.5 uppercase tracking-wide">Week 3</p>
+                <h2 className="text-[18px] font-semibold text-text-primary">Coming up next</h2>
+              </div>
+              <button
+                onClick={() => onNavigate("calendar")}
+                className="flex items-center gap-1.5 text-[12px] font-medium text-accent-text hover:underline cursor-pointer"
+              >
+                Full week view
+                <ArrowRight size={13} />
+              </button>
+            </div>
+
+            {/* Next 3 deliverables */}
+            <div className="flex flex-col gap-2 mb-6">
+              {upcomingDeliverables.map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-background transition-colors"
+                  className={`flex items-center gap-3 p-3 rounded-xl border ${
+                    item.urgent ? "border-warning/20 bg-warning-light" : "border-border bg-background"
+                  }`}
                 >
-                  <FileText size={14} className="text-text-muted flex-shrink-0" />
+                  <FileText
+                    size={14}
+                    className={`flex-shrink-0 ${item.urgent ? "text-warning" : "text-text-muted"}`}
+                  />
                   <div className="flex-1 min-w-0">
-                    <span className="text-[12px] font-medium text-text-primary block">
+                    <p className={`text-[12px] font-medium ${item.urgent ? "text-text-primary" : "text-text-secondary"}`}>
                       {item.title}
-                    </span>
-                    <span className="text-[10px] text-text-muted">
-                      {item.subject}
-                    </span>
+                    </p>
+                    <p className="text-[10px] text-text-muted">{item.subject}</p>
                   </div>
-                  <span className="text-[10px] text-text-muted flex-shrink-0">
+                  <span className={`text-[11px] font-medium flex-shrink-0 ${item.urgent ? "text-warning" : "text-text-muted"}`}>
                     {item.due}
                   </span>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Bottom row: Trimester + Competencies */}
-        <div className="grid grid-cols-2 gap-5">
-          <TrimesterTimeline />
-          <CompetencyProgress />
-        </div>
+            {/* Teaser */}
+            <div className="bg-background rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[12px] font-medium text-text-primary">
+                  Full week · Thu–Fri deliverables · Demo Day schedule
+                </p>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  Plan the week and never miss a deadline
+                </p>
+              </div>
+              <button
+                onClick={() => onNavigate("calendar")}
+                className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-semibold px-4 py-2 rounded-xl hover:brightness-110 transition-all cursor-pointer flex-shrink-0 ml-4"
+              >
+                View all
+                <ArrowRight size={12} />
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
-      {/* Right sidebar */}
+      {/* Chat — always visible */}
       <div className="w-[300px] flex-shrink-0">
         <TeacherChat role="parent" />
       </div>

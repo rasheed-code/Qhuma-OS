@@ -10,7 +10,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
-import { Role, StudentView, TeacherView } from "@/types";
+import { Role, StudentView, TeacherView, ParentView } from "@/types";
 
 const studentNav = [
   { icon: LayoutDashboard, label: "Dashboard", view: "dashboard" as StudentView },
@@ -22,12 +22,12 @@ const studentNav = [
   { icon: Settings, label: "Settings", view: "settings" as StudentView },
 ];
 
-const parentNav = [
-  { icon: LayoutDashboard, label: "Overview", active: true },
-  { icon: BarChart3, label: "Progress", active: false },
-  { icon: Calendar, label: "Calendar", active: false },
-  { icon: User, label: "Profile", active: false },
-  { icon: Settings, label: "Settings", active: false },
+const parentNav: { icon: typeof LayoutDashboard; label: string; view: ParentView }[] = [
+  { icon: LayoutDashboard, label: "Overview", view: "overview" },
+  { icon: BarChart3, label: "Progress", view: "progress" },
+  { icon: Calendar, label: "Calendar", view: "calendar" },
+  { icon: User, label: "Teachers", view: "teachers" },
+  { icon: Settings, label: "Settings", view: "settings" },
 ];
 
 const teacherNav: { icon: typeof LayoutDashboard; label: string; view: TeacherView | null }[] = [
@@ -45,9 +45,11 @@ interface SidebarProps {
   onNavigate?: (view: StudentView) => void;
   activeTeacherView?: TeacherView;
   onTeacherNavigate?: (view: TeacherView) => void;
+  activeParentView?: ParentView;
+  onParentNavigate?: (view: ParentView) => void;
 }
 
-export default function Sidebar({ role, activeView, onNavigate, activeTeacherView, onTeacherNavigate }: SidebarProps) {
+export default function Sidebar({ role, activeView, onNavigate, activeTeacherView, onTeacherNavigate, activeParentView, onParentNavigate }: SidebarProps) {
   return (
     <aside className="fixed left-4 top-4 bottom-4 w-[220px] bg-sidebar rounded-3xl flex flex-col py-7 px-4 z-50">
       {/* Logo */}
@@ -117,22 +119,26 @@ export default function Sidebar({ role, activeView, onNavigate, activeTeacherVie
                 </button>
               );
             })
-          : parentNav.map((item) => (
-              <button
-                key={item.label}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 cursor-pointer ${
-                  item.active
-                    ? "bg-white/10 text-white"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/5"
-                }`}
-              >
-                <item.icon
-                  size={18}
-                  className={item.active ? "text-accent" : ""}
-                />
-                {item.label}
-              </button>
-            ))}
+          : parentNav.map((item) => {
+              const isActive = item.view === activeParentView;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => onParentNavigate && onParentNavigate(item.view)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? "bg-white/10 text-white"
+                      : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon
+                    size={18}
+                    className={isActive ? "text-accent" : ""}
+                  />
+                  {item.label}
+                </button>
+              );
+            })}
       </nav>
 
       {/* Bottom promo card */}
