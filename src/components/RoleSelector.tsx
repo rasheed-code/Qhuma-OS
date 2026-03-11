@@ -1,12 +1,13 @@
 "use client";
 
-import { GraduationCap, Users, BookOpen } from "lucide-react";
+import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { Role } from "@/types";
 
 const roles: { key: Role; label: string; sublabel: string; icon: typeof GraduationCap }[] = [
-  { key: "student", label: "Lucas García", sublabel: "1º ESO Student", icon: GraduationCap },
-  { key: "parent", label: "María García", sublabel: "Parent View", icon: Users },
-  { key: "teacher", label: "Prof. Ana Martínez", sublabel: "Mentor / Teacher", icon: BookOpen },
+  { key: "student", label: "Lucas García",      sublabel: "1º ESO · Alumno",          icon: GraduationCap },
+  { key: "parent",  label: "María García",      sublabel: "Familia de Lucas",          icon: Users },
+  { key: "teacher", label: "Prof. Ana Martínez",sublabel: "Mentora · 1º ESO",         icon: BookOpen },
+  { key: "admin",   label: "Admin QHUMA",       sublabel: "Panel de administración",   icon: Shield },
 ];
 
 export default function RoleSelector({

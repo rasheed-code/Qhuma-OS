@@ -14,8 +14,13 @@ import {
   MessageSquare,
   GalleryHorizontalEnd,
   Trophy,
+  Shield,
+  Bot,
+  Building2,
+  FileText,
+  Users,
 } from "lucide-react";
-import { Role, StudentView, TeacherView, ParentView } from "@/types";
+import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
 
 // Badge counts (in a real app these would come from state/context)
@@ -48,6 +53,14 @@ const parentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: strin
   { icon: Settings,        labelEs: "Ajustes",   labelEn: "Settings",  view: "settings" },
 ];
 
+const adminNav: { icon: typeof LayoutDashboard; labelEs: string; view: AdminView }[] = [
+  { icon: LayoutDashboard, labelEs: "Resumen",  view: "overview" },
+  { icon: Users,           labelEs: "Usuarios", view: "users" },
+  { icon: Bot,             labelEs: "IA",        view: "ai" },
+  { icon: Building2,       labelEs: "Colegios",  view: "schools" },
+  { icon: FileText,        labelEs: "Informes",  view: "reports" },
+];
+
 const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: TeacherView }[] = [
   { icon: LayoutDashboard, labelEs: "Inicio",    labelEn: "Dashboard", view: "dashboard" },
   { icon: FolderKanban,    labelEs: "Proyectos", labelEn: "Projects",  view: "projects" },
@@ -65,6 +78,8 @@ interface SidebarProps {
   onTeacherNavigate?: (view: TeacherView) => void;
   activeParentView?: ParentView;
   onParentNavigate?: (view: ParentView) => void;
+  activeAdminView?: AdminView;
+  onAdminNavigate?: (view: AdminView) => void;
 }
 
 export default function Sidebar({
@@ -75,6 +90,8 @@ export default function Sidebar({
   onTeacherNavigate,
   activeParentView,
   onParentNavigate,
+  activeAdminView,
+  onAdminNavigate,
 }: SidebarProps) {
   const { lang } = useLang();
 
@@ -189,6 +206,30 @@ export default function Sidebar({
                 </button>
               );
             })
+          : role === "admin"
+          ? adminNav.map((item) => {
+              const isActive = item.view === activeAdminView;
+              return (
+                <button
+                  key={item.view}
+                  onClick={() => onAdminNavigate?.(item.view)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 cursor-pointer group relative ${
+                    isActive
+                      ? "bg-white/10 text-white"
+                      : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                  }`}
+                >
+                  <item.icon
+                    size={17}
+                    className={`flex-shrink-0 transition-colors ${isActive ? "text-accent" : "group-hover:text-white/60"}`}
+                  />
+                  <span className="flex-1 text-left">{item.labelEs}</span>
+                  {isActive && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-accent" />
+                  )}
+                </button>
+              );
+            })
           : parentNav.map((item) => {
               const isActive = item.view === activeParentView;
               return (
@@ -234,6 +275,8 @@ export default function Sidebar({
               ? "🎯 Demo Day viernes"
               : role === "parent"
               ? lbl("📊 Informe semanal listo", "📊 Weekly report ready")
+              : role === "admin"
+              ? "⚡ Sistema al 94% de salud"
               : "⚠️ 2 alertas urgentes"}
           </p>
           {role === "teacher" ? (

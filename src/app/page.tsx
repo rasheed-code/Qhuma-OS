@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Role, StudentView, TeacherView, ParentView } from "@/types";
+import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
 import Sidebar from "@/components/Sidebar";
 import RoleSelector from "@/components/RoleSelector";
@@ -27,6 +27,7 @@ import StudentSettings from "@/components/StudentSettings";
 import TaskWorkspace from "@/components/TaskWorkspace";
 import EvidenceGallery from "@/components/EvidenceGallery";
 import StudentAchievements from "@/components/StudentAchievements";
+import AdminDashboard from "@/components/AdminDashboard";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -34,6 +35,7 @@ export default function Home() {
   const [activeView, setActiveView] = useState<StudentView>("dashboard");
   const [activeTeacherView, setActiveTeacherView] = useState<TeacherView>("dashboard");
   const [activeParentView, setActiveParentView] = useState<ParentView>("overview");
+  const [activeAdminView, setActiveAdminView] = useState<AdminView>("overview");
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   const handleRoleChange = (newRole: Role) => {
@@ -41,6 +43,7 @@ export default function Home() {
     setActiveView("dashboard");
     setActiveTeacherView("dashboard");
     setActiveParentView("overview");
+    setActiveAdminView("overview");
   };
 
   return (
@@ -53,6 +56,8 @@ export default function Home() {
         onTeacherNavigate={setActiveTeacherView}
         activeParentView={activeParentView}
         onParentNavigate={setActiveParentView}
+        activeAdminView={activeAdminView}
+        onAdminNavigate={setActiveAdminView}
       />
 
       {/* Main panel — one big white rounded card */}
@@ -64,25 +69,22 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <span className="text-[13px] font-medium text-text-primary block">
-                  {role === "student"
-                    ? "Lucas García"
-                    : role === "parent"
-                    ? "María García"
+                  {role === "student" ? "Lucas García"
+                    : role === "parent" ? "María García"
+                    : role === "admin" ? "Admin QHUMA"
                     : "Prof. Ana Martínez"}
                 </span>
                 <span className="text-[11px] text-text-muted">
-                  {role === "student"
-                    ? "1º ESO"
-                    : role === "parent"
-                    ? (lang === "es" ? "Familia de Lucas" : "Parent of Lucas")
+                  {role === "student" ? "1º ESO"
+                    : role === "parent" ? (lang === "es" ? "Familia de Lucas" : "Parent of Lucas")
+                    : role === "admin" ? "Panel de administración"
                     : "1º ESO Mentor"}
                 </span>
               </div>
               <div className="w-10 h-10 rounded-full bg-sidebar flex items-center justify-center text-white text-[12px] font-semibold">
-                {role === "student"
-                  ? "LG"
-                  : role === "parent"
-                  ? "MG"
+                {role === "student" ? "LG"
+                  : role === "parent" ? "MG"
+                  : role === "admin" ? "AQ"
                   : "AM"}
               </div>
             </div>
@@ -130,6 +132,9 @@ export default function Home() {
           {role === "teacher" && activeTeacherView === "calendar" && <TeacherCalendar />}
           {role === "teacher" && activeTeacherView === "students" && <TeacherStudents />}
           {role === "teacher" && activeTeacherView === "settings" && <TeacherSettings />}
+          {role === "admin" && (
+            <AdminDashboard activeView={activeAdminView} onNavigate={setActiveAdminView} />
+          )}
         </div>
       </main>
     </div>
