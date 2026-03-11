@@ -211,6 +211,56 @@ export default function StudentPortfolio() {
   const [narrativaIA, setNarrativaIA] = useState<string | null>(null);
   const [isGenerandoNarrativa, setIsGenerandoNarrativa] = useState(false);
 
+  // S18 — Reflexión semanal IA
+  const [reflexionBullets, setReflexionBullets] = useState<string[] | null>(null);
+  const [isGenerandoReflexion, setIsGenerandoReflexion] = useState(false);
+  const [expandedBullets, setExpandedBullets] = useState<Set<number>>(new Set());
+  const [notasReflexion, setNotasReflexion] = useState<Record<number, string>>({});
+
+  const handleGenerarReflexion = async () => {
+    setIsGenerandoReflexion(true);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: "Genera exactamente 3 aprendizajes clave de la semana para Lucas García en el Proyecto Airbnb Málaga. Formato: 3 frases numeradas (1. ... 2. ... 3. ...) separadas por salto de línea. Semana 3, competencias trabajadas: STEM (modelo financiero), CLC (listing bilingüe), CE (estrategia de precios). Logro más destacado: completó el punto de equilibrio tras 2 días de trabajo.",
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      const raw: string = data.reply ?? "";
+      const bullets = raw
+        .split("\n")
+        .map((l: string) => l.replace(/^\d+[.)]\s*/, "").trim())
+        .filter((l: string) => l.length > 10)
+        .slice(0, 3);
+      setReflexionBullets(bullets.length > 0 ? bullets : [
+        "Esta semana construiste el modelo financiero de Casa Limón con 3 escenarios reales. Es la primera vez que trabajas con proyecciones a 12 meses.",
+        "Completaste el listing en español e inglés sin traductor automático — aplicaste CE y CLC simultáneamente.",
+        "Tu error con el punto de equilibrio optimista se convirtió en tu mejor aprendizaje: modelar siempre el escenario conservador primero.",
+      ]);
+      setExpandedBullets(new Set());
+    } catch {
+      setReflexionBullets([
+        "Esta semana construiste el modelo financiero de Casa Limón con 3 escenarios reales.",
+        "Completaste el listing bilingüe aplicando CE y CLC simultáneamente.",
+        "El error con el punto de equilibrio fue tu mejor aprendizaje de la semana.",
+      ]);
+    } finally {
+      setIsGenerandoReflexion(false);
+    }
+  };
+
+  const toggleBullet = (i: number) => {
+    setExpandedBullets((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
+
   const handleRegenerarNarrativa = async () => {
     setIsGenerandoNarrativa(true);
     try {
@@ -349,6 +399,78 @@ export default function StudentPortfolio() {
                 Pasaste de {compProgress[activeComp].before}% a {compProgress[activeComp].after}% a lo largo del proyecto.
                 Ganancia neta: <span className="font-bold text-success">+{compProgress[activeComp].after - compProgress[activeComp].before}%</span>
               </p>
+            </div>
+          )}
+        </div>
+
+        {/* S18: Reflexión semanal IA */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">Reflexión semanal</span>
+            <span className="text-[10px] text-text-muted ml-1">Semana 3 · Proyecto Airbnb Málaga</span>
+            <button
+              onClick={handleGenerarReflexion}
+              disabled={isGenerandoReflexion}
+              className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={10} className={isGenerandoReflexion ? "animate-spin" : ""} />
+              {isGenerandoReflexion ? "Generando..." : reflexionBullets ? "Regenerar" : "Generar reflexión de la semana"}
+            </button>
+          </div>
+          {!reflexionBullets && !isGenerandoReflexion && (
+            <div className="bg-background rounded-xl px-4 py-5 flex flex-col items-center gap-2">
+              <Sparkles size={20} className="text-text-muted" />
+              <p className="text-[11px] text-text-muted text-center">
+                Genera tu reflexión semanal: 3 aprendizajes clave de esta semana, construidos a partir de tu actividad en el proyecto.
+              </p>
+            </div>
+          )}
+          {isGenerandoReflexion && (
+            <div className="bg-background rounded-xl px-4 py-4 flex items-center gap-3">
+              <RefreshCw size={14} className="text-accent-text animate-spin flex-shrink-0" />
+              <span className="text-[11px] text-text-secondary">Analizando tu semana de trabajo...</span>
+            </div>
+          )}
+          {reflexionBullets && (
+            <div className="space-y-2">
+              {reflexionBullets.map((bullet, i) => {
+                const isOpen = expandedBullets.has(i);
+                const nota = notasReflexion[i] ?? "";
+                const labels = ["Aprendizaje principal", "Competencia aplicada", "Lección del error"];
+                return (
+                  <div key={i} className={`rounded-xl border transition-all ${isOpen ? "border-accent-text/30 bg-accent-light" : "border-card-border bg-background"}`}>
+                    <button
+                      onClick={() => toggleBullet(i)}
+                      className="w-full flex items-start gap-3 px-4 py-3 text-left cursor-pointer"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-0.5">{labels[i]}</span>
+                        <p className={`text-[11px] leading-relaxed ${isOpen ? "text-accent-text font-medium" : "text-text-primary"}`}>{bullet}</p>
+                      </div>
+                      {isOpen
+                        ? <ChevronUp size={12} className="text-accent-text flex-shrink-0 mt-1" />
+                        : <ChevronDown size={12} className="text-text-muted flex-shrink-0 mt-1" />
+                      }
+                    </button>
+                    {isOpen && (
+                      <div className="px-4 pb-3">
+                        <p className="text-[9px] font-semibold text-accent-text uppercase tracking-wide mb-1.5">Mi nota personal</p>
+                        <textarea
+                          value={nota}
+                          onChange={(e) => setNotasReflexion((prev) => ({ ...prev, [i]: e.target.value }))}
+                          placeholder="Añade tu propio pensamiento sobre este aprendizaje..."
+                          rows={2}
+                          className="w-full text-[11px] text-text-primary bg-card border border-accent-text/20 rounded-xl px-3 py-2 outline-none focus:border-accent-text/50 resize-none transition-colors placeholder:text-text-muted"
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
