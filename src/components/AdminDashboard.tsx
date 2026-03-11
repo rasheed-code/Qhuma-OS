@@ -7,6 +7,7 @@ import {
   Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
+  Trophy, BarChart3,
 } from "lucide-react";
 import { AdminView } from "@/types";
 
@@ -371,6 +372,136 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 ))}
               </div>
             </div>
+
+            {/* A10: Evolución mensual de alumnos activos (barras CSS) */}
+            {(() => {
+              const meses = [
+                { mes: "Oct 25", alumnos: 241 },
+                { mes: "Nov 25", alumnos: 267 },
+                { mes: "Dic 25", alumnos: 259 },
+                { mes: "Ene 26", alumnos: 288 },
+                { mes: "Feb 26", alumnos: 302 },
+                { mes: "Mar 26", alumnos: 312 },
+              ];
+              const maxAlumnos = Math.max(...meses.map(m => m.alumnos));
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp size={14} className="text-success" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Alumnos activos — evolución mensual</h3>
+                    <span className="ml-auto text-[10px] text-success font-semibold bg-success-light px-2 py-0.5 rounded-full">+29% en 6 meses</span>
+                  </div>
+                  <div className="flex items-end gap-2 h-28">
+                    {meses.map((m, i) => {
+                      const isLast = i === meses.length - 1;
+                      const pct = (m.alumnos / maxAlumnos) * 100;
+                      return (
+                        <div key={m.mes} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-[9px] font-bold text-accent-text">{m.alumnos}</span>
+                          <div
+                            className={`w-full rounded-t-lg transition-all duration-500 ${isLast ? "bg-accent-text" : "bg-accent-light border border-accent/30"}`}
+                            style={{ height: `${pct}%`, minHeight: "6px" }}
+                          />
+                          <span className="text-[8px] text-text-muted text-center">{m.mes}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* A10: Top 3 proyectos por progreso */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Trophy size={14} className="text-warning" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Top 3 proyectos en progreso</h3>
+              </div>
+              <div className="space-y-3">
+                {[
+                  { pos: 1, alumno: "Carmen Vega",    proyecto: "App de Intercambio Estudiantil", progreso: 94, comp: "CE", avatar: "CV" },
+                  { pos: 2, alumno: "Sofía Martín",   proyecto: "Huerto Urbano Digital",          progreso: 88, comp: "CD", avatar: "SM" },
+                  { pos: 3, alumno: "Lucas García",   proyecto: "El Airbnb de Lucas",             progreso: 72, comp: "STEM", avatar: "LG" },
+                ].map((p) => (
+                  <div key={p.pos} className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+                      p.pos === 1 ? "bg-warning text-white" : p.pos === 2 ? "bg-text-muted/30 text-text-muted" : "bg-background border border-card-border text-text-muted"
+                    }`}>{p.pos}</div>
+                    <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">{p.avatar}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[11px] font-semibold text-text-primary truncate">{p.proyecto}</span>
+                        <span className="text-[11px] font-bold text-accent-text ml-2 flex-shrink-0">{p.progreso}%</span>
+                      </div>
+                      <div className="h-1.5 bg-background rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-text rounded-full" style={{ width: `${p.progreso}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* A10: Mapa de calor de actividad por hora del día */}
+            {(() => {
+              const horas = ["8h", "9h", "10h", "11h", "12h", "13h", "14h", "15h", "16h", "17h", "18h", "19h", "20h"];
+              const dias = ["L", "M", "X", "J", "V"];
+              // Datos mock: actividad por día × hora (0-12 interacciones)
+              const actividad: number[][] = [
+                [2, 8, 11, 9, 7, 4, 1, 6, 8, 5, 2, 1, 0],
+                [1, 7, 12, 10, 8, 5, 2, 7, 9, 6, 3, 1, 0],
+                [3, 9, 11, 8, 6, 4, 1, 5, 7, 4, 2, 0, 0],
+                [2, 6, 10, 9, 7, 5, 3, 8, 10, 7, 3, 1, 0],
+                [4, 8, 9, 7, 5, 3, 0, 3, 5, 3, 1, 0, 0],
+              ];
+              const maxAct = 12;
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BarChart3 size={14} className="text-text-secondary" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Actividad por hora del día</h3>
+                    <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">Lun–Vie · 8h–20h</span>
+                  </div>
+                  {/* Horas header */}
+                  <div className="flex gap-1 mb-1 ml-4">
+                    {horas.map((h) => (
+                      <div key={h} className="flex-1 text-center text-[7px] text-text-muted">{h}</div>
+                    ))}
+                  </div>
+                  {/* Grid */}
+                  <div className="space-y-1">
+                    {dias.map((dia, di) => (
+                      <div key={dia} className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold text-text-muted w-4 flex-shrink-0">{dia}</span>
+                        {actividad[di].map((val, hi) => {
+                          const intensity = val / maxAct;
+                          return (
+                            <div
+                              key={hi}
+                              className="flex-1 h-5 rounded-sm"
+                              style={{
+                                backgroundColor: intensity < 0.1
+                                  ? "#f4f0e9"
+                                  : `rgba(31,81,76,${0.12 + intensity * 0.75})`,
+                              }}
+                              title={`${dia} ${horas[hi]}: ${val} interacciones`}
+                            />
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Leyenda */}
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-[9px] text-text-muted">Menos</span>
+                    {[0.1, 0.3, 0.5, 0.7, 0.9].map((op, i) => (
+                      <div key={i} className="w-4 h-3 rounded-sm" style={{ backgroundColor: `rgba(31,81,76,${0.12 + op * 0.75})` }} />
+                    ))}
+                    <span className="text-[9px] text-text-muted">Más</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Panel derecho — Actividad reciente */}
