@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 32 ✅ (push: `5ec906e`)
+- **Último ciclo completo**: Ciclo 33 ✅ (push: `b2b4603`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 33
+- **Próximo ciclo**: Ciclo 34
 
 ---
 
@@ -1242,6 +1242,50 @@
 - "Exportar insignias": HTML blob con grid de 8 insignias + estilos Inter, Blob/createObjectURL, filename insignias_lucas_garcia.html
 - Estados: badgeExpandida string|null, exportandoBadges, badgesExportadas
 - Imports añadidos: Lock, Shield
+
+---
+
+## Sprints completados — Ciclo 33
+
+### [SPRINT-TEACHER][T31] TeacherStudents — Demo Day evaluación en directo ✅
+- Commit: `ab751bb`
+- Archivo: `src/components/TeacherStudents.tsx`
+- Panel de 12 turnos (6 min cada uno, slots desde 09:00) con timer Play/Pause/Reset por alumno
+- 4 criterios LOMLOE por evaluación: Claridad del problema / Solución / Viabilidad financiera / Presentación oral — ciclo 1→2→3→4 con click
+- Indicador de alumno activo con barra de progreso (verde ≤6min, urgente si pasa), botón "Marcar presentado"
+- Media automática visible por alumno; exportación HTML/PDF con todas las notas
+- Nuevos imports: `useEffect`, `Play`, `Pause`, `RotateCcw`, `ClipboardList`
+- Nuevos estados: `demoDaySlot`, `demoDayScores`, `demoDayPresentados`, `demoDayTimer`, `demoDayRunning`, `demoDayExportando`, `demoDayExportado`
+
+### [SPRINT-STUDENT][S33] StudentDashboard — Resumen semanal inteligente ✅
+- Commit: `a2f7112`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Widget con 5 KPIs en grid horizontal: tareas (7/9), Q-Coins (340), mejor competencia (CE), racha (14d), evidencias (3/4)
+- Botón "Analizar con IA": fetch /api/tutor-chat mode="narrativa" → 3 insights sobre patrones de trabajo + competencias LOMLOE + recomendaciones Demo Day
+- Fallback hardcoded contextualizado (3 frases específicas del proyecto)
+- Nuevos imports: `BarChart3`, `Lightbulb`, `RefreshCw`
+- Nuevo estado: `semanaInsights`, `generandoInsights`
+
+### [SPRINT-ADMIN][A31] AdminDashboard — Tablero Demo Day en vivo (Overview) ✅
+- Commit: `7916a55`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Panel en left column del tab Overview (después de A30 proyectos activos)
+- 4 KPIs: nº presentados (success) / pendientes (urgent) / familias presentes 18 (accent) / Q-Coins otorgados (background)
+- Indicador pulsante "Presentando ahora:" con nombre del alumno en curso
+- Timeline de 12 turnos: dot de estado (completado=success, en_curso=pulsante urgent, pendiente=muted), hora, nombre, Q-Coins, badge
+- Sin estados nuevos (datos mock estáticos)
+
+### [SPRINT-CULTURE][C31] StudentProfile — Sección Metacognición (Bloque 1) ✅
+- Commit: `b2b4603`
+- Archivo: `src/components/StudentProfile.tsx`
+- Insertada antes de Achievements (después del Diario socrático C30)
+- Gráfico de barras de 6 franjas horarias (8–22h), pico detectado automáticamente (16–18h=91% → marcado en accent-text)
+- 3 ratios en grid: ratio socrático 74% / errores superados 5/7 / distribución solo/equipo 68/32%
+- Panel bg-sidebar para estrategia generada + botón "Regenerar"
+- Botón "Generar estrategia IA": fetch /api/tutor-chat mode="narrativa" con datos reales de metacognición del alumno; fallback contextualizado
+- Principio culture.md Bloque 1: Deep Dive (tracking de ratio socrático) + Modo Socrático como métrica observable
+- Nuevos imports: `Cpu`, `TrendingUp`, `Sparkles`
+- Nuevos estados: `metaEstrategia`, `generandoMeta`
 
 ---
 
