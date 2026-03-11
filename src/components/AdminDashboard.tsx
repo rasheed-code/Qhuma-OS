@@ -1609,6 +1609,113 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           })()}
         </div>
 
+          {/* ── A33: Mapa de transición T1 → T2 ────────────────────────────── */}
+          {(() => {
+            const clases = [
+              {
+                id: "c1",
+                nombre: "1º ESO A",
+                docente: "Ana Martínez",
+                alumnos: 12,
+                t1: { evidencias: true, demoDay: true, informeLomloe: true, t2asignado: true },
+                t2proyecto: lbl("Diseña tu Food Truck", "Design your Food Truck"),
+                inicio: "17 mar 2026",
+              },
+              {
+                id: "c2",
+                nombre: "1º ESO B",
+                docente: "Carlos Rueda",
+                alumnos: 11,
+                t1: { evidencias: true, demoDay: true, informeLomloe: false, t2asignado: true },
+                t2proyecto: lbl("Diseña tu Food Truck", "Design your Food Truck"),
+                inicio: "17 mar 2026",
+              },
+              {
+                id: "c3",
+                nombre: "2º ESO A",
+                docente: "Patricia López",
+                alumnos: 13,
+                t1: { evidencias: true, demoDay: false, informeLomloe: false, t2asignado: false },
+                t2proyecto: lbl("Por asignar", "To be assigned"),
+                inicio: lbl("Pendiente", "Pending"),
+              },
+              {
+                id: "c4",
+                nombre: "2º ESO B",
+                docente: "Miguel Torres",
+                alumnos: 12,
+                t1: { evidencias: false, demoDay: false, informeLomloe: false, t2asignado: false },
+                t2proyecto: lbl("Por asignar", "To be assigned"),
+                inicio: lbl("Pendiente", "Pending"),
+              },
+            ];
+            const checkItems: { key: keyof typeof clases[0]["t1"]; label: string } [] = [
+              { key: "evidencias",     label: lbl("Evidencias T1",   "T1 evidences") },
+              { key: "demoDay",        label: lbl("Demo Day",         "Demo Day") },
+              { key: "informeLomloe",  label: lbl("Informe LOMLOE",   "LOMLOE report") },
+              { key: "t2asignado",     label: lbl("T2 asignado",      "T2 assigned") },
+            ];
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">
+                      {lbl("Mapa de transición T1 → T2", "T1 → T2 Transition map")}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-text-muted">{lbl("4 clases · 48 alumnos", "4 classes · 48 students")}</span>
+                </div>
+                <div className="space-y-3">
+                  {clases.map((cl) => {
+                    const done = Object.values(cl.t1).filter(Boolean).length;
+                    const total = checkItems.length;
+                    const pct = Math.round((done / total) * 100);
+                    const allDone = done === total;
+                    return (
+                      <div key={cl.id} className={`rounded-xl border p-3.5 ${allDone ? "border-success/30 bg-success-light" : done >= 2 ? "border-warning/30 bg-warning-light" : "border-card-border bg-background"}`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[12px] font-bold text-text-primary">{cl.nombre}</span>
+                              <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${allDone ? "bg-success text-white" : done >= 2 ? "bg-warning text-white" : "bg-urgent text-white"}`}>
+                                {pct}% {lbl("listo", "ready")}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-text-muted mt-0.5">{cl.docente} · {cl.alumnos} {lbl("alumnos", "students")}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[9px] text-text-muted">{lbl("Proyecto T2", "T2 project")}</p>
+                            <p className={`text-[10px] font-semibold ${cl.t1.t2asignado ? "text-accent-text" : "text-text-muted"}`}>{cl.t2proyecto}</p>
+                            <p className="text-[9px] text-text-muted">{cl.inicio}</p>
+                          </div>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="h-1.5 rounded-full bg-border overflow-hidden mb-2">
+                          <div className={`h-full rounded-full ${allDone ? "bg-success" : done >= 2 ? "bg-warning" : "bg-urgent"}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        {/* Checklist pills */}
+                        <div className="flex gap-1.5 flex-wrap">
+                          {checkItems.map((item) => {
+                            const checked = cl.t1[item.key];
+                            return (
+                              <span key={item.key} className={`flex items-center gap-0.5 text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${
+                                checked ? "bg-success text-white" : "bg-card border border-card-border text-text-muted"
+                              }`}>
+                                {checked ? <CheckCircle2 size={7} /> : <span className="w-[7px] h-[7px] rounded-full border border-text-muted inline-block" />}
+                                {item.label}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
         {/* Panel derecho — Actividad reciente */}
         <div className="w-[260px] flex-shrink-0">
             <div className="bg-card rounded-2xl border border-card-border p-5 h-full">
