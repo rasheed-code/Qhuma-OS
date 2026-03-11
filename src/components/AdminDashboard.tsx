@@ -260,6 +260,26 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [mantenimientoSlot, setMantenimientoSlot] = useState<string | null>(null);
   const [mantenimientoGuardado, setMantenimientoGuardado] = useState<string | null>(null);
 
+  // A27 — Configuración de alertas automáticas
+  const [alertasConfig, setAlertasConfig] = useState<Record<string, boolean>>({
+    inactividad3dias: true,
+    notaBaja: true,
+    evidenciaVencida: false,
+    qcoinsBajo: true,
+    ratioCompletado: false,
+    streakRota: false,
+  });
+  const [alertasFrecuencia, setAlertasFrecuencia] = useState<Record<string, string>>({
+    inactividad3dias: "inmediata",
+    notaBaja: "diaria",
+    evidenciaVencida: "inmediata",
+    qcoinsBajo: "semanal",
+    ratioCompletado: "diaria",
+    streakRota: "inmediata",
+  });
+  const [probandoAlerta, setProbandoAlerta] = useState<string | null>(null);
+  const [alertaProbada, setAlertaProbada] = useState<Set<string>>(new Set());
+
   // A2 — Users management state
   const [userSearch, setUserSearch] = useState("");
   const [userFilterRol, setUserFilterRol] = useState("Todos");
@@ -2273,6 +2293,174 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
             </div>
           </div>
+
+          {/* A27 — Configuración de alertas automáticas */}
+          {(() => {
+            const reglasAlertas = [
+              {
+                id: "inactividad3dias",
+                nombre: "Alumno sin actividad >3 días",
+                condicion: "Sin login ni entrega en 72h",
+                destinatarios: ["Alumno", "Tutor"],
+                ultimaVez: "Hace 2 días",
+                icon: Bell,
+              },
+              {
+                id: "notaBaja",
+                nombre: "Nota LOMLOE baja (<2)",
+                condicion: "Nivel 1 en cualquier competencia",
+                destinatarios: ["Alumno", "Familia"],
+                ultimaVez: "Hoy 09:12",
+                icon: AlertTriangle,
+              },
+              {
+                id: "evidenciaVencida",
+                nombre: "Evidencia vencida",
+                condicion: "Fecha límite superada sin entrega",
+                destinatarios: ["Alumno", "Tutor"],
+                ultimaVez: "Nunca",
+                icon: Clock,
+              },
+              {
+                id: "qcoinsBajo",
+                nombre: "Q-Coins por debajo de 100",
+                condicion: "Saldo QC < 100",
+                destinatarios: ["Alumno"],
+                ultimaVez: "Hace 5 días",
+                icon: Coins,
+              },
+              {
+                id: "ratioCompletado",
+                nombre: "Ratio completado <40%",
+                condicion: "Evidencias / total < 40%",
+                destinatarios: ["Tutor", "Familia"],
+                ultimaVez: "Nunca",
+                icon: TrendingDown,
+              },
+              {
+                id: "streakRota",
+                nombre: "Streak rota 3+ veces",
+                condicion: "≥3 interrupciones de racha en el trimestre",
+                destinatarios: ["Alumno", "Tutor"],
+                ultimaVez: "Nunca",
+                icon: Activity,
+              },
+            ];
+
+            const activas = Object.values(alertasConfig).filter(Boolean).length;
+            const pendientes = Object.entries(alertasConfig).filter(([, v]) => !v).length;
+
+            const destinatarioColor: Record<string, string> = {
+              Alumno: "bg-accent-light text-accent-text",
+              Tutor: "bg-success-light text-success",
+              Familia: "bg-warning-light text-warning",
+            };
+
+            const frecuencias = ["inmediata", "diaria", "semanal"];
+
+            const handleProbarAlerta = (id: string) => {
+              if (probandoAlerta) return;
+              setProbandoAlerta(id);
+              setTimeout(() => {
+                setProbandoAlerta(null);
+                setAlertaProbada(new Set([...alertaProbada, id]));
+                setTimeout(() => setAlertaProbada((prev) => { const s = new Set(prev); s.delete(id); return s; }), 3500);
+              }, 800);
+            };
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bell size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">Configuración de alertas automáticas</h3>
+                </div>
+
+                {/* Resumen */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {[
+                    { label: "Reglas activas", valor: activas, bg: "bg-success-light", text: "text-success" },
+                    { label: "Alertas enviadas esta semana", valor: 14, bg: "bg-accent-light", text: "text-accent-text" },
+                    { label: "Pendientes de configurar", valor: pendientes, bg: pendientes > 0 ? "bg-warning-light" : "bg-background", text: pendientes > 0 ? "text-warning" : "text-text-muted" },
+                  ].map((s) => (
+                    <div key={s.label} className={`rounded-xl p-3 ${s.bg}`}>
+                      <span className={`text-[22px] font-bold ${s.text} block leading-none`}>{s.valor}</span>
+                      <span className="text-[9px] text-text-muted block mt-1">{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Reglas */}
+                <div className="space-y-3">
+                  {reglasAlertas.map((regla) => {
+                    const activa = alertasConfig[regla.id];
+                    const probando = probandoAlerta === regla.id;
+                    const probada = alertaProbada.has(regla.id);
+                    const IconComp = regla.icon;
+                    return (
+                      <div key={regla.id} className={`rounded-xl border p-4 transition-all ${activa ? "border-card-border bg-background" : "border-card-border/50 bg-card opacity-75"}`}>
+                        <div className="flex items-start gap-3">
+                          {/* Toggle pill */}
+                          <button
+                            onClick={() => setAlertasConfig({ ...alertasConfig, [regla.id]: !activa })}
+                            className={`relative inline-flex h-5 w-9 flex-shrink-0 items-center rounded-full transition-colors cursor-pointer mt-0.5 ${activa ? "bg-success" : "bg-card-border"}`}
+                          >
+                            <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${activa ? "translate-x-4" : "translate-x-0.5"}`} />
+                          </button>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <IconComp size={12} className={activa ? "text-accent-text" : "text-text-muted"} />
+                              <span className={`text-[12px] font-semibold ${activa ? "text-text-primary" : "text-text-muted"}`}>{regla.nombre}</span>
+                            </div>
+                            <p className="text-[10px] text-text-muted mb-2">{regla.condicion}</p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[9px] text-text-muted">Destinatarios:</span>
+                              {regla.destinatarios.map((d) => (
+                                <span key={d} className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${destinatarioColor[d] ?? "bg-background text-text-muted"}`}>{d}</span>
+                              ))}
+                              <span className="text-[9px] text-text-muted ml-auto">Última vez: {regla.ultimaVez}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            {/* Frecuencia select */}
+                            <select
+                              value={alertasFrecuencia[regla.id]}
+                              onChange={(e) => setAlertasFrecuencia({ ...alertasFrecuencia, [regla.id]: e.target.value })}
+                              disabled={!activa}
+                              className="text-[9px] bg-background border border-card-border rounded-lg px-2 py-1 text-text-secondary outline-none cursor-pointer disabled:opacity-40"
+                            >
+                              {frecuencias.map((f) => (
+                                <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
+                              ))}
+                            </select>
+                            {/* Probar alerta */}
+                            <button
+                              onClick={() => handleProbarAlerta(regla.id)}
+                              disabled={!activa || probandoAlerta !== null}
+                              className={`text-[9px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-all disabled:opacity-40 ${
+                                probada
+                                  ? "bg-success-light text-success"
+                                  : "bg-accent-light text-accent-text hover:bg-accent/20"
+                              }`}
+                            >
+                              {probando ? (
+                                <span className="flex items-center gap-1"><RefreshCw size={9} className="animate-spin" />Probando…</span>
+                              ) : probada ? (
+                                <span className="flex items-center gap-1"><CheckCircle2 size={9} />Enviada a 3</span>
+                              ) : (
+                                "Probar alerta"
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
