@@ -2404,6 +2404,113 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── C37: Industrias Vivas — sector hostelería y restauración ────── */}
+      {(() => {
+        interface Tendencia { label: string; valor: string; delta: string; positivo: boolean; descripcion: string }
+        interface Perfil { titulo: string; salario: string; skills: string[]; demanda: string }
+        const tendencias: Tendencia[] = [
+          { label: lbl("Mercado food trucks España", "Food truck market Spain"), valor: "€890M", delta: "+12% anual", positivo: true, descripcion: lbl("El sector crece un 12% cada año. Madrid y Málaga lideran el crecimiento.", "The sector grows 12% yearly. Madrid and Málaga lead growth.") },
+          { label: lbl("Tasa de éxito primer año", "1st year success rate"), valor: "62%", delta: "+8pp vs media hostelería", positivo: true, descripcion: lbl("Los food trucks tienen mayor supervivencia que bares y restaurantes tradicionales.", "Food trucks have higher survival rates than traditional bars and restaurants.") },
+          { label: lbl("Ticket medio", "Average ticket"), valor: "€8,40", delta: "+1.20€ vs 2023", positivo: true, descripcion: lbl("El cliente del food truck paga más que en fast food pero menos que en restaurante.", "Food truck customers pay more than fast food but less than restaurants.") },
+          { label: lbl("Food trucks en España", "Food trucks in Spain"), valor: "3.200+", delta: "+400 en 2025", positivo: true, descripcion: lbl("El sector suma 400 nuevas unidades al año y tiene recorrido hasta 2030.", "The sector adds 400 new units per year with growth runway through 2030.") },
+        ];
+        const perfiles: Perfil[] = [
+          { titulo: lbl("Emprendedor food truck", "Food Truck Entrepreneur"), salario: lbl("€24.000–€60.000/año", "€24,000–€60,000/year"), skills: ["CE", "STEM", "CLC"], demanda: lbl("Alta", "High") },
+          { titulo: lbl("Chef / Jefe de cocina", "Chef / Head Cook"), salario: lbl("€22.000–€45.000/año", "€22,000–€45,000/year"), skills: ["CCEC", "CPSAA", "CE"], demanda: lbl("Muy alta", "Very high") },
+          { titulo: lbl("Responsable de marketing gastronómico", "Gastro Marketing Manager"), salario: lbl("€28.000–€55.000/año", "€28,000–€55,000/year"), skills: ["CLC", "CD", "CE"], demanda: lbl("Alta", "High") },
+          { titulo: lbl("Controller financiero hostelería", "Hospitality Finance Controller"), salario: lbl("€30.000–€65.000/año", "€30,000–€65,000/year"), skills: ["STEM", "CE", "CD"], demanda: lbl("Media-alta", "Medium-high") },
+        ];
+        const [perfilExpandido, setPerfilExpandido] = useState<number | null>(null);
+        const compColors: Record<string, string> = {
+          CE: "bg-sidebar text-accent", STEM: "bg-warning-light text-warning",
+          CLC: "bg-accent-light text-accent-text", CCEC: "bg-urgent-light text-urgent",
+          CD: "bg-success-light text-success", CPSAA: "bg-background text-text-secondary",
+        };
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-xl bg-warning-light flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={14} className="text-warning" />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                  {lbl("Industrias Vivas: hostelería y restauración", "Live Industries: hospitality & food service")}
+                </h2>
+                <p className="text-[10px] text-text-secondary">{lbl("Tu sector real · datos actualizados 2025", "Your real sector · 2025 updated data")}</p>
+              </div>
+            </div>
+
+            {/* Tendencias de mercado */}
+            <div className="mt-3 mb-4">
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Tendencias del mercado", "Market trends")}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {tendencias.map((t) => (
+                  <div key={t.label} className="bg-background rounded-xl p-3">
+                    <p className="text-[9px] text-text-muted mb-0.5">{t.label}</p>
+                    <p className="text-[18px] font-bold text-text-primary leading-none">{t.valor}</p>
+                    <p className={`text-[8px] font-semibold mt-1 ${t.positivo ? "text-success" : "text-urgent"}`}>
+                      {t.positivo ? "▲" : "▼"} {t.delta}
+                    </p>
+                    <p className="text-[8px] text-text-muted mt-1 leading-snug">{t.descripcion}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Perfiles profesionales */}
+            <div className="mb-4">
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Perfiles profesionales del sector", "Sector job profiles")}</p>
+              <div className="space-y-1.5">
+                {perfiles.map((p, i) => {
+                  const isOpen = perfilExpandido === i;
+                  return (
+                    <div key={i} className={`rounded-xl border transition-all ${isOpen ? "bg-accent-light border-accent/30" : "bg-background border-card-border"}`}>
+                      <button
+                        onClick={() => setPerfilExpandido(isOpen ? null : i)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 cursor-pointer"
+                      >
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-[11px] font-semibold text-text-primary">{p.titulo}</p>
+                          <p className="text-[9px] text-text-muted">{p.salario}</p>
+                        </div>
+                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${p.demanda === lbl("Muy alta", "Very high") || p.demanda === lbl("Alta", "High") ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
+                          {p.demanda}
+                        </span>
+                        <ChevronRight size={11} className={`text-text-muted flex-shrink-0 transition-transform ${isOpen ? "rotate-90" : ""}`} />
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3">
+                          <p className="text-[9px] text-text-muted mb-2">{lbl("Competencias LOMLOE clave para este perfil:", "Key LOMLOE competencies for this profile:")}</p>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {p.skills.map((s) => (
+                              <span key={s} className={`text-[8px] font-bold px-2 py-0.5 rounded-full ${compColors[s] ?? "bg-background text-text-muted"}`}>{s}</span>
+                            ))}
+                          </div>
+                          <p className="text-[9px] text-accent-text mt-2 leading-snug font-semibold">
+                            {lbl("Tu proyecto Food Truck ya está desarrollando estas competencias.", "Your Food Truck project is already developing these competencies.")}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Conexión con el proyecto */}
+            <div className="bg-sidebar rounded-xl p-3">
+              <p className="text-[9px] font-bold text-accent mb-1">{lbl("Tu proyecto, tu sector real", "Your project, your real sector")}</p>
+              <p className="text-[10px] text-white/80 leading-snug">
+                {lbl(
+                  "Lo que estás construyendo en clase no es un ejercicio — es una simulación del mercado real de hostelería. Las decisiones de precio, marca y finanzas que tomas hoy son las mismas que toman los emprendedores reales del sector.",
+                  "What you're building in class isn't an exercise — it's a real-market simulation of the hospitality sector. The pricing, branding and financial decisions you make today are the same ones real entrepreneurs make."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center justify-between mb-4">
