@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -219,6 +220,9 @@ const evidenciasDestacadas = [
 ];
 
 export default function StudentPortfolio() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [activeComp, setActiveComp] = useState<CompKey | null>(null);
   const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set(["e1"]));
   const [expandedEvidencia, setExpandedEvidencia] = useState<string | null>(null);
@@ -404,6 +408,35 @@ export default function StudentPortfolio() {
     });
   };
 
+  // S21 — Mis errores → Mis aprendizajes
+  const [superadosSet, setSuperadosSet] = useState<Set<string>>(new Set(["e1", "e2"]));
+  const [confirmandoSuperacion, setConfirmandoSuperacion] = useState<string | null>(null);
+  const [superacionMensaje, setSuperacionMensaje] = useState<Record<string, string>>({});
+
+  const handleMarcarSuperado = async (entry: ErrorEntry) => {
+    if (confirmandoSuperacion) return;
+    setConfirmandoSuperacion(entry.id);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: `Lucas García ha marcado como superado el siguiente error de aprendizaje: "${entry.title}" (competencia ${entry.competency}). Lo que cambiaría: ${entry.cambiaría}. Responde con una frase breve de felicitación y refuerzo positivo (máx 25 palabras).`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      const msg = data.reply ?? "¡Error convertido en aprendizaje! Eso es exactamente lo que hace crecer a un emprendedor.";
+      setSuperacionMensaje((prev) => ({ ...prev, [entry.id]: msg }));
+    } catch {
+      setSuperacionMensaje((prev) => ({ ...prev, [entry.id]: "¡Error convertido en aprendizaje! Eso es exactamente lo que hace crecer a un emprendedor." }));
+    } finally {
+      setSuperadosSet((prev) => { const n = new Set(prev); n.add(entry.id); return n; });
+      setConfirmandoSuperacion(null);
+    }
+  };
+
   // C9 — ErrorLog IA reflexión
   const [iaReflexiones, setIaReflexiones] = useState<Record<string, string>>({});
   const [loadingReflexion, setLoadingReflexion] = useState<string | null>(null);
@@ -434,14 +467,14 @@ export default function StudentPortfolio() {
         {/* Header */}
         <div className="flex items-center gap-2 mb-1">
           <BookOpen size={18} className="text-accent-text" />
-          <h1 className="text-[22px] font-bold text-text-primary">Mi Portfolio</h1>
+          <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mi Portfolio", "My Portfolio")}</h1>
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={handleCompartirPortfolio}
               className="flex items-center gap-1.5 text-[11px] font-semibold text-sidebar bg-accent border border-accent/60 px-3 py-1.5 rounded-full hover:brightness-110 transition-colors cursor-pointer"
             >
               <Share2 size={11} />
-              Compartir portfolio
+              {lbl("Compartir portfolio", "Share portfolio")}
             </button>
             <button
               onClick={handleRegenerarNarrativa}
@@ -449,7 +482,7 @@ export default function StudentPortfolio() {
               className="flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw size={11} className={isGenerandoNarrativa ? "animate-spin" : ""} />
-              {isGenerandoNarrativa ? "Generando..." : "Regenerar narrativa IA"}
+              {isGenerandoNarrativa ? lbl("Generando...", "Generating...") : lbl("Regenerar narrativa IA", "Regenerate AI narrative")}
             </button>
           </div>
         </div>
@@ -463,7 +496,7 @@ export default function StudentPortfolio() {
             {/* Header del panel */}
             <div className="flex items-center gap-2 mb-4">
               <Share2 size={14} className="text-accent-text" />
-              <span className="text-[13px] font-semibold text-text-primary">Vista pública del portfolio</span>
+              <span className="text-[13px] font-semibold text-text-primary">{lbl("Vista pública del portfolio", "Public portfolio view")}</span>
               <button
                 onClick={() => setMostrarDatosPersonales(!mostrarDatosPersonales)}
                 className={`ml-auto flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-xl border cursor-pointer transition-all ${
@@ -473,7 +506,7 @@ export default function StudentPortfolio() {
                 }`}
               >
                 {mostrarDatosPersonales ? <Eye size={10} /> : <EyeOff size={10} />}
-                {mostrarDatosPersonales ? "Datos visibles" : "Datos ocultos"}
+                {mostrarDatosPersonales ? lbl("Datos visibles", "Data visible") : lbl("Datos ocultos", "Data hidden")}
               </button>
               <button
                 onClick={() => setShowVistaPublica(false)}
@@ -492,7 +525,7 @@ export default function StudentPortfolio() {
                 }`}
               >
                 <Copy size={10} />
-                {urlCopiada ? "¡Copiada!" : "Copiar URL"}
+                {urlCopiada ? lbl("¡Copiada!", "Copied!") : lbl("Copiar URL", "Copy URL")}
               </button>
             </div>
 
@@ -510,13 +543,13 @@ export default function StudentPortfolio() {
                 </div>
                 <div className="ml-auto flex items-center gap-1.5 bg-success-light px-3 py-1.5 rounded-full">
                   <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                  <span className="text-[10px] font-bold text-success">Portfolio activo</span>
+                  <span className="text-[10px] font-bold text-success">{lbl("Portfolio activo", "Active portfolio")}</span>
                 </div>
               </div>
 
               {/* Top competencias */}
               <div className="mb-4">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Competencias LOMLOE</p>
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Competencias LOMLOE", "LOMLOE Competencies")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(Object.entries(compProgress) as [CompKey, { before: number; after: number }][])
                     .sort(([, a], [, b]) => b.after - a.after)
@@ -541,7 +574,7 @@ export default function StudentPortfolio() {
 
               {/* Hitos completados */}
               <div className="mb-4">
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Hitos del proyecto</p>
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Hitos del proyecto", "Project milestones")}</p>
                 <div className="space-y-1.5">
                   {timelineHitos.filter((h) => h.completado).slice(-3).map((h, i) => (
                     <div key={i} className="flex items-center gap-2 bg-card rounded-xl border border-card-border px-3 py-2">
@@ -558,7 +591,7 @@ export default function StudentPortfolio() {
 
               {/* Datos de impacto */}
               <div>
-                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Impacto real del proyecto</p>
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Impacto real del proyecto", "Real project impact")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
                     { label: "Ocupación media", valor: mostrarDatosPersonales ? "72%" : "●●", bg: "bg-success-light text-success" },
@@ -607,9 +640,9 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <ChevronRight size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Próximos pasos recomendados</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Próximos pasos recomendados", "Recommended next steps")}</span>
             {proximosPasos && (
-              <span className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full ml-1">3 pasos</span>
+              <span className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full ml-1">{lbl("3 pasos", "3 steps")}</span>
             )}
             {!proximosPasos && (
               <button
@@ -618,8 +651,8 @@ export default function StudentPortfolio() {
                 className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-sidebar text-white cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
               >
                 {generandoProximosPasos
-                  ? <><RefreshCw size={11} className="animate-spin" /> Generando...</>
-                  : <><Sparkles size={11} /> Generar con IA</>
+                  ? <><RefreshCw size={11} className="animate-spin" /> {lbl("Generando...", "Generating...")}</>
+                  : <><Sparkles size={11} /> {lbl("Generar con IA", "Generate with AI")}</>
                 }
               </button>
             )}
@@ -629,8 +662,8 @@ export default function StudentPortfolio() {
               <div className="w-10 h-10 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-3">
                 <Lightbulb size={18} className="text-accent-text" />
               </div>
-              <p className="text-[12px] text-text-secondary mb-1">La IA analizará tu progreso actual</p>
-              <p className="text-[10px] text-text-muted">y generará 3 pasos accionables con competencia, acción y tiempo estimado</p>
+              <p className="text-[12px] text-text-secondary mb-1">{lbl("La IA analizará tu progreso actual", "AI will analyse your current progress")}</p>
+              <p className="text-[10px] text-text-muted">{lbl("y generará 3 pasos accionables con competencia, acción y tiempo estimado", "and generate 3 actionable steps with competency, action, and estimated time")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -673,7 +706,7 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Crecimiento en competencias</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Crecimiento en competencias", "Competency growth")}</span>
           </div>
           <div className="grid grid-cols-4 gap-3">
             {COMPS.map((c) => {
@@ -719,7 +752,7 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Reflexión semanal</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Reflexión semanal", "Weekly reflection")}</span>
             <span className="text-[10px] text-text-muted ml-1">Semana 3 · Proyecto Airbnb Málaga</span>
             <button
               onClick={handleGenerarReflexion}
@@ -727,21 +760,21 @@ export default function StudentPortfolio() {
               className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw size={10} className={isGenerandoReflexion ? "animate-spin" : ""} />
-              {isGenerandoReflexion ? "Generando..." : reflexionBullets ? "Regenerar" : "Generar reflexión de la semana"}
+              {isGenerandoReflexion ? lbl("Generando...", "Generating...") : reflexionBullets ? lbl("Regenerar", "Regenerate") : lbl("Generar reflexión de la semana", "Generate weekly reflection")}
             </button>
           </div>
           {!reflexionBullets && !isGenerandoReflexion && (
             <div className="bg-background rounded-xl px-4 py-5 flex flex-col items-center gap-2">
               <Sparkles size={20} className="text-text-muted" />
               <p className="text-[11px] text-text-muted text-center">
-                Genera tu reflexión semanal: 3 aprendizajes clave de esta semana, construidos a partir de tu actividad en el proyecto.
+                {lbl("Genera tu reflexión semanal: 3 aprendizajes clave de esta semana, construidos a partir de tu actividad en el proyecto.", "Generate your weekly reflection: 3 key learnings from this week, built from your project activity.")}
               </p>
             </div>
           )}
           {isGenerandoReflexion && (
             <div className="bg-background rounded-xl px-4 py-4 flex items-center gap-3">
               <RefreshCw size={14} className="text-accent-text animate-spin flex-shrink-0" />
-              <span className="text-[11px] text-text-secondary">Analizando tu semana de trabajo...</span>
+              <span className="text-[11px] text-text-secondary">{lbl("Analizando tu semana de trabajo...", "Analyzing your work week...")}</span>
             </div>
           )}
           {reflexionBullets && (
@@ -749,7 +782,7 @@ export default function StudentPortfolio() {
               {reflexionBullets.map((bullet, i) => {
                 const isOpen = expandedBullets.has(i);
                 const nota = notasReflexion[i] ?? "";
-                const labels = ["Aprendizaje principal", "Competencia aplicada", "Lección del error"];
+                const labels = [lbl("Aprendizaje principal", "Main learning"), lbl("Competencia aplicada", "Applied competency"), lbl("Lección del error", "Lesson from error")];
                 return (
                   <div key={i} className={`rounded-xl border transition-all ${isOpen ? "border-accent-text/30 bg-accent-light" : "border-card-border bg-background"}`}>
                     <button
@@ -770,11 +803,11 @@ export default function StudentPortfolio() {
                     </button>
                     {isOpen && (
                       <div className="px-4 pb-3">
-                        <p className="text-[9px] font-semibold text-accent-text uppercase tracking-wide mb-1.5">Mi nota personal</p>
+                        <p className="text-[9px] font-semibold text-accent-text uppercase tracking-wide mb-1.5">{lbl("Mi nota personal", "My personal note")}</p>
                         <textarea
                           value={nota}
                           onChange={(e) => setNotasReflexion((prev) => ({ ...prev, [i]: e.target.value }))}
-                          placeholder="Añade tu propio pensamiento sobre este aprendizaje..."
+                          placeholder={lbl("Añade tu propio pensamiento sobre este aprendizaje...", "Add your own thought on this learning...")}
                           rows={2}
                           className="w-full text-[11px] text-text-primary bg-card border border-accent-text/20 rounded-xl px-3 py-2 outline-none focus:border-accent-text/50 resize-none transition-colors placeholder:text-text-muted"
                         />
@@ -791,9 +824,9 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <GitCommit size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Línea del tiempo del proyecto</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Línea del tiempo del proyecto", "Project timeline")}</span>
             <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-              {timelineHitos.filter((h) => h.completado).length}/{timelineHitos.length} hitos completados
+              {timelineHitos.filter((h) => h.completado).length}/{timelineHitos.length} {lbl("hitos completados", "milestones completed")}
             </span>
           </div>
           <div className="relative pl-6">
@@ -846,7 +879,7 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-1">
             <Award size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Mi impacto real</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Mi impacto real", "My real impact")}</span>
             <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
               Casa Limón · Airbnb Málaga
             </span>
@@ -905,9 +938,9 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <Star size={14} className="text-accent-text" />
-            <span className="text-[13px] font-semibold text-text-primary">Evidencias destacadas</span>
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Evidencias destacadas", "Featured evidence")}</span>
             <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
-              4 seleccionadas
+              {lbl("4 seleccionadas", "4 selected")}
             </span>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -928,7 +961,7 @@ export default function StudentPortfolio() {
                         </div>
                         <div>
                           <span className="text-[9px] text-text-muted block">{ev.tipo}</span>
-                          <span className="text-[8px] font-bold bg-warning-light text-warning px-1.5 py-0.5 rounded-full">Destacada</span>
+                          <span className="text-[8px] font-bold bg-warning-light text-warning px-1.5 py-0.5 rounded-full">{lbl("Destacada", "Featured")}</span>
                         </div>
                       </div>
                       {isExpanded
@@ -949,7 +982,7 @@ export default function StudentPortfolio() {
                       <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{ev.descripcionCompleta}</p>
                       <button className="flex items-center gap-1.5 text-[10px] font-bold text-accent-text hover:underline cursor-pointer">
                         <ExternalLink size={11} />
-                        Ver en galería
+                        {lbl("Ver en galería", "View in gallery")}
                       </button>
                     </div>
                   )}
@@ -995,38 +1028,57 @@ export default function StudentPortfolio() {
           ))}
         </div>
 
-        {/* Error Log — culture.md Bloque 1 */}
+        {/* S21 — Mis errores → Mis aprendizajes */}
         <div className="mt-5">
           <div className="flex items-center gap-2 mb-3">
-            <AlertCircle size={15} className="text-urgent" />
-            <h2 className="text-[16px] font-bold text-text-primary">Historial de errores aprendidos</h2>
-            <span className="text-[10px] bg-urgent-light text-urgent font-bold px-2 py-0.5 rounded-full ml-auto">
-              {errorLog.filter(e => !e.resolved).length} pendiente de resolver
+            <GitCommit size={15} className="text-accent-text" />
+            <h2 className="text-[16px] font-bold text-text-primary">{lbl("Mis errores → Mis aprendizajes", "My mistakes → My learnings")}</h2>
+            <span className="text-[10px] bg-success-light text-success font-bold px-2 py-0.5 rounded-full ml-auto">
+              {superadosSet.size}/{errorLog.length} {lbl("superados", "overcome")}
             </span>
           </div>
-          <p className="text-[11px] text-text-muted mb-3 leading-relaxed">
-            Cada error es una evidencia de pensamiento iterativo. No se penaliza — se analiza. Forma parte de tu portfolio oficial.
+          <p className="text-[11px] text-text-muted mb-4 leading-relaxed">
+            {lbl("Cada error es una evidencia de pensamiento iterativo. No se penaliza — se analiza y se supera.", "Each mistake is evidence of iterative thinking. Not penalized — analyzed and overcome.")}
           </p>
-          <div className="space-y-3">
-            {errorLog.map((entry) => {
+          <div className="relative">
+            {/* Timeline vertical line */}
+            <div className="absolute left-4 top-4 bottom-4 w-px bg-card-border" />
+            <div className="space-y-4">
+            {errorLog.map((entry, idx) => {
               const isOpen = expandedErrors.has(entry.id);
+              const isSuperado = superadosSet.has(entry.id);
+              const progreso = compProgress[entry.competency];
+              const isConfirmando = confirmandoSuperacion === entry.id;
               return (
-                <div key={entry.id} className={`rounded-2xl border ${entry.resolved ? "border-card-border bg-card" : "border-urgent/20 bg-urgent-light"}`}>
+                <div key={entry.id} className="relative pl-10">
+                  {/* Timeline dot */}
+                  <div className={`absolute left-2 top-4 w-4 h-4 rounded-full flex items-center justify-center border-2 z-10 ${
+                    isSuperado ? "bg-success border-success" : "bg-background border-card-border"
+                  }`}>
+                    {isSuperado
+                      ? <span className="text-white text-[8px] font-bold">✓</span>
+                      : <span className="text-text-muted text-[8px] font-bold">{idx + 1}</span>
+                    }
+                  </div>
+                <div className={`rounded-2xl border ${isSuperado ? "border-success/20 bg-success-light/30" : entry.resolved ? "border-card-border bg-card" : "border-urgent/20 bg-urgent-light"}`}>
                   <button
                     onClick={() => toggleError(entry.id)}
                     className="w-full flex items-center gap-3 p-4 text-left cursor-pointer"
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${entry.resolved ? "bg-success-light" : "bg-urgent-light border border-urgent/20"}`}>
-                      {entry.resolved
-                        ? <RefreshCw size={13} className="text-success" />
-                        : <AlertCircle size={13} className="text-urgent" />
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isSuperado ? "bg-success" : entry.resolved ? "bg-success-light" : "bg-urgent-light border border-urgent/20"}`}>
+                      {isSuperado
+                        ? <span className="text-white text-[13px]">✓</span>
+                        : entry.resolved
+                          ? <RefreshCw size={13} className="text-success" />
+                          : <AlertCircle size={13} className="text-urgent" />
                       }
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[12px] font-semibold text-text-primary">{entry.title}</span>
+                        <span className={`text-[12px] font-semibold ${isSuperado ? "text-success line-through opacity-70" : "text-text-primary"}`}>{entry.title}</span>
                         <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(entry.competency)}`}>{entry.competency}</span>
-                        {entry.resolved && <span className="text-[9px] text-success font-semibold">✓ Resuelto</span>}
+                        {isSuperado && <span className="text-[9px] text-success font-semibold">{lbl("Superado", "Overcome")}</span>}
+                        {!isSuperado && entry.resolved && <span className="text-[9px] text-success font-semibold">✓ {lbl("Resuelto", "Resolved")}</span>}
                       </div>
                       <span className="text-[10px] text-text-muted">{entry.date} · {entry.phase}</span>
                     </div>
@@ -1035,9 +1087,9 @@ export default function StudentPortfolio() {
                   {isOpen && (
                     <div className="px-4 pb-4 space-y-2.5">
                       {[
-                        { label: "¿Qué asumí?", value: entry.asumí, color: "text-warning", bg: "bg-warning-light border-warning/20" },
-                        { label: "¿Dónde falló?", value: entry.falló, color: "text-urgent", bg: "bg-urgent-light border-urgent/20" },
-                        { label: "¿Qué cambiaría?", value: entry.cambiaría, color: "text-accent-text", bg: "bg-accent-light border-accent-text/20" },
+                        { label: lbl("¿Qué asumí?", "What did I assume?"), value: entry.asumí, color: "text-warning", bg: "bg-warning-light border-warning/20" },
+                        { label: lbl("¿Dónde falló?", "Where did it fail?"), value: entry.falló, color: "text-urgent", bg: "bg-urgent-light border-urgent/20" },
+                        { label: lbl("¿Qué cambiaría?", "What would I change?"), value: entry.cambiaría, color: "text-accent-text", bg: "bg-accent-light border-accent-text/20" },
                       ].map((item) => (
                         <div key={item.label} className={`rounded-xl border p-3 ${item.bg}`}>
                           <span className={`text-[9px] font-bold uppercase tracking-wide ${item.color} block mb-1`}>{item.label}</span>
@@ -1049,7 +1101,7 @@ export default function StudentPortfolio() {
                         <div className="bg-sidebar/5 rounded-xl border border-sidebar/10 p-3">
                           <div className="flex items-center gap-1.5 mb-2">
                             <Sparkles size={11} className="text-accent-text" />
-                            <span className="text-[9px] font-bold uppercase tracking-wide text-accent-text">Preguntas de reflexión IA</span>
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-accent-text">{lbl("Preguntas de reflexión IA", "AI reflection questions")}</span>
                           </div>
                           <div className="space-y-1.5">
                             {iaReflexiones[entry.id].split("\n").filter(Boolean).map((linea, i) => (
@@ -1061,7 +1113,7 @@ export default function StudentPortfolio() {
                             disabled={loadingReflexion !== null}
                             className="mt-2 text-[10px] text-accent-text font-semibold hover:underline cursor-pointer disabled:opacity-50"
                           >
-                            Regenerar preguntas
+                            {lbl("Regenerar preguntas", "Regenerate questions")}
                           </button>
                         </div>
                       ) : (
@@ -1071,17 +1123,54 @@ export default function StudentPortfolio() {
                           className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-accent/30 text-accent-text text-[11px] font-semibold hover:bg-accent-light transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {loadingReflexion === entry.id ? (
-                            <><RefreshCw size={11} className="animate-spin" />Analizando con IA…</>
+                            <><RefreshCw size={11} className="animate-spin" />{lbl("Analizando con IA…", "Analyzing with AI…")}</>
                           ) : (
-                            <><Sparkles size={11} />Analizar con IA · 3 preguntas de reflexión</>
+                            <><Sparkles size={11} />{lbl("Analizar con IA · 3 preguntas de reflexión", "Analyze with AI · 3 reflection questions")}</>
                           )}
                         </button>
                       )}
+                      {/* S21 — Progreso de superación y botón */}
+                      <div className="rounded-xl border border-card-border bg-background p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[9px] font-bold uppercase tracking-wide text-text-muted">{lbl("Progreso competencia", "Competency progress")} · {entry.competency}</span>
+                          <span className="text-[9px] font-bold text-text-primary">{progreso.before}% → {progreso.after}%</span>
+                        </div>
+                        <div className="relative h-2 bg-card-border rounded-full overflow-hidden mb-3">
+                          <div className="absolute left-0 top-0 h-full bg-warning/40 rounded-full" style={{ width: `${progreso.before}%` }} />
+                          <div className="absolute left-0 top-0 h-full bg-success rounded-full transition-all" style={{ width: `${progreso.after}%` }} />
+                        </div>
+                        {superacionMensaje[entry.id] ? (
+                          <div className="flex items-start gap-2 bg-success-light rounded-xl px-3 py-2">
+                            <Sparkles size={11} className="text-success flex-shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-success leading-relaxed">{superacionMensaje[entry.id]}</p>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => handleMarcarSuperado(entry)}
+                            disabled={isSuperado || isConfirmando}
+                            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
+                              isSuperado
+                                ? "bg-success-light text-success cursor-default"
+                                : "bg-success text-white hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+                            }`}
+                          >
+                            {isConfirmando ? (
+                              <><RefreshCw size={11} className="animate-spin" />{lbl("Confirmando con IA…", "Confirming with AI…")}</>
+                            ) : isSuperado ? (
+                              <>{lbl("Ya superado", "Already overcome")}</>
+                            ) : (
+                              <>{lbl("Marcar como superado", "Mark as overcome")}</>
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
+                </div>
               );
             })}
+            </div>
           </div>
         </div>
       </div>
@@ -1101,20 +1190,20 @@ export default function StudentPortfolio() {
           </div>
           <div className="space-y-2">
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-muted">Proyecto</span>
+              <span className="text-text-muted">{lbl("Proyecto", "Project")}</span>
               <span className="font-semibold text-text-primary">Airbnb Málaga</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-muted">Progreso global</span>
+              <span className="text-text-muted">{lbl("Progreso global", "Overall progress")}</span>
               <span className="font-bold text-success">72%</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-muted">Q-Coins ganadas</span>
+              <span className="text-text-muted">{lbl("Q-Coins ganadas", "Q-Coins earned")}</span>
               <span className="font-bold text-accent-text">340 QC</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-muted">Racha actual</span>
-              <span className="font-bold text-warning">12 días 🔥</span>
+              <span className="text-text-muted">{lbl("Racha actual", "Current streak")}</span>
+              <span className="font-bold text-warning">12 {lbl("días", "days")} 🔥</span>
             </div>
           </div>
         </div>
@@ -1133,14 +1222,14 @@ export default function StudentPortfolio() {
             <div className="bg-card rounded-2xl border border-card-border p-4">
               <div className="flex items-center gap-2 mb-3">
                 <TrendingUp size={13} className="text-success" />
-                <span className="text-[11px] font-bold text-success">Competencia del mes</span>
+                <span className="text-[11px] font-bold text-success">{lbl("Competencia del mes", "Competency of the month")}</span>
                 <span className="ml-auto text-[9px] font-bold bg-success-light text-success px-2 py-0.5 rounded-full">+{gain}%</span>
               </div>
               <p className="text-[13px] font-bold text-text-primary mb-0.5">{topComp} — {compFull[topComp]}</p>
-              <p className="text-[10px] text-text-muted mb-3">{before}% → {after}% · Mayor crecimiento</p>
+              <p className="text-[10px] text-text-muted mb-3">{before}% → {after}% · {lbl("Mayor crecimiento", "Highest growth")}</p>
               {/* Gráfico semanal CSS */}
               <div className="mb-3">
-                <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-1.5">Progreso semanal</span>
+                <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-1.5">{lbl("Progreso semanal", "Weekly progress")}</span>
                 <div className="flex items-end gap-1.5 h-14">
                   {semanas.map((val, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
@@ -1160,7 +1249,7 @@ export default function StudentPortfolio() {
               <div className="bg-accent-light rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <Lightbulb size={10} className="text-accent-text flex-shrink-0" />
-                  <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">Reto para la semana siguiente</span>
+                  <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">{lbl("Reto para la semana siguiente", "Challenge for next week")}</span>
                 </div>
                 <p className="text-[10px] text-text-secondary leading-relaxed">{reto}</p>
               </div>
@@ -1172,7 +1261,7 @@ export default function StudentPortfolio() {
         <div className="bg-card rounded-2xl border border-card-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <Award size={13} className="text-accent-text" />
-            <span className="text-[11px] font-bold text-text-primary">Logros en este proyecto</span>
+            <span className="text-[11px] font-bold text-text-primary">{lbl("Logros en este proyecto", "Achievements in this project")}</span>
           </div>
           <div className="space-y-2">
             {[
@@ -1196,7 +1285,7 @@ export default function StudentPortfolio() {
         <div className="bg-accent-light rounded-2xl border border-accent-text/20 p-4">
           <div className="flex items-center gap-2 mb-2">
             <MessageSquare size={12} className="text-accent-text" />
-            <span className="text-[11px] font-bold text-accent-text">Nota de la mentora</span>
+            <span className="text-[11px] font-bold text-accent-text">{lbl("Nota de la mentora", "Mentor's note")}</span>
           </div>
           <p className="text-[11px] text-accent-text leading-relaxed italic">
             "Lucas ha demostrado una capacidad emprendedora excepcional. Su evolución en presentaciones públicas ha sido la mayor sorpresa del trimestre."

@@ -7,9 +7,10 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare,
+  Trophy, BarChart3, MessageSquare, Copy, Check,
 } from "lucide-react";
 import { AdminView } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 interface AdminDashboardProps {
   activeView: AdminView;
@@ -223,6 +224,9 @@ const faseConfig = {
 };
 
 export default function AdminDashboard({ activeView, onNavigate }: AdminDashboardProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [colegioActivo, setColegioActivo] = useState<Colegio>("malaga");
   const [showColegioMenu, setShowColegioMenu] = useState(false);
   const colegio = colegios[colegioActivo];
@@ -235,6 +239,12 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
   // A18 — Comparativa colegios extended
   const [comparativaMetrica, setComparativaMetrica] = useState<"retencion" | "engagement" | "evidencias" | "lomloe">("engagement");
+
+  // A19 — Exportar informe comparativo
+  const [exportandoComparativa, setExportandoComparativa] = useState(false);
+  const [comparativaExportada, setComparativaExportada] = useState(false);
+  const [copiandoResumen, setCopiandoResumen] = useState(false);
+  const [resumenCopiado, setResumenCopiado] = useState(false);
 
   // A16 — Top competencias por clase
   const [compClaseVista, setCompClaseVista] = useState<"1eso" | "2eso">("1eso");
@@ -363,9 +373,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Shield size={18} className="text-accent-text" />
-            <h1 className="text-[22px] font-bold text-text-primary">Panel de Administración</h1>
+            <h1 className="text-[22px] font-bold text-text-primary">{lbl("Panel de Administración", "Administration Panel")}</h1>
           </div>
-          <p className="text-[13px] text-text-secondary">QHUMA OS · Sistema educativo con IA · España</p>
+          <p className="text-[13px] text-text-secondary">{lbl("QHUMA OS · Sistema educativo con IA · España", "QHUMA OS · AI-powered education system · Spain")}</p>
         </div>
         {/* Selector de colegio */}
         <div className="relative">
@@ -399,13 +409,13 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
       {/* Tabs de navegación */}
       <div className="flex gap-1 bg-background rounded-xl p-1 mb-5">
         {([
-          { key: "overview" as AdminView, label: "Resumen",  icon: LayoutDashboard },
-          { key: "users"    as AdminView, label: "Usuarios", icon: Users },
-          { key: "capital"     as AdminView, label: "Capital",    icon: Landmark },
-          { key: "ai"          as AdminView, label: "IA",         icon: Bot },
-          { key: "schools"     as AdminView, label: "Colegios",   icon: Building2 },
-          { key: "reports"     as AdminView, label: "Informes",   icon: FileText },
-          { key: "inspection"  as AdminView, label: "Inspección", icon: ClipboardCheck },
+          { key: "overview" as AdminView, label: lbl("Resumen", "Overview"),      icon: LayoutDashboard },
+          { key: "users"    as AdminView, label: lbl("Usuarios", "Users"),        icon: Users },
+          { key: "capital"  as AdminView, label: lbl("Capital", "Capital"),       icon: Landmark },
+          { key: "ai"       as AdminView, label: lbl("IA", "AI"),                 icon: Bot },
+          { key: "schools"  as AdminView, label: lbl("Colegios", "Schools"),      icon: Building2 },
+          { key: "reports"  as AdminView, label: lbl("Informes", "Reports"),      icon: FileText },
+          { key: "inspection" as AdminView, label: lbl("Inspección", "Inspection"), icon: ClipboardCheck },
         ]).map((tab) => (
           <button
             key={tab.key}
@@ -441,21 +451,21 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               </div>
               <div className="flex-1">
-                <p className="text-[11px] text-white/50 mb-0.5">Salud de la plataforma</p>
+                <p className="text-[11px] text-white/50 mb-0.5">{lbl("Salud de la plataforma", "Platform health")}</p>
                 <p className="text-[18px] font-bold text-white mb-1">{colegio.nombre}</p>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1">
                     <ArrowUp size={11} className="text-accent" />
-                    <span className="text-[10px] text-accent">Mejorando esta semana</span>
+                    <span className="text-[10px] text-accent">{lbl("Mejorando esta semana", "Improving this week")}</span>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 flex-shrink-0">
                 {[
-                  { label: "Alumnos", val: colegio.alumnos },
-                  { label: "Docentes", val: colegio.docentes },
-                  { label: "Proyectos", val: colegio.proyectos },
-                  { label: "Clases", val: colegio.clases },
+                  { label: lbl("Alumnos", "Students"), val: colegio.alumnos },
+                  { label: lbl("Docentes", "Teachers"), val: colegio.docentes },
+                  { label: lbl("Proyectos", "Projects"), val: colegio.proyectos },
+                  { label: lbl("Clases", "Classes"), val: colegio.clases },
                 ].map((s) => (
                   <div key={s.label} className="bg-white/8 rounded-xl px-3 py-2 text-center">
                     <span className="text-[16px] font-bold text-white block">{s.val}</span>
@@ -469,7 +479,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Activity size={14} className="text-text-primary" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Estado del sistema</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Estado del sistema", "System status")}</h3>
               </div>
               <div className="space-y-2.5">
                 {estadoSistema.map((item) => (
@@ -503,21 +513,21 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Bot size={14} className="text-accent-text" />
-                      <h3 className="text-[14px] font-semibold text-text-primary">Salud del sistema IA</h3>
+                      <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Salud del sistema IA", "AI system health")}</h3>
                     </div>
                     <button
                       onClick={() => setShowIALogs(!showIALogs)}
                       className="flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-accent-light px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-accent/30 transition-all"
                     >
                       <Eye size={11} />
-                      {showIALogs ? "Ocultar logs" : "Ver logs"}
+                      {showIALogs ? lbl("Ocultar logs", "Hide logs") : lbl("Ver logs", "View logs")}
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-3 mb-4">
                     {[
-                      { label: "Latencia media API", valor: "1.2s", color: "text-text-primary", bg: "bg-background" },
-                      { label: "Tasa de error",       valor: "0.3%", color: "text-success",      bg: "bg-background" },
-                      { label: "Tokens esta semana",  valor: "1.84M", color: "text-accent-text", bg: "bg-accent-light" },
+                      { label: lbl("Latencia media API", "Avg API latency"), valor: "1.2s", color: "text-text-primary", bg: "bg-background" },
+                      { label: lbl("Tasa de error", "Error rate"),            valor: "0.3%", color: "text-success",      bg: "bg-background" },
+                      { label: lbl("Tokens esta semana", "Tokens this week"), valor: "1.84M", color: "text-accent-text", bg: "bg-accent-light" },
                     ].map((kpi) => (
                       <div key={kpi.label} className={`${kpi.bg} rounded-xl p-3 text-center`}>
                         <span className={`text-[18px] font-bold ${kpi.color} block`}>{kpi.valor}</span>
@@ -527,7 +537,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   </div>
                   {showIALogs && (
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Últimos 5 eventos del sistema</p>
+                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Últimos 5 eventos del sistema", "Last 5 system events")}</p>
                       {iaLogs.map((log, i) => (
                         <div key={i} className={`flex items-start gap-2 p-2.5 rounded-xl ${
                           log.tipo === "error" ? "bg-urgent-light" : log.tipo === "timeout" ? "bg-warning-light" : "bg-background"
@@ -554,14 +564,14 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Zap size={14} className="text-accent-text" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Acciones rápidas</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Acciones rápidas", "Quick actions")}</h3>
               </div>
               <div className="grid grid-cols-4 gap-3">
                 {[
-                  { label: "Informe mensual", icon: FileText },
-                  { label: "Exportar LOMLOE", icon: Download },
-                  { label: "Añadir usuario", icon: UserPlus },
-                  { label: "Notificaciones", icon: Bell },
+                  { label: lbl("Informe mensual", "Monthly report"), icon: FileText },
+                  { label: lbl("Exportar LOMLOE", "Export LOMLOE"), icon: Download },
+                  { label: lbl("Añadir usuario", "Add user"), icon: UserPlus },
+                  { label: lbl("Notificaciones", "Notifications"), icon: Bell },
                 ].map((a) => (
                   <button key={a.label} className="flex flex-col items-center gap-2 p-4 bg-background rounded-xl hover:bg-accent-light hover:border-accent-text/20 border border-transparent transition-all cursor-pointer">
                     <a.icon size={18} className="text-accent-text" />
@@ -586,7 +596,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <div className="bg-card rounded-2xl border border-card-border p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp size={14} className="text-success" />
-                    <h3 className="text-[14px] font-semibold text-text-primary">Alumnos activos — evolución mensual</h3>
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Alumnos activos — evolución mensual", "Active students — monthly trend")}</h3>
                     <span className="ml-auto text-[10px] text-success font-semibold bg-success-light px-2 py-0.5 rounded-full">+29% en 6 meses</span>
                   </div>
                   <div className="flex items-end gap-2 h-28">
@@ -613,7 +623,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Trophy size={14} className="text-warning" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Top 3 proyectos en progreso</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Top 3 proyectos en progreso", "Top 3 projects in progress")}</h3>
               </div>
               <div className="space-y-3">
                 {[
@@ -657,8 +667,8 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <div className="bg-card rounded-2xl border border-card-border p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart3 size={14} className="text-text-secondary" />
-                    <h3 className="text-[14px] font-semibold text-text-primary">Actividad por hora del día</h3>
-                    <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">Lun–Vie · 8h–20h</span>
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Actividad por hora del día", "Activity by time of day")}</h3>
+                    <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">{lbl("Lun–Vie · 8h–20h", "Mon–Fri · 8h–20h")}</span>
                   </div>
                   {/* Horas header */}
                   <div className="flex gap-1 mb-1 ml-4">
@@ -691,11 +701,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   </div>
                   {/* Leyenda */}
                   <div className="flex items-center gap-2 mt-3">
-                    <span className="text-[9px] text-text-muted">Menos</span>
+                    <span className="text-[9px] text-text-muted">{lbl("Menos", "Less")}</span>
                     {[0.1, 0.3, 0.5, 0.7, 0.9].map((op, i) => (
                       <div key={i} className="w-4 h-3 rounded-sm" style={{ backgroundColor: `rgba(31,81,76,${0.12 + op * 0.75})` }} />
                     ))}
-                    <span className="text-[9px] text-text-muted">Más</span>
+                    <span className="text-[9px] text-text-muted">{lbl("Más", "More")}</span>
                   </div>
                 </div>
               );
@@ -705,9 +715,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Users size={14} className="text-accent-text" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Actividad docente hoy</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Actividad docente hoy", "Teacher activity today")}</h3>
                 <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
-                  {actividadDocente.length} acciones
+                  {actividadDocente.length} {lbl("acciones", "actions")}
                 </span>
               </div>
               <div className="space-y-3">
@@ -739,7 +749,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 className="w-full mt-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-accent-text hover:underline cursor-pointer py-1"
               >
                 <ChevronDown size={11} className={showTodasActividades ? "rotate-180" : ""} />
-                {showTodasActividades ? "Ver menos" : "Ver todas (6)"}
+                {showTodasActividades ? lbl("Ver menos", "View less") : lbl("Ver todas (6)", "View all (6)")}
               </button>
             </div>
 
@@ -747,9 +757,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Bell size={14} className="text-accent-text" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Notificaciones automáticas</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Notificaciones automáticas", "Automatic notifications")}</h3>
                 <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
-                  {notificacionesAutomaticas.length - notificacionesEnviadas.size} pendientes
+                  {notificacionesAutomaticas.length - notificacionesEnviadas.size} {lbl("pendientes", "pending")}
                 </span>
               </div>
               <div className="space-y-3">
@@ -781,7 +791,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       <div className="mt-2.5 flex justify-end">
                         {enviada ? (
                           <span className="text-[9px] font-bold text-success flex items-center gap-1">
-                            <CheckCircle2 size={10} /> Enviada
+                            <CheckCircle2 size={10} /> {lbl("Enviada", "Sent")}
                           </span>
                         ) : (
                           <button
@@ -790,9 +800,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                             className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {enviando ? (
-                              <><RefreshCw size={10} className="animate-spin" />Enviando...</>
+                              <><RefreshCw size={10} className="animate-spin" />{lbl("Enviando...", "Sending...")}</>
                             ) : (
-                              <><Send size={10} />Enviar ahora</>
+                              <><Send size={10} />{lbl("Enviar ahora", "Send now")}</>
                             )}
                           </button>
                         )}
@@ -809,7 +819,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5 h-full">
               <div className="flex items-center gap-2 mb-4">
                 <Clock size={14} className="text-text-primary" />
-                <h3 className="text-[13px] font-semibold text-text-primary">Actividad reciente</h3>
+                <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Actividad reciente", "Recent activity")}</h3>
               </div>
               <div className="space-y-3">
                 {actividadReciente.map((a) => (
@@ -845,13 +855,13 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[14px] font-semibold text-text-primary">Usuarios — {colegio.nombre}</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Usuarios", "Users")} — {colegio.nombre}</h3>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
               >
                 <UserPlus size={12} />
-                Añadir usuario
+                {lbl("Añadir usuario", "Add user")}
               </button>
             </div>
             {/* Search + Filters */}
@@ -862,7 +872,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   type="text"
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
-                  placeholder="Buscar por nombre o email..."
+                  placeholder={lbl("Buscar por nombre o email...", "Search by name or email...")}
                   className="w-full bg-background text-[12px] text-text-primary pl-8 pr-3 py-2 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
                 />
               </div>
@@ -884,14 +894,14 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   <option key={e}>{e}</option>
                 ))}
               </select>
-              <span className="text-[11px] text-text-muted flex-shrink-0">{filtered.length} usuarios</span>
+              <span className="text-[11px] text-text-muted flex-shrink-0">{filtered.length} {lbl("usuarios", "users")}</span>
             </div>
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-card-border">
-                    {["Nombre", "Email", "Rol", "Grupo/Curso", "Estado"].map((h) => (
+                    {[lbl("Nombre","Name"), "Email", lbl("Rol","Role"), lbl("Grupo/Curso","Group/Grade"), lbl("Estado","Status")].map((h) => (
                       <th key={h} className="text-[10px] font-bold text-text-muted text-left pb-3 pr-4">{h}</th>
                     ))}
                   </tr>
@@ -921,7 +931,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                         <div className={`flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-full ${u.activo ? "bg-success-light" : "bg-urgent-light"}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${u.activo ? "bg-success" : "bg-urgent"}`} />
                           <span className={`text-[9px] font-semibold ${u.activo ? "text-success" : "text-urgent"}`}>
-                            {u.activo ? "Activo" : "Inactivo"}
+                            {u.activo ? lbl("Activo", "Active") : lbl("Inactivo", "Inactive")}
                           </span>
                         </div>
                       </td>
@@ -929,7 +939,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-[12px] text-text-muted">No hay usuarios que coincidan con los filtros.</td>
+                      <td colSpan={5} className="py-8 text-center text-[12px] text-text-muted">{lbl("No hay usuarios que coincidan con los filtros.", "No users match the current filters.")}</td>
                     </tr>
                   )}
                 </tbody>
@@ -943,7 +953,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2">
                       <UserPlus size={16} className="text-accent-text" />
-                      <h3 className="text-[15px] font-bold text-text-primary">Añadir nuevo usuario</h3>
+                      <h3 className="text-[15px] font-bold text-text-primary">{lbl("Añadir nuevo usuario", "Add new user")}</h3>
                     </div>
                     <button onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-primary cursor-pointer transition-colors">
                       <X size={16} />
@@ -951,9 +961,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   </div>
                   <div className="space-y-3">
                     {[
-                      { label: "Nombre completo", key: "nombre", type: "text", placeholder: "Ej. Elena Rodríguez" },
-                      { label: "Email",            key: "email", type: "email", placeholder: "elena@qhuma.es" },
-                      { label: "Grupo/Curso",      key: "curso", type: "text", placeholder: "Ej. 1º ESO" },
+                      { label: lbl("Nombre completo", "Full name"), key: "nombre", type: "text", placeholder: lbl("Ej. Elena Rodríguez", "e.g. Elena Rodríguez") },
+                      { label: "Email",                              key: "email", type: "email", placeholder: "elena@qhuma.es" },
+                      { label: lbl("Grupo/Curso", "Group/Grade"),   key: "curso", type: "text", placeholder: lbl("Ej. 1º ESO", "e.g. Year 7") },
                     ].map((field) => (
                       <div key={field.key}>
                         <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{field.label}</label>
@@ -967,7 +977,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       </div>
                     ))}
                     <div>
-                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Rol</label>
+                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{lbl("Rol", "Role")}</label>
                       <select
                         value={newUser.rol}
                         onChange={(e) => setNewUser({ ...newUser, rol: e.target.value })}
@@ -982,13 +992,13 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       onClick={() => setShowAddModal(false)}
                       className="flex-1 py-2.5 bg-background text-text-secondary text-[12px] font-medium rounded-xl cursor-pointer hover:bg-card-border/20 border border-card-border transition-colors"
                     >
-                      Cancelar
+                      {lbl("Cancelar", "Cancel")}
                     </button>
                     <button
                       onClick={() => { setShowAddModal(false); setNewUser({ nombre: "", email: "", rol: "Alumno", curso: "" }); }}
                       className="flex-1 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl cursor-pointer hover:brightness-110 transition-all"
                     >
-                      Crear usuario
+                      {lbl("Crear usuario", "Create user")}
                     </button>
                   </div>
                 </div>
@@ -1004,10 +1014,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           {/* Header stats */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { label: "Proyectos en evaluación", valor: "5",      sub: "Este trimestre",            bg: "bg-accent-light",   text: "text-accent-text" },
-              { label: "Inversión total solicitada", valor: "€21.900", sub: "Máx. €10.000 por proyecto", bg: "bg-background",     text: "text-text-primary" },
-              { label: "Proyectos financiados",   valor: "1",      sub: "Carmen Vega · €5.000",       bg: "bg-success-light",  text: "text-success" },
-              { label: "Votos emitidos (docentes)", valor: "30",   sub: "De 48 posibles",             bg: "bg-warning-light",  text: "text-warning" },
+              { label: lbl("Proyectos en evaluación", "Projects under review"),    valor: "5",      sub: lbl("Este trimestre","This trimester"),                bg: "bg-accent-light",   text: "text-accent-text" },
+              { label: lbl("Inversión total solicitada","Total investment requested"), valor: "€21.900", sub: lbl("Máx. €10.000 por proyecto","Max €10,000 per project"), bg: "bg-background", text: "text-text-primary" },
+              { label: lbl("Proyectos financiados","Funded projects"),             valor: "1",      sub: "Carmen Vega · €5.000",                               bg: "bg-success-light",  text: "text-success" },
+              { label: lbl("Votos emitidos (docentes)","Votes cast (teachers)"),   valor: "30",     sub: lbl("De 48 posibles","Out of 48 possible"),           bg: "bg-warning-light",  text: "text-warning" },
             ].map((s) => (
               <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-card-border`}>
                 <p className="text-[10px] text-text-muted mb-1 leading-tight">{s.label}</p>
@@ -1034,7 +1044,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 {/* Capital comprometido highlight */}
                 <div className="bg-sidebar rounded-2xl p-4 flex items-center gap-5">
                   <div className="flex-1">
-                    <p className="text-[11px] text-white/60 mb-0.5">Capital total comprometido</p>
+                    <p className="text-[11px] text-white/60 mb-0.5">{lbl("Capital total comprometido", "Total committed capital")}</p>
                     <span className="text-[32px] font-bold text-accent leading-none">
                       €{capitalComprometido.toLocaleString()}
                     </span>
@@ -1061,7 +1071,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <div className="bg-card rounded-2xl border border-card-border p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <Calendar size={14} className="text-accent-text" />
-                    <h3 className="text-[14px] font-semibold text-text-primary">Próxima reunión de inversores</h3>
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Próxima reunión de inversores", "Next investor meeting")}</h3>
                     <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2.5 py-0.5 rounded-full">
                       25 mar · 10:00h
                     </span>
@@ -1070,15 +1080,15 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="text-center">
                         <p className="text-[18px] font-bold text-text-primary leading-none">25 mar</p>
-                        <p className="text-[10px] text-text-muted">Miércoles 2026</p>
+                        <p className="text-[10px] text-text-muted">{lbl("Miércoles 2026", "Wednesday 2026")}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[18px] font-bold text-text-primary leading-none">10:00</p>
-                        <p className="text-[10px] text-text-muted">Sala de proyectos</p>
+                        <p className="text-[10px] text-text-muted">{lbl("Sala de proyectos", "Project room")}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-[18px] font-bold text-text-primary leading-none">{agendaProyectos.length}</p>
-                        <p className="text-[10px] text-text-muted">Pitches programados</p>
+                        <p className="text-[10px] text-text-muted">{lbl("Pitches programados", "Scheduled pitches")}</p>
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -1103,7 +1113,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       className="flex items-center gap-1.5 px-4 py-2 bg-accent text-sidebar text-[11px] font-bold rounded-xl hover:brightness-105 transition-all cursor-pointer disabled:opacity-60"
                     >
                       {generandoAgenda ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
-                      {generandoAgenda ? "Generando…" : "Preparar agenda PDF"}
+                      {generandoAgenda ? lbl("Generando…", "Generating…") : lbl("Preparar agenda PDF", "Prepare PDF agenda")}
                     </button>
                     {agendaGenerada && (
                       <div className="flex items-center gap-1.5">
@@ -1121,8 +1131,8 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <Landmark size={14} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Proyectos QHUMA Capital</h3>
-              <span className="ml-auto text-[10px] text-text-muted">Fases: Pitch → Votación → Aprobado → Financiado</span>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Proyectos QHUMA Capital", "QHUMA Capital Projects")}</h3>
+              <span className="ml-auto text-[10px] text-text-muted">{lbl("Fases: Pitch → Votación → Aprobado → Financiado", "Phases: Pitch → Vote → Approved → Funded")}</span>
             </div>
             <div className="space-y-3">
               {qhumaCapitalProyectos.map((p) => {
@@ -1171,7 +1181,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     {/* Acción */}
                     <button className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-light text-accent-text text-[10px] font-bold rounded-xl hover:brightness-95 transition-all cursor-pointer flex-shrink-0">
                       <Eye size={11} />
-                      Revisar pitch
+                      {lbl("Revisar pitch", "Review pitch")}
                     </button>
                   </div>
                 );
@@ -1190,9 +1200,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               <div className="bg-card rounded-2xl border border-card-border p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Vote size={14} className="text-warning" />
-                  <h3 className="text-[14px] font-semibold text-text-primary">Votación del claustro — en directo</h3>
+                  <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Votación del claustro — en directo", "Faculty vote — live")}</h3>
                   <span className={`ml-auto text-[9px] font-bold px-2.5 py-0.5 rounded-full ${aprobado ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
-                    {aprobado ? "Quórum alcanzado" : `Faltan ${quorum - votos} votos`}
+                    {aprobado ? lbl("Quórum alcanzado", "Quorum reached") : lbl(`Faltan ${quorum - votos} votos`, `${quorum - votos} votes remaining`)}
                   </span>
                 </div>
                 <div className="bg-background rounded-xl p-4">
@@ -1213,7 +1223,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       }`}
                     >
                       <Vote size={12} />
-                      {votos >= p.votosMax ? "Completado" : votandoId === p.id ? "Registrando…" : "Emitir voto del claustro"}
+                      {votos >= p.votosMax ? lbl("Completado", "Complete") : votandoId === p.id ? lbl("Registrando…", "Registering…") : lbl("Emitir voto del claustro", "Cast faculty vote")}
                     </button>
                   </div>
                   <div className="flex items-center gap-3 mb-2">
@@ -1242,7 +1252,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={14} className="text-text-secondary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Historial de pitches — 1er Trimestre</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Historial de pitches — 1er Trimestre", "Pitch history — 1st Term")}</h3>
               <span className="ml-auto text-[10px] text-text-muted bg-background px-2.5 py-0.5 rounded-full">Sep – Dic 2025</span>
             </div>
             <div className="space-y-2">
@@ -1289,7 +1299,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <ClipboardCheck size={14} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Generador de carta de aprobación</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Generador de carta de aprobación", "Approval letter generator")}</h3>
             </div>
             <div className="flex items-center gap-3 mb-4">
               <select
@@ -1309,7 +1319,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 className="flex items-center gap-1.5 px-4 py-2 bg-accent text-sidebar text-[11px] font-bold rounded-xl hover:brightness-105 transition-all cursor-pointer disabled:opacity-60 flex-shrink-0"
               >
                 {generandoCarta ? <RefreshCw size={12} className="animate-spin" /> : <Save size={12} />}
-                {generandoCarta ? "Generando…" : "Generar carta"}
+                {generandoCarta ? lbl("Generando…", "Generating…") : lbl("Generar carta", "Generate letter")}
               </button>
             </div>
             {cartaGenerada && (() => {
@@ -1323,7 +1333,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     </div>
                     <button className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-light text-accent-text text-[10px] font-bold rounded-xl hover:brightness-95 cursor-pointer">
                       <Download size={10} />
-                      Descargar PDF
+                      {lbl("Descargar PDF", "Download PDF")}
                     </button>
                   </div>
                   <div className="space-y-2 text-[12px] text-text-primary leading-relaxed">
@@ -1361,10 +1371,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           {/* KPIs */}
           <div className="grid grid-cols-4 gap-4">
             {[
-              { label: "Llamadas API este mes",    valor: "2.170",   sub: "Gemini 2.0 Flash",      bg: "bg-accent-light",  text: "text-accent-text" },
-              { label: "Coste estimado total",     valor: "€25,82",  sub: "Presupuesto: €40/mes",  bg: "bg-success-light", text: "text-success" },
-              { label: "Tiempo medio respuesta",   valor: "1,2s",    sub: "Objetivo <2s ✓",        bg: "bg-background",    text: "text-text-primary" },
-              { label: "Tasa socrática",           valor: "74%",     sub: "Preguntas de retorno",  bg: "bg-warning-light", text: "text-warning" },
+              { label: lbl("Llamadas API este mes","API calls this month"),     valor: "2.170",   sub: "Gemini 2.0 Flash",                              bg: "bg-accent-light",  text: "text-accent-text" },
+              { label: lbl("Coste estimado total","Total estimated cost"),      valor: "€25,82",  sub: lbl("Presupuesto: €40/mes","Budget: €40/month"), bg: "bg-success-light", text: "text-success" },
+              { label: lbl("Tiempo medio respuesta","Avg response time"),       valor: "1,2s",    sub: lbl("Objetivo <2s ✓","Target <2s ✓"),           bg: "bg-background",    text: "text-text-primary" },
+              { label: lbl("Tasa socrática","Socratic rate"),                   valor: "74%",     sub: lbl("Preguntas de retorno","Return questions"),  bg: "bg-warning-light", text: "text-warning" },
             ].map((s) => (
               <div key={s.label} className={`rounded-2xl p-4 border border-card-border ${s.bg}`}>
                 <p className="text-[10px] text-text-muted mb-1 leading-tight">{s.label}</p>
@@ -1379,7 +1389,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="flex-1 bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Bot size={14} className="text-accent-text" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Uso por funcionalidad</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Uso por funcionalidad", "Usage by feature")}</h3>
               </div>
               <div className="space-y-4">
                 {usoIA.map((u) => (
@@ -1405,7 +1415,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               <div className="mt-5 pt-4 border-t border-card-border">
                 <div className="flex items-center gap-2 mb-3">
                   <Activity size={12} className="text-text-primary" />
-                  <span className="text-[12px] font-semibold text-text-primary">Comparativa semanal</span>
+                  <span className="text-[12px] font-semibold text-text-primary">{lbl("Comparativa semanal", "Weekly comparison")}</span>
                 </div>
                 <div className="flex items-end gap-2 h-[80px]">
                   {comparativaSemanal.map((s) => {
@@ -1433,8 +1443,8 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="w-[320px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-3">
                 <Users size={14} className="text-text-primary" />
-                <h3 className="text-[13px] font-semibold text-text-primary">Actividad por usuario</h3>
-                <span className="ml-auto text-[9px] text-text-muted">Lun–Vie esta semana</span>
+                <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Actividad por usuario", "Activity per user")}</h3>
+                <span className="ml-auto text-[9px] text-text-muted">{lbl("Lun–Vie esta semana", "Mon–Fri this week")}</span>
               </div>
               {/* Cabecera días */}
               <div className="flex gap-1 mb-1 pl-[88px]">
@@ -1478,7 +1488,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
               {/* Leyenda */}
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-card-border">
-                <span className="text-[9px] text-text-muted">Menos</span>
+                <span className="text-[9px] text-text-muted">{lbl("Menos", "Less")}</span>
                 {[0, 3, 6, 9, 12, 15].map((v) => {
                   const t = Math.min(v / 15, 1);
                   const r = Math.round(195 + (31 - 195) * t);
@@ -1488,7 +1498,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     <div key={v} className="w-4 h-4 rounded-sm" style={{ backgroundColor: v === 0 ? "#f4f0e9" : `rgb(${r},${g},${b})` }} />
                   );
                 })}
-                <span className="text-[9px] text-text-muted">Más</span>
+                <span className="text-[9px] text-text-muted">{lbl("Más", "More")}</span>
               </div>
             </div>
           </div>
@@ -1503,19 +1513,19 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Building2 size={14} className="text-text-primary" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Información del colegio — {colegio.nombre}</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Información del colegio", "School information")} — {colegio.nombre}</h3>
               </div>
               <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
                 <Save size={11} />
-                Guardar cambios
+                {lbl("Guardar cambios", "Save changes")}
               </button>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { label: "Nombre del colegio", key: "nombre",    placeholder: "QHUMA Málaga" },
-                { label: "Director/a",         key: "director",  placeholder: "Nombre y apellidos" },
-                { label: "Email institucional", key: "email",    placeholder: "direccion@colegio.es" },
-                { label: "Nivel educativo",    key: "nivel",     placeholder: "Ej. Primaria + ESO" },
+                { label: lbl("Nombre del colegio","School name"),    key: "nombre",    placeholder: "QHUMA Málaga" },
+                { label: lbl("Director/a","Principal"),              key: "director",  placeholder: lbl("Nombre y apellidos","Full name") },
+                { label: lbl("Email institucional","Institutional email"), key: "email", placeholder: "direccion@colegio.es" },
+                { label: lbl("Nivel educativo","Education level"),   key: "nivel",     placeholder: lbl("Ej. Primaria + ESO","e.g. Primary + Secondary") },
               ].map((field) => (
                 <div key={field.key}>
                   <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{field.label}</label>
@@ -1529,12 +1539,12 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               ))}
               <div className="col-span-2">
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Dirección postal</label>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{lbl("Dirección postal","Postal address")}</label>
                 <input
                   type="text"
                   value={schoolForm.direccion}
                   onChange={(e) => setSchoolForm({ ...schoolForm, direccion: e.target.value })}
-                  placeholder="Calle, número, código postal, ciudad"
+                  placeholder={lbl("Calle, número, código postal, ciudad","Street, number, postal code, city")}
                   className="w-full bg-background text-[12px] text-text-primary px-3 py-2.5 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
                 />
               </div>
@@ -1545,7 +1555,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle2 size={14} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Competencias LOMLOE activas</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Competencias LOMLOE activas", "Active LOMLOE competencies")}</h3>
               <span className="ml-auto text-[10px] text-text-muted">
                 {Object.values(compActivas).filter(Boolean).length}/8 activas
               </span>
@@ -1579,7 +1589,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <Calendar size={14} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Calendario académico 2025-2026</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Calendario académico 2025-2026", "Academic calendar 2025-2026")}</h3>
             </div>
             <div className="grid grid-cols-3 gap-4">
               {trimestres.map((t) => (
@@ -1595,7 +1605,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       : t.estado === "completado" ? "bg-success text-white"
                       : "bg-background border border-card-border text-text-muted"
                     }`}>
-                      {t.estado === "activo" ? "En curso" : t.estado === "completado" ? "Completado" : "Próximo"}
+                      {t.estado === "activo" ? lbl("En curso","In progress") : t.estado === "completado" ? lbl("Completado","Completed") : lbl("Próximo","Upcoming")}
                     </span>
                   </div>
                   <p className="text-[10px] text-text-muted mb-0.5">{t.inicio} → {t.fin}</p>
@@ -1609,7 +1619,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <Shield size={14} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Escala de evaluación LOMLOE (1-4)</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Escala de evaluación LOMLOE (1-4)", "LOMLOE assessment scale (1–4)")}</h3>
               <span className="ml-auto text-[10px] text-text-muted">Conforme a los criterios oficiales del MEC</span>
             </div>
             <div className="grid grid-cols-4 gap-3">
@@ -1634,7 +1644,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <FileText size={15} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Generador de informes LOMLOE</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Generador de informes LOMLOE", "LOMLOE report generator")}</h3>
             </div>
 
             {/* A11: Plantillas predefinidas */}
@@ -1665,7 +1675,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           <div className="grid grid-cols-3 gap-3 mb-4">
               {/* Selector alumno */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Alumno</label>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("Alumno","Student")}</label>
                 <select
                   value={reportAlumno}
                   onChange={(e) => { setReportAlumno(e.target.value); setReportPreview(false); }}
@@ -1679,7 +1689,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
               {/* Selector trimestre */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Trimestre</label>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("Trimestre","Term")}</label>
                 <select
                   value={reportTrimestre}
                   onChange={(e) => { setReportTrimestre(e.target.value as "1" | "2" | "3"); setReportPreview(false); }}
@@ -1693,7 +1703,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
               {/* Selector tipo */}
               <div>
-                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Tipo de informe</label>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("Tipo de informe","Report type")}</label>
                 <select
                   value={reportTipo}
                   onChange={(e) => { setReportTipo(e.target.value as typeof reportTipo); setReportPreview(false); }}
@@ -1714,9 +1724,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               className="flex items-center gap-2 bg-sidebar text-white text-[12px] font-bold px-4 py-2.5 rounded-xl cursor-pointer hover:bg-accent-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
-                <><RefreshCw size={13} className="animate-spin" /> Generando informe...</>
+                <><RefreshCw size={13} className="animate-spin" /> {lbl("Generando informe...", "Generating report...")}</>
               ) : (
-                <><FileText size={13} /> Generar informe</>
+                <><FileText size={13} /> {lbl("Generar informe", "Generate report")}</>
               )}
             </button>
           </div>
@@ -1801,7 +1811,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
                     >
                       {isDownloading ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
-                      {isDownloading ? "Preparando..." : "Descargar PDF"}
+                      {isDownloading ? lbl("Preparando...", "Preparing...") : lbl("Descargar PDF", "Download PDF")}
                     </button>
                     {downloadedFilename && (
                       <p className="text-[9px] text-success mt-1 font-mono truncate max-w-[220px]">{downloadedFilename}</p>
@@ -1842,7 +1852,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
           {/* Informes recientes */}
           <div className="bg-card rounded-2xl border border-card-border p-5">
-            <h3 className="text-[13px] font-semibold text-text-primary mb-3">Informes recientes</h3>
+            <h3 className="text-[13px] font-semibold text-text-primary mb-3">{lbl("Informes recientes", "Recent reports")}</h3>
             <div className="space-y-2.5">
               {[
                 { nombre: "Informe LOMLOE — Semana 3 — 1º ESO", tipo: "LOMLOE", fecha: "Hoy 10:30", tamaño: "245 KB" },
@@ -1910,10 +1920,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             {/* KPIs de inspección */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: "Alumnos activos",        valor: "12",   sub: "1º y 2º ESO",               bg: "bg-card", textV: "text-text-primary" },
-                { label: "Cumplimiento LOMLOE",    valor: `${cumplimiento}%`, sub: "8/10 requisitos", bg: "bg-success-light", textV: "text-success" },
-                { label: "Evidencias entregadas",  valor: "127",  sub: "de 192 posibles",             bg: "bg-accent-light",  textV: "text-accent-text" },
-                { label: "Proyectos en curso",     valor: "14",   sub: "4 colegios activos",          bg: "bg-card", textV: "text-text-primary" },
+                { label: lbl("Alumnos activos","Active students"),          valor: "12",   sub: lbl("1º y 2º ESO","Year 7 & Year 8"),          bg: "bg-card", textV: "text-text-primary" },
+                { label: lbl("Cumplimiento LOMLOE","LOMLOE compliance"),    valor: `${cumplimiento}%`, sub: "8/10 " + lbl("requisitos","requirements"), bg: "bg-success-light", textV: "text-success" },
+                { label: lbl("Evidencias entregadas","Submitted evidence"), valor: "127",  sub: lbl("de 192 posibles","out of 192"),             bg: "bg-accent-light",  textV: "text-accent-text" },
+                { label: lbl("Proyectos en curso","Active projects"),       valor: "14",   sub: lbl("4 colegios activos","4 active schools"),   bg: "bg-card", textV: "text-text-primary" },
               ].map((k) => (
                 <div key={k.label} className={`${k.bg} rounded-2xl border border-card-border p-4`}>
                   <p className={`text-[28px] font-bold ${k.textV} leading-none mb-1`}>{k.valor}</p>
@@ -1928,11 +1938,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Users size={15} className="text-accent-text" />
-                  <h3 className="text-[14px] font-semibold text-text-primary">Progreso por alumno — {trimestreLabel["2"]}</h3>
+                  <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Progreso por alumno","Student progress")} — {trimestreLabel["2"]}</h3>
                 </div>
                 <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
                   <Download size={12} />
-                  Exportar para inspección
+                  {lbl("Exportar para inspección", "Export for inspection")}
                 </button>
               </div>
 
@@ -1940,7 +1950,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-card-border">
-                      {["Alumno", "Curso", "Proyecto", "Progreso", "Evidencias", "Nivel LOMLOE", "Estado"].map((h) => (
+                      {[lbl("Alumno","Student"), lbl("Curso","Grade"), lbl("Proyecto","Project"), lbl("Progreso","Progress"), lbl("Evidencias","Evidence"), lbl("Nivel LOMLOE","LOMLOE Level"), lbl("Estado","Status")].map((h) => (
                         <th key={h} className="text-left text-[10px] font-bold text-text-muted uppercase tracking-wide py-2 px-2">{h}</th>
                       ))}
                     </tr>
@@ -1976,7 +1986,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                           </td>
                           <td className="py-2.5 px-2">
                             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${a.activo ? "bg-success-light text-success" : "bg-urgent-light text-urgent"}`}>
-                              {a.activo ? "Activo" : "Inactivo"}
+                              {a.activo ? lbl("Activo","Active") : lbl("Inactivo","Inactive")}
                             </span>
                           </td>
                         </tr>
@@ -1991,7 +2001,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ClipboardCheck size={15} className="text-accent-text" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Cumplimiento normativo — Real Decreto 217/2022</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Cumplimiento normativo — Real Decreto 217/2022", "Regulatory compliance — Royal Decree 217/2022")}</h3>
                 <span className={`ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full ${cumplimiento >= 80 ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
                   {checklist.filter(c => c.ok).length}/{checklist.length} requisitos
                 </span>
@@ -2015,7 +2025,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-3">
                 <FileText size={14} className="text-accent-text" />
-                <h3 className="text-[13px] font-semibold text-text-primary">Documentación para inspección</h3>
+                <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Documentación para inspección", "Inspection documentation")}</h3>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[
@@ -2036,7 +2046,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     <div className="flex-1 min-w-0">
                       <p className="text-[11px] font-medium text-text-primary leading-snug truncate">{doc.nombre}</p>
                       <span className={`text-[9px] font-bold ${doc.estado === "listo" ? "text-success" : "text-warning"}`}>
-                        {doc.estado === "listo" ? "Disponible para descarga" : "Pendiente de preparar"}
+                        {doc.estado === "listo" ? lbl("Disponible para descarga","Available for download") : lbl("Pendiente de preparar","Pending preparation")}
                       </span>
                     </div>
                     {doc.estado === "listo" && (
@@ -2086,10 +2096,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             {/* KPIs globales */}
             <div className="grid grid-cols-4 gap-4">
               {[
-                { label: "Tasa de retención",    valor: "96%",  sub: "+2% vs trimestre anterior", bg: "bg-success-light", textV: "text-success" },
-                { label: "Engagement semanal",    valor: "78%",  sub: "Alumnos activos hoy",       bg: "bg-accent-light",  textV: "text-accent-text" },
-                { label: "Cumplimiento LOMLOE",   valor: "89%",  sub: "8 competencias evaluadas",  bg: "bg-card",          textV: "text-text-primary" },
-                { label: "Alumnos en riesgo",     valor: "3",    sub: "Scoring < 40 — intervenir", bg: "bg-urgent-light",  textV: "text-urgent" },
+                { label: lbl("Tasa de retención","Retention rate"),      valor: "96%",  sub: lbl("+2% vs trimestre anterior","+2% vs previous term"), bg: "bg-success-light", textV: "text-success" },
+                { label: lbl("Engagement semanal","Weekly engagement"),   valor: "78%",  sub: lbl("Alumnos activos hoy","Active students today"),     bg: "bg-accent-light",  textV: "text-accent-text" },
+                { label: lbl("Cumplimiento LOMLOE","LOMLOE compliance"),  valor: "89%",  sub: lbl("8 competencias evaluadas","8 competencies assessed"), bg: "bg-card",        textV: "text-text-primary" },
+                { label: lbl("Alumnos en riesgo","At-risk students"),     valor: "3",    sub: lbl("Scoring < 40 — intervenir","Score < 40 — intervene"), bg: "bg-urgent-light", textV: "text-urgent" },
               ].map((k) => (
                 <div key={k.label} className={`${k.bg} rounded-2xl border border-card-border p-4`}>
                   <p className={`text-[28px] font-bold ${k.textV} leading-none mb-1`}>{k.valor}</p>
@@ -2103,7 +2113,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="flex gap-5">
               {/* Comparativa */}
               <div className="flex-1 bg-card rounded-2xl border border-card-border p-5">
-                <h3 className="text-[14px] font-semibold text-text-primary mb-4">Comparativa entre colegios QHUMA</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary mb-4">{lbl("Comparativa entre colegios QHUMA", "QHUMA schools comparison")}</h3>
                 <div className="flex flex-col gap-4">
                   {metricas.map((metrica, mi) => {
                     const vals = comparativaColegios.map((c) => {
@@ -2155,19 +2165,19 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 return (
                   <div className="w-[280px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-[14px] font-semibold text-text-primary">Actividad</h3>
+                      <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Actividad", "Activity")}</h3>
                       <div className="flex bg-background rounded-lg p-0.5 gap-0.5">
                         <button
                           onClick={() => setMetricsVista("semana")}
                           className={`text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-all ${metricsVista === "semana" ? "bg-card text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
                         >
-                          Semana
+                          {lbl("Semana", "Week")}
                         </button>
                         <button
                           onClick={() => setMetricsVista("mes")}
                           className={`text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-all ${metricsVista === "mes" ? "bg-card text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
                         >
-                          Mes
+                          {lbl("Mes", "Month")}
                         </button>
                       </div>
                     </div>
@@ -2226,7 +2236,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <div className="bg-card rounded-2xl border border-card-border p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart3 size={14} className="text-accent-text" />
-                    <h3 className="text-[14px] font-semibold text-text-primary">Análisis comparativo ampliado</h3>
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Análisis comparativo ampliado", "Extended comparative analysis")}</h3>
                     {/* Toggle de métrica */}
                     <div className="ml-auto flex gap-1 bg-background rounded-xl border border-card-border p-0.5">
                       {(["retencion", "engagement", "evidencias", "lomloe"] as const).map((m) => (
@@ -2283,7 +2293,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
                     {/* Radar competencias por colegio */}
                     <div className="w-[340px] flex-shrink-0">
-                      <p className="text-[11px] font-semibold text-text-secondary mb-3">Radar competencias LOMLOE</p>
+                      <p className="text-[11px] font-semibold text-text-secondary mb-3">{lbl("Radar competencias LOMLOE", "LOMLOE competency radar")}</p>
                       <div className="space-y-1.5">
                         {comparativaCompetencias.map((c) => {
                           const diff = c.malaga - c.madrid;
@@ -2321,6 +2331,87 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                       </div>
                     </div>
                   </div>
+                  {/* A19 — Botones de exportación */}
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-card-border">
+                    <button
+                      onClick={() => {
+                        setExportandoComparativa(true);
+                        setTimeout(() => {
+                          const rows: string[] = ["Colegio,Metrica,Dic,Ene,Feb,Mar"];
+                          const metricas = ["retencion", "engagement", "evidencias", "lomloe"] as const;
+                          const metricaLabelsLocal: Record<string, string> = { retencion: "Retención", engagement: "Engagement", evidencias: "Evidencias %", lomloe: "Cumpl. LOMLOE" };
+                          const evMensual: Record<string, { mes: string; malaga: number; madrid: number }[]> = {
+                            retencion:  [{ mes: "Dic", malaga: 93, madrid: 88 }, { mes: "Ene", malaga: 94, madrid: 89 }, { mes: "Feb", malaga: 95, madrid: 90 }, { mes: "Mar", malaga: 96, madrid: 91 }],
+                            engagement: [{ mes: "Dic", malaga: 70, madrid: 65 }, { mes: "Ene", malaga: 73, madrid: 67 }, { mes: "Feb", malaga: 76, madrid: 70 }, { mes: "Mar", malaga: 78, madrid: 71 }],
+                            evidencias: [{ mes: "Dic", malaga: 55, madrid: 48 }, { mes: "Ene", malaga: 58, madrid: 52 }, { mes: "Feb", malaga: 62, madrid: 55 }, { mes: "Mar", malaga: 66, madrid: 58 }],
+                            lomloe:     [{ mes: "Dic", malaga: 84, madrid: 79 }, { mes: "Ene", malaga: 86, madrid: 80 }, { mes: "Feb", malaga: 88, madrid: 82 }, { mes: "Mar", malaga: 89, madrid: 83 }],
+                          };
+                          metricas.forEach((m) => {
+                            const d = evMensual[m];
+                            rows.push(`QHUMA Málaga,${metricaLabelsLocal[m]},${d[0].malaga},${d[1].malaga},${d[2].malaga},${d[3].malaga}`);
+                            rows.push(`QHUMA Madrid,${metricaLabelsLocal[m]},${d[0].madrid},${d[1].madrid},${d[2].madrid},${d[3].madrid}`);
+                          });
+                          rows.push("");
+                          rows.push("Colegio,CLC,CPL,STEM,CD,CPSAA,CC,CE,CCEC");
+                          rows.push("QHUMA Málaga,72,58,85,88,74,68,90,55");
+                          rows.push("QHUMA Madrid,68,63,79,76,71,70,82,62");
+                          const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url; a.download = "comparativa_colegios_QHUMA.csv"; a.click();
+                          URL.revokeObjectURL(url);
+                          setExportandoComparativa(false);
+                          setComparativaExportada(true);
+                          setTimeout(() => setComparativaExportada(false), 2500);
+                        }, 600);
+                      }}
+                      disabled={exportandoComparativa}
+                      className="flex items-center gap-2 bg-sidebar text-white text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                    >
+                      {exportandoComparativa ? (
+                        <><RefreshCw size={12} className="animate-spin" />{lbl("Generando…", "Generating…")}</>
+                      ) : comparativaExportada ? (
+                        <><Check size={12} className="text-success" />{lbl("CSV descargado", "CSV downloaded")}</>
+                      ) : (
+                        <><Download size={12} />{lbl("Exportar CSV comparativa", "Export comparative CSV")}</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCopiandoResumen(true);
+                        const texto = [
+                          "RESUMEN EJECUTIVO — COMPARATIVA QHUMA (Mar 2025)",
+                          "================================================",
+                          "RETENCIÓN: Málaga 96% vs Madrid 91% (+5pp)",
+                          "ENGAGEMENT: Málaga 78% vs Madrid 71% (+7pp)",
+                          "EVIDENCIAS: Málaga 66% vs Madrid 58% (+8pp)",
+                          "CUMPL. LOMLOE: Málaga 89% vs Madrid 83% (+6pp)",
+                          "",
+                          "COMPETENCIAS DESTACADAS (Málaga > Madrid):",
+                          "  CD  +12pp | CE  +8pp | STEM +6pp | CLC +4pp",
+                          "",
+                          "COMPETENCIAS A REFORZAR (Madrid > Málaga):",
+                          "  CPL +5pp | CCEC +7pp | CC +2pp",
+                          "",
+                          "Conclusión: Málaga lidera en 5 de 8 competencias.",
+                          "Recomendación: compartir metodología CE/CD con Madrid.",
+                        ].join("\n");
+                        navigator.clipboard.writeText(texto).then(() => {
+                          setCopiandoResumen(false);
+                          setResumenCopiado(true);
+                          setTimeout(() => setResumenCopiado(false), 2500);
+                        });
+                      }}
+                      disabled={copiandoResumen}
+                      className="flex items-center gap-2 border border-card-border text-text-secondary text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-background transition-all disabled:opacity-60"
+                    >
+                      {resumenCopiado ? (
+                        <><Check size={12} className="text-success" />{lbl("Copiado al portapapeles", "Copied to clipboard")}</>
+                      ) : (
+                        <><Copy size={12} />{lbl("Copiar resumen ejecutivo", "Copy executive summary")}</>
+                      )}
+                    </button>
+                  </div>
                 </div>
               );
             })()}
@@ -2329,7 +2420,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle size={15} className="text-warning" />
-                <h3 className="text-[14px] font-semibold text-text-primary">Predicción de riesgo de abandono</h3>
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Predicción de riesgo de abandono", "Dropout risk prediction")}</h3>
                 <span className="ml-auto text-[10px] text-text-muted bg-background px-2.5 py-1 rounded-full">
                   Scoring: racha × 3 + evidencias × 4 (máx 100)
                 </span>
@@ -2338,7 +2429,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-card-border">
-                      {["Alumno", "Curso", "Racha (días)", "Evidencias", "Score riesgo", "Nivel", "Acción"].map((h) => (
+                      {[lbl("Alumno","Student"), lbl("Curso","Grade"), lbl("Racha (días)","Streak (days)"), lbl("Evidencias","Evidence"), lbl("Score riesgo","Risk score"), lbl("Nivel","Level"), lbl("Acción","Action")].map((h) => (
                         <th key={h} className="text-left text-[10px] font-bold text-text-muted uppercase tracking-wide py-2 px-2">{h}</th>
                       ))}
                     </tr>
@@ -2388,7 +2479,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                           </td>
                           <td className="py-2.5 px-2">
                             <button className="text-[10px] font-medium text-accent-text hover:underline cursor-pointer">
-                              {al.nivel === "Alto" ? "Intervenir ahora" : al.nivel === "Medio" ? "Hacer seguimiento" : "Monitorear"}
+                              {al.nivel === "Alto" ? lbl("Intervenir ahora","Intervene now") : al.nivel === "Medio" ? lbl("Hacer seguimiento","Follow up") : lbl("Monitorear","Monitor")}
                             </button>
                           </td>
                         </tr>
@@ -2417,8 +2508,8 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <div className="bg-card rounded-2xl border border-card-border p-5">
                   <div className="flex items-center gap-2 mb-4">
                     <BarChart3 size={15} className="text-accent-text" />
-                    <h3 className="text-[14px] font-semibold text-text-primary">Top competencias por clase</h3>
-                    <span className="text-[10px] text-text-muted ml-1">Media LOMLOE (1–4) · referencia nivel 3.0</span>
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Top competencias por clase", "Top competencies by class")}</h3>
+                    <span className="text-[10px] text-text-muted ml-1">{lbl("Media LOMLOE (1–4) · referencia nivel 3.0", "LOMLOE average (1–4) · reference level 3.0")}</span>
                     <div className="ml-auto flex bg-background rounded-lg border border-card-border p-0.5 gap-0.5">
                       {(["1eso", "2eso"] as const).map((c) => (
                         <button

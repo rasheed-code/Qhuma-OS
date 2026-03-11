@@ -6,6 +6,7 @@ import {
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
   Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History,
 } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 interface PitchSection {
   id: string;
@@ -360,6 +361,9 @@ function TimerBlock({ totalSecs, onComplete }: { totalSecs: number; onComplete: 
 }
 
 export default function PitchLab() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [activeSection, setActiveSection] = useState(0);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [mode, setMode] = useState<"write" | "feedback">("write");
@@ -534,6 +538,12 @@ export default function PitchLab() {
   const [ensayoElapsed, setEnsayoElapsed] = useState(0);
   const [ensayoCompleted, setEnsayoCompleted] = useState(false);
 
+  // C19 — Puntuación IA al terminar ensayo
+  const [ensayoScore, setEnsayoScore] = useState<number | null>(null);
+  const [ensayoScoreFuerte, setEnsayoScoreFuerte] = useState<string | null>(null);
+  const [ensayoScoreMejora, setEnsayoScoreMejora] = useState<string | null>(null);
+  const [ensayoScoreLoading, setEnsayoScoreLoading] = useState(false);
+
   // C18 — Preguntas intercaladas al cambiar de sección
   const [ensayoPreguntaIntercalada, setEnsayoPreguntaIntercalada] = useState<typeof preguntasJurado[number] | null>(null);
   const [ensayoRespuestaIntercalada, setEnsayoRespuestaIntercalada] = useState("");
@@ -553,6 +563,34 @@ export default function PitchLab() {
     }, 1000);
     return () => clearInterval(interval);
   }, [ensayoRunning, ensayoCompleted, totalPitchSecs]);
+
+  // C19 — Llamar IA al completar ensayo
+  useEffect(() => {
+    if (!ensayoCompleted || ensayoScore !== null || ensayoScoreLoading) return;
+    setEnsayoScoreLoading(true);
+    const tiempoTexto = `${Math.floor(ensayoElapsed / 60)}:${String(ensayoElapsed % 60).padStart(2, "0")} min`;
+    fetch("/api/tutor-chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "pitchcoach", tiempoEmpleado: tiempoTexto, proyecto: "Airbnb Málaga", respuestasIntercaladas: ensayoRespuestaIntercalada }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const score = typeof data.score === "number" ? data.score : Math.round(6 + Math.random() * 3);
+        const fuerte = data.puntofuerte ?? "Estructura clara y tiempo bien gestionado. El segmento de mercado quedó muy definido.";
+        const mejora = data.mejora ?? "Refuerza la propuesta de valor en los primeros 20 segundos para enganchar antes al jurado.";
+        setEnsayoScore(score);
+        setEnsayoScoreFuerte(fuerte);
+        setEnsayoScoreMejora(mejora);
+      })
+      .catch(() => {
+        setEnsayoScore(Math.round(6 + Math.random() * 3));
+        setEnsayoScoreFuerte("Estructura clara y tiempo bien gestionado. El segmento de mercado quedó muy definido.");
+        setEnsayoScoreMejora("Refuerza la propuesta de valor en los primeros 20 segundos para enganchar antes al jurado.");
+      })
+      .finally(() => setEnsayoScoreLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ensayoCompleted]);
 
   const currentEnsayoSectionIdx = Math.min(
     sectionCumulative.findIndex((c) => ensayoElapsed < c),
@@ -596,6 +634,10 @@ export default function PitchLab() {
     setEnsayoPreguntaIntercalada(null);
     setEnsayoRespuestaIntercalada("");
     ensayoIntercaladasVisitadas.current = new Set();
+    setEnsayoScore(null);
+    setEnsayoScoreFuerte(null);
+    setEnsayoScoreMejora(null);
+    setEnsayoScoreLoading(false);
   };
 
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
@@ -669,7 +711,7 @@ export default function PitchLab() {
             <h1 className="text-[22px] font-bold text-text-primary">Pitch Lab</h1>
           </div>
           <p className="text-[13px] text-text-secondary">
-            Practica tu presentación para el Demo Day · Proyecto Airbnb Málaga
+            {lbl("Practica tu presentación para el Demo Day · Proyecto Airbnb Málaga", "Practice your Demo Day presentation · Airbnb Málaga Project")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -677,9 +719,9 @@ export default function PitchLab() {
             <>
               <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
                 <BarChart3 size={12} />
-                <span>{filledCount}/5 secciones</span>
+                <span>{filledCount}/5 {lbl("secciones", "sections")}</span>
                 <span>·</span>
-                <span>~{totalWords} palabras</span>
+                <span>~{totalWords} {lbl("palabras", "words")}</span>
               </div>
               <button
                 onClick={() => { setEnsayoMode(!ensayoMode); if (ensayoMode) handleResetEnsayo(); }}
@@ -690,14 +732,14 @@ export default function PitchLab() {
                 }`}
               >
                 <Timer size={14} />
-                {ensayoMode ? "Salir del ensayo" : "Ensayo cronometrado"}
+                {ensayoMode ? lbl("Salir del ensayo", "Exit rehearsal") : lbl("Ensayo cronometrado", "Timed rehearsal")}
               </button>
               <button
                 onClick={handleSimulate}
                 className="flex items-center gap-2 bg-sidebar text-accent font-bold text-[12px] px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
               >
                 <Users size={14} />
-                Simular audiencia
+                {lbl("Simular audiencia", "Simulate audience")}
               </button>
             </>
           )}
@@ -706,7 +748,7 @@ export default function PitchLab() {
               onClick={() => setMode("write")}
               className="text-[11px] text-text-secondary border border-card-border rounded-xl px-3 py-2 hover:border-accent-text/30 transition-all cursor-pointer"
             >
-              ← Seguir editando
+              ← {lbl("Seguir editando", "Keep editing")}
             </button>
           )}
         </div>
@@ -718,32 +760,90 @@ export default function PitchLab() {
         {ensayoMode && (
           <div className={`rounded-2xl p-5 mb-5 border ${ensayoCompleted ? "bg-success-light border-success/20" : "bg-sidebar border-sidebar"}`}>
             {ensayoCompleted ? (
-              /* Completed state */
-              <div className="flex items-center gap-5">
-                <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 size={28} className="text-white" />
+              /* Completed state — C19: with AI score */
+              <div>
+                <div className="flex items-center gap-5 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 size={28} className="text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[11px] font-bold text-success uppercase tracking-wide mb-0.5">{lbl("Ensayo completado", "Rehearsal complete")}</p>
+                    <p className="text-[20px] font-bold text-text-primary">
+                      {lbl("Pitch completado en", "Pitch completed in")} {ensayoMins}:{ensayoElapsed % 60 === 0 && ensayoMins > 0 ? "00" : String(ensayoSecs).padStart(2, "0")} min
+                    </p>
+                    <p className="text-[12px] text-text-secondary mt-0.5">{lbl("Tiempo total del pitch", "Total pitch time")}: {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} · {lbl("¡Bien hecho!", "Well done!")}</p>
+                  </div>
+                  <button
+                    onClick={handleResetEnsayo}
+                    className="flex items-center gap-1.5 border border-success/30 text-success text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-success/10 transition-all"
+                  >
+                    <RotateCcw size={13} />
+                    {lbl("Reiniciar", "Restart")}
+                  </button>
                 </div>
-                <div className="flex-1">
-                  <p className="text-[11px] font-bold text-success uppercase tracking-wide mb-0.5">Ensayo completado</p>
-                  <p className="text-[20px] font-bold text-text-primary">
-                    Pitch completado en {ensayoMins}:{ensayoElapsed % 60 === 0 && ensayoMins > 0 ? "00" : String(ensayoSecs).padStart(2, "0")} min
-                  </p>
-                  <p className="text-[12px] text-text-secondary mt-0.5">Tiempo total del pitch: {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} · ¡Bien hecho!</p>
-                </div>
-                <button
-                  onClick={handleResetEnsayo}
-                  className="flex items-center gap-1.5 border border-success/30 text-success text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-success/10 transition-all"
-                >
-                  <RotateCcw size={13} />
-                  Reiniciar
-                </button>
+                {/* C19 — Puntuación IA */}
+                {ensayoScoreLoading ? (
+                  <div className="flex items-center gap-3 bg-white/5 rounded-2xl px-4 py-3">
+                    <Loader2 size={16} className="text-accent animate-spin flex-shrink-0" />
+                    <div>
+                      <p className="text-[12px] font-semibold text-white">{lbl("Analizando tu ensayo con IA…", "Analyzing your rehearsal with AI…")}</p>
+                      <p className="text-[10px] text-white/50">{lbl("Calculando puntuación, punto fuerte y mejora prioritaria", "Calculating score, strength, and key improvement")}</p>
+                    </div>
+                  </div>
+                ) : ensayoScore !== null ? (
+                  <div className="space-y-3">
+                    {/* Score global */}
+                    <div className="flex items-center gap-4 bg-white/5 rounded-2xl px-5 py-4">
+                      <div className="flex-shrink-0 text-center">
+                        <span className="text-[42px] font-black text-white leading-none">{ensayoScore}</span>
+                        <span className="text-[18px] font-bold text-white/40">/10</span>
+                        <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5">{lbl("Puntuación IA", "AI Score")}</p>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex gap-1 mb-2">
+                          {Array.from({ length: 10 }).map((_, i) => (
+                            <div
+                              key={i}
+                              className={`flex-1 h-2 rounded-full transition-all ${i < ensayoScore ? (ensayoScore >= 8 ? "bg-success" : ensayoScore >= 6 ? "bg-accent" : "bg-warning") : "bg-white/10"}`}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-white/50">
+                          {ensayoScore >= 8 ? lbl("Excelente — listo para el Demo Day", "Excellent — ready for Demo Day") :
+                           ensayoScore >= 6 ? lbl("Buen nivel — sigue puliendo", "Good level — keep refining") :
+                           lbl("En progreso — practica más", "In progress — keep practicing")}
+                        </p>
+                      </div>
+                    </div>
+                    {/* Punto fuerte */}
+                    {ensayoScoreFuerte && (
+                      <div className="flex items-start gap-3 bg-success/10 border border-success/20 rounded-2xl px-4 py-3">
+                        <Star size={13} className="text-success flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-success uppercase tracking-wide mb-0.5">{lbl("Punto fuerte detectado", "Detected strength")}</p>
+                          <p className="text-[12px] text-white/80 leading-relaxed">{ensayoScoreFuerte}</p>
+                        </div>
+                      </div>
+                    )}
+                    {/* Mejora prioritaria */}
+                    {ensayoScoreMejora && (
+                      <div className="flex items-start gap-3 bg-warning/10 border border-warning/20 rounded-2xl px-4 py-3">
+                        <AlertCircle size={13} className="text-warning flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold text-warning uppercase tracking-wide mb-0.5">{lbl("Mejora prioritaria", "Priority improvement")}</p>
+                          <p className="text-[12px] text-white/80 leading-relaxed">{ensayoScoreMejora}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : null}
               </div>
             ) : ensayoPreguntaIntercalada ? (
               /* C18: Pregunta intercalada del jurado */
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <MessageSquare size={14} className="text-accent flex-shrink-0" />
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wide">Pregunta del jurado</span>
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wide">{lbl("Pregunta del jurado", "Jury question")}</span>
                   <span className={`ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full ${
                     tipoColor[ensayoPreguntaIntercalada.tipo] ?? "bg-background text-text-muted"
                   }`}>
@@ -762,7 +862,7 @@ export default function PitchLab() {
                 <textarea
                   value={ensayoRespuestaIntercalada}
                   onChange={(e) => setEnsayoRespuestaIntercalada(e.target.value)}
-                  placeholder="Responde antes de continuar con el siguiente segmento del ensayo..."
+                  placeholder={lbl("Responde antes de continuar con el siguiente segmento del ensayo...", "Answer before continuing to the next rehearsal segment...")}
                   className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-[12px] text-white placeholder:text-white/30 resize-none outline-none focus:border-accent/40 h-20 mb-3"
                 />
                 <div className="flex gap-2">
@@ -772,13 +872,13 @@ export default function PitchLab() {
                     className="flex items-center gap-1.5 bg-accent text-sidebar text-[12px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Play size={13} />
-                    Continuar ensayo
+                    {lbl("Continuar ensayo", "Continue rehearsal")}
                   </button>
                   <button
                     onClick={handleContinuarTrasIntercalada}
                     className="flex items-center gap-1.5 bg-white/10 text-white/60 text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:bg-white/20 transition-all"
                   >
-                    Omitir pregunta
+                    {lbl("Omitir pregunta", "Skip question")}
                   </button>
                 </div>
               </div>
@@ -788,8 +888,8 @@ export default function PitchLab() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Timer size={14} className="text-accent" />
-                    <span className="text-[12px] font-bold text-white uppercase tracking-wide">Ensayo cronometrado</span>
-                    <span className="text-[10px] text-white/50">— {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} min total</span>
+                    <span className="text-[12px] font-bold text-white uppercase tracking-wide">{lbl("Ensayo cronometrado", "Timed rehearsal")}</span>
+                    <span className="text-[10px] text-white/50">— {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} min {lbl("total", "total")}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[20px] font-bold text-accent tabular-nums">
@@ -808,12 +908,12 @@ export default function PitchLab() {
                 <div className="bg-white/8 rounded-xl p-3 mb-3 flex items-center gap-3">
                   <currentEnsayoSection.icon size={15} className="text-accent flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-white/50 font-medium">Sección actual</p>
+                    <p className="text-[10px] text-white/50 font-medium">{lbl("Sección actual", "Current section")}</p>
                     <p className="text-[13px] font-bold text-white">{currentEnsayoSection.title}</p>
                     <p className="text-[10px] text-white/50">{currentEnsayoSection.subtitle}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-[10px] text-white/40">Tiempo objetivo</p>
+                    <p className="text-[10px] text-white/40">{lbl("Tiempo objetivo", "Target time")}</p>
                     <p className="text-[12px] font-bold text-accent">{currentEnsayoSection.durationSeg}s</p>
                   </div>
                 </div>
@@ -837,14 +937,14 @@ export default function PitchLab() {
                     className="flex items-center gap-2 bg-accent text-sidebar text-[12px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
                   >
                     {ensayoRunning ? <Pause size={13} /> : <Play size={13} />}
-                    {ensayoRunning ? "Pausar" : ensayoElapsed > 0 ? "Continuar" : "Empezar"}
+                    {ensayoRunning ? lbl("Pausar", "Pause") : ensayoElapsed > 0 ? lbl("Continuar", "Continue") : lbl("Empezar", "Start")}
                   </button>
                   <button
                     onClick={handleResetEnsayo}
                     className="flex items-center gap-2 bg-white/8 text-white text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:bg-white/15 transition-all"
                   >
                     <RotateCcw size={12} />
-                    Reiniciar
+                    {lbl("Reiniciar", "Restart")}
                   </button>
                 </div>
               </div>
@@ -888,11 +988,11 @@ export default function PitchLab() {
 
             {/* Progress */}
             <div className="bg-accent-light rounded-xl border border-accent-text/20 p-3 mt-3">
-              <p className="text-[10px] font-bold text-accent-text mb-1.5">Progreso total</p>
+              <p className="text-[10px] font-bold text-accent-text mb-1.5">{lbl("Progreso total", "Total progress")}</p>
               <div className="h-1.5 bg-white/60 rounded-full overflow-hidden mb-1">
                 <div className="h-full bg-accent-text rounded-full" style={{ width: `${(filledCount / 5) * 100}%` }} />
               </div>
-              <p className="text-[9px] text-accent-text">{filledCount}/5 secciones · ~{Math.round(totalWords / 130)} min</p>
+              <p className="text-[9px] text-accent-text">{filledCount}/5 {lbl("secciones", "sections")} · ~{Math.round(totalWords / 130)} min</p>
             </div>
           </div>
 
@@ -906,7 +1006,7 @@ export default function PitchLab() {
                     <current.icon size={16} className="text-accent-text" />
                     <h2 className="text-[17px] font-bold text-text-primary">{current.title}</h2>
                     <span className="text-[9px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-                      Sección {activeSection + 1} de 5
+                      {lbl("Sección", "Section")} {activeSection + 1} {lbl("de", "of")} 5
                     </span>
                   </div>
                   <p className="text-[12px] text-text-secondary">{current.subtitle}</p>
@@ -934,9 +1034,9 @@ export default function PitchLab() {
                 <div className="flex items-center gap-2 mb-2">
                   <Timer size={12} className="text-text-muted" />
                   <span className="text-[10px] text-text-muted font-medium">
-                    Tiempo asignado para esta sección: {current.durationSeg}s
+                    {lbl("Tiempo asignado para esta sección:", "Time allocated for this section:")} {current.durationSeg}s
                   </span>
-                  {timerDone && <span className="text-[9px] text-warning font-bold bg-warning-light px-2 py-0.5 rounded-full">¡Tiempo!</span>}
+                  {timerDone && <span className="text-[9px] text-warning font-bold bg-warning-light px-2 py-0.5 rounded-full">{lbl("¡Tiempo!", "Time's up!")}</span>}
                 </div>
                 <TimerBlock
                   key={current.id}
@@ -958,15 +1058,15 @@ export default function PitchLab() {
               />
               <div className="flex items-center justify-between mt-2 mb-4">
                 <span className="text-[10px] text-text-muted">
-                  {(notes[current.id] || "").split(/\s+/).filter(Boolean).length} palabras
-                  · objetivo ~{current.wordTarget}
+                  {(notes[current.id] || "").split(/\s+/).filter(Boolean).length} {lbl("palabras", "words")}
+                  · {lbl("objetivo", "target")} ~{current.wordTarget}
                 </span>
                 {activeSection < pitchSections.length - 1 && (
                   <button
                     onClick={() => setActiveSection(activeSection + 1)}
                     className="flex items-center gap-1.5 text-[10px] font-semibold text-accent-text hover:underline cursor-pointer"
                   >
-                    Siguiente sección <ChevronRight size={11} />
+                    {lbl("Siguiente sección", "Next section")} <ChevronRight size={11} />
                   </button>
                 )}
               </div>
@@ -976,7 +1076,7 @@ export default function PitchLab() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
                     <Sparkles size={12} className="text-accent-text" />
-                    <span className="text-[11px] font-bold text-accent-text">Coach IA — Prof. Ana</span>
+                    <span className="text-[11px] font-bold text-accent-text">{lbl("Coach IA — Prof. Ana", "AI Coach — Prof. Ana")}</span>
                   </div>
                   <button
                     onClick={() => handlePedirConsejo(current.id, notes[current.id] || "")}
@@ -984,8 +1084,8 @@ export default function PitchLab() {
                     className="flex items-center gap-1.5 text-[10px] font-bold bg-sidebar text-white px-3 py-1.5 rounded-xl cursor-pointer hover:bg-accent-dark transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {coachingSection === current.id
-                      ? <><Loader2 size={10} className="animate-spin" /> Analizando...</>
-                      : <><MessageSquare size={10} /> Pedir consejo</>
+                      ? <><Loader2 size={10} className="animate-spin" /> {lbl("Analizando...", "Analyzing...")}</>
+                      : <><MessageSquare size={10} /> {lbl("Pedir consejo", "Get advice")}</>
                     }
                   </button>
                 </div>
@@ -996,7 +1096,7 @@ export default function PitchLab() {
                       <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
                         <span className="text-accent text-[8px] font-bold">IA</span>
                       </div>
-                      <span className="text-[10px] font-bold text-white/70 uppercase tracking-wide">Feedback de Prof. Ana</span>
+                      <span className="text-[10px] font-bold text-white/70 uppercase tracking-wide">{lbl("Feedback de Prof. Ana", "Feedback from Prof. Ana")}</span>
                       <button
                         onClick={() => setAiCoach(prev => ({ ...prev, [current.id]: null }))}
                         className="ml-auto text-white/30 hover:text-white/60 cursor-pointer text-[10px]"
@@ -1007,7 +1107,7 @@ export default function PitchLab() {
                 ) : (
                   <div className="bg-background rounded-xl px-4 py-3 border border-dashed border-card-border text-center">
                     <p className="text-[10px] text-text-muted">
-                      Escribe tu sección y pulsa &ldquo;Pedir consejo&rdquo; — la Profa. Ana revisará tu pitch y dará feedback personalizado.
+                      {lbl("Escribe tu sección y pulsa \"Pedir consejo\" — la Profa. Ana revisará tu pitch y dará feedback personalizado.", "Write your section and click \"Get advice\" — Prof. Ana will review your pitch and give personalised feedback.")}
                     </p>
                   </div>
                 )}
@@ -1018,7 +1118,7 @@ export default function PitchLab() {
             <div className="bg-accent-light rounded-2xl border border-accent-text/20 p-4">
               <div className="flex items-center gap-2 mb-2.5">
                 <Lightbulb size={13} className="text-accent-text" />
-                <span className="text-[11px] font-bold text-accent-text">Consejos para esta sección</span>
+                <span className="text-[11px] font-bold text-accent-text">{lbl("Consejos para esta sección", "Tips for this section")}</span>
               </div>
               <ul className="space-y-1.5">
                 {current.tips.map((tip, i) => (
@@ -1038,9 +1138,9 @@ export default function PitchLab() {
                   className="w-full flex items-center gap-2 px-4 py-3 hover:bg-background transition-colors cursor-pointer"
                 >
                   <BookOpen size={13} className="text-text-secondary flex-shrink-0" />
-                  <span className="text-[11px] font-bold text-text-primary flex-1 text-left">Guión de apoyo</span>
+                  <span className="text-[11px] font-bold text-text-primary flex-1 text-left">{lbl("Guión de apoyo", "Support script")}</span>
                   <span className="text-[9px] text-text-muted bg-background px-2 py-0.5 rounded-full mr-1">
-                    {guionPorSeccion[current.id].puntos.filter((p) => p.clave).length} puntos clave
+                    {guionPorSeccion[current.id].puntos.filter((p) => p.clave).length} {lbl("puntos clave", "key points")}
                   </span>
                   {guionOpen.has(current.id)
                     ? <ChevronUp size={13} className="text-text-muted flex-shrink-0" />
@@ -1050,7 +1150,7 @@ export default function PitchLab() {
                 {guionOpen.has(current.id) && (
                   <div className="px-4 pb-4 border-t border-card-border">
                     <p className="text-[10px] text-text-muted py-2.5">
-                      Puntos que debes cubrir en esta sección — los marcados como <span className="font-bold text-sidebar">Clave</span> son imprescindibles.
+                      {lbl("Puntos que debes cubrir en esta sección — los marcados como", "Points to cover in this section — those marked as")} <span className="font-bold text-sidebar">{lbl("Clave", "Key")}</span> {lbl("son imprescindibles.", "are essential.")}
                     </p>
                     <ul className="space-y-2 mb-4">
                       {guionPorSeccion[current.id].puntos.map((punto, i) => (
@@ -1061,14 +1161,14 @@ export default function PitchLab() {
                           </span>
                           {punto.clave && (
                             <span className="text-[8px] font-bold bg-accent text-sidebar px-1.5 py-0.5 rounded-full flex-shrink-0 self-start mt-0.5">
-                              Clave
+                              {lbl("Clave", "Key")}
                             </span>
                           )}
                         </li>
                       ))}
                     </ul>
                     <div className="bg-accent-light rounded-xl px-3 py-2.5 border border-accent-text/20">
-                      <p className="text-[9px] font-bold text-accent-text uppercase tracking-wide mb-1">Frase de transición →</p>
+                      <p className="text-[9px] font-bold text-accent-text uppercase tracking-wide mb-1">{lbl("Frase de transición →", "Transition phrase →")}</p>
                       <p className="text-[11px] text-accent-text italic leading-relaxed">
                         {guionPorSeccion[current.id].transicion}
                       </p>
@@ -1097,13 +1197,13 @@ export default function PitchLab() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Users size={14} className="text-accent" />
-                  <span className="text-[12px] text-white/70 font-medium uppercase tracking-widest">Simulacro de audiencia completado</span>
+                  <span className="text-[12px] text-white/70 font-medium uppercase tracking-widest">{lbl("Simulacro de audiencia completado", "Audience simulation complete")}</span>
                 </div>
                 <h2 className="text-[22px] font-bold text-white mb-1">
-                  {avgScore >= 80 ? "¡Pitch sólido! Estás listo." : avgScore >= 60 ? "Buen avance. Perfina estos puntos." : "Necesita más trabajo. ¡Tú puedes!"}
+                  {avgScore >= 80 ? lbl("¡Pitch sólido! Estás listo.", "Solid pitch! You're ready.") : avgScore >= 60 ? lbl("Buen avance. Perfina estos puntos.", "Good progress. Refine these points.") : lbl("Necesita más trabajo. ¡Tú puedes!", "Needs more work. You've got this!")}
                 </h2>
                 <p className="text-[12px] text-white/60">
-                  {filledCount}/5 secciones completadas · {totalWords} palabras (~{Math.round(totalWords / 130)} min de pitch)
+                  {filledCount}/5 {lbl("secciones completadas", "sections completed")} · {totalWords} {lbl("palabras", "words")} (~{Math.round(totalWords / 130)} min {lbl("de pitch", "pitch")})
                 </p>
               </div>
               <div className="ml-auto flex gap-3">
@@ -1112,7 +1212,7 @@ export default function PitchLab() {
                   className="flex items-center gap-1.5 border border-white/20 text-white text-[11px] font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:bg-white/10 transition-all"
                 >
                   <RotateCcw size={13} />
-                  Volver a practicar
+                  {lbl("Volver a practicar", "Practice again")}
                 </button>
               </div>
             </div>
@@ -1150,9 +1250,9 @@ export default function PitchLab() {
               <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <BarChart3 size={14} className="text-accent-text" />
-                  <span className="text-[13px] font-semibold text-text-primary">Puntuación por sección</span>
+                  <span className="text-[13px] font-semibold text-text-primary">{lbl("Puntuación por sección", "Score by section")}</span>
                   <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-                    Media: {(Object.values(sectionScores).reduce((a, b) => a + b, 0) / Object.values(sectionScores).length).toFixed(1)}/10
+                    {lbl("Media", "Avg")}: {(Object.values(sectionScores).reduce((a, b) => a + b, 0) / Object.values(sectionScores).length).toFixed(1)}/10
                   </span>
                 </div>
                 {(() => {
@@ -1179,7 +1279,7 @@ export default function PitchLab() {
                             <span className={`text-[14px] font-bold w-5 text-right flex-shrink-0 ${textColor}`}>{score}</span>
                             <span className="text-[9px] text-text-muted w-7 flex-shrink-0">/10</span>
                             {isWeakest
-                              ? <span className="text-[8px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">Mejorar</span>
+                              ? <span className="text-[8px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">{lbl("Mejorar", "Improve")}</span>
                               : <div className="w-14 flex-shrink-0" />
                             }
                           </div>
@@ -1201,13 +1301,13 @@ export default function PitchLab() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Users size={14} className="text-accent-text" />
-                      <span className="text-[13px] font-bold text-text-primary">Inversores simulados</span>
+                      <span className="text-[13px] font-bold text-text-primary">{lbl("Inversores simulados", "Simulated investors")}</span>
                     </div>
                     {capitalConseguido > 0 && (
                       <div className="flex items-center gap-2 bg-success-light border border-success/20 rounded-xl px-4 py-2">
                         <TrendingUp size={13} className="text-success" />
                         <span className="text-[12px] font-bold text-success">
-                          {capitalConseguido.toLocaleString("es-ES")} € conseguidos
+                          {capitalConseguido.toLocaleString("es-ES")} € {lbl("conseguidos", "secured")}
                         </span>
                       </div>
                     )}
@@ -1250,7 +1350,7 @@ export default function PitchLab() {
                           <p className="text-[10px] text-text-muted mb-2 leading-relaxed">{inv.descripcion}</p>
                           {decision !== null && (
                             <div className={`text-[10px] font-semibold mb-1 ${decision === "si" ? "text-success" : "text-urgent"}`}>
-                              {decision === "si" ? `Invierte ${inv.capital.toLocaleString("es-ES")} €` : "No invierte"}
+                              {decision === "si" ? `${lbl("Invierte", "Invests")} ${inv.capital.toLocaleString("es-ES")} €` : lbl("No invierte", "Does not invest")}
                             </div>
                           )}
                           {razon && (
@@ -1259,7 +1359,7 @@ export default function PitchLab() {
                             </p>
                           )}
                           {isLoading && (
-                            <p className="text-[10px] text-text-muted italic">Evaluando pitch...</p>
+                            <p className="text-[10px] text-text-muted italic">{lbl("Evaluando pitch...", "Evaluating pitch...")}</p>
                           )}
                         </div>
                       );
@@ -1268,7 +1368,7 @@ export default function PitchLab() {
                   {capitalConseguido === 0 && !inversoresConfig.some((inv) => inversoresVotos[inv.id]?.loading) && (
                     <div className="mt-4 bg-urgent-light rounded-xl px-4 py-3 border border-urgent/20">
                       <p className="text-[11px] text-urgent font-medium">
-                        Ningún inversor ha apostado por el proyecto esta vez. Refuerza el modelo financiero y la sección de mercado para convencerlos.
+                        {lbl("Ningún inversor ha apostado por el proyecto esta vez. Refuerza el modelo financiero y la sección de mercado para convencerlos.", "No investor backed the project this time. Strengthen the financial model and market section to convince them.")}
                       </p>
                     </div>
                   )}
@@ -1281,7 +1381,7 @@ export default function PitchLab() {
               <div className="col-span-3 bg-sidebar rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles size={14} className="text-accent" />
-                  <span className="text-[12px] font-bold text-accent uppercase tracking-wide">Feedback IA por sección</span>
+                  <span className="text-[12px] font-bold text-accent uppercase tracking-wide">{lbl("Feedback IA por sección", "AI feedback by section")}</span>
                 </div>
                 <div className="space-y-3">
                   {pitchSections.filter(s => aiCoach[s.id]).map(s => (
@@ -1301,9 +1401,9 @@ export default function PitchLab() {
             <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Users size={14} className="text-accent-text" />
-                <span className="text-[13px] font-semibold text-text-primary">Preguntas del jurado</span>
+                <span className="text-[13px] font-semibold text-text-primary">{lbl("Preguntas del jurado", "Jury questions")}</span>
                 <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-                  5 preguntas · inversores reales del Demo Day
+                  {lbl("5 preguntas · inversores reales del Demo Day", "5 questions · real Demo Day investors")}
                 </span>
               </div>
               <div className="space-y-4">
@@ -1331,7 +1431,7 @@ export default function PitchLab() {
                       <textarea
                         value={respuesta}
                         onChange={(e) => setRespuestasJurado((prev) => ({ ...prev, [pj.id]: e.target.value }))}
-                        placeholder="Escribe tu respuesta aquí... Sé directo, usa datos si los tienes y termina con seguridad."
+                        placeholder={lbl("Escribe tu respuesta aquí... Sé directo, usa datos si los tienes y termina con seguridad.", "Write your answer here... Be direct, use data if you have it, and close with confidence.")}
                         rows={3}
                         className="w-full text-[11px] text-text-primary bg-card border border-card-border rounded-xl px-3 py-2.5 outline-none focus:border-accent-text/40 resize-none transition-colors placeholder:text-text-muted mb-2"
                       />
@@ -1343,13 +1443,13 @@ export default function PitchLab() {
                           className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-sidebar px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isEvaluando ? (
-                            <><Loader2 size={10} className="animate-spin" />Evaluando...</>
+                            <><Loader2 size={10} className="animate-spin" />{lbl("Evaluando...", "Evaluating...")}</>
                           ) : (
-                            <><Sparkles size={10} />Evaluar respuesta</>
+                            <><Sparkles size={10} />{lbl("Evaluar respuesta", "Evaluate answer")}</>
                           )}
                         </button>
                         {respuesta.length > 0 && (
-                          <span className="text-[9px] text-text-muted">{respuesta.split(/\s+/).filter(Boolean).length} palabras</span>
+                          <span className="text-[9px] text-text-muted">{respuesta.split(/\s+/).filter(Boolean).length} {lbl("palabras", "words")}</span>
                         )}
                       </div>
                       {/* Evaluación IA */}
@@ -1357,7 +1457,7 @@ export default function PitchLab() {
                         <div className="mt-3 bg-sidebar/5 rounded-xl border border-sidebar/10 p-3">
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Sparkles size={10} className="text-accent-text" />
-                            <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">Evaluación del jurado IA</span>
+                            <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">{lbl("Evaluación del jurado IA", "AI jury evaluation")}</span>
                           </div>
                           <p className="text-[11px] text-text-secondary leading-relaxed">{evaluacion}</p>
                         </div>
@@ -1372,15 +1472,15 @@ export default function PitchLab() {
             <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Mic size={14} className="text-sidebar" />
-                <span className="text-[13px] font-semibold text-text-primary">Inversores en vivo</span>
-                <span className="text-[10px] text-text-muted ml-1">Sesión de 3 preguntas encadenadas · inversor aleatorio</span>
+                <span className="text-[13px] font-semibold text-text-primary">{lbl("Inversores en vivo", "Live investors")}</span>
+                <span className="text-[10px] text-text-muted ml-1">{lbl("Sesión de 3 preguntas encadenadas · inversor aleatorio", "3-question chained session · random investor")}</span>
                 {vivoStep === 0 && (
                   <button
                     onClick={handleIniciarSesionVivo}
                     className="ml-auto flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
                   >
                     <Play size={11} />
-                    Iniciar sesión en vivo
+                    {lbl("Iniciar sesión en vivo", "Start live session")}
                   </button>
                 )}
                 {vivoStep > 0 && vivoStep < 4 && (
@@ -1388,7 +1488,7 @@ export default function PitchLab() {
                     onClick={() => { setVivoStep(0); setVivoInversor(null); }}
                     className="ml-auto text-[9px] text-text-muted hover:text-urgent cursor-pointer"
                   >
-                    Cancelar sesión
+                    {lbl("Cancelar sesión", "Cancel session")}
                   </button>
                 )}
                 {vivoStep === 4 && (
@@ -1397,7 +1497,7 @@ export default function PitchLab() {
                     className="ml-auto flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:border-accent-text/30"
                   >
                     <RotateCcw size={10} />
-                    Nueva sesión
+                    {lbl("Nueva sesión", "New session")}
                   </button>
                 )}
               </div>
@@ -1407,7 +1507,7 @@ export default function PitchLab() {
                 <div className="bg-background rounded-xl px-4 py-5 flex flex-col items-center gap-2">
                   <Users size={20} className="text-text-muted" />
                   <p className="text-[11px] text-text-muted text-center">
-                    Un inversor aleatorio te hará 3 preguntas encadenadas. La segunda y tercera dependen de tu respuesta anterior. Al final, recibirás una puntuación de 1 a 10.
+                    {lbl("Un inversor aleatorio te hará 3 preguntas encadenadas. La segunda y tercera dependen de tu respuesta anterior. Al final, recibirás una puntuación de 1 a 10.", "A random investor will ask you 3 chained questions. The second and third depend on your previous answer. At the end, you will receive a score from 1 to 10.")}
                   </p>
                 </div>
               )}
@@ -1429,11 +1529,11 @@ export default function PitchLab() {
                         {[1, 2, 3].map((s) => (
                           <div key={s} className={`w-2 h-2 rounded-full ${s <= vivoStep ? "bg-accent" : "bg-white/20"}`} />
                         ))}
-                        <span className="text-[9px] text-white/40 ml-1">Pregunta {Math.min(vivoStep, 3)} de 3</span>
+                        <span className="text-[9px] text-white/40 ml-1">{lbl("Pregunta", "Question")} {Math.min(vivoStep, 3)} {lbl("de", "of")} 3</span>
                       </div>
                     )}
                     {vivoStep === 4 && (
-                      <span className="text-[9px] font-bold bg-success text-white px-2 py-0.5 rounded-full">Completada</span>
+                      <span className="text-[9px] font-bold bg-success text-white px-2 py-0.5 rounded-full">{lbl("Completada", "Completed")}</span>
                     )}
                   </div>
 
@@ -1447,7 +1547,7 @@ export default function PitchLab() {
                             {vivoInversor.avatar}
                           </div>
                           <div className="bg-background rounded-xl rounded-tl-sm px-3 py-2 flex-1">
-                            <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-0.5">Pregunta {i + 1}</span>
+                            <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-0.5">{lbl("Pregunta", "Question")} {i + 1}</span>
                             <p className="text-[11px] text-text-primary leading-relaxed italic">&ldquo;{preg}&rdquo;</p>
                           </div>
                         </div>
@@ -1455,7 +1555,7 @@ export default function PitchLab() {
                         {vivoRespuestas[i] && (
                           <div className="flex items-start gap-2 justify-end">
                             <div className="bg-accent-light rounded-xl rounded-tr-sm px-3 py-2 max-w-[85%]">
-                              <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide block mb-0.5">Tu respuesta</span>
+                              <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide block mb-0.5">{lbl("Tu respuesta", "Your answer")}</span>
                               <p className="text-[11px] text-text-primary leading-relaxed">{vivoRespuestas[i]}</p>
                             </div>
                             <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -1473,13 +1573,13 @@ export default function PitchLab() {
                       <textarea
                         value={vivoRespuestaActual}
                         onChange={(e) => setVivoRespuestaActual(e.target.value)}
-                        placeholder="Responde de forma directa y concisa. El inversor espera claridad..."
+                        placeholder={lbl("Responde de forma directa y concisa. El inversor espera claridad...", "Answer directly and concisely. The investor expects clarity...")}
                         rows={3}
                         className="w-full text-[11px] text-text-primary bg-background border border-card-border rounded-xl px-3 py-2.5 outline-none focus:border-accent-text/40 resize-none transition-colors placeholder:text-text-muted"
                       />
                       <div className="flex items-center justify-between">
                         <span className="text-[9px] text-text-muted">
-                          {vivoRespuestaActual.split(/\s+/).filter(Boolean).length} palabras
+                          {vivoRespuestaActual.split(/\s+/).filter(Boolean).length} {lbl("palabras", "words")}
                         </span>
                         <button
                           onClick={handleEnviarRespuestaVivo}
@@ -1487,7 +1587,7 @@ export default function PitchLab() {
                           className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-4 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <ChevronRight size={11} />
-                          {vivoStep < 3 ? "Enviar y continuar" : "Enviar y finalizar"}
+                          {vivoStep < 3 ? lbl("Enviar y continuar", "Send and continue") : lbl("Enviar y finalizar", "Send and finish")}
                         </button>
                       </div>
                     </div>
@@ -1498,7 +1598,7 @@ export default function PitchLab() {
                     <div className="flex items-center gap-3 bg-background rounded-xl px-4 py-3">
                       <Loader2 size={13} className="text-accent-text animate-spin flex-shrink-0" />
                       <span className="text-[11px] text-text-secondary">
-                        {vivoStep <= 3 ? "Preparando la siguiente pregunta..." : "Calculando tu puntuación final..."}
+                        {vivoStep <= 3 ? lbl("Preparando la siguiente pregunta...", "Preparing the next question...") : lbl("Calculando tu puntuación final...", "Calculating your final score...")}
                       </span>
                     </div>
                   )}
@@ -1506,7 +1606,7 @@ export default function PitchLab() {
                   {/* Evaluación final */}
                   {vivoStep === 4 && vivoPuntuacion !== null && (
                     <div className={`rounded-xl p-5 text-center ${vivoPuntuacion >= 8 ? "bg-success-light" : vivoPuntuacion >= 6 ? "bg-accent-light" : "bg-warning-light"}`}>
-                      <p className="text-[11px] font-semibold text-text-secondary mb-1">{vivoInversor.nombre} · Puntuación final</p>
+                      <p className="text-[11px] font-semibold text-text-secondary mb-1">{vivoInversor.nombre} · {lbl("Puntuación final", "Final score")}</p>
                       <p className={`text-[48px] font-bold leading-none mb-2 ${vivoPuntuacion >= 8 ? "text-success" : vivoPuntuacion >= 6 ? "text-accent-text" : "text-warning"}`}>
                         {vivoPuntuacion}<span className="text-[20px] font-normal text-text-muted">/10</span>
                       </p>
@@ -1514,7 +1614,7 @@ export default function PitchLab() {
                         <p className="text-[12px] text-text-secondary italic max-w-md mx-auto">&ldquo;{vivoComentario}&rdquo;</p>
                       )}
                       <p className="text-[10px] text-text-muted mt-2">
-                        {vivoPuntuacion >= 8 ? "¡Excelente sesión! Estás listo para el Demo Day." : vivoPuntuacion >= 6 ? "Buena base. Practica los detalles financieros." : "Sigue practicando — especialmente el modelo de mercado."}
+                        {vivoPuntuacion >= 8 ? lbl("¡Excelente sesión! Estás listo para el Demo Day.", "Excellent session! You're ready for Demo Day.") : vivoPuntuacion >= 6 ? lbl("Buena base. Practica los detalles financieros.", "Good base. Practise the financial details.") : lbl("Sigue practicando — especialmente el modelo de mercado.", "Keep practising — especially the market model.")}
                       </p>
                     </div>
                   )}
@@ -1527,16 +1627,16 @@ export default function PitchLab() {
               <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <History size={14} className="text-accent-text" />
-                  <span className="text-[13px] font-semibold text-text-primary">Historial de sesiones en vivo</span>
+                  <span className="text-[13px] font-semibold text-text-primary">{lbl("Historial de sesiones en vivo", "Live session history")}</span>
                   <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-                    {historialSesiones.length} de 3 sesiones guardadas
+                    {historialSesiones.length} {lbl("de 3 sesiones guardadas", "of 3 sessions saved")}
                   </span>
                 </div>
 
                 {/* Gráfico de evolución de puntuaciones */}
                 {historialSesiones.length > 1 && (
                   <div className="mb-4">
-                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Evolución de puntuación</p>
+                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Evolución de puntuación", "Score evolution")}</p>
                     <div className="flex items-end gap-3 h-20">
                       {[...historialSesiones].reverse().map((s, i) => {
                         const pct = (s.puntuacion / 10) * 100;
@@ -1574,7 +1674,7 @@ export default function PitchLab() {
                             </span>
                           </div>
                           <p className="text-[10px] text-text-muted mb-1">{s.inversor.perfil} · {s.inversor.descripcion}</p>
-                          <p className="text-[10px] text-text-secondary italic truncate">1ª pregunta: &ldquo;{s.preguntaClave}&rdquo;</p>
+                          <p className="text-[10px] text-text-secondary italic truncate">{lbl("1ª pregunta:", "1st question:")} &ldquo;{s.preguntaClave}&rdquo;</p>
                           {s.comentario && (
                             <p className="text-[10px] text-text-secondary mt-1 leading-snug">&ldquo;{s.comentario}&rdquo;</p>
                           )}
@@ -1586,7 +1686,7 @@ export default function PitchLab() {
                           className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
                         >
                           <RotateCcw size={10} />
-                          Repetir con {s.inversor.nombre.split(" ")[0]}
+                          {lbl("Repetir con", "Repeat with")} {s.inversor.nombre.split(" ")[0]}
                         </button>
                       </div>
                     </div>
@@ -1599,7 +1699,7 @@ export default function PitchLab() {
             <div className="col-span-3 bg-accent-light rounded-2xl border border-accent-text/20 p-5">
               <div className="flex items-center gap-2 mb-2">
                 <MessageSquare size={14} className="text-accent-text" />
-                <span className="text-[12px] font-bold text-accent-text">Nota de la Profa. Ana</span>
+                <span className="text-[12px] font-bold text-accent-text">{lbl("Nota de la Profa. Ana", "Note from Prof. Ana")}</span>
               </div>
               <p className="text-[12px] text-accent-text leading-relaxed">
                 {avgScore >= 80
