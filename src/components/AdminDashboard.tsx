@@ -5972,6 +5972,161 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               );
             })()}
+
+            {/* ── A42: Evolución LOMLOE T2 por clase · semanas 1–4 ─────────── */}
+            {(() => {
+              const claseT2Data: Record<string, { activa: boolean; comps: Record<string, number[]> }> = {
+                "1ºESO A": {
+                  activa: true,
+                  comps: {
+                    CLC:   [1.8, 2.3, 2.7, 3.0],
+                    CPL:   [1.5, 2.0, 2.4, 2.6],
+                    STEM:  [2.0, 2.5, 3.0, 3.2],
+                    CD:    [1.7, 2.2, 2.6, 2.9],
+                    CPSAA: [1.9, 2.3, 2.7, 3.1],
+                    CC:    [1.8, 2.4, 2.8, 3.0],
+                    CE:    [2.2, 2.7, 3.1, 3.4],
+                    CCEC:  [1.6, 2.1, 2.5, 2.8],
+                  },
+                },
+                "1ºESO B": {
+                  activa: true,
+                  comps: {
+                    CLC:   [1.7, 2.2, 2.5, 2.8],
+                    CPL:   [1.4, 1.9, 2.2, 2.4],
+                    STEM:  [1.9, 2.4, 2.8, 3.0],
+                    CD:    [1.8, 2.3, 2.7, 3.0],
+                    CPSAA: [1.7, 2.1, 2.5, 2.7],
+                    CC:    [1.6, 2.0, 2.4, 2.6],
+                    CE:    [2.0, 2.5, 2.9, 3.2],
+                    CCEC:  [1.5, 2.0, 2.3, 2.6],
+                  },
+                },
+                "2ºESO A": { activa: false, comps: { CLC: [0,0,0,0], CPL: [0,0,0,0], STEM: [0,0,0,0], CD: [0,0,0,0], CPSAA: [0,0,0,0], CC: [0,0,0,0], CE: [0,0,0,0], CCEC: [0,0,0,0] } },
+                "2ºESO B": { activa: false, comps: { CLC: [0,0,0,0], CPL: [0,0,0,0], STEM: [0,0,0,0], CD: [0,0,0,0], CPSAA: [0,0,0,0], CC: [0,0,0,0], CE: [0,0,0,0], CCEC: [0,0,0,0] } },
+              };
+
+              const compNames: Record<string, string> = {
+                CLC: "Comunicación", CPL: "Plurilingüe", STEM: "STEM", CD: "Digital",
+                CPSAA: "Personal", CC: "Ciudadana", CE: "Emprendedora", CCEC: "Cultural",
+              };
+
+              const semColor = (val: number) => {
+                if (val >= 3.5) return "bg-success";
+                if (val >= 2.8) return "bg-accent-text";
+                if (val >= 2.0) return "bg-warning";
+                return "bg-urgent";
+              };
+
+              const claseActiva = "1ºESO A"; // most advanced class as reference
+              const t2ActiveClases = Object.entries(claseT2Data).filter(([, v]) => v.activa);
+              const avgT2Global = (() => {
+                let sum = 0; let count = 0;
+                t2ActiveClases.forEach(([, c]) => {
+                  Object.values(c.comps).forEach((arr) => { sum += arr[3]; count++; });
+                });
+                return count > 0 ? (sum / count).toFixed(1) : "0";
+              })();
+              const mejorComp = (() => {
+                const refComps = claseT2Data[claseActiva].comps;
+                return Object.entries(refComps).sort((a, b) => b[1][3] - a[1][3])[0];
+              })();
+
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp size={14} className="text-accent-text" />
+                      <h3 className="text-[14px] font-semibold text-text-primary">Evolución LOMLOE T2 por clase · semanas 1–4</h3>
+                    </div>
+                    <span className="text-[9px] bg-sidebar text-white font-bold px-2 py-1 rounded-full">Food Truck</span>
+                  </div>
+                  <p className="text-[11px] text-text-muted mb-4">
+                    Progresión media de las 8 competencias LOMLOE por clase (escala 1–4). 1ºESO en activo; 2ºESO inicia T2 la semana 5.
+                  </p>
+
+                  {/* KPIs */}
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="bg-accent-light rounded-xl p-3 text-center">
+                      <p className="text-[20px] font-black text-accent-text leading-none">{avgT2Global}</p>
+                      <p className="text-[9px] text-text-muted mt-1">Media global T2</p>
+                    </div>
+                    <div className="bg-success-light rounded-xl p-3 text-center">
+                      <p className="text-[20px] font-black text-success leading-none">{mejorComp[0]}</p>
+                      <p className="text-[9px] text-text-muted mt-1">Comp. más avanzada (1ºA)</p>
+                    </div>
+                    <div className="bg-background rounded-xl p-3 text-center">
+                      <p className="text-[20px] font-black text-text-primary leading-none">S{4}</p>
+                      <p className="text-[9px] text-text-muted mt-1">Semana actual</p>
+                    </div>
+                  </div>
+
+                  {/* Grid por clase activa */}
+                  <div className="space-y-5">
+                    {t2ActiveClases.map(([clase, data]) => (
+                      <div key={clase}>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-[11px] font-bold text-text-primary">{clase}</span>
+                          <span className="text-[8px] bg-success-light text-success font-bold px-2 py-0.5 rounded-full">T2 activo</span>
+                        </div>
+                        {/* Comp rows */}
+                        <div className="space-y-1.5">
+                          {Object.entries(data.comps).map(([comp, vals]) => {
+                            const delta = vals[3] - vals[0];
+                            return (
+                              <div key={comp} className="flex items-center gap-2">
+                                <span className="text-[9px] font-bold text-text-muted w-12 flex-shrink-0">{comp}</span>
+                                <span className="text-[9px] text-text-muted w-20 flex-shrink-0 truncate">{compNames[comp]}</span>
+                                {/* 4 week bars */}
+                                <div className="flex items-end gap-1 flex-1">
+                                  {vals.map((v, wi) => (
+                                    <div key={wi} className="flex-1 flex flex-col items-center gap-0.5">
+                                      <div className="w-full rounded-sm" style={{ height: `${Math.round(v / 4 * 28)}px`, minHeight: 4 }}>
+                                        <div className={`w-full h-full rounded-sm ${wi === 3 ? semColor(v) : "bg-accent-text/30"}`} />
+                                      </div>
+                                      <span className="text-[7px] text-text-muted">S{wi + 1}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                                <span className={`text-[9px] font-bold w-10 text-right flex-shrink-0 ${delta >= 0.8 ? "text-success" : delta >= 0.5 ? "text-accent-text" : "text-warning"}`}>
+                                  +{delta.toFixed(1)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Clases pendientes */}
+                  <div className="mt-4 bg-warning-light rounded-xl px-3 py-2.5 border border-warning/20">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertTriangle size={10} className="text-warning" />
+                      <span className="text-[10px] font-bold text-warning">2ºESO A y 2ºESO B — T2 pendiente de lanzar (semana 5)</span>
+                    </div>
+                    <p className="text-[10px] text-text-secondary">
+                      Estas clases finalizan T1 esta semana. Los datos LOMLOE T2 estarán disponibles cuando el docente asigne el proyecto Food Truck.
+                    </p>
+                  </div>
+
+                  {/* Leyenda */}
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    {[
+                      { color: "bg-success", label: "Logro sobresaliente (≥3.5)" },
+                      { color: "bg-accent-text", label: "Logro esperado (2.8–3.5)" },
+                      { color: "bg-warning", label: "En proceso (2.0–2.8)" },
+                      { color: "bg-urgent", label: "Inicio (<2.0)" },
+                    ].map((l) => (
+                      <div key={l.label} className="flex items-center gap-1">
+                        <span className={`w-2.5 h-2.5 rounded-sm ${l.color} inline-block flex-shrink-0`} />
+                        <span className="text-[8px] text-text-muted">{l.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}

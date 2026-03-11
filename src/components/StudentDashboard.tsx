@@ -136,6 +136,11 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
 
+  // S44 — Mi pitch T2 · Bloque 3 Pitch Lab
+  const [pitchTextos, setPitchTextos] = useState<Record<string, string>>({});
+  const [pitchGuardando, setPitchGuardando] = useState(false);
+  const [pitchGuardado, setPitchGuardado] = useState(false);
+
   // C41 — Deep Dive · Bloque 1 Mentalidad
   const [deepDiveEnviado, setDeepDiveEnviado] = useState<string | null>(null);
 
@@ -2527,6 +2532,260 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 {lbl(
                   "Lo que estás construyendo en clase no es un ejercicio — es una simulación del mercado real de hostelería. Las decisiones de precio, marca y finanzas que tomas hoy son las mismas que toman los emprendedores reales del sector.",
                   "What you're building in class isn't an exercise — it's a real-market simulation of the hospitality sector. The pricing, branding and financial decisions you make today are the same ones real entrepreneurs make."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S44: Mi pitch T2 — estructura y ensayo · Bloque 3 ──────────────── */}
+      {(() => {
+        const secciones = [
+          { id: "problema",  titulo: lbl("Problema",          "Problem"),      tiempo: "30s", palabras: 50, placeholder: lbl("¿Qué problema real resuelve tu food truck? Ej.: En Málaga no hay un food truck de cocina mediterránea de autor asequible cerca de las zonas de oficinas.", "What real problem does your food truck solve?") },
+          { id: "solucion",  titulo: lbl("Solución",          "Solution"),     tiempo: "20s", palabras: 35, placeholder: lbl("¿Cómo lo resuelves? Describe tu concepto en 1-2 frases con lo diferencial.", "How do you solve it? Describe your concept in 1-2 sentences with your differentiator.") },
+          { id: "mercado",   titulo: lbl("Mercado",           "Market"),       tiempo: "15s", palabras: 25, placeholder: lbl("¿A quién va dirigido? Tamaño del mercado objetivo en Málaga.", "Who is it for? Target market size in Málaga.") },
+          { id: "modelo",    titulo: lbl("Modelo de negocio", "Business model"),tiempo: "15s", palabras: 25, placeholder: lbl("¿Cómo ganas dinero? Precio medio, margen, punto de equilibrio.", "How do you make money? Avg price, margin, breakeven.") },
+          { id: "equipo",    titulo: lbl("Equipo",            "Team"),         tiempo: "10s", palabras: 20, placeholder: lbl("¿Quiénes sois? Nombra los 4 roles del equipo y vuestra competencia principal.", "Who are you? Name the 4 team roles and your main competency.") },
+        ];
+        const rellenadas = secciones.filter(s => (pitchTextos[s.id] ?? "").trim().length > 5).length;
+        const pctPitch = Math.round((rellenadas / secciones.length) * 100);
+
+        const handleGuardar = () => {
+          if (pitchGuardando) return;
+          setPitchGuardando(true);
+          setTimeout(() => {
+            setPitchGuardando(false);
+            setPitchGuardado(true);
+            setTimeout(() => setPitchGuardado(false), 3000);
+          }, 900);
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <MessageCircle size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Mi pitch T2 — estructura 90 segundos", "T2 pitch — 90-second structure")}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${pctPitch === 100 ? "bg-success-light text-success" : "bg-accent-light text-accent-text"}`}>
+                  {rellenadas}/5
+                </span>
+                <span className="text-[9px] bg-sidebar text-white font-bold px-2 py-1 rounded-full">
+                  {lbl("Bloque 3 · Pitch", "Block 3 · Pitch")}
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Estructura tu pitch de 90 segundos para el Demo Day. Cada sección tiene un tiempo y un número máximo de palabras.", "Structure your 90-second pitch for Demo Day. Each section has a time limit and word count.")}
+            </p>
+
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="h-1.5 bg-background rounded-full overflow-hidden border border-card-border">
+                <div
+                  className={`h-full rounded-full transition-all ${pctPitch === 100 ? "bg-success" : "bg-accent-text"}`}
+                  style={{ width: `${pctPitch}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Secciones */}
+            <div className="space-y-3 mb-4">
+              {secciones.map((s) => {
+                const texto = pitchTextos[s.id] ?? "";
+                const wordCount = texto.trim() ? texto.trim().split(/\s+/).length : 0;
+                const over = wordCount > s.palabras;
+                const done = texto.trim().length > 5;
+                return (
+                  <div key={s.id} className={`rounded-xl border p-3 transition-all ${done ? "bg-accent-light border-accent/30" : "bg-background border-card-border"}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${done ? "bg-success" : "bg-border"}`}>
+                        {done ? <CheckCircle2 size={10} className="text-white" /> : <span className="text-[8px] font-bold text-text-muted">{secciones.indexOf(s) + 1}</span>}
+                      </div>
+                      <span className="text-[12px] font-semibold text-text-primary">{s.titulo}</span>
+                      <span className="text-[8px] text-text-muted ml-auto flex-shrink-0">{s.tiempo}</span>
+                      <span className={`text-[8px] font-bold flex-shrink-0 ${over ? "text-urgent" : "text-text-muted"}`}>
+                        {wordCount}/{s.palabras} {lbl("pal.", "wds")}
+                      </span>
+                    </div>
+                    <textarea
+                      value={texto}
+                      onChange={(e) => {
+                        setPitchTextos(prev => ({ ...prev, [s.id]: e.target.value }));
+                        setPitchGuardado(false);
+                      }}
+                      placeholder={s.placeholder}
+                      rows={2}
+                      className="w-full bg-white/70 border border-card-border rounded-lg px-2.5 py-1.5 text-[11px] text-text-primary placeholder-text-muted outline-none focus:border-accent-text/50 transition-colors resize-none"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Save button */}
+            <button
+              onClick={handleGuardar}
+              disabled={pitchGuardando || rellenadas === 0}
+              className={`flex items-center gap-2 text-[11px] font-bold px-4 py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                pitchGuardado ? "bg-success-light text-success" : "bg-sidebar text-white hover:bg-accent-dark"
+              }`}
+            >
+              {pitchGuardando ? (
+                <><RefreshCw size={11} className="animate-spin" />{lbl("Guardando...", "Saving...")}</>
+              ) : pitchGuardado ? (
+                <><CheckCircle2 size={11} />{lbl("¡Pitch guardado!", "Pitch saved!")}</>
+              ) : (
+                <><Send size={11} />{lbl("Guardar borrador", "Save draft")}</>
+              )}
+            </button>
+
+            {/* Culture note */}
+            <div className="mt-3 bg-accent-light rounded-xl px-3 py-2">
+              <p className="text-[9px] text-accent-text leading-relaxed">
+                {lbl(
+                  "🎤 Bloque 3 Pitch Lab: cada proyecto termina con presentación pública. La estructura de 90 segundos es la misma que usan los emprendedores en concursos de inversión reales.",
+                  "🎤 Block 3 Pitch Lab: every project ends with a public presentation. The 90-second structure is the same used by entrepreneurs in real investment competitions."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── C42: Empresa por dentro · Bloque 2 ──────────────────────────────── */}
+      {(() => {
+        const [rolExpandido, setRolExpandido] = useState<string | null>(null);
+        const roles = [
+          {
+            id: "ceo",
+            titulo: lbl("CEO — Directora de Concepto", "CEO — Concept Director"),
+            alumna: "Sofía Torres",
+            avatar: "ST",
+            comp: "CE",
+            descripcion: lbl(
+              "Toma las decisiones estratégicas del proyecto: concepto gastronómico, posicionamiento y visión a largo plazo del food truck. Equivale al CEO de una startup.",
+              "Makes strategic project decisions: gastronomic concept, positioning and long-term vision. Equivalent to a startup CEO."
+            ),
+            analogia: lbl("McDonald's tiene un CEO que decide si la marca entra en nuevos países. Sofía decide si 'Food & Fam' va al mercado navideño.", "McDonald's CEO decides whether the brand enters new countries. Sofía decides if 'Food & Fam' goes to the Christmas market."),
+            empresaReal: "Starbucks · McDonald's · Chipotle",
+          },
+          {
+            id: "cfo",
+            titulo: lbl("CFO — Director Financiero", "CFO — Financial Director"),
+            alumna: "Diego López",
+            avatar: "DL",
+            comp: "STEM",
+            descripcion: lbl(
+              "Gestiona el modelo de costes, fija precios, calcula el punto de equilibrio y controla el presupuesto. En una empresa real, es el CFO quien habla con los inversores.",
+              "Manages the cost model, sets prices, calculates breakeven and controls the budget. In a real company, the CFO talks to investors."
+            ),
+            analogia: lbl("El CFO de Uber decidió cuándo la empresa podía dejar de perder dinero. Diego decide cuántas raciones/día necesita para no perder.", "Uber's CFO decided when the company could stop losing money. Diego decides how many portions/day are needed to break even."),
+            empresaReal: "Uber · Airbnb · Deliveroo",
+          },
+          {
+            id: "cmo",
+            titulo: lbl("CMO — Directora de Marca", "CMO — Brand Director"),
+            alumna: "Ana Martín",
+            avatar: "AM",
+            comp: "CCEC",
+            descripcion: lbl(
+              "Diseña la identidad visual, el nombre y la estrategia de comunicación del food truck. En una empresa real, el CMO gestiona la imagen de marca global.",
+              "Designs the visual identity, name and communication strategy. In a real company, the CMO manages the global brand image."
+            ),
+            analogia: lbl("La CMO de Coca-Cola decide los colores y el tono de las campañas. Ana decide el logo, la paleta y cómo comunicar 'Food & Fam'.", "Coca-Cola's CMO decides campaign colours and tone. Ana decides the logo, palette and how to communicate 'Food & Fam'."),
+            empresaReal: "Coca-Cola · Apple · Zara",
+          },
+          {
+            id: "coo",
+            titulo: lbl("COO — Coordinadora de Operaciones", "COO — Operations Coordinator"),
+            alumna: "Lucas García",
+            avatar: "LG",
+            comp: "CPSAA",
+            descripcion: lbl(
+              "Organiza la logística del food truck: rutas, proveedores, turnos y procesos. En una empresa real, el COO asegura que todo funcione de forma eficiente cada día.",
+              "Organises food truck logistics: routes, suppliers, shifts and processes. In a real company, the COO ensures everything runs efficiently every day."
+            ),
+            analogia: lbl("El COO de Amazon diseña el sistema de entregas para que lleguen en 24h. Lucas diseña el flujo del food truck para servir 53 raciones/día.", "Amazon's COO designs the delivery system for 24h arrivals. Lucas designs the food truck flow to serve 53 portions/day."),
+            empresaReal: "Amazon · FedEx · Glovo",
+          },
+        ];
+
+        const compColors: Record<string, string> = {
+          CE: "bg-accent-light text-accent-text",
+          STEM: "bg-[#eff6ff] text-[#3b82f6]",
+          CCEC: "bg-warning-light text-warning",
+          CPSAA: "bg-success-light text-success",
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Empresa por dentro — Food Truck S.L.", "Inside the company — Food Truck S.L.")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-sidebar text-white font-bold px-2 py-1 rounded-full">
+                {lbl("Bloque 2 · Empresa", "Block 2 · Company")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl(
+                "Tu equipo tiene los mismos roles que una empresa real. Descubre cómo lo que haces en el proyecto se conecta con estructuras de empresas reales.",
+                "Your team has the same roles as a real company. Discover how what you do in the project connects to real company structures."
+              )}
+            </p>
+
+            <div className="space-y-2.5">
+              {roles.map((r) => {
+                const isOpen = rolExpandido === r.id;
+                return (
+                  <div key={r.id} className={`rounded-xl border transition-all ${isOpen ? "bg-sidebar text-white border-sidebar" : "bg-background border-card-border"}`}>
+                    <button
+                      onClick={() => setRolExpandido(isOpen ? null : r.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer"
+                    >
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${isOpen ? "bg-accent text-sidebar" : "bg-sidebar text-accent"}`}>
+                        <span className="text-[9px] font-bold">{r.avatar}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[12px] font-semibold leading-snug ${isOpen ? "text-white" : "text-text-primary"}`}>{r.titulo}</p>
+                        <p className={`text-[10px] ${isOpen ? "text-white/60" : "text-text-muted"}`}>{r.alumna}</p>
+                      </div>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${isOpen ? "bg-white/20 text-white" : (compColors[r.comp] ?? "bg-background text-text-muted")}`}>
+                        {r.comp}
+                      </span>
+                      <ChevronRight size={12} className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-90 text-white/60" : "text-text-muted"}`} />
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-3 pb-3">
+                        <p className="text-[11px] text-white/80 leading-relaxed mb-3">{r.descripcion}</p>
+                        <div className="bg-white/10 rounded-xl p-3 mb-2">
+                          <p className="text-[9px] font-bold text-accent uppercase tracking-wide mb-1">{lbl("Analogía con empresa real", "Real company analogy")}</p>
+                          <p className="text-[10px] text-white/80 leading-relaxed italic">«{r.analogia}»</p>
+                        </div>
+                        <p className="text-[8px] text-white/40">
+                          {lbl("Empresas con este rol:", "Companies with this role:")} <span className="text-white/60 font-semibold">{r.empresaReal}</span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 bg-accent-light rounded-xl px-3 py-2">
+              <p className="text-[9px] text-accent-text leading-relaxed">
+                {lbl(
+                  "🏢 Empresa por dentro (Bloque 2): las estructuras organizativas de tu proyecto son las mismas que usan las empresas reales del sector hostelero. No estás jugando a los negocios — estás aprendiendo cómo funcionan realmente.",
+                  "🏢 Inside the company (Block 2): your project's organizational structures are the same used by real hospitality companies. You're not playing business — you're learning how they really work."
                 )}
               </p>
             </div>

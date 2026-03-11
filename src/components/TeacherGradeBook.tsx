@@ -1255,6 +1255,113 @@ export default function TeacherGradeBook() {
           </div>
         );
       })()}
+
+      {/* ── T42: Proyección T2 — impacto en calificación final ───────────── */}
+      {(() => {
+        // T2 score por alumno: (canvas * 0.4 + presupuesto * 0.3 + equipo * 0.2 + pitchDraft * 0.1) × 4
+        const proyeccionT2: { id: string; nombre: string; avatar: string; canvasOk: boolean; presupOk: boolean; equipoOk: boolean; pitchOk: boolean; t2Score: number }[] = [
+          { id: "1",  nombre: "Lucas García",    avatar: "LG", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: false, t2Score: 0 },
+          { id: "2",  nombre: "Sofía Torres",    avatar: "ST", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: true,  t2Score: 0 },
+          { id: "3",  nombre: "Pablo Ruiz",      avatar: "PR", canvasOk: false, presupOk: false, equipoOk: false, pitchOk: false, t2Score: 0 },
+          { id: "4",  nombre: "María Santos",    avatar: "MS", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: false, t2Score: 0 },
+          { id: "5",  nombre: "Daniel Torres",   avatar: "DT", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: true,  t2Score: 0 },
+          { id: "6",  nombre: "Carmen López",    avatar: "CL", canvasOk: true,  presupOk: false, equipoOk: true,  pitchOk: false, t2Score: 0 },
+          { id: "7",  nombre: "Alejandro Ruiz",  avatar: "AR", canvasOk: false, presupOk: false, equipoOk: true,  pitchOk: false, t2Score: 0 },
+          { id: "8",  nombre: "Valentina Cruz",  avatar: "VC", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: false, t2Score: 0 },
+          { id: "9",  nombre: "Jorge Méndez",    avatar: "JM", canvasOk: true,  presupOk: true,  equipoOk: false, pitchOk: false, t2Score: 0 },
+          { id: "10", nombre: "Laura Sanz",      avatar: "LS", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: true,  t2Score: 0 },
+          { id: "11", nombre: "Tomás Herrera",   avatar: "TH", canvasOk: false, presupOk: false, equipoOk: false, pitchOk: false, t2Score: 0 },
+          { id: "12", nombre: "Carla Vega",      avatar: "CV", canvasOk: true,  presupOk: true,  equipoOk: true,  pitchOk: false, t2Score: 0 },
+        ].map(a => ({
+          ...a,
+          t2Score: Math.round(
+            (a.canvasOk ? 0.4 : 0) + (a.presupOk ? 0.3 : 0) + (a.equipoOk ? 0.2 : 0) + (a.pitchOk ? 0.1 : 0)
+          ) * 100,
+        }));
+
+        const suben  = proyeccionT2.filter(a => a.t2Score >= 70).length;
+        const bajan  = proyeccionT2.filter(a => a.t2Score < 30).length;
+        const estables = proyeccionT2.length - suben - bajan;
+        const avgT2 = Math.round(proyeccionT2.reduce((s, a) => s + a.t2Score, 0) / proyeccionT2.length);
+
+        const impactoCfg = (score: number) => {
+          if (score >= 70) return { label: lbl("Mejora",   "Improves"),  cls: "bg-success-light text-success",  icon: <ArrowUp   size={9} className="text-success" /> };
+          if (score >= 40) return { label: lbl("Estable",  "Stable"),    cls: "bg-accent-light text-accent-text", icon: <ArrowRight size={9} className="text-accent-text" /> };
+          return              { label: lbl("Riesgo",   "At risk"),   cls: "bg-urgent-light text-urgent",    icon: <ArrowDown size={9} className="text-urgent" /> };
+        };
+
+        return (
+          <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Proyección T2 — impacto en calificación final", "T2 projection — final grade impact")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                {lbl("Semana 3 · predictivo", "Week 3 · predictive")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Predicción del impacto de T2 en la nota final basada en canvas + presupuesto + equipo + pitch (sem. 3).", "Predicted T2 impact on final grade based on canvas + budget + team + pitch (week 3).")}
+            </p>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {[
+                { label: lbl("Score medio T2", "Avg T2 score"), val: `${avgT2}/100`, bg: "bg-accent-light", txt: "text-accent-text" },
+                { label: lbl("Mejoran nota",   "Grade improves"), val: `${suben}/12`,  bg: "bg-success-light", txt: "text-success" },
+                { label: lbl("Sin cambio",     "No change"),      val: `${estables}/12`, bg: "bg-background",   txt: "text-text-primary" },
+                { label: lbl("En riesgo",      "At risk"),        val: `${bajan}/12`,  bg: "bg-urgent-light",  txt: "text-urgent" },
+              ].map((k) => (
+                <div key={k.label} className={`rounded-xl p-3 text-center ${k.bg}`}>
+                  <p className={`text-[18px] font-black leading-none ${k.txt}`}>{k.val}</p>
+                  <p className="text-[9px] text-text-muted mt-1">{k.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* List */}
+            <div className="space-y-1.5">
+              {proyeccionT2.map((a) => {
+                const cfg = impactoCfg(a.t2Score);
+                return (
+                  <div key={a.id} className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${cfg.cls.includes("success") ? "bg-success-light/40 border-success/10" : cfg.cls.includes("urgent") ? "bg-urgent-light/40 border-urgent/10" : "bg-background border-card-border"}`}>
+                    <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                      <span className="text-[8px] font-bold text-accent">{a.avatar}</span>
+                    </div>
+                    <span className="text-[11px] font-medium text-text-primary flex-1 truncate">{a.nombre}</span>
+                    {[
+                      { v: a.canvasOk, l: "Canvas" },
+                      { v: a.presupOk, l: lbl("Presup.", "Budget") },
+                      { v: a.equipoOk, l: lbl("Equipo",  "Team") },
+                      { v: a.pitchOk,  l: "Pitch" },
+                    ].map((h) => (
+                      <span key={h.l} className={`text-[7px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${h.v ? "bg-success-light text-success" : "bg-border text-text-muted"}`}>
+                        {h.v ? "✓" : "·"} {h.l}
+                      </span>
+                    ))}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {cfg.icon}
+                      <span className={`text-[8px] font-bold ${cfg.cls.split(" ")[1]}`}>{a.t2Score}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 bg-accent-light rounded-xl px-3 py-2.5">
+              <p className="text-[10px] text-accent-text leading-relaxed">
+                {lbl(
+                  "La proyección predictiva muestra el impacto esperado en la calificación final si el alumno mantiene el ritmo actual. Los alumnos en riesgo (Pablo, Alejandro, Tomás) requieren intervención antes de la semana 5.",
+                  "The predictive projection shows expected impact on final grade if the student maintains current pace. At-risk students (Pablo, Alejandro, Tomás) require intervention before week 5."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
