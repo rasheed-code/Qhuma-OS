@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -127,6 +127,17 @@ const errorLog: ErrorEntry[] = [
     cambiaría: "Modelar siempre un escenario conservador (40% ocupación), uno realista (65%) y uno optimista (85%). Nunca solo el optimista.",
     resolved: false,
   },
+];
+
+// S14 — Línea del tiempo del proyecto
+const timelineHitos = [
+  { fecha: "3 mar", titulo: "Análisis de mercado completado", competencia: "STEM" as CompKey, xp: 120, completado: true, fase: "Semana 1" },
+  { fecha: "4 mar", titulo: "Identidad visual de Casa Limón creada", competencia: "CCEC" as CompKey, xp: 100, completado: true, fase: "Semana 1" },
+  { fecha: "5 mar", titulo: "Listing publicado en español e inglés", competencia: "CLC" as CompKey, xp: 130, completado: true, fase: "Semana 2" },
+  { fecha: "6 mar", titulo: "Landing page de Casa Limón publicada", competencia: "CD" as CompKey, xp: 150, completado: true, fase: "Semana 2" },
+  { fecha: "8 mar", titulo: "Modelo financiero y punto de equilibrio", competencia: "STEM" as CompKey, xp: 140, completado: true, fase: "Semana 3" },
+  { fecha: "10 mar", titulo: "Templates de comunicación con huéspedes", competencia: "CLC" as CompKey, xp: 80, completado: true, fase: "Semana 3" },
+  { fecha: "Próximo", titulo: "Demo Day — Pitch ante inversores reales", competencia: "CE" as CompKey, xp: 200, completado: false, fase: "Semana 4" },
 ];
 
 export default function StudentPortfolio() {
@@ -275,6 +286,61 @@ export default function StudentPortfolio() {
               </p>
             </div>
           )}
+        </div>
+
+        {/* S14: Línea del tiempo del proyecto */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-4">
+            <GitCommit size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">Línea del tiempo del proyecto</span>
+            <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+              {timelineHitos.filter((h) => h.completado).length}/{timelineHitos.length} hitos completados
+            </span>
+          </div>
+          <div className="relative pl-6">
+            {/* Connecting line */}
+            <div className="absolute left-2.5 top-2 bottom-2 w-0.5 bg-gradient-to-b from-accent-text/40 to-warning/30" />
+            <div className="space-y-3">
+              {timelineHitos.map((h, idx) => (
+                <div key={idx} className="relative">
+                  {/* Dot */}
+                  <div className={`absolute -left-[19px] w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    h.completado
+                      ? "bg-success border-success"
+                      : "bg-warning-light border-warning"
+                  }`}>
+                    {h.completado
+                      ? <span className="text-white text-[7px] font-black">✓</span>
+                      : <span className="text-warning text-[7px] font-black">→</span>
+                    }
+                  </div>
+                  {/* Card */}
+                  <div className={`rounded-xl px-3 py-2.5 ${
+                    h.completado ? "bg-background" : "bg-warning-light border border-warning/20"
+                  }`}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className={`text-[12px] font-semibold ${h.completado ? "text-text-primary" : "text-text-primary"}`}>
+                        {h.titulo}
+                      </span>
+                      <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                        <TrendingUp size={9} className="text-accent-text" />
+                        <span className="text-[10px] font-bold text-accent-text">+{h.xp} XP</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] text-text-muted">{h.fecha} · {h.fase}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(h.competencia)}`}>
+                        {h.competencia}
+                      </span>
+                      {!h.completado && (
+                        <span className="text-[8px] font-bold bg-warning text-white px-1.5 py-0.5 rounded-full">Próximo</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Weekly narrative blocks */}
