@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare, ArrowUp, ArrowDown, Minus, ShieldAlert } from "lucide-react";
+import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare, ArrowUp, ArrowDown, Minus, ShieldAlert, Download, Layers } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { useLang } from "@/lib/i18n";
@@ -90,6 +90,10 @@ export default function TeacherAnalytics() {
   const [contactados, setContactados] = useState<Set<string>>(new Set());
   // T23 — Semáforo de riesgo
   const [contactadosSemaforo, setContactadosSemaforo] = useState<Set<string>>(new Set());
+  // T29 — Comparativa entre grupos
+  const [grupoComparativaVista, setGrupoComparativaVista] = useState<"competencia" | "indicador">("competencia");
+  const [exportandoAnalisis, setExportandoAnalisis] = useState(false);
+  const [analisisExportado, setAnalisisExportado] = useState(false);
 
   const progMedio = Math.round(classStudents.reduce((s, a) => s + a.progress, 0) / classStudents.length);
   const totalEntregas = classStudents.reduce((s, a) => s + a.evidencesSubmitted, 0);
@@ -584,6 +588,226 @@ export default function TeacherAnalytics() {
           })}
         </div>
       </div>
+
+      {/* T29 — Comparativa entre grupos */}
+      {(() => {
+        const grupoA = [
+          { nombre: "Lucas García",    avatar: "LG", racha: 14, entregasATiempo: 95, riesgo: 12 },
+          { nombre: "Sofía Torres",    avatar: "ST", racha: 11, entregasATiempo: 88, riesgo: 18 },
+          { nombre: "Pablo Ruiz",      avatar: "PR", racha: 4,  entregasATiempo: 62, riesgo: 45 },
+          { nombre: "María Santos",    avatar: "MS", racha: 13, entregasATiempo: 92, riesgo: 10 },
+          { nombre: "Diego López",     avatar: "DL", racha: 7,  entregasATiempo: 74, riesgo: 30 },
+          { nombre: "Ana Martín",      avatar: "AM", racha: 15, entregasATiempo: 97, riesgo: 8  },
+        ];
+        const grupoB = [
+          { nombre: "Carlos Rivera",   avatar: "CR", racha: 9,  entregasATiempo: 80, riesgo: 22 },
+          { nombre: "Laura Sanz",      avatar: "LS", racha: 12, entregasATiempo: 89, riesgo: 14 },
+          { nombre: "Tomás Herrera",   avatar: "TH", racha: 5,  entregasATiempo: 67, riesgo: 38 },
+          { nombre: "Carla Vega",      avatar: "CV", racha: 10, entregasATiempo: 84, riesgo: 16 },
+          { nombre: "Alejandro Pérez", avatar: "AP", racha: 6,  entregasATiempo: 70, riesgo: 32 },
+          { nombre: "Valentina Cruz",  avatar: "VC", racha: 14, entregasATiempo: 93, riesgo: 9  },
+        ];
+
+        // Niveles LOMLOE por comp para cada grupo (promedio de los 6 alumnos × sus índices)
+        const compsKeys = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"];
+        const avgA_comps = compsKeys.map((_, ci) => {
+          const vals = grupoA.map((_, si) => seededLevel(si, ci));
+          return parseFloat((vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1));
+        });
+        const avgB_comps = compsKeys.map((_, ci) => {
+          const vals = grupoB.map((_, si) => seededLevel(si + 6, ci));
+          return parseFloat((vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1));
+        });
+
+        // Indicadores (vista alternativa)
+        const indicadores = [
+          { label: lbl("Entregas a tiempo", "On-time submissions"),  a: parseFloat((grupoA.reduce((s, a) => s + a.entregasATiempo, 0) / 6).toFixed(0)), b: parseFloat((grupoB.reduce((s, a) => s + a.entregasATiempo, 0) / 6).toFixed(0)), max: 100, suffix: "%" },
+          { label: lbl("Racha media",       "Average streak"),       a: parseFloat((grupoA.reduce((s, a) => s + a.racha, 0) / 6).toFixed(1)),            b: parseFloat((grupoB.reduce((s, a) => s + a.racha, 0) / 6).toFixed(1)),            max: 15,  suffix: " d" },
+          { label: lbl("Riesgo medio",      "Average risk score"),   a: parseFloat((grupoA.reduce((s, a) => s + a.riesgo, 0) / 6).toFixed(0)),           b: parseFloat((grupoB.reduce((s, a) => s + a.riesgo, 0) / 6).toFixed(0)),           max: 50,  suffix: "" },
+        ];
+
+        const avgRachaA = parseFloat((grupoA.reduce((s, a) => s + a.racha, 0) / 6).toFixed(1));
+        const avgRachaB = parseFloat((grupoB.reduce((s, a) => s + a.racha, 0) / 6).toFixed(1));
+        const avgEntregasA = parseFloat((grupoA.reduce((s, a) => s + a.entregasATiempo, 0) / 6).toFixed(0));
+        const avgEntregasB = parseFloat((grupoB.reduce((s, a) => s + a.entregasATiempo, 0) / 6).toFixed(0));
+        const avgRiesgoA = parseFloat((grupoA.reduce((s, a) => s + a.riesgo, 0) / 6).toFixed(0));
+        const avgRiesgoB = parseFloat((grupoB.reduce((s, a) => s + a.riesgo, 0) / 6).toFixed(0));
+
+        const handleExportar = () => {
+          setExportandoAnalisis(true);
+          setTimeout(() => {
+            const rows = compsKeys.map((k, ci) => `<tr><td style="padding:6px 12px;border:1px solid #eee;font-weight:600">${k}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;color:#1f514c">${avgA_comps[ci]}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;color:#376459">${avgB_comps[ci]}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;font-weight:600;color:${avgA_comps[ci] >= avgB_comps[ci] ? "#22c55e" : "#ef4444"}">${avgA_comps[ci] >= avgB_comps[ci] ? "Grupo A" : "Grupo B"}</td></tr>`).join("");
+            const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Análisis Comparativo Grupos — QHUMA OS</title><style>body{font-family:Inter,sans-serif;padding:32px;max-width:800px;margin:0 auto}h1{color:#141414}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#1f514c;color:white;padding:8px 12px;text-align:left}td{padding:6px 12px;border:1px solid #eee}.badge{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11px;font-weight:700}</style></head><body><h1>Análisis comparativo — Grupos A y B</h1><p style="color:#666">Proyecto: Airbnb Málaga / Casa Limón · 1º ESO · Semana 3 · ${new Date().toLocaleDateString("es-ES")}</p><h2>Resumen por indicador</h2><table><thead><tr><th>Indicador</th><th>Grupo A</th><th>Grupo B</th></tr></thead><tbody><tr><td>Racha media</td><td>${avgRachaA} días</td><td>${avgRachaB} días</td></tr><tr><td>Entregas a tiempo</td><td>${avgEntregasA}%</td><td>${avgEntregasB}%</td></tr><tr><td>Riesgo medio</td><td>${avgRiesgoA}</td><td>${avgRiesgoB}</td></tr></tbody></table><h2 style="margin-top:24px">Competencias LOMLOE (media 1–4)</h2><table><thead><tr><th>Competencia</th><th>Grupo A</th><th>Grupo B</th><th>Lidera</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const blob = new Blob([html], { type: "text/html" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `analisis_comparativo_grupos_${new Date().toISOString().slice(0,10)}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            setExportandoAnalisis(false);
+            setAnalisisExportado(true);
+            setTimeout(() => setAnalisisExportado(false), 4000);
+          }, 1200);
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-text-primary" />
+                <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Comparativa entre grupos", "Group comparison")}</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Toggle vista */}
+                <div className="flex gap-0.5 bg-background rounded-lg p-0.5">
+                  {(["competencia", "indicador"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setGrupoComparativaVista(v)}
+                      className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all cursor-pointer ${grupoComparativaVista === v ? "bg-card text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
+                    >
+                      {v === "competencia" ? lbl("Por competencia", "By competency") : lbl("Por indicador", "By indicator")}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={handleExportar}
+                  disabled={exportandoAnalisis}
+                  className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                >
+                  {exportandoAnalisis ? <ArrowDown size={10} className="animate-bounce" /> : <Download size={10} />}
+                  {exportandoAnalisis ? lbl("Generando…", "Generating…") : lbl("Exportar análisis", "Export analysis")}
+                </button>
+              </div>
+            </div>
+
+            {analisisExportado && (
+              <div className="flex items-center gap-2 bg-success-light border border-success/20 rounded-xl px-3 py-2 mb-4">
+                <CheckCircle2 size={12} className="text-success" />
+                <span className="text-[11px] font-semibold text-success">{lbl("Análisis comparativo exportado correctamente", "Comparative analysis exported successfully")}</span>
+              </div>
+            )}
+
+            {/* Leyenda grupos */}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-sidebar" />
+                <span className="text-[10px] font-semibold text-text-secondary">Grupo A: Lucas, Sofía, Pablo, María, Diego, Ana</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-sm bg-accent-text/60" />
+                <span className="text-[10px] font-semibold text-text-secondary">Grupo B: Carlos, Laura, Tomás, Carla, Alejandro, Valentina</span>
+              </div>
+            </div>
+
+            {/* Resumen KPIs comparativos */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              {[
+                { label: lbl("Racha media", "Avg streak"), a: `${avgRachaA} d`, b: `${avgRachaB} d`, aWins: avgRachaA >= avgRachaB },
+                { label: lbl("Entregas a tiempo", "On-time %"), a: `${avgEntregasA}%`, b: `${avgEntregasB}%`, aWins: avgEntregasA >= avgEntregasB },
+                { label: lbl("Riesgo medio", "Avg risk"), a: String(avgRiesgoA), b: String(avgRiesgoB), aWins: avgRiesgoA <= avgRiesgoB },
+              ].map((kpi) => (
+                <div key={kpi.label} className="bg-background rounded-xl p-3">
+                  <span className="text-[9px] text-text-muted block mb-2">{kpi.label}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="text-center flex-1">
+                      <span className="text-[18px] font-bold text-sidebar block leading-none">{kpi.a}</span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full mt-1 inline-block ${kpi.aWins ? "bg-success-light text-success" : "bg-background text-text-muted"}`}>A {kpi.aWins ? "▲" : ""}</span>
+                    </div>
+                    <span className="text-[10px] text-text-muted mx-2">vs</span>
+                    <div className="text-center flex-1">
+                      <span className="text-[18px] font-bold text-accent-text block leading-none">{kpi.b}</span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full mt-1 inline-block ${!kpi.aWins ? "bg-success-light text-success" : "bg-background text-text-muted"}`}>B {!kpi.aWins ? "▲" : ""}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Vista por competencia */}
+            {grupoComparativaVista === "competencia" && (
+              <div>
+                <p className="text-[10px] text-text-muted mb-3">{lbl("Media LOMLOE 1–4 por competencia · barras lado a lado", "LOMLOE avg 1–4 per competency · side-by-side bars")}</p>
+                <div className="space-y-2.5">
+                  {compsKeys.map((comp, ci) => {
+                    const va = avgA_comps[ci];
+                    const vb = avgB_comps[ci];
+                    const aWins = va >= vb;
+                    return (
+                      <div key={comp}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-bold text-text-primary w-12">{comp}</span>
+                          <div className="flex items-center gap-2 flex-1 mx-3">
+                            {/* Grupo A bar (right-to-left) */}
+                            <div className="flex-1 flex justify-end">
+                              <div className="h-2.5 bg-sidebar rounded-full" style={{ width: `${(va / 4) * 100}%`, minWidth: "4px" }} />
+                            </div>
+                            <span className="text-[9px] text-text-muted w-4 text-center">|</span>
+                            {/* Grupo B bar (left-to-right) */}
+                            <div className="flex-1">
+                              <div className="h-2.5 bg-accent-text/60 rounded-full" style={{ width: `${(vb / 4) * 100}%`, minWidth: "4px" }} />
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-bold text-sidebar">{va}</span>
+                            <span className="text-[9px] text-text-muted">/</span>
+                            <span className="text-[10px] font-bold text-accent-text">{vb}</span>
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ml-1 ${aWins ? "bg-sidebar text-white" : "bg-accent-light text-accent-text"}`}>{aWins ? "A" : "B"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Vista por indicador */}
+            {grupoComparativaVista === "indicador" && (
+              <div className="space-y-4">
+                {indicadores.map((ind) => {
+                  const aWins = ind.label === lbl("Riesgo medio", "Average risk score")
+                    ? ind.a <= ind.b
+                    : ind.a >= ind.b;
+                  const barA = Math.round((ind.a / ind.max) * 100);
+                  const barB = Math.round((ind.b / ind.max) * 100);
+                  return (
+                    <div key={ind.label} className="bg-background rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] font-semibold text-text-primary">{ind.label}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${aWins ? "bg-sidebar text-white" : "bg-accent-light text-accent-text"}`}>
+                          {lbl("Lidera:", "Leads:")} {aWins ? "Grupo A" : "Grupo B"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[9px] text-text-muted">Grupo A</span>
+                            <span className="text-[11px] font-bold text-sidebar">{ind.a}{ind.suffix}</span>
+                          </div>
+                          <div className="h-2 bg-white rounded-full overflow-hidden">
+                            <div className="h-full bg-sidebar rounded-full" style={{ width: `${Math.min(barA, 100)}%` }} />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[9px] text-text-muted">Grupo B</span>
+                            <span className="text-[11px] font-bold text-accent-text">{ind.b}{ind.suffix}</span>
+                          </div>
+                          <div className="h-2 bg-white rounded-full overflow-hidden">
+                            <div className="h-full bg-accent-text/60 rounded-full" style={{ width: `${Math.min(barB, 100)}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
