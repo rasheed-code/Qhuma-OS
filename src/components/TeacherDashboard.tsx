@@ -107,6 +107,30 @@ const proximasEntregas: EntregaProxima[] = [
   { id: "ep5", alumno: "Ana Martín",        avatar: "AM", tarea: "Landing page Casa Limón publicada",     proyecto: "Airbnb Málaga",  comp: "CD",   fechaLimite: "Vie 14 mar",     diasRestantes: 3,  estado: "pendiente" },
 ];
 
+// ── T32: Balance Demo Day ──────────────────────────────────────────────────
+interface DemoDayScore {
+  id: string;
+  nombre: string;
+  avatar: string;
+  criterios: [number, number, number, number]; // A, B, C, D — LOMLOE 1–4
+  qCoins: number;
+}
+
+const demoDayScores: DemoDayScore[] = [
+  { id: "dd1",  nombre: "Ana Martín",       avatar: "AM", criterios: [4, 4, 3, 4], qCoins: 80 },
+  { id: "dd2",  nombre: "Sofía Torres",     avatar: "ST", criterios: [4, 3, 4, 4], qCoins: 75 },
+  { id: "dd3",  nombre: "Diego López",      avatar: "DL", criterios: [3, 4, 4, 3], qCoins: 70 },
+  { id: "dd4",  nombre: "María Santos",     avatar: "MS", criterios: [4, 3, 3, 4], qCoins: 70 },
+  { id: "dd5",  nombre: "Carlos Ruiz",      avatar: "CR", criterios: [3, 3, 4, 3], qCoins: 65 },
+  { id: "dd6",  nombre: "Isabel Fdez.",     avatar: "IF", criterios: [3, 4, 3, 3], qCoins: 65 },
+  { id: "dd7",  nombre: "Lucas Moreno",     avatar: "LM", criterios: [3, 3, 3, 4], qCoins: 60 },
+  { id: "dd8",  nombre: "Elena Gutiérrez",  avatar: "EG", criterios: [3, 3, 3, 3], qCoins: 55 },
+  { id: "dd9",  nombre: "Miguel Jiménez",   avatar: "MJ", criterios: [2, 3, 3, 3], qCoins: 50 },
+  { id: "dd10", nombre: "Laura Sánchez",    avatar: "LS", criterios: [3, 2, 3, 3], qCoins: 50 },
+  { id: "dd11", nombre: "Pablo Ruiz",       avatar: "PR", criterios: [2, 2, 3, 2], qCoins: 40 },
+  { id: "dd12", nombre: "Tomás Herrera",    avatar: "TH", criterios: [2, 3, 2, 2], qCoins: 35 },
+];
+
 export default function TeacherDashboard() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
@@ -124,6 +148,9 @@ export default function TeacherDashboard() {
   const [semanaResumen, setSemanaResumen] = useState<string | null>(null);
   const [generandoResumen, setGenerandoResumen] = useState(false);
   const [resumenCopiado, setResumenCopiado] = useState(false);
+
+  // T32 — Balance Demo Day
+  const [cartaEnviada, setCartaEnviada] = useState(false);
 
   const handleGenerarResumen = async () => {
     if (generandoResumen) return;
@@ -898,6 +925,121 @@ export default function TeacherDashboard() {
               );
             })}
           </div>
+        </div>
+
+        {/* ── T32: Balance Demo Day ─────────────────────────────────────────── */}
+        <div className="bg-card rounded-2xl p-5 border border-card-border">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Trophy size={14} className="text-[#F59E0B]" />
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Balance Demo Day", "Demo Day Results")}</h3>
+              <span className="text-[10px] font-semibold text-[#F59E0B] bg-[#FEF3C7] px-2 py-0.5 rounded-full">
+                T1 · Airbnb Málaga
+              </span>
+            </div>
+            <button
+              onClick={() => { setCartaEnviada(true); setTimeout(() => setCartaEnviada(false), 3000); }}
+              className={`flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                cartaEnviada
+                  ? "bg-success text-white"
+                  : "bg-sidebar text-white hover:bg-accent-dark"
+              }`}
+            >
+              {cartaEnviada
+                ? <><CheckCircle2 size={11} className="mr-1" />{lbl("Cartas enviadas", "Letters sent!")}</>
+                : <><Star size={11} className="mr-1" />{lbl("Carta de felicitación", "Send congrats")}</>
+              }
+            </button>
+          </div>
+
+          {/* Score table */}
+          <div className="overflow-x-auto mb-5">
+            <table className="w-full text-[10px]">
+              <thead>
+                <tr>
+                  <th className="text-left text-text-muted font-medium pb-2 pr-3">{lbl("Alumno", "Student")}</th>
+                  {["A", "B", "C", "D"].map((c) => (
+                    <th key={c} className="text-center text-text-muted font-medium pb-2 px-2 w-8">{c}</th>
+                  ))}
+                  <th className="text-center text-text-muted font-medium pb-2 px-2">{lbl("Media", "Avg")}</th>
+                  <th className="text-center text-[#F59E0B] font-semibold pb-2 pl-2">Q</th>
+                </tr>
+              </thead>
+              <tbody>
+                {demoDayScores.map((s) => {
+                  const sum = s.criterios.reduce((a, b) => a + b, 0);
+                  const avg = sum / 4;
+                  const avgStr = avg.toFixed(1);
+                  const avgColor = avg >= 3.5 ? "text-[#4F8EF7] font-bold" : avg >= 2.5 ? "text-success font-semibold" : "text-warning";
+                  return (
+                    <tr key={s.id} className="border-t border-border/40">
+                      <td className="py-1.5 pr-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[7px] font-bold flex items-center justify-center flex-shrink-0">
+                            {s.avatar}
+                          </div>
+                          <span className="text-text-primary font-medium truncate max-w-[100px]">{s.nombre}</span>
+                        </div>
+                      </td>
+                      {s.criterios.map((v, i) => (
+                        <td key={i} className="text-center px-2">
+                          <span className={`${v === 4 ? "text-[#4F8EF7] font-bold" : v <= 1 ? "text-urgent" : "text-text-primary"}`}>{v}</span>
+                        </td>
+                      ))}
+                      <td className="text-center px-2">
+                        <span className={avgColor}>{avgStr}</span>
+                      </td>
+                      <td className="text-center pl-2">
+                        <span className="text-[#F59E0B] font-semibold">{s.qCoins}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Top 3 performers */}
+          {(() => {
+            const sorted = [...demoDayScores].sort(
+              (a, b) =>
+                b.criterios.reduce((s, v) => s + v, 0) -
+                a.criterios.reduce((s, v) => s + v, 0)
+            );
+            const top3 = sorted.slice(0, 3);
+            const medalLabels = ["1°", "2°", "3°"];
+            const medalBg = ["bg-[#FEF3C7]", "bg-[#F3F4F6]", "bg-[#FDF4E7]"];
+            const medalColor = ["text-[#D97706]", "text-[#6B7280]", "text-[#B45309]"];
+            return (
+              <div>
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Coins size={12} className="text-[#F59E0B]" />
+                  <span className="text-[11px] font-semibold text-text-primary">
+                    {lbl("Top 3 · Q-Coins distribuidas", "Top 3 · Q-Coins awarded")}
+                  </span>
+                  <span className="text-[10px] text-text-muted ml-auto">
+                    {lbl("Total:", "Total:")} {demoDayScores.reduce((s, d) => s + d.qCoins, 0)} Q
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  {top3.map((s, i) => {
+                    const avg = (s.criterios.reduce((a, b) => a + b, 0) / 4).toFixed(1);
+                    return (
+                      <div key={s.id} className={`rounded-xl p-3 text-center ${medalBg[i]}`}>
+                        <div className={`text-[13px] font-black mb-1 ${medalColor[i]}`}>{medalLabels[i]}</div>
+                        <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center mx-auto mb-1.5">
+                          {s.avatar}
+                        </div>
+                        <div className="text-[10px] font-semibold text-text-primary truncate">{s.nombre.split(" ")[0]}</div>
+                        <div className="text-[9px] text-text-muted">{lbl("Media", "Avg")} {avg}</div>
+                        <div className={`text-[11px] font-bold mt-0.5 ${medalColor[i]}`}>+{s.qCoins} Q</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Bottom: Competency Progress */}
