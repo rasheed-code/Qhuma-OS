@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3,
+  Trophy, BarChart3, MessageSquare,
 } from "lucide-react";
 import { AdminView } from "@/types";
 
@@ -44,6 +44,16 @@ const estadoSistema = [
   { nombre: "Base de datos", estado: "Operativo", detalle: "Última copia hace 3h · 98 GB", tipo: "success", icon: Database },
   { nombre: "Sincronización LOMLOE", estado: "Actualizado", detalle: "Última sync hace 2h", tipo: "success", icon: RefreshCw },
   { nombre: "Alumnos sin actividad", estado: "3 alumnos", detalle: "Requieren seguimiento", tipo: "warning", icon: Users },
+];
+
+// A15 — Actividad docente hoy
+const actividadDocente = [
+  { id: 1, avatar: "AM", nombre: "Ana Martínez",  accion: "Actualizó notas LOMLOE — 1º ESO B (8 competencias)",  hora: "14:38", icon: ClipboardCheck, color: "bg-accent-light text-accent-text" },
+  { id: 2, avatar: "CP", nombre: "Carlos Pérez",  accion: "Generó informe trimestral de Pablo Ruiz",              hora: "13:55", icon: FileText,      color: "bg-background text-text-muted border border-card-border" },
+  { id: 3, avatar: "IM", nombre: "Isabel Mora",   accion: "Lanzó sesión PitchLab con 2º ESO — 18 participantes", hora: "11:20", icon: Zap,            color: "bg-success-light text-success" },
+  { id: 4, avatar: "AM", nombre: "Ana Martínez",  accion: "Añadió comentario en portfolio de Sofía Martín",       hora: "10:47", icon: MessageSquare,  color: "bg-accent-light text-accent-text" },
+  { id: 5, avatar: "CP", nombre: "Carlos Pérez",  accion: "Marcó hito completado: Demo Day — Lucas García",       hora: "09:31", icon: CheckCircle2,   color: "bg-success-light text-success" },
+  { id: 6, avatar: "IM", nombre: "Isabel Mora",   accion: "Creó alerta de seguimiento para Tomás Herrera",        hora: "09:05", icon: AlertTriangle,  color: "bg-warning-light text-warning" },
 ];
 
 const usuariosMock = [
@@ -256,6 +266,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     setCartaGenerada(false);
     setTimeout(() => { setGenerandoCarta(false); setCartaGenerada(true); }, 1600);
   };
+
+  // A15 — Actividad docente hoy
+  const [showTodasActividades, setShowTodasActividades] = useState(false);
 
   // A14 — Próxima reunión agenda
   const [agendaGenerada, setAgendaGenerada] = useState(false);
@@ -610,6 +623,48 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               );
             })()}
+
+            {/* A15: Widget Actividad docente hoy */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Actividad docente hoy</h3>
+                <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+                  {actividadDocente.length} acciones
+                </span>
+              </div>
+              <div className="space-y-3">
+                {actividadDocente.slice(0, showTodasActividades ? 6 : 3).map((act) => {
+                  const Icon = act.icon;
+                  return (
+                    <div key={act.id} className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                        {act.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[11px] font-semibold text-text-primary">{act.nombre}</span>
+                            <p className="text-[10px] text-text-secondary leading-snug mt-0.5">{act.accion}</p>
+                          </div>
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${act.color}`}>
+                            <Icon size={11} />
+                          </div>
+                        </div>
+                        <span className="text-[9px] text-text-muted mt-0.5 block">{act.hora}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setShowTodasActividades(!showTodasActividades)}
+                className="w-full mt-3 flex items-center justify-center gap-1.5 text-[10px] font-semibold text-accent-text hover:underline cursor-pointer py-1"
+              >
+                <ChevronDown size={11} className={showTodasActividades ? "rotate-180" : ""} />
+                {showTodasActividades ? "Ver menos" : "Ver todas (6)"}
+              </button>
+            </div>
           </div>
 
           {/* Panel derecho — Actividad reciente */}
