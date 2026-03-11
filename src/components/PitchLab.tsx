@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic, Timer, ChevronRight, ChevronLeft, Star, Target,
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
-  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp,
+  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History,
 } from "lucide-react";
 
 interface PitchSection {
@@ -102,6 +102,15 @@ interface InversorVoto {
   decision: "si" | "no" | null;
   razon: string | null;
   loading: boolean;
+}
+
+// C17 — Historial de sesiones en vivo
+interface SesionVivo {
+  inversor: typeof inversoresConfig[number];
+  puntuacion: number;
+  comentario: string;
+  fecha: string;
+  preguntaClave: string;
 }
 
 const inversoresConfig = [
@@ -408,6 +417,19 @@ export default function PitchLab() {
   const [vivoPuntuacion, setVivoPuntuacion] = useState<number | null>(null);
   const [vivoComentario, setVivoComentario] = useState<string | null>(null);
 
+  // C17 — Historial de sesiones en vivo
+  const [historialSesiones, setHistorialSesiones] = useState<SesionVivo[]>([]);
+
+  const handleRepetirConInversor = (inv: typeof inversoresConfig[number]) => {
+    setVivoInversor(inv);
+    setVivoPreguntas([primerasPreguntasVivo[inv.id] ?? "¿Por qué apostaría yo por este proyecto hoy?"]);
+    setVivoRespuestas([]);
+    setVivoRespuestaActual("");
+    setVivoStep(1);
+    setVivoPuntuacion(null);
+    setVivoComentario(null);
+  };
+
   const handleIniciarSesionVivo = () => {
     const random = inversoresConfig[Math.floor(Math.random() * inversoresConfig.length)];
     setVivoInversor(random);
@@ -464,13 +486,29 @@ export default function PitchLab() {
         const raw: string = data.reply ?? "";
         const scoreMatch = raw.match(/PUNTUACI[ÓO]N[:\s]+(\d+)/i);
         const comentMatch = raw.match(/COMENTARIO[:\s]+(.+)/i);
-        setVivoPuntuacion(scoreMatch ? parseInt(scoreMatch[1]) : 7);
-        setVivoComentario(comentMatch ? comentMatch[1].trim() : "Respuestas sólidas, falta concretar el escalado.");
+        const puntuacion = scoreMatch ? parseInt(scoreMatch[1]) : 7;
+        const comentario = comentMatch ? comentMatch[1].trim() : "Respuestas sólidas, falta concretar el escalado.";
+        setVivoPuntuacion(puntuacion);
+        setVivoComentario(comentario);
         setVivoStep(4);
+        if (vivoInversor) {
+          setHistorialSesiones((prev) => [
+            { inversor: vivoInversor, puntuacion, comentario, fecha: new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), preguntaClave: vivoPreguntas[0] ?? "" },
+            ...prev,
+          ].slice(0, 3));
+        }
       } catch {
-        setVivoPuntuacion(6);
-        setVivoComentario("Buena base, pero necesitas más datos de mercado.");
+        const puntuacion = 6;
+        const comentario = "Buena base, pero necesitas más datos de mercado.";
+        setVivoPuntuacion(puntuacion);
+        setVivoComentario(comentario);
         setVivoStep(4);
+        if (vivoInversor) {
+          setHistorialSesiones((prev) => [
+            { inversor: vivoInversor, puntuacion, comentario, fecha: new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), preguntaClave: vivoPreguntas[0] ?? "" },
+            ...prev,
+          ].slice(0, 3));
+        }
       }
     }
     setVivoIsGenerating(false);
@@ -1405,6 +1443,79 @@ export default function PitchLab() {
                 </div>
               )}
             </div>
+
+            {/* C17: Historial de sesiones en vivo */}
+            {historialSesiones.length > 0 && (
+              <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <History size={14} className="text-accent-text" />
+                  <span className="text-[13px] font-semibold text-text-primary">Historial de sesiones en vivo</span>
+                  <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+                    {historialSesiones.length} de 3 sesiones guardadas
+                  </span>
+                </div>
+
+                {/* Gráfico de evolución de puntuaciones */}
+                {historialSesiones.length > 1 && (
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Evolución de puntuación</p>
+                    <div className="flex items-end gap-3 h-20">
+                      {[...historialSesiones].reverse().map((s, i) => {
+                        const pct = (s.puntuacion / 10) * 100;
+                        const color = s.puntuacion >= 8 ? "bg-success" : s.puntuacion >= 6 ? "bg-accent-text" : "bg-warning";
+                        return (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                            <span className={`text-[11px] font-bold ${s.puntuacion >= 8 ? "text-success" : s.puntuacion >= 6 ? "text-accent-text" : "text-warning"}`}>
+                              {s.puntuacion}
+                            </span>
+                            <div className="w-full flex items-end" style={{ height: "52px" }}>
+                              <div className={`w-full rounded-t-lg ${color}`} style={{ height: `${pct}%`, minHeight: "4px" }} />
+                            </div>
+                            <span className="text-[8px] text-text-muted text-center">{s.fecha}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Lista de sesiones */}
+                <div className="space-y-3">
+                  {historialSesiones.map((s, i) => (
+                    <div key={i} className={`rounded-xl border p-4 ${s.puntuacion >= 8 ? "bg-success-light border-success/20" : s.puntuacion >= 6 ? "bg-accent-light border-accent-text/20" : "bg-warning-light border-warning/20"}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                          {s.inversor.avatar}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-[12px] font-bold text-text-primary">{s.inversor.nombre}</span>
+                            <span className="text-[9px] text-text-muted">· {s.fecha}</span>
+                            <span className={`ml-auto text-[18px] font-bold flex-shrink-0 ${s.puntuacion >= 8 ? "text-success" : s.puntuacion >= 6 ? "text-accent-text" : "text-warning"}`}>
+                              {s.puntuacion}<span className="text-[11px] font-normal text-text-muted">/10</span>
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-text-muted mb-1">{s.inversor.perfil} · {s.inversor.descripcion}</p>
+                          <p className="text-[10px] text-text-secondary italic truncate">1ª pregunta: &ldquo;{s.preguntaClave}&rdquo;</p>
+                          {s.comentario && (
+                            <p className="text-[10px] text-text-secondary mt-1 leading-snug">&ldquo;{s.comentario}&rdquo;</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          onClick={() => handleRepetirConInversor(s.inversor)}
+                          className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                        >
+                          <RotateCcw size={10} />
+                          Repetir con {s.inversor.nombre.split(" ")[0]}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Mentor message */}
             <div className="col-span-3 bg-accent-light rounded-2xl border border-accent-text/20 p-5">
