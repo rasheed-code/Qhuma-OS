@@ -41,6 +41,9 @@ import {
   Focus,
   RotateCcw,
   X,
+  BarChart3,
+  Lightbulb,
+  RefreshCw,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -123,6 +126,10 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [guardandoReflexion, setGuardandoReflexion] = useState(false);
   const [reflexionGuardada, setReflexionGuardada] = useState(false);
   const [showReflexiones, setShowReflexiones] = useState(false);
+
+  // S33 — Resumen semanal inteligente
+  const [semanaInsights, setSemanaInsights] = useState<string[] | null>(null);
+  const [generandoInsights, setGenerandoInsights] = useState(false);
 
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
@@ -1625,6 +1632,111 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           );
         })())}
       </div>
+
+      {/* S33 — Resumen semanal inteligente */}
+      {(() => {
+        const statsSemanales = [
+          { label: lbl("Tareas completadas", "Tasks done"),   valor: 7, de: 9,    icon: CheckCircle2, bg: "bg-success-light",  color: "text-success"      },
+          { label: lbl("Q-Coins ganados",    "Q-Coins earned"), valor: 340, de: null, icon: Coins,        bg: "bg-accent-light",   color: "text-accent-text"  },
+          { label: lbl("Mejor competencia",  "Top skill"),     valor: "CE", de: null, icon: Trophy,       bg: "bg-warning-light",  color: "text-warning"      },
+          { label: lbl("Racha mantenida",    "Streak"),        valor: 14,  de: null, icon: Flame,        bg: "bg-background",     color: "text-text-primary" },
+          { label: lbl("Evidencias subidas", "Evidences"),     valor: 3,   de: 4,    icon: FileText,     bg: "bg-urgent-light",   color: "text-urgent"       },
+        ];
+        const insightsFallback = [
+          lbl(
+            "Esta semana tu competencia CE (Emprendedora) creció un +12% respecto a la semana anterior — el trabajo en el modelo financiero se está notando.",
+            "This week your CE (Entrepreneurship) competency grew +12% versus last week — the financial modeling work is paying off."
+          ),
+          lbl(
+            "Las tareas de comunicación (CLC) tienen un tiempo medio de resolución 35% más largo que el resto. Considera empezar por ellas cuando tengas más energía.",
+            "Communication tasks (CLC) take 35% longer on average than others. Consider starting them when your energy is highest."
+          ),
+          lbl(
+            "Tu racha de 14 días es la más larga del trimestre. Mantenerla hasta el Demo Day del viernes te daría un nuevo récord personal.",
+            "Your 14-day streak is the longest of the trimester. Keeping it through Friday's Demo Day would set a new personal record."
+          ),
+        ];
+        const handleGenerar = async () => {
+          setGenerandoInsights(true);
+          try {
+            const res = await fetch("/api/tutor-chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                mode: "narrativa",
+                message: "Genera 3 insights breves y personalizados sobre la semana de Lucas García en el proyecto Casa Limón (Airbnb Málaga). Semana 3, marzo 2026. Menciona competencias LOMLOE, patrones de trabajo y recomendación concreta para el Demo Day del viernes. Formato: 3 frases numeradas, una por línea, máximo 30 palabras cada una.",
+                history: [],
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const lines = (data.reply as string).split("\n").filter((l: string) => l.trim().length > 0).slice(0, 3);
+              if (lines.length >= 2) { setSemanaInsights(lines); setGenerandoInsights(false); return; }
+            }
+          } catch { /* noop */ }
+          setSemanaInsights(insightsFallback);
+          setGenerandoInsights(false);
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 size={15} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Resumen de la semana", "Weekly Summary")}
+                </h3>
+                <span className="text-[10px] text-text-muted font-medium">
+                  {lbl("Semana 3 · 10–14 mar", "Week 3 · Mar 10–14")}
+                </span>
+              </div>
+              <button
+                onClick={handleGenerar}
+                disabled={generandoInsights}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all disabled:opacity-50"
+              >
+                {generandoInsights ? <RefreshCw size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                {lbl("Analizar con IA", "Analyze with AI")}
+              </button>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-5 gap-2 mb-4">
+              {statsSemanales.map((s, i) => {
+                const Icon = s.icon;
+                return (
+                  <div key={i} className={`${s.bg} rounded-xl p-3 text-center`}>
+                    <Icon size={13} className={`${s.color} mx-auto mb-1`} />
+                    <div className={`text-[16px] font-bold ${s.color}`}>
+                      {s.valor}{s.de ? <span className="text-[10px] font-normal text-text-muted">/{s.de}</span> : ""}
+                    </div>
+                    <div className="text-[9px] text-text-muted leading-tight mt-0.5">{s.label}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* AI insights */}
+            {semanaInsights ? (
+              <div className="space-y-2">
+                {semanaInsights.map((insight, i) => (
+                  <div key={i} className="flex items-start gap-2 bg-background rounded-xl px-3 py-2">
+                    <Lightbulb size={12} className="text-accent-text flex-shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-text-primary leading-snug">{insight.replace(/^\d+\.\s*/, "")}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-background rounded-xl px-3 py-3">
+                <Sparkles size={13} className="text-text-muted" />
+                <p className="text-[11px] text-text-muted">
+                  {lbl("Haz clic en 'Analizar con IA' para ver los patrones de tu semana.", "Click 'Analyze with AI' to see your weekly patterns.")}
+                </p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* S32 — Demo Day prep */}
       {(() => {
