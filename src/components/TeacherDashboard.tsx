@@ -19,6 +19,9 @@ import {
   Star,
   Shield,
   Activity,
+  WifiOff,
+  CalendarClock,
+  RefreshCw,
 } from "lucide-react";
 import { classStudents, teacherAlerts } from "@/data/students";
 import TeacherChat from "./TeacherChat";
@@ -74,9 +77,24 @@ function getRiskLabel(score: number): {
   return { label: "Riesgo alto", color: "text-urgent", bg: "bg-urgent-light" };
 }
 
+// ── T10: Datos de urgencias ────────────────────────────────────────────────
+type CompKeyTeacher = "STEM" | "CLC" | "CE" | "CD" | "CPSAA" | "CC" | "CPL" | "CCEC";
+
+const tareasVencidas: { id: string; alumno: string; avatar: string; tarea: string; diasRetraso: number; comp: CompKeyTeacher }[] = [
+  { id: "tv1", alumno: "Pablo Ruiz",    avatar: "PR", tarea: "Análisis de mercado",    diasRetraso: 3, comp: "STEM" },
+  { id: "tv2", alumno: "Pablo Ruiz",    avatar: "PR", tarea: "Presupuesto inicial",     diasRetraso: 2, comp: "CE" },
+  { id: "tv3", alumno: "Tomás Herrera", avatar: "TH", tarea: "Plantillas comunicación", diasRetraso: 1, comp: "CLC" },
+];
+
+const alumnosSinLogin: { id: string; nombre: string; avatar: string; diasSinLogin: number; ultimaActividad: string }[] = [
+  { id: "asl1", nombre: "Pablo Ruiz",    avatar: "PR", diasSinLogin: 3, ultimaActividad: "Lun 9 mar · 14:22" },
+  { id: "asl2", nombre: "Tomás Herrera", avatar: "TH", diasSinLogin: 2, ultimaActividad: "Mar 10 mar · 09:05" },
+];
+
 export default function TeacherDashboard() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeAlerts, setActiveAlerts] = useState(new Set(teacherAlerts.map((a) => a.id)));
+  const [prorrogadas, setProrrogadas] = useState<Set<string>>(new Set());
 
   const excelling = classStudents.filter((s) => s.status === "excelling").length;
   const onTrack = classStudents.filter((s) => s.status === "on_track").length;
@@ -347,6 +365,107 @@ export default function TeacherDashboard() {
                 </div>
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* T10: Panel de urgencias ────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-5 mb-5">
+
+          {/* Tareas vencidas agrupadas por alumno */}
+          <div className="bg-card rounded-2xl p-5 border border-card-border">
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarClock size={14} className="text-urgent" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Tareas vencidas hoy</h3>
+              <span className="ml-auto text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
+                {tareasVencidas.filter(t => !prorrogadas.has(t.id)).length} pendientes
+              </span>
+            </div>
+            {tareasVencidas.length === 0 ? (
+              <div className="flex items-center gap-2 py-3 text-center justify-center">
+                <CheckCircle2 size={16} className="text-success" />
+                <span className="text-[12px] text-text-muted">Sin entregas vencidas</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {/* Agrupamos por alumno */}
+                {Array.from(new Set(tareasVencidas.map(t => t.alumno))).map((alumno) => {
+                  const tareas = tareasVencidas.filter(t => t.alumno === alumno);
+                  const av = tareas[0].avatar;
+                  return (
+                    <div key={alumno} className="bg-background rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                          {av}
+                        </div>
+                        <span className="text-[12px] font-semibold text-text-primary">{alumno}</span>
+                        <span className="ml-auto text-[9px] text-text-muted">{tareas.length} tarea{tareas.length > 1 ? "s" : ""}</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {tareas.map((t) => (
+                          <div key={t.id} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 transition-all ${
+                            prorrogadas.has(t.id) ? "bg-accent-light border border-accent/20" : "bg-urgent-light border border-urgent/10"
+                          }`}>
+                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${prorrogadas.has(t.id) ? "bg-accent-text" : "bg-urgent"}`} />
+                            <span className="text-[10px] text-text-secondary flex-1 leading-snug">{t.tarea}</span>
+                            <span className="text-[9px] font-bold text-text-muted flex-shrink-0">{t.comp}</span>
+                            <span className={`text-[8px] font-semibold flex-shrink-0 ${prorrogadas.has(t.id) ? "text-accent-text" : "text-urgent"}`}>
+                              {t.diasRetraso}d
+                            </span>
+                            {prorrogadas.has(t.id) ? (
+                              <span className="text-[8px] font-bold text-accent-text flex-shrink-0">+48h ✓</span>
+                            ) : (
+                              <button
+                                onClick={() => setProrrogadas(prev => new Set([...prev, t.id]))}
+                                className="flex items-center gap-0.5 text-[8px] font-bold text-accent-text bg-white px-1.5 py-0.5 rounded-md hover:bg-accent-light transition-colors cursor-pointer border border-accent/20 flex-shrink-0"
+                              >
+                                <RefreshCw size={7} />
+                                +48h
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Alumnos sin login más de 2 días */}
+          <div className="bg-card rounded-2xl p-5 border border-card-border">
+            <div className="flex items-center gap-2 mb-4">
+              <WifiOff size={14} className="text-warning" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Sin acceso a plataforma</h3>
+              <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
+                {alumnosSinLogin.length} alumnos
+              </span>
+            </div>
+            <div className="space-y-2.5 mb-4">
+              {alumnosSinLogin.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 bg-warning-light rounded-xl px-3 py-2.5 border border-warning/15">
+                  <div className="w-8 h-8 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                    {a.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-text-primary">{a.nombre}</p>
+                    <p className="text-[10px] text-text-muted">Última actividad: {a.ultimaActividad}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[11px] font-bold text-warning">{a.diasSinLogin} días</span>
+                    <button className="flex items-center gap-1 text-[9px] font-bold text-accent-text bg-white px-2 py-0.5 rounded-lg hover:bg-accent-light border border-accent/20 cursor-pointer transition-colors">
+                      <MessageSquare size={9} />
+                      Contactar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="bg-background rounded-xl p-3 border border-card-border">
+              <p className="text-[10px] text-text-muted leading-relaxed">
+                <span className="font-semibold text-text-secondary">Protocolo QHUMA:</span> Si un alumno lleva más de 3 días sin acceder, el sistema notifica automáticamente a la familia. Los datos se envían al informe de seguimiento mensual.
+              </p>
+            </div>
           </div>
         </div>
 
