@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2 } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -447,6 +447,11 @@ export default function StudentPortfolio() {
   const [proyeccionData, setProyeccionData] = useState<{ conservador: number[]; realista: number[]; optimista: number[] } | null>(null);
   const [proyeccionGuardada, setProyeccionGuardada] = useState(false);
 
+  // C25 — Línea del tiempo integrada
+  const [timelineVista, setTimelineVista] = useState<"narrativa" | "timeline">("narrativa");
+  const [exportandoTimeline, setExportandoTimeline] = useState(false);
+  const [timelineExportado, setTimelineExportado] = useState(false);
+
   const handleImprimirTarjeta = (ev: typeof evidenciasDestacadas[number]) => {
     setImprimiendoTarjeta(ev.id);
     // Build deterministic QR-like pixel map (7×7 seed based on id)
@@ -565,6 +570,26 @@ export default function StudentPortfolio() {
         <p className="text-[13px] text-text-secondary mb-4">
           Narrativa de aprendizaje · Proyecto Airbnb Málaga · Lucas García · 1º ESO
         </p>
+
+        {/* C25: Toggle Vista narrativa / Línea del tiempo */}
+        <div className="flex gap-1 bg-background rounded-xl p-1 mb-5 w-fit">
+          {([
+            { key: "narrativa" as const, label: lbl("Vista narrativa", "Narrative view") },
+            { key: "timeline" as const, label: lbl("Línea del tiempo", "Timeline") },
+          ]).map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setTimelineVista(opt.key)}
+              className={`px-4 py-2 rounded-lg text-[12px] font-medium transition-all cursor-pointer ${
+                timelineVista === opt.key
+                  ? "bg-card text-text-primary shadow-sm"
+                  : "text-text-muted hover:text-text-secondary"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
 
         {/* S19: Vista pública compartible */}
         {showVistaPublica && (
@@ -688,6 +713,217 @@ export default function StudentPortfolio() {
             </p>
           </div>
         )}
+
+        {/* C25: Línea del tiempo integrada */}
+        {timelineVista === "timeline" && (() => {
+          const handleExportarTimeline = () => {
+            setExportandoTimeline(true);
+            // Build unified timeline events
+            const hitosEvts = timelineHitos.map((h) => ({
+              fecha: h.fecha,
+              tipo: "hito" as const,
+              titulo: h.titulo,
+              competencia: h.competencia,
+              descripcion: h.fase,
+              extra: h.completado ? lbl("Completado", "Completed") : lbl("Próximo", "Upcoming"),
+            }));
+            const erroresEvts = errorLog.map((e) => ({
+              fecha: e.date,
+              tipo: "error" as const,
+              titulo: e.title,
+              competencia: e.competency,
+              descripcion: e.phase,
+              extra: e.resolved ? lbl("→ Superado", "→ Resolved") : lbl("→ En proceso", "→ In progress"),
+            }));
+            const evidenciasEvts = evidenciasDestacadas.map((ev) => ({
+              fecha: lbl("Semana 1-4 · 2026", "Week 1-4 · 2026"),
+              tipo: "evidencia" as const,
+              titulo: ev.titulo,
+              competencia: ev.competencia,
+              descripcion: ev.tipo,
+              extra: ev.descripcionCorta,
+            }));
+            // Date order: hitos in order, errores interspersed by phase, evidencias by id
+            const orden = ["Semana 1", "Semana 2", "Semana 3", "Semana 4"];
+            const phaseOf = (phase: string) => orden.findIndex((o) => phase.includes(o));
+            const allEvts = [...hitosEvts, ...erroresEvts, ...evidenciasEvts].sort((a, b) => {
+              const pa = phaseOf(a.descripcion);
+              const pb = phaseOf(b.descripcion);
+              return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
+            });
+
+            const typeLabelMap = { hito: lbl("Hito", "Milestone"), error: lbl("Error aprendido", "Learned error"), evidencia: lbl("Evidencia", "Evidence") };
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Línea del tiempo — Lucas García</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 40px; background: #f4f0e9; }
+  h1 { color: #141414; font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 12px; margin-bottom: 24px; }
+  .event { margin-bottom: 16px; padding: 14px 16px; border-radius: 12px; border: 1px solid #ededed; background: white; }
+  .hito { border-left: 3px solid #22c55e; }
+  .error { border-left: 3px solid #f59e0b; }
+  .evidencia { border-left: 3px solid #2f574d; }
+  .badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-right: 6px; background: #edffe3; color: #2f574d; }
+  .tipo { font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+  .titulo { font-size: 13px; font-weight: 700; color: #141414; margin: 4px 0; }
+  .extra { font-size: 10px; color: #666; }
+</style></head><body>
+<h1>Línea del tiempo integrada — Lucas García</h1>
+<div class="sub">Proyecto Airbnb Málaga · QHUMA OS · Generado: ${new Date().toLocaleDateString("es-ES")}</div>
+${allEvts.map((e) => `
+<div class="event ${e.tipo}">
+  <div class="tipo">${typeLabelMap[e.tipo]} · ${e.fecha}</div>
+  <div class="titulo">${e.titulo}</div>
+  <span class="badge">${e.competencia}</span>
+  <span class="extra">${e.extra}</span>
+</div>`).join("")}
+</body></html>`;
+            const blob = new Blob([html], { type: "text/html" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `timeline_lucas_garcia_${new Date().toISOString().slice(0,10)}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            setTimeout(() => { setExportandoTimeline(false); setTimelineExportado(true); }, 1200);
+            setTimeout(() => setTimelineExportado(false), 4000);
+          };
+
+          // Build unified sorted events
+          const hitosEvts = timelineHitos.map((h) => ({
+            id: `h-${h.titulo}`,
+            fecha: h.fecha,
+            tipo: "hito" as const,
+            titulo: h.titulo,
+            competencia: h.competencia,
+            descripcion: h.fase,
+            completado: h.completado,
+            xp: h.xp,
+          }));
+          const erroresEvts = errorLog.map((e) => ({
+            id: `e-${e.id}`,
+            fecha: e.date,
+            tipo: "error" as const,
+            titulo: e.title,
+            competencia: e.competency,
+            descripcion: e.phase,
+            completado: e.resolved,
+            xp: 0,
+          }));
+          const evidenciasEvts = evidenciasDestacadas.map((ev, idx) => ({
+            id: `ev-${ev.id}`,
+            fecha: `${idx < 2 ? "4" : idx < 3 ? "5" : "8"} mar`,
+            tipo: "evidencia" as const,
+            titulo: ev.titulo,
+            competencia: ev.competencia,
+            descripcion: ev.tipo,
+            completado: true,
+            xp: 0,
+          }));
+
+          const ordenFases = ["Semana 1", "Semana 2", "Semana 3", "Semana 4", "Modelo financiero"];
+          const phaseScore = (desc: string) => {
+            const idx = ordenFases.findIndex((o) => desc.includes(o.replace("Semana ", "")));
+            return idx === -1 ? 5 : idx;
+          };
+          const allEvts = [...hitosEvts, ...erroresEvts, ...evidenciasEvts].sort((a, b) => {
+            return phaseScore(a.descripcion) - phaseScore(b.descripcion);
+          });
+
+          const tipoCfgTL = {
+            hito: { dot: "bg-success border-success", icon: Trophy, iconColor: "text-success", badge: "bg-success-light text-success", label: lbl("Hito", "Milestone") },
+            error: { dot: "bg-warning border-warning", icon: AlertCircle, iconColor: "text-warning", badge: "bg-warning-light text-text-primary", label: lbl("Error aprendido", "Learned error") },
+            evidencia: { dot: "bg-accent-text border-accent-text", icon: FileText, iconColor: "text-accent-text", badge: "bg-accent-light text-accent-text", label: lbl("Evidencia", "Evidence") },
+          };
+
+          return (
+            <div className="mb-5">
+              {/* Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <GitCommit size={14} className="text-accent-text" />
+                <span className="text-[13px] font-semibold text-text-primary">
+                  {lbl("Línea del tiempo integrada", "Integrated timeline")}
+                </span>
+                <span className="ml-auto text-[10px] text-text-muted bg-background border border-card-border px-2 py-0.5 rounded-full">
+                  {allEvts.length} {lbl("eventos", "events")}
+                </span>
+                <button
+                  onClick={handleExportarTimeline}
+                  disabled={exportandoTimeline}
+                  className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-xl border cursor-pointer transition-all disabled:opacity-50 ${
+                    timelineExportado
+                      ? "bg-success-light text-success border-success/20"
+                      : "bg-background text-text-secondary border-card-border hover:bg-accent-light hover:text-accent-text"
+                  }`}
+                >
+                  {exportandoTimeline ? <RefreshCw size={10} className="animate-spin" /> : timelineExportado ? <CheckCircle2 size={10} /> : <Download size={10} />}
+                  {timelineExportado ? lbl("Exportado", "Exported") : lbl("Exportar", "Export")}
+                </button>
+              </div>
+
+              {/* Leyenda */}
+              <div className="flex items-center gap-4 mb-5 bg-background rounded-xl px-4 py-2.5 border border-card-border">
+                {(["hito", "error", "evidencia"] as const).map((t) => {
+                  const cfg = tipoCfgTL[t];
+                  return (
+                    <div key={t} className="flex items-center gap-1.5">
+                      <div className={`w-2.5 h-2.5 rounded-full border-2 ${cfg.dot}`} />
+                      <span className="text-[10px] text-text-secondary font-medium">{cfg.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Timeline vertical */}
+              <div className="relative pl-6">
+                {/* Vertical line */}
+                <div className="absolute left-2.5 top-0 bottom-0 w-0.5 bg-card-border" />
+
+                <div className="space-y-3">
+                  {allEvts.map((evt) => {
+                    const cfg = tipoCfgTL[evt.tipo];
+                    const EvtIcon = cfg.icon;
+                    return (
+                      <div key={evt.id} className="relative">
+                        {/* Dot */}
+                        <div className={`absolute -left-[19px] top-3 w-4 h-4 rounded-full border-2 flex items-center justify-center ${cfg.dot} bg-card`}>
+                          <EvtIcon size={8} className={cfg.iconColor} />
+                        </div>
+
+                        {/* Card */}
+                        <div className="bg-card rounded-xl border border-card-border p-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[9px] font-bold text-text-muted">{evt.fecha}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.badge}`}>
+                              {cfg.label}
+                            </span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${compColor(evt.competencia as CompKey)}`}>
+                              {evt.competencia}
+                            </span>
+                            {evt.tipo === "error" && (
+                              <span className="text-[9px] text-text-muted ml-auto">
+                                {evt.completado ? lbl("→ Aprendizaje superado", "→ Resolved") : lbl("→ En proceso", "→ In progress")}
+                              </span>
+                            )}
+                            {evt.tipo === "hito" && evt.xp > 0 && (
+                              <span className="text-[9px] font-bold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full ml-auto">
+                                +{evt.xp} XP
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] font-semibold text-text-primary leading-tight">{evt.titulo}</p>
+                          <p className="text-[10px] text-text-muted mt-0.5">{evt.descripcion}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* C25: narrative view wrapper */}
+        {timelineVista === "narrativa" && <>
 
         {/* C6: Narrativa generada por IA */}
         {narrativaIA && (
@@ -1433,6 +1669,10 @@ export default function StudentPortfolio() {
             </div>
           </div>
         </div>
+
+        {/* End C25 narrative view wrapper */}
+        </>}
+
       </div>
 
       {/* Right column — summary */}
