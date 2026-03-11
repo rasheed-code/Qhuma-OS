@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Loader2, Brain, Telescope, BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Brain, Telescope, BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2, ClipboardList, Timer, X } from "lucide-react";
 import { chatMessages as initialMessages } from "@/data/students";
 import { Role, ChatMessage } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -44,6 +44,95 @@ export default function TeacherChat({ role }: { role: Role }) {
   const [guardandoSesion, setGuardandoSesion] = useState(false);
   const [sessionGuardada, setSessionGuardada] = useState(false);
   const [showSesiones, setShowSesiones] = useState(false);
+
+  // C28 — Tutoría estructurada
+  const [tutoriaMode, setTutoriaMode] = useState(false);
+  const [tutoriaStep, setTutoriaStep] = useState(0); // 0-3
+  const [tutoriaTimers, setTutoriaTimers] = useState([120, 300, 600, 180]); // seconds per step
+  const [tutoriaCompletados, setTutoriaCompletados] = useState<Set<number>>(new Set());
+  const [tutoriaSesiones, setTutoriaSesiones] = useState<{ fecha: string; duracion: string; pasos: number; resumen: string }[]>([]);
+  const [guardandoTutoria, setGuardandoTutoria] = useState(false);
+  const [tutoriaGuardada, setTutoriaGuardada] = useState(false);
+  const [tutoriaTimerRunning, setTutoriaTimerRunning] = useState(false);
+  const tutoriaIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // C28 — Agenda de tutoría (4 pasos)
+  const agendaTutoria = [
+    {
+      titulo: lbl("Check-in", "Check-in"),
+      duracion: lbl("2 min", "2 min"),
+      segundos: 120,
+      descripcion: lbl("Conexión inicial y estado emocional", "Initial connection and emotional state"),
+      preguntaSugerida: lbl("¿Cómo te sientes hoy con el proyecto de Casa Limón?", "How do you feel today about the Casa Limón project?"),
+    },
+    {
+      titulo: lbl("Revisión", "Review"),
+      duracion: lbl("5 min", "5 min"),
+      segundos: 300,
+      descripcion: lbl("Avances desde la última sesión", "Progress since last session"),
+      preguntaSugerida: lbl("¿Qué avanzaste desde nuestra última sesión sobre el Airbnb Málaga?", "What did you advance since our last session on Airbnb Málaga?"),
+    },
+    {
+      titulo: lbl("Obstáculos", "Obstacles"),
+      duracion: lbl("10 min", "10 min"),
+      segundos: 600,
+      descripcion: lbl("Identificar y resolver bloqueos", "Identify and resolve blockers"),
+      preguntaSugerida: lbl("¿Qué te está bloqueando ahora mismo en el modelo financiero de Casa Limón?", "What is blocking you right now in the Casa Limón financial model?"),
+    },
+    {
+      titulo: lbl("Plan", "Plan"),
+      duracion: lbl("3 min", "3 min"),
+      segundos: 180,
+      descripcion: lbl("Próximos pasos concretos", "Concrete next steps"),
+      preguntaSugerida: lbl("¿Cuál es tu próximo paso concreto para avanzar en el proyecto esta semana?", "What is your next concrete step to advance the project this week?"),
+    },
+  ];
+
+  useEffect(() => {
+    if (!tutoriaTimerRunning) {
+      if (tutoriaIntervalRef.current) clearInterval(tutoriaIntervalRef.current);
+      return;
+    }
+    tutoriaIntervalRef.current = setInterval(() => {
+      setTutoriaTimers((prev) => {
+        const next = [...prev];
+        if (next[tutoriaStep] > 0) {
+          next[tutoriaStep] = next[tutoriaStep] - 1;
+        } else {
+          clearInterval(tutoriaIntervalRef.current!);
+          setTutoriaTimerRunning(false);
+        }
+        return next;
+      });
+    }, 1000);
+    return () => { if (tutoriaIntervalRef.current) clearInterval(tutoriaIntervalRef.current); };
+  }, [tutoriaTimerRunning, tutoriaStep]);
+
+  const handleGuardarTutoria = () => {
+    if (guardandoTutoria) return;
+    setGuardandoTutoria(true);
+    setTimeout(() => {
+      const nuevaSesion = {
+        fecha: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+        duracion: lbl("20 min", "20 min"),
+        pasos: tutoriaCompletados.size,
+        resumen: lbl(
+          `Sesión completada con ${tutoriaCompletados.size}/4 pasos. Alumno: Lucas García — Proyecto: Casa Limón Airbnb Málaga. Próximo paso identificado en fase Plan.`,
+          `Session completed with ${tutoriaCompletados.size}/4 steps. Student: Lucas García — Project: Casa Limón Airbnb Málaga.`
+        ),
+      };
+      setTutoriaSesiones((prev) => [nuevaSesion, ...prev].slice(0, 5));
+      setGuardandoTutoria(false);
+      setTutoriaGuardada(true);
+      setTimeout(() => setTutoriaGuardada(false), 3000);
+    }, 1200);
+  };
+
+  const formatTutoriaTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
 
   // Auto-activate Deep Dive when student has sent 6+ messages (sustained engagement)
   const studentMsgCount = messages.filter((m) => m.sender === "student").length;
@@ -206,6 +295,17 @@ export default function TeacherChat({ role }: { role: Role }) {
               <span className="text-[8px] text-warning font-bold tracking-wide">DEEP DIVE</span>
             </div>
           )}
+          {/* C28 — Tutoría button (teacher role or student admin view) */}
+          <button
+            onClick={() => setTutoriaMode((v) => !v)}
+            className={`flex items-center gap-1 px-2 py-0.5 rounded-full transition-all cursor-pointer ${
+              tutoriaMode ? "bg-accent/30 text-accent" : "bg-white/10 text-white/60 hover:text-white/80"
+            }`}
+            title={lbl("Tutoría estructurada", "Structured tutoring")}
+          >
+            <ClipboardList size={8} />
+            <span className="text-[8px] font-bold tracking-wide">{lbl("TUTORÍA", "TUTORING")}</span>
+          </button>
         </div>
       </div>
 
@@ -403,6 +503,172 @@ export default function TeacherChat({ role }: { role: Role }) {
                       <p key={i} className="text-[9px] text-text-muted">· {insight}</p>
                     ))}
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* C28 — Panel Tutoría estructurada */}
+      {tutoriaMode && (
+        <div className="px-3 pb-2 space-y-2">
+          {/* Agenda header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <ClipboardList size={11} className="text-accent-text" />
+              <span className="text-[10px] font-semibold text-text-primary">{lbl("Agenda de tutoría estructurada", "Structured tutoring agenda")}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  if (tutoriaTimerRunning) {
+                    setTutoriaTimerRunning(false);
+                  } else {
+                    setTutoriaTimerRunning(true);
+                  }
+                }}
+                className={`flex items-center gap-1 text-[8px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-all ${
+                  tutoriaTimerRunning ? "bg-warning-light text-warning" : "bg-sidebar text-accent"
+                }`}
+              >
+                <Timer size={8} />
+                {tutoriaTimerRunning ? lbl("Pausar", "Pause") : lbl("Iniciar", "Start")}
+              </button>
+              <button
+                onClick={() => setTutoriaMode(false)}
+                className="text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress indicator */}
+          <div className="flex gap-1">
+            {agendaTutoria.map((_, idx) => (
+              <div
+                key={idx}
+                className={`flex-1 h-1 rounded-full transition-all ${
+                  tutoriaCompletados.has(idx) ? "bg-success" :
+                  idx === tutoriaStep ? "bg-accent-text" :
+                  "bg-background border border-card-border"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-1.5">
+            {agendaTutoria.map((paso, idx) => {
+              const isActive = idx === tutoriaStep;
+              const isCompletado = tutoriaCompletados.has(idx);
+              const secsLeft = tutoriaTimers[idx];
+              const secsTot = paso.segundos;
+              const pct = Math.round((secsLeft / secsTot) * 100);
+              return (
+                <div
+                  key={idx}
+                  onClick={() => !isCompletado && setTutoriaStep(idx)}
+                  className={`rounded-xl p-2.5 border transition-all cursor-pointer ${
+                    isCompletado ? "bg-success-light border-success/20 opacity-75" :
+                    isActive ? "bg-accent-light border-accent-text/15" :
+                    "bg-background border-card-border hover:border-accent-text/20"
+                  }`}
+                >
+                  <div className="flex items-start gap-2">
+                    {/* Checkbox */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setTutoriaCompletados((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(idx)) next.delete(idx); else next.add(idx);
+                          return next;
+                        });
+                        if (!isCompletado && idx < 3) setTutoriaStep(idx + 1);
+                      }}
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all cursor-pointer ${
+                        isCompletado ? "bg-success border-success" : isActive ? "border-accent-text" : "border-text-muted/30"
+                      }`}
+                    >
+                      {isCompletado && <CheckCircle2 size={10} className="text-white" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[10px] font-semibold ${isCompletado ? "text-success" : isActive ? "text-accent-text" : "text-text-primary"}`}>
+                            {idx + 1}. {paso.titulo}
+                          </span>
+                          <span className="text-[8px] text-text-muted bg-background px-1 py-0.5 rounded-full border border-card-border">{paso.duracion}</span>
+                        </div>
+                        {isActive && (
+                          <span className={`text-[9px] font-bold ${secsLeft < 30 ? "text-urgent" : "text-accent-text"}`}>
+                            {formatTutoriaTime(secsLeft)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[9px] text-text-muted mb-1">{paso.descripcion}</p>
+                      {isActive && (
+                        <>
+                          {/* Timer bar */}
+                          <div className="h-1 bg-card rounded-full overflow-hidden mb-1.5">
+                            <div
+                              className={`h-full rounded-full transition-all ${secsLeft < 30 ? "bg-urgent" : "bg-accent-text"}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          {/* Pregunta sugerida clickable */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInput(paso.preguntaSugerida);
+                              inputRef.current?.focus();
+                            }}
+                            className="text-left text-[9px] text-accent-text bg-accent-light border border-accent-text/15 rounded-lg px-2 py-1 w-full hover:bg-accent/20 transition-all cursor-pointer leading-relaxed"
+                          >
+                            💬 {paso.preguntaSugerida}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Guardar sesión */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleGuardarTutoria}
+              disabled={guardandoTutoria || tutoriaCompletados.size === 0}
+              className="flex items-center gap-1.5 text-[9px] font-semibold bg-sidebar text-white px-2.5 py-1.5 rounded-xl hover:brightness-110 transition-all cursor-pointer disabled:opacity-40 flex-shrink-0"
+            >
+              {guardandoTutoria ? (
+                <><Loader2 size={8} className="animate-spin" />{lbl("Guardando...", "Saving...")}</>
+              ) : tutoriaGuardada ? (
+                <><CheckCircle2 size={8} className="text-accent" />{lbl("Guardada", "Saved")}</>
+              ) : (
+                <><Save size={8} />{lbl("Guardar sesión", "Save session")}</>
+              )}
+            </button>
+            <span className="text-[9px] text-text-muted">
+              {tutoriaCompletados.size}/4 {lbl("pasos completados", "steps completed")}
+            </span>
+          </div>
+
+          {/* Sesiones guardadas */}
+          {tutoriaSesiones.length > 0 && (
+            <div className="space-y-1">
+              <span className="text-[9px] font-semibold text-text-muted">{lbl("Sesiones guardadas", "Saved sessions")} ({tutoriaSesiones.length})</span>
+              {tutoriaSesiones.map((s, idx) => (
+                <div key={idx} className="bg-background rounded-lg p-2 border border-card-border">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[9px] font-semibold text-text-primary">{lbl("Sesión", "Session")} · {s.fecha}</span>
+                    <span className="text-[8px] text-text-muted">{s.pasos}/4 {lbl("pasos", "steps")} · {s.duracion}</span>
+                  </div>
+                  <p className="text-[9px] text-text-muted leading-relaxed line-clamp-2">{s.resumen}</p>
                 </div>
               ))}
             </div>
