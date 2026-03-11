@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic, Timer, ChevronRight, ChevronLeft, Star, Target,
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
-  Users, TrendingUp, AlertCircle,
+  Users, TrendingUp, AlertCircle, Sparkles, Loader2,
 } from "lucide-react";
 
 interface PitchSection {
@@ -192,6 +192,31 @@ export default function PitchLab() {
   const [mode, setMode] = useState<"write" | "feedback">("write");
   const [feedback, setFeedback] = useState<FeedbackScore[] | null>(null);
   const [timerDone, setTimerDone] = useState(false);
+  const [aiCoach, setAiCoach] = useState<Record<string, string | null>>({});
+  const [coachingSection, setCoachingSection] = useState<string | null>(null);
+
+  const handlePedirConsejo = async (sectionId: string, texto: string) => {
+    if (!texto.trim() || coachingSection) return;
+    setCoachingSection(sectionId);
+    try {
+      const seccion = pitchSections.find(s => s.id === sectionId);
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "pitchcoach",
+          message: `Sección: "${seccion?.title}"\n\nTexto del alumno:\n${texto}`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      setAiCoach(prev => ({ ...prev, [sectionId]: data.reply ?? null }));
+    } catch {
+      setAiCoach(prev => ({ ...prev, [sectionId]: "No he podido conectar ahora mismo. Revisa tu pitch manualmente y vuelve a intentarlo." }));
+    } finally {
+      setCoachingSection(null);
+    }
+  };
 
   const current = pitchSections[activeSection];
   const totalWords = Object.values(notes).join(" ").split(/\s+/).filter(Boolean).length;
@@ -353,7 +378,7 @@ export default function PitchLab() {
                 rows={8}
                 className="w-full text-[12px] text-text-primary bg-background rounded-xl border border-card-border px-4 py-3 outline-none focus:border-accent-text/40 resize-none placeholder:text-text-muted leading-relaxed"
               />
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-between mt-2 mb-4">
                 <span className="text-[10px] text-text-muted">
                   {(notes[current.id] || "").split(/\s+/).filter(Boolean).length} palabras
                   · objetivo ~{current.wordTarget}
@@ -365,6 +390,48 @@ export default function PitchLab() {
                   >
                     Siguiente sección <ChevronRight size={11} />
                   </button>
+                )}
+              </div>
+
+              {/* C7: Botón feedback IA por sección */}
+              <div className="border-t border-card-border pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles size={12} className="text-accent-text" />
+                    <span className="text-[11px] font-bold text-accent-text">Coach IA — Prof. Ana</span>
+                  </div>
+                  <button
+                    onClick={() => handlePedirConsejo(current.id, notes[current.id] || "")}
+                    disabled={coachingSection !== null || !(notes[current.id] || "").trim()}
+                    className="flex items-center gap-1.5 text-[10px] font-bold bg-sidebar text-white px-3 py-1.5 rounded-xl cursor-pointer hover:bg-accent-dark transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {coachingSection === current.id
+                      ? <><Loader2 size={10} className="animate-spin" /> Analizando...</>
+                      : <><MessageSquare size={10} /> Pedir consejo</>
+                    }
+                  </button>
+                </div>
+
+                {aiCoach[current.id] ? (
+                  <div className="bg-sidebar rounded-xl p-4 relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-accent text-[8px] font-bold">IA</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-white/70 uppercase tracking-wide">Feedback de Prof. Ana</span>
+                      <button
+                        onClick={() => setAiCoach(prev => ({ ...prev, [current.id]: null }))}
+                        className="ml-auto text-white/30 hover:text-white/60 cursor-pointer text-[10px]"
+                      >✕</button>
+                    </div>
+                    <p className="text-[12px] text-white/90 leading-relaxed">{aiCoach[current.id]}</p>
+                  </div>
+                ) : (
+                  <div className="bg-background rounded-xl px-4 py-3 border border-dashed border-card-border text-center">
+                    <p className="text-[10px] text-text-muted">
+                      Escribe tu sección y pulsa &ldquo;Pedir consejo&rdquo; — la Profa. Ana revisará tu pitch y dará feedback personalizado.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -450,6 +517,27 @@ export default function PitchLab() {
                 </div>
               </div>
             ))}
+
+            {/* AI coach feedback per section (collected during writing) */}
+            {Object.keys(aiCoach).some(k => aiCoach[k]) && (
+              <div className="col-span-3 bg-sidebar rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles size={14} className="text-accent" />
+                  <span className="text-[12px] font-bold text-accent uppercase tracking-wide">Feedback IA por sección</span>
+                </div>
+                <div className="space-y-3">
+                  {pitchSections.filter(s => aiCoach[s.id]).map(s => (
+                    <div key={s.id} className="bg-white/5 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <s.icon size={12} className="text-accent" />
+                        <span className="text-[11px] font-semibold text-white">{s.title}</span>
+                      </div>
+                      <p className="text-[11px] text-white/80 leading-relaxed">{aiCoach[s.id]}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Mentor message */}
             <div className="col-span-3 bg-accent-light rounded-2xl border border-accent-text/20 p-5">
