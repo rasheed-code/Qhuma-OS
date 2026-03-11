@@ -37,6 +37,7 @@ import {
   Briefcase,
   UserCheck,
   MessageSquare,
+  Brain,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -908,6 +909,107 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             </p>
           </div>
         </div>
+
+        {/* S23: Perfil cognitivo activo */}
+        {(() => {
+          const tareaActiva = today.tasks.find((t) => t.status === "in_progress");
+          // Gardner intelligence profiles mapped to task competencies
+          const inteligenciasPorComp: Record<string, { nombre: string; descripcion: string; estrategia: string; nivel: number }> = {
+            STEM:  { nombre: "Lógico-matemática", descripcion: "Razonamiento analítico, patrones numéricos y resolución sistemática de problemas.", estrategia: "Usa tablas o esquemas para estructurar tu análisis antes de escribir. Los datos son tu aliado.", nivel: 82 },
+            CD:    { nombre: "Espacial-digital",  descripcion: "Visualización de sistemas, diseño de interfaces y pensamiento en diagramas.", estrategia: "Dibuja el flujo de tu solución digital antes de implementarla. La estructura visual acelera la comprensión.", nivel: 76 },
+            CLC:   { nombre: "Lingüística",       descripcion: "Comunicación precisa, narrativa clara y capacidad de síntesis escrita.", estrategia: "Escribe el concepto central en una sola frase antes de desarrollarlo. La claridad viene de la economía de palabras.", nivel: 71 },
+            CE:    { nombre: "Emprendedora",      descripcion: "Visión de oportunidades, toma de decisiones bajo incertidumbre y creación de valor.", estrategia: "Pregúntate qué haría alguien que ya tiene este negocio funcionando. Piensa como operador, no como estudiante.", nivel: 88 },
+            CPSAA: { nombre: "Intrapersonal",     descripcion: "Metacognición, autorregulación y conciencia de los propios procesos de aprendizaje.", estrategia: "Dedica 3 minutos a identificar qué sabes ya y qué necesitas aprender para esta tarea. Reduce la ansiedad.", nivel: 65 },
+            CC:    { nombre: "Interpersonal",     descripcion: "Empatía, colaboración y comprensión de dinámicas sociales y ciudadanas.", estrategia: "Piensa en cómo tu proyecto impacta en personas reales. El propósito social mejora la calidad de las decisiones.", nivel: 60 },
+            CPL:   { nombre: "Lingüística-plurilingüe", descripcion: "Capacidad de conectar con audiencias diversas y comunicar en múltiples contextos culturales.", estrategia: "Imagina que explicas tu proyecto a alguien de otro país. ¿Qué necesitarías aclarar? Eso es lo que falta en tu argumentación.", nivel: 58 },
+            CCEC:  { nombre: "Estético-creativa", descripcion: "Sensibilidad visual, pensamiento divergente y capacidad de dar forma a ideas abstractas.", estrategia: "Busca una metáfora o imagen que represente tu proyecto. Ayuda a que otros lo recuerden mejor.", nivel: 55 },
+          };
+          const compActiva = tareaActiva?.competencies?.[0] ?? "STEM";
+          const perfil = inteligenciasPorComp[compActiva] ?? inteligenciasPorComp["STEM"];
+          const todas = Object.entries(inteligenciasPorComp).sort((a, b) => b[1].nivel - a[1].nivel);
+          const top3 = todas.slice(0, 3);
+          return (
+            <div className="mt-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <Brain size={16} className="text-text-primary" />
+                  <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Perfil cognitivo activo", "Active cognitive profile")}</h2>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[10px] font-bold border border-accent/20">
+                  {lbl("Basado en tu interacción de hoy", "Based on today's interaction")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                {/* Inteligencia activa hoy */}
+                <div className="col-span-2 bg-sidebar rounded-2xl p-5">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center flex-shrink-0">
+                      <Brain size={18} className="text-accent" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[10px] font-bold text-accent uppercase tracking-widest">{lbl("Inteligencia dominante hoy", "Today's dominant intelligence")}</span>
+                      </div>
+                      <p className="text-[16px] font-bold text-white leading-tight">{perfil.nombre}</p>
+                      <p className="text-[11px] text-white/60 mt-0.5 leading-relaxed">{perfil.descripcion}</p>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <span className="text-[24px] font-black text-accent block leading-none">{perfil.nivel}</span>
+                      <span className="text-[9px] text-white/40">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-accent rounded-full transition-all duration-700" style={{ width: `${perfil.nivel}%` }} />
+                  </div>
+                  {/* Estrategia activada */}
+                  <div className="bg-white/8 rounded-xl px-4 py-3 border border-white/10">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Sparkles size={11} className="text-accent flex-shrink-0" />
+                      <span className="text-[10px] font-bold text-accent uppercase tracking-wide">{lbl("Estrategia para tu tarea actual", "Strategy for your current task")}</span>
+                    </div>
+                    <p className="text-[12px] text-white/80 leading-relaxed">
+                      {tareaActiva
+                        ? <><span className="text-white font-semibold">{tareaActiva.title}:</span> {perfil.estrategia}</>
+                        : perfil.estrategia
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Top 3 inteligencias */}
+                <div className="bg-card rounded-2xl border border-card-border p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy size={12} className="text-accent-text" />
+                    <span className="text-[11px] font-semibold text-text-primary">{lbl("Tus 3 más fuertes", "Your top 3")}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {top3.map(([comp, data], i) => (
+                      <div key={comp}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 ${i === 0 ? "bg-accent text-sidebar" : "bg-background text-text-muted"}`}>{i + 1}</span>
+                          <span className="text-[11px] font-semibold text-text-primary flex-1 truncate">{data.nombre}</span>
+                          <span className="text-[11px] font-bold text-accent-text">{data.nivel}</span>
+                        </div>
+                        <div className="h-1.5 bg-background rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${i === 0 ? "bg-accent-text" : "bg-accent-text/40"}`}
+                            style={{ width: `${data.nivel}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-card-border">
+                    <p className="text-[10px] text-text-muted leading-relaxed">
+                      {lbl("Construido desde 30 días de interacción — no es un test, es tu huella de aprendizaje.", "Built from 30 days of interaction — not a test, it's your learning fingerprint.")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* S6: Mercado en Tiempo Real */}
         <div className="mt-8">
