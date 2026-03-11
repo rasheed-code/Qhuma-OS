@@ -286,7 +286,7 @@ export default function EvidenceGallery() {
               <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mis Evidencias", "My Evidence")}</h1>
             </div>
             <p className="text-[13px] text-text-secondary">
-              Proyecto: <span className="font-medium text-accent-text">Gestiona tu Airbnb en Málaga</span> · Semana 3 de 12
+              {lbl("Proyecto:", "Project:")} <span className="font-medium text-accent-text">Gestiona tu Airbnb en Málaga</span> · {lbl("Semana 3 de 12", "Week 3 of 12")}
             </p>
           </div>
           <button className="flex items-center gap-2 bg-accent text-sidebar text-[12px] font-bold px-4 py-2.5 rounded-xl hover:brightness-110 transition-all cursor-pointer">

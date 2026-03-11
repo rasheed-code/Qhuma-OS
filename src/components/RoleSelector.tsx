@@ -2,13 +2,7 @@
 
 import { GraduationCap, Users, BookOpen, Shield } from "lucide-react";
 import { Role } from "@/types";
-
-const roles: { key: Role; label: string; sublabel: string; icon: typeof GraduationCap }[] = [
-  { key: "student", label: "Lucas García",      sublabel: "1º ESO · Alumno",          icon: GraduationCap },
-  { key: "parent",  label: "María García",      sublabel: "Familia de Lucas",          icon: Users },
-  { key: "teacher", label: "Prof. Ana Martínez",sublabel: "Mentora · 1º ESO",         icon: BookOpen },
-  { key: "admin",   label: "Admin QHUMA",       sublabel: "Panel de administración",   icon: Shield },
-];
+import { useLang } from "@/lib/i18n";
 
 export default function RoleSelector({
   activeRole,
@@ -17,6 +11,16 @@ export default function RoleSelector({
   activeRole: Role;
   onRoleChange: (role: Role) => void;
 }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const roles: { key: Role; label: string; sublabel: string; icon: typeof GraduationCap }[] = [
+    { key: "student", label: "Lucas García",       sublabel: lbl("1º ESO · Alumno",           "Year 7 · Student"),          icon: GraduationCap },
+    { key: "parent",  label: "María García",       sublabel: lbl("Familia de Lucas",          "Lucas's family"),            icon: Users },
+    { key: "teacher", label: "Prof. Ana Martínez", sublabel: lbl("Mentora · 1º ESO",         "Mentor · Year 7"),           icon: BookOpen },
+    { key: "admin",   label: "Admin QHUMA",        sublabel: lbl("Panel de administración",   "Administration panel"),      icon: Shield },
+  ];
+
   return (
     <div className="flex items-center gap-2">
       {roles.map((role) => (

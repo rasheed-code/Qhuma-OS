@@ -21,6 +21,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { weekSchedule, trimesterProjects } from "@/data/tasks";
+import { useLang } from "@/lib/i18n";
 import { taskEvidence } from "@/data/evidence";
 import { competencies } from "@/data/competencies";
 import { currentStudent } from "@/data/students";
@@ -107,11 +108,11 @@ interface ProjectDetailProps {
 // ── S12: Kanban ────────────────────────────────────────────────────────────
 type KanbanCol = "todo" | "doing" | "review" | "done";
 
-const colConfig: Record<KanbanCol, { label: string; bg: string; border: string; pill: string; pillText: string }> = {
-  todo:   { label: "Por hacer",    bg: "bg-background",    border: "border-card-border",   pill: "bg-card-border text-text-muted",     pillText: "text-text-muted" },
-  doing:  { label: "En curso",     bg: "bg-accent-light",  border: "border-accent/30",     pill: "bg-accent text-sidebar",              pillText: "text-sidebar" },
-  review: { label: "En revisión",  bg: "bg-warning-light", border: "border-warning/30",    pill: "bg-warning-light text-warning",       pillText: "text-warning" },
-  done:   { label: "Completado",   bg: "bg-success-light", border: "border-success/20",    pill: "bg-success-light text-success",       pillText: "text-success" },
+const colConfig: Record<KanbanCol, { labelEs: string; labelEn: string; bg: string; border: string; pill: string; pillText: string }> = {
+  todo:   { labelEs: "Por hacer",   labelEn: "To do",       bg: "bg-background",    border: "border-card-border",   pill: "bg-card-border text-text-muted",     pillText: "text-text-muted" },
+  doing:  { labelEs: "En curso",    labelEn: "In progress", bg: "bg-accent-light",  border: "border-accent/30",     pill: "bg-accent text-sidebar",              pillText: "text-sidebar" },
+  review: { labelEs: "En revisión", labelEn: "In review",   bg: "bg-warning-light", border: "border-warning/30",    pill: "bg-warning-light text-warning",       pillText: "text-warning" },
+  done:   { labelEs: "Completado",  labelEn: "Done",        bg: "bg-success-light", border: "border-success/20",    pill: "bg-success-light text-success",       pillText: "text-success" },
 };
 
 const statusToCol: Record<string, KanbanCol> = {
@@ -144,6 +145,9 @@ const estimadoMin: Record<string, number> = {
 };
 
 export default function ProjectDetail({ onBack }: ProjectDetailProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [expandedDay, setExpandedDay] = useState<string | null>("Wednesday");
   const [proyectoVista, setProyectoVista] = useState<"lista" | "kanban">("lista");
   const [kanban, setKanban] = useState<Record<string, KanbanCol>>(initKanban);
@@ -354,7 +358,7 @@ export default function ProjectDetail({ onBack }: ProjectDetailProps) {
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg.pill}`}>
                       {tasksInCol.length}
                     </span>
-                    <span className="text-[12px] font-semibold text-text-primary">{cfg.label}</span>
+                    <span className="text-[12px] font-semibold text-text-primary">{lbl(cfg.labelEs, cfg.labelEn)}</span>
                   </div>
                   {/* Tasks */}
                   <div className="flex flex-col gap-2 px-2 pb-3" style={{ minHeight: "60px" }}>

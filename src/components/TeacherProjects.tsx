@@ -400,7 +400,7 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
                 rows={4}
                 value={descriptionInput}
                 onChange={(e) => setDescriptionInput(e.target.value)}
-                placeholder="Ej: Unidad 4 de Matemáticas 2º ESO — Funciones lineales y cuadráticas. Los alumnos deben aprender a representar gráficas, interpretar pendiente e intersección, y aplicar funciones a situaciones cotidianas como costes o velocidad..."
+                placeholder={lbl("Ej: Unidad 4 de Matemáticas 2º ESO — Funciones lineales y cuadráticas. Los alumnos deben aprender a representar gráficas, interpretar pendiente e intersección, y aplicar funciones a situaciones cotidianas como costes o velocidad...", "E.g.: Unit 4 of Year 8 Maths — Linear and quadratic functions. Students should learn to graph functions, interpret slope and intercept, and apply functions to everyday situations like costs or speed...")}
                 className="w-full border border-card-border rounded-xl px-4 py-3 text-[13px] text-text-primary placeholder-text-muted bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 focus:border-sidebar resize-none"
               />
             </div>
