@@ -81,6 +81,20 @@ const compColor = (key: CompKey) => {
   return colors[key];
 };
 
+// S20 — Próximos pasos recomendados
+interface ProximoPaso {
+  competencia: CompKey;
+  accion: string;
+  tiempo: string;
+  descripcion: string;
+}
+
+const proximosPasosMock: ProximoPaso[] = [
+  { competencia: "CE", accion: "Perfecciona el pitch para el Demo Day", tiempo: "2-3 h", descripcion: "Grábate presentando el modelo financiero y compártelo con tu tutor para recibir feedback antes del Demo Day real." },
+  { competencia: "CD", accion: "Publica la landing page de Casa Limón", tiempo: "1-2 h", descripcion: "Despliega en Vercel o Netlify la landing page diseñada y añade el enlace como evidencia pública en tu portfolio." },
+  { competencia: "CPL", accion: "Traduce las FAQ de huéspedes al francés", tiempo: "3-4 h", descripcion: "Amplía el alcance de Casa Limón al mercado francés. Usa el vocabulario trabajado en clase, evita el traductor automático." },
+];
+
 interface ErrorEntry {
   id: string;
   date: string;
@@ -210,6 +224,85 @@ export default function StudentPortfolio() {
   const [expandedEvidencia, setExpandedEvidencia] = useState<string | null>(null);
   const [narrativaIA, setNarrativaIA] = useState<string | null>(null);
   const [isGenerandoNarrativa, setIsGenerandoNarrativa] = useState(false);
+
+  // S20 — Próximos pasos recomendados
+  const [proximosPasos, setProximosPasos] = useState<ProximoPaso[] | null>(null);
+  const [generandoProximosPasos, setGenerandoProximosPasos] = useState(false);
+  const [generandoPaso, setGenerandoPaso] = useState<number | null>(null);
+
+  const handleGenerarProximosPasos = async () => {
+    setGenerandoProximosPasos(true);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: "Genera 3 próximos pasos accionables para Lucas García en el Proyecto Airbnb Málaga, semana 4. Cada paso: competencia LOMLOE, acción concreta (máx 10 palabras), estimación de tiempo (ej: '2-3 h'), descripción breve (1 frase). Formato JSON array: [{\"competencia\":\"CE\",\"accion\":\"...\",\"tiempo\":\"...\",\"descripcion\":\"...\"}]",
+          history: [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const raw: string = data.reply ?? "";
+        const jsonMatch = raw.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]) as ProximoPaso[];
+          setProximosPasos(parsed.slice(0, 3));
+          setGenerandoProximosPasos(false);
+          return;
+        }
+      }
+    } catch { /* noop */ }
+    setProximosPasos(proximosPasosMock);
+    setGenerandoProximosPasos(false);
+  };
+
+  const handleRegenerarPaso = async (index: number) => {
+    if (generandoPaso !== null) return;
+    setGenerandoPaso(index);
+    const paso = proximosPasos?.[index];
+    if (!paso) { setGenerandoPaso(null); return; }
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: `Genera un paso alternativo a "${paso.accion}" para Lucas García, Proyecto Airbnb Málaga. Usa una competencia diferente a ${paso.competencia}. JSON: {"competencia":"...","accion":"...","tiempo":"...","descripcion":"..."}`,
+          history: [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const raw: string = data.reply ?? "";
+        const jsonMatch = raw.match(/\{[\s\S]*?\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]) as ProximoPaso;
+          setProximosPasos((prev) => {
+            if (!prev) return prev;
+            const next = [...prev];
+            next[index] = parsed;
+            return next;
+          });
+          setGenerandoPaso(null);
+          return;
+        }
+      }
+    } catch { /* noop */ }
+    const alternativas: ProximoPaso[] = [
+      { competencia: "STEM", accion: "Actualiza el modelo financiero con datos reales", tiempo: "2 h", descripcion: "Reemplaza los supuestos iniciales por datos reales de ocupación del Q1 y ajusta las proyecciones a 12 meses." },
+      { competencia: "CC", accion: "Redacta el reglamento interno de Casa Limón", tiempo: "1.5 h", descripcion: "Define las normas de convivencia cumpliendo la normativa de Málaga para alquiler vacacional en 2024." },
+      { competencia: "CPSAA", accion: "Solicita feedback escrito a 3 compañeros", tiempo: "1 h", descripcion: "Pide a tres compañeros que evalúen tu pitch con la rúbrica del Demo Day y sintetiza los puntos comunes." },
+    ];
+    setProximosPasos((prev) => {
+      if (!prev) return prev;
+      const next = [...prev];
+      next[index] = alternativas[index % alternativas.length];
+      return next;
+    });
+    setGenerandoPaso(null);
+  };
 
   // S19 — Vista pública compartible
   const [showVistaPublica, setShowVistaPublica] = useState(false);
@@ -509,6 +602,72 @@ export default function StudentPortfolio() {
             <p className="text-[9px] text-white/30 mt-3 text-right">Generado por Gemini · {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
           </div>
         )}
+
+        {/* S20 — Próximos pasos recomendados */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-4">
+            <ChevronRight size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">Próximos pasos recomendados</span>
+            {proximosPasos && (
+              <span className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full ml-1">3 pasos</span>
+            )}
+            {!proximosPasos && (
+              <button
+                onClick={handleGenerarProximosPasos}
+                disabled={generandoProximosPasos}
+                className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-sidebar text-white cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+              >
+                {generandoProximosPasos
+                  ? <><RefreshCw size={11} className="animate-spin" /> Generando...</>
+                  : <><Sparkles size={11} /> Generar con IA</>
+                }
+              </button>
+            )}
+          </div>
+          {!proximosPasos ? (
+            <div className="text-center py-6">
+              <div className="w-10 h-10 rounded-full bg-accent-light flex items-center justify-center mx-auto mb-3">
+                <Lightbulb size={18} className="text-accent-text" />
+              </div>
+              <p className="text-[12px] text-text-secondary mb-1">La IA analizará tu progreso actual</p>
+              <p className="text-[10px] text-text-muted">y generará 3 pasos accionables con competencia, acción y tiempo estimado</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {proximosPasos.map((paso, i) => (
+                <div key={i} className="flex items-start gap-3 bg-background rounded-xl border border-card-border px-4 py-3">
+                  <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(paso.competencia as CompKey)}`}>
+                        {paso.competencia}
+                      </span>
+                      <span className="text-[10px] text-text-muted bg-card border border-card-border px-2 py-0.5 rounded-full">
+                        {paso.tiempo}
+                      </span>
+                    </div>
+                    <p className="text-[12px] font-semibold text-text-primary mb-0.5">{paso.accion}</p>
+                    <p className="text-[10px] text-text-muted leading-relaxed">{paso.descripcion}</p>
+                  </div>
+                  <button
+                    onClick={() => handleRegenerarPaso(i)}
+                    disabled={generandoPaso !== null}
+                    title="Regenerar este paso"
+                    className="flex items-center gap-1 text-[9px] font-semibold text-text-muted hover:text-accent-text border border-card-border bg-card px-2 py-1 rounded-lg cursor-pointer hover:border-accent-text/30 transition-all disabled:opacity-40 flex-shrink-0"
+                  >
+                    {generandoPaso === i
+                      ? <RefreshCw size={9} className="animate-spin" />
+                      : <RefreshCw size={9} />
+                    }
+                    Otro
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Competency growth overview */}
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
