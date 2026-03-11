@@ -135,7 +135,7 @@ export default function StudentSettings() {
 
       {/* Language */}
       <div className="bg-card rounded-2xl p-5 border border-card-border mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <Globe size={16} className="text-text-primary" />
             <h2 className="text-[16px] font-semibold text-text-primary">{tr("settings.language")}</h2>
@@ -146,18 +146,22 @@ export default function StudentSettings() {
             </span>
           )}
         </div>
+        <p className="text-[11px] text-text-muted mb-4 ml-6">
+          {lbl("Cambia el idioma de toda la plataforma.", "Change the language of the entire platform.")}
+        </p>
         <div className="flex gap-2">
           {(["es", "en"] as Lang[]).map((l) => (
             <button
               key={l}
               onClick={() => handleSaveLang(l)}
-              className={`px-4 py-2 rounded-xl text-[12px] font-semibold transition-all cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl border text-[12px] font-medium transition-all cursor-pointer ${
                 lang === l
-                  ? "bg-sidebar text-white"
-                  : "bg-background text-text-muted hover:bg-accent-light hover:text-accent-text"
+                  ? "border-accent-text/30 bg-accent-light text-accent-text"
+                  : "border-card-border text-text-secondary hover:bg-background"
               }`}
             >
-              {l === "es" ? "Español" : "English"}
+              {lang === l && <Check size={12} />}
+              {l === "es" ? "🇪🇸 Español" : "🇬🇧 English"}
             </button>
           ))}
         </div>
