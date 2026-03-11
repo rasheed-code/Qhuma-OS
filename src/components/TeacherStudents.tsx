@@ -1,12 +1,48 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
 
 type Filter = "all" | "excelling" | "needs_attention";
+
+interface HistorialIntervencion {
+  id: string;
+  tipo: "comentario" | "prorroga" | "contacto";
+  descripcion: string;
+  fecha: string;
+}
+
+const historialPorAlumno: Record<string, HistorialIntervencion[]> = Object.fromEntries(
+  classStudents.map((s, i) => {
+    let lista: HistorialIntervencion[];
+    if (i === 0) {
+      lista = [
+        { id: "hi1", tipo: "comentario", descripcion: "Refuerzo positivo: análisis de mercado muy riguroso.", fecha: "Lun, 9 mar" },
+        { id: "hi2", tipo: "prorroga", descripcion: "Prórroga concedida para landing page hasta el 12 mar.", fecha: "Mar, 10 mar" },
+        { id: "hi3", tipo: "comentario", descripcion: "Revisado modelo financiero — pendiente escenario pesimista.", fecha: "Mar, 10 mar" },
+        { id: "hi4", tipo: "contacto", descripcion: "Contacto con familia: progreso excelente, Demo Day viernes.", fecha: "Mié, 11 mar" },
+        { id: "hi5", tipo: "comentario", descripcion: "Feedback del pitch: sección de problema muy sólida.", fecha: "Mié, 11 mar" },
+      ];
+    } else if (s.status === "needs_attention") {
+      lista = [
+        { id: `h${i}a`, tipo: "contacto", descripcion: "Email a familia: sin actividad 3 días, revisión urgente.", fecha: "Lun, 9 mar" },
+        { id: `h${i}b`, tipo: "comentario", descripcion: "Evidencia de Fase 2 pendiente — recordatorio enviado.", fecha: "Mar, 10 mar" },
+        { id: `h${i}c`, tipo: "contacto", descripcion: "Llamada realizada — familia confirma dificultades en casa.", fecha: "Mié, 11 mar" },
+      ];
+    } else if (s.status === "excelling") {
+      lista = [
+        { id: `h${i}a`, tipo: "comentario", descripcion: "Destacado: entregó todas las evidencias antes del plazo.", fecha: "Mar, 10 mar" },
+        { id: `h${i}b`, tipo: "comentario", descripcion: "Propuesta de ampliación de tareas aceptada.", fecha: "Mié, 11 mar" },
+      ];
+    } else {
+      lista = [];
+    }
+    return [s.id, lista];
+  })
+);
 
 interface Comentario {
   id: string;
@@ -146,9 +182,9 @@ export default function TeacherStudents() {
       {/* Filtros */}
       <div className="flex gap-1 bg-background rounded-xl p-1 mb-6 w-fit">
         {([
-          { key: "all" as Filter, label: "Todos los alumnos" },
-          { key: "excelling" as Filter, label: "Destacados" },
-          { key: "needs_attention" as Filter, label: "Necesitan atención" },
+          { key: "all" as Filter, label: "Todos" },
+          { key: "excelling" as Filter, label: "Brillando" },
+          { key: "needs_attention" as Filter, label: "En riesgo" },
         ]).map((f) => (
           <button
             key={f.key}
@@ -284,6 +320,49 @@ export default function TeacherStudents() {
                       </div>
                     ))}
                   </div>
+
+                  {/* ─── T11: Historial de intervenciones ─── */}
+                  {(() => {
+                    const historial = historialPorAlumno[student.id] ?? [];
+                    const tipoCfg = {
+                      comentario: { label: "Comentario", color: "text-accent-text", bg: "bg-accent-light", Icon: MessageSquare },
+                      prorroga:   { label: "Prórroga",   color: "text-warning",     bg: "bg-warning-light", Icon: Clock },
+                      contacto:   { label: "Contacto familiar", color: "text-success", bg: "bg-success-light", Icon: Phone },
+                    };
+                    return (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock size={12} className="text-text-muted" />
+                          <h4 className="text-[12px] font-semibold text-text-primary">Historial de intervenciones</h4>
+                          <span className="ml-auto text-[9px] font-bold bg-card text-text-muted border border-card-border px-1.5 py-0.5 rounded-full">
+                            {historial.length} registradas
+                          </span>
+                        </div>
+                        {historial.length > 0 ? (
+                          <div className="space-y-1.5">
+                            {historial.map((h) => {
+                              const cfg = tipoCfg[h.tipo];
+                              const HIcon = cfg.Icon;
+                              return (
+                                <div key={h.id} className={`rounded-xl p-2.5 ${cfg.bg} flex items-start gap-2`}>
+                                  <HIcon size={10} className={`${cfg.color} mt-0.5 flex-shrink-0`} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                      <span className={`text-[9px] font-bold uppercase tracking-wide ${cfg.color}`}>{cfg.label}</span>
+                                      <span className="text-[9px] text-text-muted ml-auto">{h.fecha}</span>
+                                    </div>
+                                    <p className="text-[10px] text-text-secondary leading-relaxed">{h.descripcion}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-text-muted italic">Sin intervenciones registradas aún.</p>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* ─── T6: Feedback docente ─── */}
                   <div className="border-t border-card-border pt-4">
