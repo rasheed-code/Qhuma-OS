@@ -459,6 +459,38 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     }, 900);
   };
 
+  // A28 — Licencias y facturación
+  const [licenciaExpanded, setLicenciaExpanded] = useState(false);
+  const [ampliacionSolicitada, setAmpliacionSolicitada] = useState(false);
+  const [ampliacionSeats, setAmpliacionSeats] = useState(750);
+  const [solicitandoAmpliacion, setSolicitandoAmpliacion] = useState(false);
+  const [descargandoFactura, setDescargandoFactura] = useState<string | null>(null);
+
+  const handleSolicitarAmpliacion = () => {
+    if (solicitandoAmpliacion) return;
+    setSolicitandoAmpliacion(true);
+    setTimeout(() => {
+      setSolicitandoAmpliacion(false);
+      setAmpliacionSolicitada(true);
+    }, 1500);
+  };
+
+  const handleDescargarFactura = (facturaId: string, filename: string) => {
+    if (descargandoFactura) return;
+    setDescargandoFactura(facturaId);
+    setTimeout(() => {
+      const content = `FACTURA QHUMA PROFESSIONAL\n\nRef: ${facturaId}\nFecha: ${filename}\nImporte: Ver detalle abajo\n\nQHUMA Education S.L.\nCIF: B12345678\nCalle Larios 12, 29005 Málaga\n\nConcepto: Licencia QHUMA Professional — 500 alumnos\n`;
+      const blob = new Blob([content], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${filename}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDescargandoFactura(null);
+    }, 800);
+  };
+
   const handleEnviarComunicado = () => {
     if (!comunicadoAsunto.trim() || !comunicadoCuerpo.trim()) return;
     setComunicadoEnviando(true);
@@ -2838,6 +2870,189 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               ))}
             </div>
           </div>
+
+          {/* A28 — Estado de licencias y facturación */}
+          {(() => {
+            const modulosLicencia = [
+              { id: "base",    nombre: "Plataforma base",     incluido: true,  activo: true,  precio: 1200, uso: "312 alumnos activos", usoPct: 62 },
+              { id: "ia",      nombre: "IA Mentor",           incluido: true,  activo: true,  precio: 600,  uso: "1.84M tokens/mes",    usoPct: 74 },
+              { id: "capital", nombre: "QHUMA Capital",       incluido: false, activo: true,  precio: 240,  uso: "3 proyectos activos", usoPct: 30 },
+              { id: "analytics",nombre: "Analytics Pro",      incluido: false, activo: true,  precio: 180,  uso: "28 docentes",         usoPct: 100 },
+              { id: "lomloe",  nombre: "Informes LOMLOE",     incluido: false, activo: false, precio: 120,  uso: "No activo",           usoPct: 0 },
+            ];
+            const facturasHistorial = [
+              { id: "f1", fecha: "15 dic 2025", concepto: "Licencia trimestral Q1",  importe: "€600",  estado: "Pagada",   estadoCfg: { bg: "bg-success-light", text: "text-success" } },
+              { id: "f2", fecha: "15 sep 2025", concepto: "Licencia trimestral Q4",  importe: "€600",  estado: "Pagada",   estadoCfg: { bg: "bg-success-light", text: "text-success" } },
+              { id: "f3", fecha: "15 jun 2025", concepto: "Licencia trimestral Q3",  importe: "€600",  estado: "Pagada",   estadoCfg: { bg: "bg-success-light", text: "text-success" } },
+              { id: "f4", fecha: "15 jun 2026", concepto: "Licencia trimestral Q2",  importe: "€600",  estado: "Pendiente",estadoCfg: { bg: "bg-warning-light",  text: "text-warning"  } },
+            ];
+            const seatsUsados = 312;
+            const seatsTotal = 500;
+            const seatsPct = Math.round((seatsUsados / seatsTotal) * 100);
+            const precioExtra = ampliacionSeats > 500 ? Math.round((ampliacionSeats - 500) * 4.8) : 0;
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Landmark size={15} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Estado de licencias y facturación</h3>
+                  </div>
+                  <button
+                    onClick={() => setLicenciaExpanded((v) => !v)}
+                    className="flex items-center gap-1.5 text-[11px] text-text-muted hover:text-accent-text transition-colors cursor-pointer"
+                  >
+                    {licenciaExpanded ? <ChevronDown size={14} /> : <ArrowUp size={14} />}
+                    {licenciaExpanded ? "Colapsar" : "Ver detalle"}
+                  </button>
+                </div>
+
+                {/* KPIs principales */}
+                <div className="grid grid-cols-4 gap-3 mb-4">
+                  <div className="bg-sidebar rounded-xl p-3 text-center">
+                    <span className="text-[18px] font-bold text-white block">QHUMA Pro</span>
+                    <span className="text-[9px] text-white/50">Plan activo</span>
+                  </div>
+                  <div className="bg-accent-light rounded-xl p-3 text-center">
+                    <span className="text-[18px] font-bold text-accent-text block">1 sept 2026</span>
+                    <span className="text-[9px] text-text-muted">Renovación</span>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${seatsPct > 80 ? "bg-warning-light" : "bg-success-light"}`}>
+                    <span className={`text-[18px] font-bold block ${seatsPct > 80 ? "text-warning" : "text-success"}`}>{seatsUsados}/{seatsTotal}</span>
+                    <span className="text-[9px] text-text-muted">Licencias usadas ({seatsPct}%)</span>
+                  </div>
+                  <div className="bg-background rounded-xl p-3 text-center">
+                    <span className="text-[18px] font-bold text-text-primary block">€600</span>
+                    <span className="text-[9px] text-text-muted">Próx. factura · 15 jun</span>
+                  </div>
+                </div>
+
+                {/* Barra de uso de licencias */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] font-semibold text-text-muted">Uso de licencias ({seatsPct}%)</span>
+                    <span className="text-[10px] text-text-muted">{seatsTotal - seatsUsados} disponibles</span>
+                  </div>
+                  <div className="h-2.5 bg-background rounded-full overflow-hidden border border-card-border">
+                    <div
+                      className={`h-full rounded-full transition-all ${seatsPct > 80 ? "bg-warning" : "bg-success"}`}
+                      style={{ width: `${seatsPct}%` }}
+                    />
+                  </div>
+                </div>
+
+                {licenciaExpanded && (
+                  <>
+                    {/* Tabla de módulos */}
+                    <div className="mb-4">
+                      <h4 className="text-[12px] font-semibold text-text-primary mb-2">Módulos activos</h4>
+                      <div className="space-y-1.5">
+                        {modulosLicencia.map((mod) => (
+                          <div key={mod.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${mod.activo ? "bg-background" : "bg-background/50 opacity-60"}`}>
+                            <div className={`w-3 h-3 rounded-full flex-shrink-0 ${mod.activo ? "bg-success" : "bg-text-muted/30"}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[12px] font-medium text-text-primary">{mod.nombre}</span>
+                                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${mod.incluido ? "bg-accent-light text-accent-text" : "bg-warning-light text-warning"}`}>
+                                  {mod.incluido ? "Incluido" : "Add-on"}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <div className="w-20 h-1 bg-card rounded-full overflow-hidden">
+                                  <div className="h-full bg-accent-text rounded-full" style={{ width: `${mod.usoPct}%` }} />
+                                </div>
+                                <span className="text-[9px] text-text-muted">{mod.uso}</span>
+                              </div>
+                            </div>
+                            <span className="text-[11px] font-bold text-text-primary flex-shrink-0">€{mod.precio}/año</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-2 flex items-center justify-between px-3 py-2 bg-sidebar rounded-xl">
+                        <span className="text-[11px] font-semibold text-white">Total anual</span>
+                        <span className="text-[14px] font-bold text-accent">€{modulosLicencia.filter((m) => m.activo).reduce((s, m) => s + m.precio, 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* Historial de facturación */}
+                    <div className="mb-4">
+                      <h4 className="text-[12px] font-semibold text-text-primary mb-2">Historial de facturación</h4>
+                      <div className="space-y-1.5">
+                        {facturasHistorial.map((f) => (
+                          <div key={f.id} className="flex items-center gap-3 p-2.5 bg-background rounded-xl">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-medium text-text-primary">{f.concepto}</p>
+                              <span className="text-[9px] text-text-muted">{f.fecha}</span>
+                            </div>
+                            <span className="text-[12px] font-bold text-text-primary">{f.importe}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${f.estadoCfg.bg} ${f.estadoCfg.text}`}>{f.estado}</span>
+                            <button
+                              onClick={() => handleDescargarFactura(f.id, `factura_qhuma_${f.id}_${f.fecha.replace(/\s/g, "_")}`)}
+                              className="flex-shrink-0 text-text-muted hover:text-accent-text transition-colors cursor-pointer"
+                              title="Descargar factura"
+                            >
+                              {descargandoFactura === f.id ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Solicitar ampliación */}
+                    {ampliacionSolicitada ? (
+                      <div className="flex items-center gap-2 bg-success-light rounded-xl px-4 py-3">
+                        <CheckCircle2 size={16} className="text-success" />
+                        <div>
+                          <p className="text-[12px] font-semibold text-success">Solicitud enviada correctamente</p>
+                          <p className="text-[10px] text-text-muted">Recibirás una propuesta en 24-48h hábiles</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-background rounded-xl p-4 border border-card-border">
+                        <h4 className="text-[12px] font-semibold text-text-primary mb-2">Solicitar ampliación de licencias</h4>
+                        <div className="mb-3">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-[10px] text-text-muted">Nº de licencias</span>
+                            <span className="text-[11px] font-bold text-text-primary">{ampliacionSeats} alumnos</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={500}
+                            max={1000}
+                            step={50}
+                            value={ampliacionSeats}
+                            onChange={(e) => setAmpliacionSeats(parseInt(e.target.value))}
+                            className="w-full accent-sidebar cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[9px] text-text-muted mt-0.5">
+                            <span>500</span>
+                            <span>1.000</span>
+                          </div>
+                        </div>
+                        {ampliacionSeats > 500 && (
+                          <p className="text-[10px] text-text-muted mb-3">
+                            Coste adicional estimado: <span className="font-bold text-text-primary">€{precioExtra}/año</span> (€4,80/alumno extra)
+                          </p>
+                        )}
+                        <button
+                          onClick={handleSolicitarAmpliacion}
+                          disabled={ampliacionSeats <= 500 || solicitandoAmpliacion}
+                          className="w-full bg-sidebar text-white py-2 rounded-xl text-[12px] font-semibold hover:brightness-110 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-1.5"
+                        >
+                          {solicitandoAmpliacion ? (
+                            <><RefreshCw size={12} className="animate-spin" />Solicitando...</>
+                          ) : (
+                            <>Solicitar ampliación a {ampliacionSeats} alumnos</>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
       {/* ─── TAB: INSPECCIÓN ─── */}
