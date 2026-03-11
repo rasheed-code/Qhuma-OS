@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, Bot, Building2, FileText, Shield,
   CheckCircle2, AlertTriangle, TrendingUp, Activity, Zap,
-  Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
+  Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
   Trophy, BarChart3, MessageSquare,
@@ -54,6 +54,65 @@ const actividadDocente = [
   { id: 4, avatar: "AM", nombre: "Ana Martínez",  accion: "Añadió comentario en portfolio de Sofía Martín",       hora: "10:47", icon: MessageSquare,  color: "bg-accent-light text-accent-text" },
   { id: 5, avatar: "CP", nombre: "Carlos Pérez",  accion: "Marcó hito completado: Demo Day — Lucas García",       hora: "09:31", icon: CheckCircle2,   color: "bg-success-light text-success" },
   { id: 6, avatar: "IM", nombre: "Isabel Mora",   accion: "Creó alerta de seguimiento para Tomás Herrera",        hora: "09:05", icon: AlertTriangle,  color: "bg-warning-light text-warning" },
+];
+
+// A17 — Notificaciones automáticas
+const notificacionesAutomaticas = [
+  {
+    id: "na1",
+    tipo: "alumno_inactivo",
+    destinatario: "Pablo Ruiz",
+    canal: "email",
+    contacto: "pablo@qhuma.es",
+    mensaje: "Pablo lleva 3 días sin acceder a la plataforma. Se recomienda seguimiento docente.",
+    icon: AlertTriangle,
+    color: "bg-warning-light text-text-primary",
+    badgeColor: "bg-warning text-white",
+  },
+  {
+    id: "na2",
+    tipo: "hito_completado",
+    destinatario: "Familia García (Lucas)",
+    canal: "email",
+    contacto: "maria@qhuma.es",
+    mensaje: "Lucas ha completado el hito 'Modelo financiero' — +140 XP — Proyecto Airbnb Málaga.",
+    icon: CheckCircle2,
+    color: "bg-success-light text-success",
+    badgeColor: "bg-success text-white",
+  },
+  {
+    id: "na3",
+    tipo: "inversor_aprueba",
+    destinatario: "Sofía Martín",
+    canal: "SMS",
+    contacto: "+34 612 345 678",
+    mensaje: "Tu proyecto 'Huerto Urbano Digital' ha recibido la aprobación del claustro inversor.",
+    icon: Vote,
+    color: "bg-accent-light text-accent-text",
+    badgeColor: "bg-accent-text text-white",
+  },
+  {
+    id: "na4",
+    tipo: "informe_listo",
+    destinatario: "Ana Martínez (Docente)",
+    canal: "email",
+    contacto: "ana@qhuma.es",
+    mensaje: "El informe LOMLOE de 1º ESO — T2 está listo para descarga en el panel de Informes.",
+    icon: FileText,
+    color: "bg-background text-text-muted border border-card-border",
+    badgeColor: "bg-background text-text-muted border border-card-border",
+  },
+  {
+    id: "na5",
+    tipo: "alumno_inactivo",
+    destinatario: "Tomás Herrera",
+    canal: "SMS",
+    contacto: "+34 634 567 890",
+    mensaje: "Tomás lleva 2 días sin actividad. Tiene una entrega pendiente para el viernes.",
+    icon: AlertTriangle,
+    color: "bg-urgent-light text-urgent",
+    badgeColor: "bg-urgent text-white",
+  },
 ];
 
 const usuariosMock = [
@@ -272,6 +331,18 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
   // A15 — Actividad docente hoy
   const [showTodasActividades, setShowTodasActividades] = useState(false);
+
+  // A17 — Notificaciones automáticas
+  const [notificacionesEnviadas, setNotificacionesEnviadas] = useState<Set<string>>(new Set());
+  const [notificandoId, setNotificandoId] = useState<string | null>(null);
+  const handleEnviarNotificacion = (id: string) => {
+    if (notificandoId || notificacionesEnviadas.has(id)) return;
+    setNotificandoId(id);
+    setTimeout(() => {
+      setNotificacionesEnviadas((prev) => new Set(prev).add(id));
+      setNotificandoId(null);
+    }, 900);
+  };
 
   // A14 — Próxima reunión agenda
   const [agendaGenerada, setAgendaGenerada] = useState(false);
@@ -667,6 +738,66 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 <ChevronDown size={11} className={showTodasActividades ? "rotate-180" : ""} />
                 {showTodasActividades ? "Ver menos" : "Ver todas (6)"}
               </button>
+            </div>
+
+            {/* A17: Notificaciones automáticas */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Bell size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Notificaciones automáticas</h3>
+                <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
+                  {notificacionesAutomaticas.length - notificacionesEnviadas.size} pendientes
+                </span>
+              </div>
+              <div className="space-y-3">
+                {notificacionesAutomaticas.map((n) => {
+                  const Icon = n.icon;
+                  const enviada = notificacionesEnviadas.has(n.id);
+                  const enviando = notificandoId === n.id;
+                  return (
+                    <div key={n.id} className={`rounded-xl border p-3 transition-all ${enviada ? "opacity-60" : n.color}`}>
+                      <div className="flex items-start gap-2.5">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${enviada ? "bg-success-light" : n.color}`}>
+                          {enviada ? (
+                            <CheckCircle2 size={13} className="text-success" />
+                          ) : (
+                            <Icon size={13} />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[11px] font-semibold text-text-primary truncate">{n.destinatario}</span>
+                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${n.badgeColor}`}>
+                              {n.canal}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-text-secondary leading-snug">{n.mensaje}</p>
+                          <p className="text-[9px] text-text-muted mt-0.5">{n.contacto}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2.5 flex justify-end">
+                        {enviada ? (
+                          <span className="text-[9px] font-bold text-success flex items-center gap-1">
+                            <CheckCircle2 size={10} /> Enviada
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleEnviarNotificacion(n.id)}
+                            disabled={!!notificandoId}
+                            className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {enviando ? (
+                              <><RefreshCw size={10} className="animate-spin" />Enviando...</>
+                            ) : (
+                              <><Send size={10} />Enviar ahora</>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
