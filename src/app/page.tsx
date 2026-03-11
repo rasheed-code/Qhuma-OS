@@ -28,6 +28,7 @@ import TaskWorkspace from "@/components/TaskWorkspace";
 import EvidenceGallery from "@/components/EvidenceGallery";
 import StudentAchievements from "@/components/StudentAchievements";
 import AdminDashboard from "@/components/AdminDashboard";
+import TeacherGradeBook from "@/components/TeacherGradeBook";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -131,6 +132,7 @@ export default function Home() {
           {role === "teacher" && activeTeacherView === "analytics" && <TeacherAnalytics />}
           {role === "teacher" && activeTeacherView === "calendar" && <TeacherCalendar />}
           {role === "teacher" && activeTeacherView === "students" && <TeacherStudents />}
+          {role === "teacher" && activeTeacherView === "gradebook" && <TeacherGradeBook />}
           {role === "teacher" && activeTeacherView === "settings" && <TeacherSettings />}
           {role === "admin" && (
             <AdminDashboard activeView={activeAdminView} onNavigate={setActiveAdminView} />
