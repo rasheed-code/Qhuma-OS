@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target, Star,
+  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target, Star, FolderOpen,
 } from "lucide-react";
 import { AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -1399,6 +1399,107 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     )}
                   </div>
                 )}
+              </div>
+            );
+          })()}
+
+          {/* A30 — Panel seguimiento proyectos activos */}
+          {(() => {
+            const proyectoAlumnos = [
+              { name: "Lucas García",      progress: 78, evidencias: 5, total: 6, status: "active"    },
+              { name: "Sofía Torres",      progress: 92, evidencias: 6, total: 6, status: "completed" },
+              { name: "Pablo Ruiz",        progress: 45, evidencias: 3, total: 6, status: "delayed"   },
+              { name: "María Santos",      progress: 83, evidencias: 5, total: 6, status: "active"    },
+              { name: "Diego López",       progress: 61, evidencias: 4, total: 6, status: "active"    },
+              { name: "Ana Martín",        progress: 89, evidencias: 6, total: 6, status: "completed" },
+              { name: "Carlos Rivera",     progress: 37, evidencias: 2, total: 6, status: "delayed"   },
+              { name: "Laura Sanz",        progress: 74, evidencias: 5, total: 6, status: "active"    },
+              { name: "Tomás Herrera",     progress: 55, evidencias: 3, total: 6, status: "active"    },
+              { name: "Carla Vega",        progress: 96, evidencias: 6, total: 6, status: "completed" },
+              { name: "Alejandro Pérez",   progress: 42, evidencias: 2, total: 6, status: "delayed"   },
+              { name: "Valentina Cruz",    progress: 68, evidencias: 4, total: 6, status: "active"    },
+            ];
+            const statusLabel = (s: string) =>
+              s === "completed" ? lbl("Entregado", "Submitted")
+              : s === "delayed"  ? lbl("Retrasado", "Delayed")
+              :                    lbl("En curso", "In progress");
+            const statusColors = {
+              completed: { bar: "bg-success",  badge: "bg-success-light text-success"  },
+              active:    { bar: "bg-accent",    badge: "bg-accent-light text-accent-text" },
+              delayed:   { bar: "bg-urgent",    badge: "bg-urgent-light text-urgent"    },
+            } as const;
+            const nCompleted = proyectoAlumnos.filter(a => a.status === "completed").length;
+            const nDelayed   = proyectoAlumnos.filter(a => a.status === "delayed").length;
+            const avgProgress = Math.round(proyectoAlumnos.reduce((s,a)=>s+a.progress,0)/proyectoAlumnos.length);
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen size={14} className="text-accent-text" />
+                    <h3 className="text-[13px] font-semibold text-text-primary">
+                      {lbl("Proyectos activos", "Active Projects")}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-text-muted font-medium">
+                    {lbl("Negocio Real · T1", "Real Business · T1")}
+                  </span>
+                </div>
+
+                {/* Summary pills */}
+                <div className="flex gap-2 mb-4">
+                  <div className="flex items-center gap-1.5 bg-background rounded-xl px-3 py-1.5">
+                    <span className="text-[18px] font-bold text-text-primary">{avgProgress}%</span>
+                    <span className="text-[9px] text-text-muted leading-tight">{lbl("media\nclase", "class\navg")}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-success-light rounded-xl px-3 py-1.5">
+                    <span className="text-[18px] font-bold text-success">{nCompleted}</span>
+                    <span className="text-[9px] text-success leading-tight">{lbl("entregados", "submitted")}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-urgent-light rounded-xl px-3 py-1.5">
+                    <span className="text-[18px] font-bold text-urgent">{nDelayed}</span>
+                    <span className="text-[9px] text-urgent leading-tight">{lbl("retrasados", "delayed")}</span>
+                  </div>
+                </div>
+
+                {/* Student rows */}
+                <div className="space-y-2">
+                  {proyectoAlumnos.map((alumno) => {
+                    const sc = statusColors[alumno.status as keyof typeof statusColors];
+                    return (
+                      <div key={alumno.name} className="flex items-center gap-3 py-1.5 border-b border-card-border last:border-0">
+                        {/* Name */}
+                        <span className="text-[11px] font-medium text-text-primary w-[118px] truncate flex-shrink-0">
+                          {alumno.name}
+                        </span>
+
+                        {/* Progress bar */}
+                        <div className="flex-1 flex items-center gap-2 min-w-0">
+                          <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${sc.bar}`}
+                              style={{ width: `${alumno.progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-semibold text-text-secondary w-8 text-right flex-shrink-0">
+                            {alumno.progress}%
+                          </span>
+                        </div>
+
+                        {/* Evidencias */}
+                        <span className="text-[10px] text-text-muted flex-shrink-0 w-8 text-center">
+                          {alumno.evidencias}/{alumno.total}
+                        </span>
+
+                        {/* Status badge */}
+                        <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${sc.badge}`}>
+                          {statusLabel(alumno.status)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })()}
