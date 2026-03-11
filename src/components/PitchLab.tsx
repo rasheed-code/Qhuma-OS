@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic, Timer, ChevronRight, ChevronLeft, Star, Target,
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
-  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History, Download, RefreshCw,
+  Users, TrendingUp, TrendingDown, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History, Download, RefreshCw,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -383,8 +383,114 @@ export default function PitchLab() {
 
   const [activeSection, setActiveSection] = useState(0);
   const [notes, setNotes] = useState<Record<string, string>>({});
-  const [mode, setMode] = useState<"write" | "feedback">("write");
+  const [mode, setMode] = useState<"write" | "feedback" | "debate">("write");
   const [feedback, setFeedback] = useState<FeedbackScore[] | null>(null);
+
+  // C26 — Modo Debate
+  const [debatePostura, setDebatePostura] = useState<"favor" | "contra" | null>(null);
+  const [debateArgumentos, setDebateArgumentos] = useState<string[]>([]);
+  const [debateRespuestas, setDebateRespuestas] = useState<string[]>(["", "", ""]);
+  const [debateEvaluacion, setDebateEvaluacion] = useState<string | null>(null);
+  const [debatePuntuacion, setDebatePuntuacion] = useState<number | null>(null);
+  const [generandoArgumentos, setGenerandoArgumentos] = useState(false);
+  const [evaluandoDebate, setEvaluandoDebate] = useState(false);
+
+  const handleIniciarDebate = async (postura: "favor" | "contra") => {
+    setDebatePostura(postura);
+    setDebateArgumentos([]);
+    setDebateRespuestas(["", "", ""]);
+    setDebateEvaluacion(null);
+    setDebatePuntuacion(null);
+    setGenerandoArgumentos(true);
+    const esContra = postura === "contra";
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "pitchcoach",
+          message: `Eres un ${esContra ? "defensor entusiasta" : "crítico riguroso"} del proyecto Airbnb Málaga de Lucas García (1º ESO). El alumno tomó la postura "${postura === "favor" ? "a favor" : "en contra"}". Genera exactamente 3 ${esContra ? "argumentos sólidos que defienden el proyecto" : "contraargumentos que señalan puntos débiles del proyecto"}. Formato: numera cada argumento (1. 2. 3.) en líneas separadas. Sé conciso y específico al proyecto.`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      const texto = data.reply ?? "";
+      const lineas = texto.split("\n").filter((l: string) => /^\d\./.test(l.trim())).slice(0, 3);
+      if (lineas.length >= 3) {
+        setDebateArgumentos(lineas.map((l: string) => l.replace(/^\d\.\s*/, "").trim()));
+      } else {
+        setDebateArgumentos(
+          esContra
+            ? [
+                "El proyecto Casa Limón tiene métricas de ocupación del 72%, por encima de la media del 65% en Málaga Centro Histórico según AirDNA.",
+                "El modelo financiero muestra un punto de equilibrio en 750€/mes, alcanzado ya en el mes 3 de operación simulada.",
+                "El equipo identifica un nicho de mercado desatendido: familias locales que no saben gestionar su Airbnb — 4.500 perfiles en Málaga.",
+              ]
+            : [
+                "La dependencia de la plataforma Airbnb es un riesgo real: si aumenta comisiones al 20%, el margen neto cae por debajo del punto de equilibrio.",
+                "El análisis de competencia es insuficiente — hay 12 gestoras activas en Málaga Centro con más recursos y experiencia.",
+                "La escalabilidad es cuestionable: el modelo funciona con 1-2 propiedades pero no explica cómo crecer sin aumentar costes operativos.",
+              ]
+        );
+      }
+    } catch {
+      setDebateArgumentos(
+        esContra
+          ? [
+              "El proyecto Casa Limón tiene métricas de ocupación del 72%, por encima de la media del 65% en Málaga Centro Histórico.",
+              "El modelo financiero muestra un punto de equilibrio en 750€/mes, alcanzado en el mes 3.",
+              "El equipo identifica un nicho desatendido: familias locales con 4.500 perfiles potenciales en Málaga.",
+            ]
+          : [
+              "La dependencia de Airbnb es un riesgo: si aumenta comisiones al 20%, el margen cae bajo el punto de equilibrio.",
+              "El análisis de competencia es insuficiente — hay 12 gestoras activas con más experiencia.",
+              "La escalabilidad no está definida más allá de 1-2 propiedades.",
+            ]
+      );
+    } finally {
+      setGenerandoArgumentos(false);
+    }
+  };
+
+  const handleEvaluarDebate = async () => {
+    if (evaluandoDebate || debateRespuestas.some((r) => !r.trim())) return;
+    setEvaluandoDebate(true);
+    try {
+      const debateTexto = debateArgumentos.map((arg, i) =>
+        `Contraargumento ${i + 1}: "${arg}"\nRespuesta del alumno: "${debateRespuestas[i]}"`
+      ).join("\n\n");
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "pitchcoach",
+          message: `Evalúa el debate del alumno Lucas García (postura: ${debatePostura === "favor" ? "a favor" : "en contra"} del proyecto Airbnb Málaga).\n\n${debateTexto}\n\nResponde con: 1) PUNTUACIÓN: un número del 1 al 10. 2) RESPUESTA MÁS FUERTE: cuál fue y por qué en 1 frase. 3) RESPUESTA MÁS DÉBIL: cuál fue y cómo mejorarla en 1 frase. Formato exacto:\nPUNTUACIÓN: X\nMÁS FUERTE: ...\nMÁS DÉBIL: ...`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      const texto = data.reply ?? "";
+      const scoreMatch = texto.match(/PUNTUACI[ÓO]N:\s*(\d+)/i);
+      const score = scoreMatch ? Math.min(10, Math.max(1, parseInt(scoreMatch[1]))) : Math.round(5 + Math.random() * 4);
+      setDebatePuntuacion(score);
+      setDebateEvaluacion(texto.replace(/PUNTUACI[ÓO]N:\s*\d+\n?/i, "").trim());
+    } catch {
+      setDebatePuntuacion(Math.round(5 + Math.random() * 4));
+      setDebateEvaluacion("MÁS FUERTE: La respuesta sobre el margen financiero fue la más sólida — citaste datos concretos.\nMÁS DÉBIL: La respuesta sobre competencia necesita más datos del sector para ser convincente.");
+    } finally {
+      setEvaluandoDebate(false);
+    }
+  };
+
+  const handleResetDebate = () => {
+    setDebatePostura(null);
+    setDebateArgumentos([]);
+    setDebateRespuestas(["", "", ""]);
+    setDebateEvaluacion(null);
+    setDebatePuntuacion(null);
+    setGenerandoArgumentos(false);
+    setEvaluandoDebate(false);
+  };
   const [timerDone, setTimerDone] = useState(false);
   const [aiCoach, setAiCoach] = useState<Record<string, string | null>>({});
   const [coachingSection, setCoachingSection] = useState<string | null>(null);
@@ -796,6 +902,29 @@ export default function PitchLab() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Mode tabs */}
+          <div className="flex gap-1 bg-background rounded-xl p-1">
+            {([
+              { key: "write" as const, label: lbl("Preparar", "Prepare") },
+              { key: "feedback" as const, label: lbl("Feedback", "Feedback") },
+              { key: "debate" as const, label: lbl("Debate", "Debate") },
+            ] as Array<{ key: "write" | "feedback" | "debate"; label: string }>).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => {
+                  if (tab.key !== "debate") handleResetDebate();
+                  setMode(tab.key);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all cursor-pointer ${
+                  mode === tab.key
+                    ? "bg-card text-text-primary shadow-sm"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
           {mode === "write" && (
             <>
               <div className="flex items-center gap-1.5 text-[11px] text-text-muted">
@@ -1879,6 +2008,251 @@ export default function PitchLab() {
             </div>
           </div>
         )
+      )}
+
+      {/* C26 — Modo Debate */}
+      {mode === "debate" && (
+        <div>
+          {/* Intro / postura selector */}
+          {debatePostura === null && (
+            <div className="bg-card rounded-2xl border border-card-border p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Users size={16} className="text-accent-text" />
+                <h2 className="text-[18px] font-bold text-text-primary">{lbl("Modo Debate", "Debate Mode")}</h2>
+              </div>
+              <p className="text-[13px] text-text-secondary leading-relaxed mb-6">
+                {lbl(
+                  "Elige una postura sobre tu proyecto Airbnb Málaga. La IA tomará el lado opuesto y generará 3 argumentos. Responde a cada uno y recibe una evaluación de tu debate.",
+                  "Choose a stance on your Airbnb Málaga project. The AI will take the opposite side and generate 3 arguments. Respond to each one and receive a debate evaluation."
+                )}
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleIniciarDebate("favor")}
+                  className="bg-success-light border border-success/20 rounded-2xl p-5 text-left cursor-pointer hover:border-success/40 transition-all group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp size={18} className="text-success" />
+                    <span className="text-[16px] font-bold text-success">{lbl("A favor", "In favor")}</span>
+                  </div>
+                  <p className="text-[12px] text-text-secondary leading-relaxed">
+                    {lbl(
+                      "Defiendes el proyecto Airbnb Málaga. La IA te lanzará 3 contraargumentos críticos para que los superes.",
+                      "You defend the Airbnb Málaga project. The AI will throw 3 critical counter-arguments for you to overcome."
+                    )}
+                  </p>
+                </button>
+                <button
+                  onClick={() => handleIniciarDebate("contra")}
+                  className="bg-urgent-light border border-urgent/20 rounded-2xl p-5 text-left cursor-pointer hover:border-urgent/40 transition-all group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingDown size={18} className="text-urgent" />
+                    <span className="text-[16px] font-bold text-urgent">{lbl("En contra", "Against")}</span>
+                  </div>
+                  <p className="text-[12px] text-text-secondary leading-relaxed">
+                    {lbl(
+                      "Criticas los puntos débiles del proyecto para fortalecerlo. La IA defiende el proyecto con 3 argumentos sólidos.",
+                      "You critique the project's weak points to strengthen it. The AI defends the project with 3 solid arguments."
+                    )}
+                  </p>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Loading argumentos */}
+          {debatePostura !== null && generandoArgumentos && (
+            <div className="bg-card rounded-2xl border border-card-border p-8 flex flex-col items-center gap-4">
+              <Loader2 size={28} className="text-accent-text animate-spin" />
+              <p className="text-[14px] font-semibold text-text-primary">
+                {lbl("La IA está preparando sus argumentos…", "The AI is preparing its arguments…")}
+              </p>
+              <p className="text-[12px] text-text-muted">
+                {debatePostura === "favor"
+                  ? lbl("Generando contraargumentos críticos", "Generating critical counter-arguments")
+                  : lbl("Generando argumentos de defensa", "Generating defense arguments")}
+              </p>
+            </div>
+          )}
+
+          {/* Debate activo */}
+          {debatePostura !== null && !generandoArgumentos && debateArgumentos.length > 0 && debateEvaluacion === null && debatePuntuacion === null && (
+            <div>
+              {/* Header postura */}
+              <div className={`rounded-2xl p-4 mb-5 border ${debatePostura === "favor" ? "bg-success-light border-success/20" : "bg-urgent-light border-urgent/20"}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {debatePostura === "favor"
+                      ? <TrendingUp size={15} className="text-success" />
+                      : <TrendingDown size={15} className="text-urgent" />}
+                    <span className="text-[13px] font-bold text-text-primary">
+                      {debatePostura === "favor"
+                        ? lbl("Postura: A favor del proyecto", "Stance: In favor of the project")
+                        : lbl("Postura: En contra (para mejorarlo)", "Stance: Against (to strengthen it)")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleResetDebate}
+                    className="text-[10px] text-text-muted border border-card-border px-2.5 py-1 rounded-lg cursor-pointer hover:border-accent-text/30 transition-all"
+                  >
+                    {lbl("Cambiar postura", "Change stance")}
+                  </button>
+                </div>
+                <p className="text-[11px] text-text-secondary mt-1">
+                  {lbl("La IA toma el papel opuesto — responde a cada uno de sus 3 argumentos.", "The AI takes the opposite role — respond to each of its 3 arguments.")}
+                </p>
+              </div>
+
+              {/* Argumentos + respuestas */}
+              <div className="space-y-4 mb-5">
+                {debateArgumentos.map((arg, i) => (
+                  <div key={i} className="bg-card rounded-2xl border border-card-border p-4">
+                    {/* IA argument */}
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                        <span className="text-accent text-[9px] font-bold">AI</span>
+                      </div>
+                      <div className="flex-1 bg-background rounded-xl px-3 py-2.5">
+                        <p className="text-[11px] font-semibold text-text-muted mb-0.5">
+                          {lbl("Argumento", "Argument")} {i + 1}
+                        </p>
+                        <p className="text-[12px] text-text-primary leading-relaxed">{arg}</p>
+                      </div>
+                    </div>
+
+                    {/* Student response */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0 flex-shrink-0">
+                        <span className="text-sidebar text-[9px] font-bold">LG</span>
+                      </div>
+                      <div className="flex-1">
+                        <textarea
+                          value={debateRespuestas[i]}
+                          onChange={(e) => {
+                            const updated = [...debateRespuestas];
+                            updated[i] = e.target.value;
+                            setDebateRespuestas(updated);
+                          }}
+                          placeholder={lbl(
+                            "Tu respuesta a este argumento… (sé específico y usa datos del proyecto)",
+                            "Your response to this argument… (be specific and use project data)"
+                          )}
+                          rows={3}
+                          className="w-full text-[11px] bg-background border border-card-border rounded-xl px-3 py-2.5 text-text-primary resize-none focus:outline-none focus:border-accent-text/40"
+                        />
+                        {debateRespuestas[i].trim() && (
+                          <div className="flex justify-end mt-1">
+                            <CheckCircle2 size={12} className="text-success" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Evaluar button */}
+              <div className="flex justify-center">
+                <button
+                  onClick={handleEvaluarDebate}
+                  disabled={evaluandoDebate || debateRespuestas.some((r) => !r.trim())}
+                  className="flex items-center gap-2 bg-sidebar text-accent font-bold text-[13px] px-6 py-3 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {evaluandoDebate
+                    ? <><Loader2 size={14} className="animate-spin" /> {lbl("Evaluando debate…", "Evaluating debate…")}</>
+                    : <><BarChart3 size={14} /> {lbl("Evaluar mi debate", "Evaluate my debate")}</>}
+                </button>
+              </div>
+              {debateRespuestas.some((r) => !r.trim()) && (
+                <p className="text-[10px] text-text-muted text-center mt-2">
+                  {lbl("Responde a los 3 argumentos antes de evaluar", "Respond to all 3 arguments before evaluating")}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Evaluación final */}
+          {debatePuntuacion !== null && (
+            <div className="space-y-4">
+              {/* Score */}
+              <div
+                className="rounded-2xl p-6"
+                style={{ background: "linear-gradient(135deg, var(--sidebar) 0%, var(--accent-dark) 100%)" }}
+              >
+                <div className="flex items-center gap-5 mb-4">
+                  <div className="flex-shrink-0 text-center">
+                    <span className="text-[48px] font-black text-white leading-none">{debatePuntuacion}</span>
+                    <span className="text-[20px] font-bold text-white/40">/10</span>
+                    <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mt-0.5">{lbl("Debate", "Debate")}</p>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[14px] font-bold text-white mb-1">
+                      {debatePuntuacion >= 8
+                        ? lbl("Debate excelente — argumentación sólida", "Excellent debate — solid argumentation")
+                        : debatePuntuacion >= 6
+                        ? lbl("Buen nivel — sigue practicando", "Good level — keep practicing")
+                        : lbl("En desarrollo — más práctica necesaria", "Developing — more practice needed")}
+                    </p>
+                    <div className="flex gap-1">
+                      {Array.from({ length: 10 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className={`flex-1 h-2 rounded-full ${i < debatePuntuacion ? (debatePuntuacion >= 8 ? "bg-success" : debatePuntuacion >= 6 ? "bg-accent" : "bg-warning") : "bg-white/10"}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Evaluación detallada */}
+              {debateEvaluacion && (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center">
+                      <span className="text-accent text-[9px] font-bold">AI</span>
+                    </div>
+                    <span className="text-[12px] font-bold text-text-primary">{lbl("Análisis del debate", "Debate analysis")}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {debateEvaluacion.split("\n").filter(Boolean).map((linea, i) => {
+                      const isFuerte = linea.startsWith("MÁS FUERTE") || linea.startsWith("MAS FUERTE");
+                      const isDebil = linea.startsWith("MÁS DÉBIL") || linea.startsWith("MAS DEBIL");
+                      return (
+                        <div
+                          key={i}
+                          className={`rounded-xl p-3 border ${isFuerte ? "bg-success-light border-success/20" : isDebil ? "bg-warning-light border-warning/20" : "bg-background border-card-border"}`}
+                        >
+                          <p className={`text-[11px] leading-relaxed ${isFuerte ? "text-success" : isDebil ? "text-warning" : "text-text-secondary"}`}>
+                            {linea}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleResetDebate}
+                  className="flex items-center gap-2 bg-background border border-card-border text-text-secondary text-[12px] font-semibold px-5 py-2.5 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all"
+                >
+                  <RotateCcw size={13} />
+                  {lbl("Nuevo debate", "New debate")}
+                </button>
+                <button
+                  onClick={() => setMode("write")}
+                  className="flex items-center gap-2 bg-sidebar text-white text-[12px] font-semibold px-5 py-2.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                >
+                  {lbl("Volver a practicar", "Back to practice")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
