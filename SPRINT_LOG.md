@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 39 ✅ (push: `e82bdb3`)
+- **Último ciclo completo**: Ciclo 41 ✅ (push: `0352c8e`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 40
+- **Próximo ciclo**: Ciclo 42
 
 ---
 
@@ -1297,6 +1297,103 @@
 
 ---
 
+## Sprints completados — Ciclo 41
+
+### [SPRINT-TEACHER][T39] TeacherDashboard — Radar T2 seguimiento semanal ✅
+- Commit: `0352c8e`
+- Archivo: `src/components/TeacherDashboard.tsx`
+- `t2Alumnos` array de 12 con flags canvas/presupuesto/equipo — definido dentro del IIFE
+- 3 KPIs: canvas enviados (9/12), presupuestos activos, alumnos en equipo
+- Tabla de 12 alumnos: row coloreado por status (verde=3/3, rojo=0/3, blanco=parcial), 3 badges de estado, contador N/3
+- Panel bg-urgent-light al pie listando alumnos sin canvas (Pablo, Tomás, Alejandro)
+- Insertado entre Demo Day scores y CompetencyProgress/Milestones grid
+- Sin estados nuevos, sin imports nuevos (AlertTriangle, Activity ya existían)
+
+### [SPRINT-STUDENT][S41] StudentDashboard — Mi equipo Food Truck ✅
+- Commit: `0352c8e`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Estados añadidos: `mensajeEquipo string`, `enviandoMensaje boolean`, `mensajeEnviado boolean`
+- `equipo` y `compañeros` definidos dentro del IIFE (Sofía/Diego/Ana con roles T2 alineados con T36)
+- SVG ring de progreso (r=20, circ, dash calculado) — 62% completado
+- Tabla de compañeros: avatar, nombre, rol, comp, indicador check/circle
+- "Misión del equipo": bg-accent-light con comp badge CE
+- Input + botón enviar mensaje al equipo (900ms delay → mensajeEnviado 3s)
+- Nota pedagógica Bloque 4 (CC — inteligencia interpersonal)
+- Insertado antes de S40 (Lean Canvas)
+
+### [SPRINT-ADMIN][A39] AdminDashboard Capital — Scouting T2 potencial de inversión ✅
+- Commit: `0352c8e`
+- Archivo: `src/components/AdminDashboard.tsx`
+- `proyectosT2` array de 5 proyectos con canvas/presupuesto/equipo/engagement + fortaleza textual
+- `scoreProyecto()`: score compuesto 40/30/10/20 weights — definido dentro del IIFE
+- `potencial()`: Alto (≥80) / Medio (≥65) / Desarrollando — badge coloreado
+- Ordenados por score desc, con ranking #N visible
+- Dual display: barra CSS proporcional al mejor score + 4 mini-métricas grid
+- Panel bg-sidebar al pie con criterio de inversión formal (score ≥80 en sem. 4 → pitch)
+- Insertado al FINAL del tab Capital antes del cierre `</div>` del tab
+
+### [SPRINT-CULTURE][C39] StudentPortfolio — Narrativa T2 Semanas 1–2 ✅
+- Commit: `0352c8e`
+- Archivo: `src/components/StudentPortfolio.tsx`
+- Import añadido: `Rocket`
+- Estados añadidos: `narrativaT2 string|null`, `generandoNarrativaT2 boolean`
+- `handleGenerarNarrativaT2()`: fetch /api/tutor-chat mode="narrativa" con contexto T2 específico; fallback inline párrafo en primera persona
+- `entradasT2` array de 2 entradas (Semana 1: concepto, Semana 2: canvas) con competencias/evidencia/reflexión — definido dentro del IIFE
+- Timeline vertical con border-l-2 accent-text/30: semana label + título + cuerpo + comp badges + evidencia + reflexión en bg-background
+- Panel narrativa IA (cuando generado): bg-sidebar/5 con cita en cursiva + opción eliminar
+- Nota pedagógica bg-accent-light: Bloque 3 — Narrativa propia
+- Insertado al final de la columna izquierda (último panel antes del cierre `</div>` de la columna)
+
+---
+
+## Sprints completados — Ciclo 40
+
+### [SPRINT-TEACHER][T38] TeacherAnalytics — Velocidad de arranque T2 vs T1 ✅
+- Commit: `51a02ab`
+- Archivo: `src/components/TeacherAnalytics.tsx`
+- Módulo-level: `arranqueData` array 12 alumnos con t1/t2 index y tendencia ("mejor"|"peor"|"similar") — insertado directamente en el IIFE
+- 4 KPIs: media T1, media T2, mejores arranques (N/12), arranques más lentos (N/12)
+- Tabla dual-bar por alumno ordenada por t2 desc: barra T1 (accent-text/50) + barra T2 (coloreada por tendencia), badge por tendencia
+- `tendCfg` Record con label + cls por tendencia; `tendCfg` definido dentro del IIFE
+- Panel bg-accent-light al pie: consejo docente contextualizado (nombrando Pablo y Tomás)
+- Sin estados nuevos, sin imports nuevos
+
+### [SPRINT-STUDENT][S40] StudentDashboard — Mi Lean Canvas T2 ✅
+- Commit: `51a02ab`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Interface `BloqueLean` con id/titulo/tituloEn/emoji/placeholder/prefill — 6 bloques (propuesta/segmento/canales/ingresos/costes/socios)
+- Estados añadidos: `canvasData Record<string,string>`, `canvasGuardando boolean`, `canvasGuardado boolean`
+- Grid 2×3 de textareas editables: value = canvasData[id] si ya editado, sino prefill bilingüe
+- Indicador "N/6 bloques" derivado de filledCount; borde/bg accent cuando hay contenido, verde dot
+- Botón "Guardar canvas" (900ms delay) con Briefcase/RefreshCw/CheckCircle2 icons
+- Nota pedagógica bg-sidebar: el canvas como mapa de decisiones reales — Principio Bloque 2
+- Insertado antes de C38 y S34
+
+### [SPRINT-ADMIN][A38] AdminDashboard — Mapa de hitos T2 por clase ✅
+- Commit: `51a02ab`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Import añadido: `Rocket`
+- `hitos` array 4 items (concepto/marca/presupuesto/menú) + `clases` array 4 items con estado por hito y pctAlumnos
+- `estadoCfg` Record para "completo"/"en_progreso"/"pendiente" con bg/text/label
+- 3 KPIs: % hitos completados global, clase más avanzada (derivada con reduce), días desde lanzamiento (14)
+- Grid HTML table 4 clases × 4 hitos: badge de estado coloreado semáforo por celda
+- Columna "Alumnos activos": % con barra CSS coloreada (success/warning/urgent)
+- Panel bg-urgent-light al pie: alerta 2ºA y 2ºB sin hitos — acción recomendada
+- Insertado en tab Inspection antes del cierre del tab, como IIFE condicionado a `activeView === "inspection"`
+
+### [SPRINT-CULTURE][C38] StudentDashboard — Pausa activa · Neurociencia ✅
+- Commit: `51a02ab`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Principio culture.md Bloque 6 — Cuerpo: micro-contenido de neurociencia del movimiento
+- `ejercicios` array 3 items: respiración 4-7-8 / estiramiento cervical / regla 20-20-20 — con instrucción y base neurocientífica
+- Estados añadidos: `pausaHecha boolean`, `pausaEjercicioIdx number`, `showPausaDetalle boolean`
+- Card condicional: si no pausaHecha → warning-light (con botón "Ver ejercicio"), si pausaHecha → success-light
+- Panel expandible con: nombre + duración badge + instrucción + botón "Cambiar →" (rota ejercicioIdx) + botón "Pausa completada ✓"
+- Inserción: después de S40 canvas y antes de S34 siguiente proyecto
+- Sin imports nuevos (CheckCircle2, Activity ya existían)
+
+---
+
 ## Sprints completados — Ciclo 39
 
 ### [SPRINT-TEACHER][T37] TeacherRubrica — Rúbricas T2 Food Truck con tab T1/T2 ✅
@@ -1822,6 +1919,14 @@
 - **Ciclo 39 — TeacherRubrica T37**: `rubricasT2Mock` + `allRubricasMock` a nivel módulo. `trimestreRubrica` state para derivar `rubricasActivas`. `initScores` usa `allRubricasMock`. El `rubrica` derivado cambia a `rubricasActivas.find() ?? rubricasActivas[0]`. Panel izquierdo usa `rubricasActivas.map`. Tab toggle resetea `activeRubrica` al cambiar trimestre.
 - **Ciclo 39 — StudentAchievements S39**: IIFE con interface `InsigniaT2` y `insigniasT2` array (8 items). Tres secciones: desbloqueadas/en progreso/bloqueadas. Sin estados nuevos en el componente — todo dentro del IIFE.
 - **Ciclo 39 — AdminDashboard A37**: Heat table con datos mock 4×8 inline. `levelColor(v)` y `deltaColor(d)` helpers dentro del IIFE. `t2Started` calculado comparando `t2[i] !== t1[i]`. Sin estados nuevos.
+- **Ciclo 41 — TeacherDashboard T39**: `t2Alumnos` array con flags canvas/presupuesto/equipo dentro del IIFE. `canvasOk/presupOk/equiposOk` calculados via filter/Set. `sinCanvas` array para alerta. Sin estados nuevos. Insertado entre Demo Day y CompetencyProgress. AlertTriangle + Activity ya importados.
+- **Ciclo 41 — StudentDashboard S41**: `equipo` object + `compañeros` array dentro del IIFE. SVG ring inline (r=20, circ=2πr, dash=progreso/100*circ, strokeDashoffset=circ/4). `mensajeEquipo/enviandoMensaje/mensajeEnviado` states en componente. Send icon ya importado. Insertado antes de S40.
+- **Ciclo 41 — AdminDashboard A39**: `proyectosT2` array 5 items dentro del IIFE. `scoreProyecto()` function inline. `potencial()` helper inline. `sorted` = proyectos con score añadido, ordenados desc. `maxScore = sorted[0].score` para normalizar barra. Sin estados nuevos. Insertado dentro del Capital tab antes del último `</div>` del tab.
+- **Ciclo 41 — StudentPortfolio C39**: `entradasT2` array de 2 items con competencias `as const` — dentro del IIFE (usa lbl()). `handleGenerarNarrativaT2()` async definida DENTRO del IIFE (no en el componente) — patrón válido en este codebase. `narrativaT2/generandoNarrativaT2` states en componente. Import añadido: Rocket. Insertado al final de la columna izquierda.
+- **Ciclo 40 — TeacherAnalytics T38**: `arranqueData` array de 12 alumnos con t1/t2/tendencia definido DENTRO del IIFE (no en módulo). `tendCfg` Record también interno. No añade estados ni imports nuevos.
+- **Ciclo 40 — StudentDashboard S40**: Interface `BloqueLean` + `bloques` array definidos dentro del IIFE. `canvasData/canvasGuardando/canvasGuardado` states declarados en el componente. Valor de cada textarea: `canvasData[id] !== undefined ? canvasData[id] : prefill`. Insertado antes de C38 y S34.
+- **Ciclo 40 — AdminDashboard A38**: `hitos/clases/estadoCfg` definidos dentro del IIFE. Condicionado con `activeView === "inspection"` independiente del bloque inspection anterior (no anidado). Import añadido: Rocket.
+- **Ciclo 40 — StudentDashboard C38**: `ejercicios` array definido dentro del IIFE. `pausaHecha/pausaEjercicioIdx/showPausaDetalle` states en el componente. `ej = ejercicios[pausaEjercicioIdx]` derivado. Card alternará warning-light (pendiente) / success-light (hecho).
 - **Ciclo 39 — StudentDashboard C37**: `perfilExpandido useState<number|null>` y `compColors Record` dentro del IIFE. `Tendencia` y `Perfil` interfaces internas. `tendencias` y `perfiles` arrays constantes dentro del IIFE (usan lbl()). Fórmulas: margenBruto=(precio-coste)/precio*100, breakeven=costosFijos/((ingresos-costes)/N), beneficioNeto=ventas*(ingresos-costes)/N-fijos. Todos derivados en cada render.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
