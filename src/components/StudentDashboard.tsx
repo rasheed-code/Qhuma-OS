@@ -117,6 +117,13 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [iaConsejoDescanso, setIaConsejoDescanso] = useState<string | null>(null);
   const [loadingConsejo, setLoadingConsejo] = useState(false);
 
+  // C29 — Reflexión del día
+  const [reflexionHoy, setReflexionHoy] = useState("");
+  const [reflexionesGuardadas, setReflexionesGuardadas] = useState<{ texto: string; dia: string; fecha: string }[]>([]);
+  const [guardandoReflexion, setGuardandoReflexion] = useState(false);
+  const [reflexionGuardada, setReflexionGuardada] = useState(false);
+  const [showReflexiones, setShowReflexiones] = useState(false);
+
   // S29 — Modo enfoque Pomodoro
   const [enfoqueMode, setEnfoqueMode] = useState(false);
   const [enfoqueRunning, setEnfoqueRunning] = useState(false);
@@ -201,6 +208,144 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
     <div className="flex gap-6">
       {/* Left: Main content */}
       <div className="flex-1 min-w-0">
+        {/* C29 — Reflexión del día */}
+        {(() => {
+          const diasSemana = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+          const diasSemanaEn = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+          const hoy = new Date();
+          const diaSemana = hoy.getDay(); // 0 = domingo, 1 = lunes...
+          const diaActual = lang === "es" ? diasSemana[diaSemana] : diasSemanaEn[diaSemana];
+          const fechaFormato = hoy.toLocaleDateString(lang === "es" ? "es-ES" : "en-GB", { day: "numeric", month: "long", year: "numeric" });
+
+          const prompts: Record<number, { es: string; en: string }> = {
+            1: {
+              es: "¿Cuál fue el mayor aprendizaje de la semana pasada en Casa Limón que quieres aplicar hoy?",
+              en: "What was your biggest learning from last week at Casa Limón that you want to apply today?",
+            },
+            2: {
+              es: "¿Qué decisión tomaste ayer en tu proyecto y cómo la cambiarías ahora con más información?",
+              en: "What decision did you make yesterday in your project and how would you change it now with more information?",
+            },
+            3: {
+              es: "Si tuvieras que explicarle a un inversor en 30 segundos por qué Casa Limón merece financiación, ¿qué dirías?",
+              en: "If you had to explain to an investor in 30 seconds why Casa Limón deserves funding, what would you say?",
+            },
+            4: {
+              es: "¿Qué competencia LOMLOE has trabajado más esta semana y cómo lo sabes?",
+              en: "Which LOMLOE competency have you worked on most this week, and how do you know?",
+            },
+            5: {
+              es: "¿Qué harías diferente la semana que viene para mejorar un resultado concreto de Casa Limón?",
+              en: "What would you do differently next week to improve a specific result from Casa Limón?",
+            },
+          };
+
+          // lunes=1…viernes=5, fin de semana usa viernes
+          const promptIdx = diaSemana >= 1 && diaSemana <= 5 ? diaSemana : 5;
+          const promptObj = prompts[promptIdx];
+          const prompt = lang === "es" ? promptObj.es : promptObj.en;
+
+          const handleGuardar = () => {
+            if (!reflexionHoy.trim()) return;
+            setGuardandoReflexion(true);
+            setTimeout(() => {
+              setReflexionesGuardadas((prev) => [
+                { texto: reflexionHoy, dia: diaActual, fecha: fechaFormato },
+                ...prev,
+              ].slice(0, 5));
+              setReflexionHoy("");
+              setGuardandoReflexion(false);
+              setReflexionGuardada(true);
+              setTimeout(() => setReflexionGuardada(false), 3000);
+            }, 700);
+          };
+
+          return (
+            <div className="mb-6 bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-sidebar flex items-center justify-center flex-shrink-0">
+                    <span className="text-accent text-[9px] font-black">AI</span>
+                  </div>
+                  <div>
+                    <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Reflexión del día", "Daily reflection")}</h3>
+                    <span className="text-[10px] text-text-muted">{diaActual} · {fechaFormato}</span>
+                  </div>
+                </div>
+                {reflexionesGuardadas.length > 0 && (
+                  <button
+                    onClick={() => setShowReflexiones((v) => !v)}
+                    className="text-[10px] font-semibold text-accent-text bg-accent-light px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all"
+                  >
+                    {showReflexiones ? lbl("Ocultar", "Hide") : `${lbl("Ver mis reflexiones", "View my reflections")} (${reflexionesGuardadas.length})`}
+                  </button>
+                )}
+              </div>
+
+              {/* Prompt socrático */}
+              <div className="bg-accent-light rounded-xl p-3 mb-3 border border-accent-text/10">
+                <p className="text-[12px] text-text-primary leading-relaxed italic">&ldquo;{prompt}&rdquo;</p>
+              </div>
+
+              {/* Textarea */}
+              <div className="relative mb-3">
+                <textarea
+                  value={reflexionHoy}
+                  onChange={(e) => setReflexionHoy(e.target.value.slice(0, 300))}
+                  placeholder={lbl("Escribe tu reflexión aquí...", "Write your reflection here...")}
+                  rows={3}
+                  className="w-full text-[12px] text-text-primary bg-background border border-card-border rounded-xl p-3 resize-none focus:outline-none focus:ring-1 focus:ring-accent-text/30 placeholder:text-text-muted"
+                />
+                <span className={`absolute bottom-2 right-3 text-[9px] ${reflexionHoy.length >= 280 ? "text-warning" : "text-text-muted"}`}>
+                  {reflexionHoy.length}/300
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleGuardar}
+                  disabled={!reflexionHoy.trim() || guardandoReflexion}
+                  className={`flex items-center gap-1.5 text-[11px] font-bold px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                    reflexionHoy.trim()
+                      ? "bg-sidebar text-white hover:brightness-110"
+                      : "bg-background text-text-muted cursor-not-allowed"
+                  } disabled:opacity-60`}
+                >
+                  {guardandoReflexion ? (
+                    <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                  ) : (
+                    <CheckCircle2 size={12} />
+                  )}
+                  {guardandoReflexion ? lbl("Guardando…", "Saving…") : lbl("Guardar reflexión", "Save reflection")}
+                </button>
+                {reflexionGuardada && (
+                  <span className="flex items-center gap-1 text-[11px] font-semibold text-success">
+                    <CheckCircle2 size={11} />
+                    {lbl("Reflexión guardada ✓", "Reflection saved ✓")}
+                  </span>
+                )}
+              </div>
+
+              {/* Mis reflexiones */}
+              {showReflexiones && reflexionesGuardadas.length > 0 && (
+                <div className="mt-4 space-y-2 border-t border-card-border pt-4">
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide">{lbl("Últimas reflexiones guardadas", "Recent saved reflections")}</p>
+                  {reflexionesGuardadas.map((r, i) => (
+                    <div key={i} className="bg-background rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-bold text-accent-text">{r.dia}</span>
+                        <span className="text-[9px] text-text-muted">·</span>
+                        <span className="text-[9px] text-text-muted">{r.fecha}</span>
+                      </div>
+                      <p className="text-[11px] text-text-primary leading-relaxed">{r.texto}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* CD1: Epic Meaning — Hero Reframing */}
         <div className="mb-6">
           {/* Level badge + streak pills */}
