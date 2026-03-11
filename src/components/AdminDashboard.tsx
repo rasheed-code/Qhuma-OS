@@ -1866,6 +1866,115 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             );
           })()}
 
+          {/* ── A36: Ranking entre clases T2 — semana 1 ─────────────────────── */}
+          {(() => {
+            const clasesRanking = [
+              { id: "1a", nombre: "1º ESO A", docente: "Ana Martínez",    alumnos: 12, tareasCompletadas: 28, engagement: 83, qcoinsGenerados: 1120, media: 3.2 },
+              { id: "1b", nombre: "1º ESO B", docente: "Carlos Rueda",     alumnos: 11, tareasCompletadas: 22, engagement: 78, qcoinsGenerados: 980,  media: 2.9 },
+              { id: "2a", nombre: "2º ESO A", docente: "Patricia López",   alumnos: 13, tareasCompletadas: 0,  engagement: 0,  qcoinsGenerados: 0,    media: 0   },
+              { id: "2b", nombre: "2º ESO B", docente: "Miguel Torres",    alumnos: 12, tareasCompletadas: 0,  engagement: 0,  qcoinsGenerados: 0,    media: 0   },
+            ];
+            const activas = clasesRanking.filter((c) => c.engagement > 0);
+            const ordenadas = [...activas].sort((a, b) => b.engagement - a.engagement);
+            const medallas = ["🥇", "🥈", "🥉"];
+            const medallaColors = [
+              "bg-warning-light border-warning/30",
+              "bg-background border-card-border",
+              "bg-background border-card-border",
+            ];
+            const medallaTextColors = ["text-warning", "text-text-muted", "text-text-muted"];
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Trophy size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">
+                      {lbl("Ranking entre clases T2 — semana 1", "T2 Class Ranking — Week 1")}
+                    </h3>
+                  </div>
+                  <span className="text-[9px] bg-warning-light text-warning font-bold px-2 py-0.5 rounded-full border border-warning/20">
+                    {lbl("En directo · Food Truck", "Live · Food Truck")}
+                  </span>
+                </div>
+
+                {/* Podio — clases activas */}
+                <div className="space-y-2 mb-4">
+                  {ordenadas.map((cl, pos) => {
+                    const engPct = cl.engagement;
+                    const tareasPorAlumno = cl.alumnos > 0 ? (cl.tareasCompletadas / cl.alumnos).toFixed(1) : "0";
+                    return (
+                      <div key={cl.id} className={`flex items-center gap-3 rounded-xl px-3.5 py-3 border ${medallaColors[pos] ?? "bg-background border-card-border"}`}>
+                        <span className="text-[20px] leading-none flex-shrink-0">{medallas[pos] ?? "·"}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <div>
+                              <span className="text-[12px] font-bold text-text-primary">{cl.nombre}</span>
+                              <span className="text-[9px] text-text-muted ml-1.5">{cl.docente}</span>
+                            </div>
+                            <span className={`text-[11px] font-bold ${medallaTextColors[pos] ?? "text-text-muted"}`}>{engPct}%</span>
+                          </div>
+                          <div className="flex items-center gap-3 mb-1.5">
+                            <span className="text-[9px] text-text-muted">{cl.tareasCompletadas} {lbl("tareas", "tasks")} · {tareasPorAlumno}/alumno</span>
+                            <span className="text-[9px] text-accent-text font-semibold">{cl.qcoinsGenerados.toLocaleString("es-ES")} QC {lbl("generados", "earned")}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-border overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${pos === 0 ? "bg-warning" : "bg-sidebar"}`}
+                              style={{ width: `${engPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Clases pendientes */}
+                {clasesRanking.filter((c) => c.engagement === 0).length > 0 && (
+                  <div className="bg-background rounded-xl px-3 py-2.5 mb-3">
+                    <p className="text-[10px] font-semibold text-text-muted mb-1.5">{lbl("Todavía no iniciadas", "Not yet started")}</p>
+                    <div className="flex gap-2">
+                      {clasesRanking.filter((c) => c.engagement === 0).map((cl) => (
+                        <div key={cl.id} className="flex items-center gap-1.5 bg-card border border-card-border rounded-lg px-2.5 py-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-border flex-shrink-0" />
+                          <span className="text-[10px] text-text-muted font-semibold">{cl.nombre}</span>
+                          <span className="text-[8px] text-text-muted">{lbl("Inicio 17 mar", "Start Mar 17")}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mini bar chart — QCoins por clase activa */}
+                <div className="bg-background rounded-xl p-3 mb-3">
+                  <p className="text-[9px] text-text-muted font-semibold uppercase tracking-wide mb-2">{lbl("Q-Coins generados · clases activas", "Q-Coins earned · active classes")}</p>
+                  <div className="space-y-1.5">
+                    {ordenadas.map((cl) => {
+                      const maxQC = Math.max(...ordenadas.map((c) => c.qcoinsGenerados));
+                      const barPct = maxQC > 0 ? Math.round((cl.qcoinsGenerados / maxQC) * 100) : 0;
+                      return (
+                        <div key={cl.id} className="flex items-center gap-2">
+                          <span className="text-[9px] text-text-muted w-12 shrink-0">{cl.nombre}</span>
+                          <div className="flex-1 h-2 rounded-full bg-border overflow-hidden">
+                            <div className="h-full rounded-full bg-accent-text" style={{ width: `${barPct}%` }} />
+                          </div>
+                          <span className="text-[8px] text-text-muted w-12 text-right">{cl.qcoinsGenerados.toLocaleString("es-ES")} QC</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="text-[9px] text-text-muted leading-snug">
+                  {lbl(
+                    "La competición entre clases es pedagógicamente sana cuando se mide el esfuerzo colectivo, no el rendimiento individual. Estos datos son visibles solo para docentes y administración.",
+                    "Class competition is pedagogically healthy when collective effort is measured, not individual performance. These data are visible only to teachers and administrators."
+                  )}
+                </p>
+              </div>
+            );
+          })()}
+
         {/* Panel derecho — Actividad reciente */}
         <div className="w-[260px] flex-shrink-0">
             <div className="bg-card rounded-2xl border border-card-border p-5 h-full">
