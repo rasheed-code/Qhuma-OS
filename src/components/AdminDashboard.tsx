@@ -257,6 +257,15 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     setTimeout(() => { setGenerandoCarta(false); setCartaGenerada(true); }, 1600);
   };
 
+  // A14 — Próxima reunión agenda
+  const [agendaGenerada, setAgendaGenerada] = useState(false);
+  const [generandoAgenda, setGenerandoAgenda] = useState(false);
+  const handleGenerarAgenda = () => {
+    setGenerandoAgenda(true);
+    setAgendaGenerada(false);
+    setTimeout(() => { setGenerandoAgenda(false); setAgendaGenerada(true); }, 1200);
+  };
+
   return (
     <div>
       {/* Header */}
@@ -815,6 +824,106 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
             ))}
           </div>
+
+          {/* A14: Capital comprometido + Próxima reunión */}
+          {(() => {
+            const capitalComprometido = qhumaCapitalProyectos
+              .filter((p) => p.fase === "aprobado" || p.fase === "financiado")
+              .reduce((sum, p) => sum + p.inversion, 0);
+            const agendaProyectos = [
+              { nombre: "El Airbnb de Lucas — Málaga", alumno: "Lucas García", inversion: 8500 },
+              { nombre: "Estudio de Animación DIY", alumno: "Lucía Fernández", inversion: 2400 },
+              { nombre: "Podcast Escolar — Historias de Barrio", alumno: "Daniel Torres", inversion: 1800 },
+            ];
+            const fechaAgenda = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+            const agendaFilename = `agenda_inversores_QHUMA_${fechaAgenda}.pdf`;
+            return (
+              <>
+                {/* Capital comprometido highlight */}
+                <div className="bg-sidebar rounded-2xl p-4 flex items-center gap-5">
+                  <div className="flex-1">
+                    <p className="text-[11px] text-white/60 mb-0.5">Capital total comprometido</p>
+                    <span className="text-[32px] font-bold text-accent leading-none">
+                      €{capitalComprometido.toLocaleString()}
+                    </span>
+                    <p className="text-[10px] text-white/40 mt-1">
+                      Suma de proyectos en fase Aprobado + Financiado ·{" "}
+                      {qhumaCapitalProyectos.filter((p) => p.fase === "aprobado" || p.fase === "financiado").length} proyectos
+                    </p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] text-white/40 mb-1">De un máximo de €10.000 por proyecto</p>
+                    <div className="w-40 h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-accent rounded-full"
+                        style={{ width: `${Math.min(100, (capitalComprometido / 20000) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-white/30 mt-1">
+                      {Math.round((capitalComprometido / 20000) * 100)}% del fondo semestral
+                    </p>
+                  </div>
+                </div>
+
+                {/* Próxima reunión de inversores */}
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Calendar size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Próxima reunión de inversores</h3>
+                    <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2.5 py-0.5 rounded-full">
+                      25 mar · 10:00h
+                    </span>
+                  </div>
+                  <div className="bg-background rounded-xl p-4 mb-4">
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center">
+                        <p className="text-[18px] font-bold text-text-primary leading-none">25 mar</p>
+                        <p className="text-[10px] text-text-muted">Miércoles 2026</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[18px] font-bold text-text-primary leading-none">10:00</p>
+                        <p className="text-[10px] text-text-muted">Sala de proyectos</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[18px] font-bold text-text-primary leading-none">{agendaProyectos.length}</p>
+                        <p className="text-[10px] text-text-muted">Pitches programados</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {agendaProyectos.map((ap, i) => (
+                        <div key={i} className="flex items-center gap-3 bg-card rounded-xl px-3 py-2">
+                          <span className="text-[10px] font-bold text-text-muted w-5 flex-shrink-0">{i + 1}.</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-text-primary truncate">{ap.nombre}</p>
+                            <p className="text-[9px] text-text-muted">{ap.alumno}</p>
+                          </div>
+                          <span className="text-[11px] font-bold text-accent-text flex-shrink-0">
+                            €{ap.inversion.toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleGenerarAgenda}
+                      disabled={generandoAgenda}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-accent text-sidebar text-[11px] font-bold rounded-xl hover:brightness-105 transition-all cursor-pointer disabled:opacity-60"
+                    >
+                      {generandoAgenda ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
+                      {generandoAgenda ? "Generando…" : "Preparar agenda PDF"}
+                    </button>
+                    {agendaGenerada && (
+                      <div className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-success" />
+                        <span className="text-[10px] text-success font-mono">{agendaFilename}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Proyectos */}
           <div className="bg-card rounded-2xl border border-card-border p-5">
