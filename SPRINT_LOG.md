@@ -499,12 +499,64 @@
 
 ---
 
-## Sprints pendientes — Ciclo 14
+---
 
-- [ ] [T13] TeacherGradeBook — vista comparativa: gráfico de barras CSS mostrando la distribución de niveles LOMLOE (1-4) por competencia para toda la clase; un div por competencia con 4 barras proporcionales al número de alumnos en cada nivel, colores success/warning/urgent/urgent-light
-- [ ] [S15] StudentPortfolio — sección "Mi impacto real": card con métricas del proyecto Airbnb Málaga (ocupación media lograda %, ingresos proyectados €, reseñas positivas simuladas, ranking en su zona); datos mock pero realistas; cada KPI con icono, valor grande y etiqueta descriptiva
-- [ ] [A13] AdminDashboard Metrics mejorado — en tab Metrics, añadir selector "Vista por semana / mes" (toggle) que cambia el gráfico de barras CSS de actividad para mostrar los últimos 7 días (nombres: Lun–Dom) o los últimos 4 semanas (Sem 1–Sem 4), con datos mock distintos para cada vista
-- [ ] [C13] PitchLab mejorado — añadir panel "Guión de apoyo": lista colapsable por sección con bullets de los puntos clave que el alumno debe mencionar (datos concretos del proyecto: cifras de mercado, nombre del listing, modelo financiero), frase de transición sugerida entre secciones, y badge "Clave" para los puntos críticos de cada sección
+## Ciclo 14 ✅ completado
+
+### [SPRINT-TEACHER][T13] TeacherGradeBook — vista comparativa distribución ✅
+- Commit: `aef3bdd`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- Sección "Distribución por competencia" entre tabla y resumen global de niveles
+- Una fila por cada una de las 8 competencias LOMLOE con barra segmentada horizontal
+- 4 segmentos por barra: proporcionales al nº de alumnos en cada nivel (1–4)
+- Colores: bg-urgent (1) / bg-warning (2) / bg-accent-text (3) / bg-success (4)
+- Conteo "NxN" a la derecha y media de clase a la izquierda de cada barra
+- Tooltip nativo (HTML title) con descripción del nivel y recuento de alumnos
+- Leyenda en el footer de la sección
+- Import añadido: BarChart3
+
+### [SPRINT-STUDENT][S15] StudentPortfolio — sección Mi impacto real ✅
+- Commit: `c211916`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- Card "Mi impacto real" insertada entre S14 timeline y bloques narrativos semanales
+- 4 KPIs en grid 2×2 con valores mock realistas del proyecto Airbnb Málaga:
+  - Ocupación media: 72% (bg-success-light) con barra CSS
+  - Ingresos proyectados: 1.850€/mes (bg-accent-light) con nota de punto de equilibrio
+  - Reseñas positivas: 14/15 (bg-warning-light) con dot-row visual
+  - Ranking zonal: Top 8% Málaga Centro Histórico (bg-sidebar, texto accent)
+- Imports añadidos: BarChart3, MapPin, Users
+
+### [SPRINT-ADMIN][A13] AdminDashboard Metrics — toggle semana/mes ✅
+- Commit: `1bdf546`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Estado `metricsVista: "semana" | "mes"` añadido al componente (default: "semana")
+- Toggle Semana/Mes en cabecera del gráfico de actividad (tab Metrics)
+- Vista semana: 7 barras Lun–Dom; fines de semana con barra atenuada (text-muted/30)
+- Vista mes: 4 barras Sem 1–Sem 4 con datos mock distintos (68/75/72/78%)
+- Alturas relativas al máximo de la vista activa (normalización dinámica)
+- Patrón IIFE para scoping local de actividadDiaria y actividadMensual
+
+### [SPRINT-CULTURE][C13] PitchLab mejorado — Guión de apoyo ✅
+- Commit: `27d2c7d`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- `guionPorSeccion`: módulo-level const con 4 puntos por sección (2 Clave + 2 secundarios)
+- Datos específicos del proyecto: cifras INE/AirDNA, precios Casa Limón, modelo financiero
+- Panel colapsable debajo de los Tips en el editor de cada sección
+- Cabecera del panel: badge "N puntos clave" + chevron toggle
+- Puntos Clave: bg-sidebar, texto blanco, badge "Clave" bg-accent text-sidebar
+- Puntos secundarios: bg-background, texto text-secondary, dot muted
+- Frase de transición sugerida en bg-accent-light cursiva al final del panel
+- Estado `guionOpen: Set<string>` — colapsable independiente por sección
+- Imports añadidos: BookOpen, ChevronDown, ChevronUp
+
+---
+
+## Sprints pendientes — Ciclo 15
+
+- [ ] [T14] TeacherGradeBook — añadir historial de cambios de nota: cada vez que se edita una celda, registrar (alumno, competencia, nivel anterior → nuevo, timestamp mock) en un array de estado; mostrar panel "Últimos cambios" (los 5 más recientes) debajo de la tabla, colapsable, con icono de flecha para subida/bajada de nivel
+- [ ] [S16] StudentPortfolio — sección "Evidencias destacadas": grid 2×2 con las 4 mejores evidencias del proyecto Airbnb Málaga (título, tipo de archivo con icono, competencia LOMLOE, descripción 1 línea, badge "Destacada"); al hacer clic, expande un preview inline con descripción completa y botón "Ver en galería"
+- [ ] [A14] AdminDashboard Capital mejorado — en tab Capital, añadir panel "Próxima reunión de inversores": fecha mock, lista de 3 proyectos que se presentarán, botón "Preparar agenda" que genera PDF simulado (filename dinámico); también añadir un KPI "Capital total comprometido" que suma las inversiones de proyectos en fase aprobado/financiado
+- [ ] [C14] PitchLab mejorado — añadir sistema de "Puntuación por sección": al simular la audiencia, además del feedback global, mostrar una puntuación individual por sección (1–10) derivada de la longitud y palabras clave del texto; mostrar tabla con sección, puntuación, y una barra visual de progreso; la sección más débil marcada con badge "Mejorar"
 
 ---
 
@@ -517,10 +569,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C11 añade inversoresConfig + InversorVoto interface + inversoresVotos state. handleSimulate es ahora async. C12 añade ensayoMode/ensayoRunning/ensayoElapsed/ensayoCompleted state + useEffect timer + panel ensayo cronometrado.
-- **TeacherGradeBook**: T12 añade handleExportCSV (Blob real), alertasTrimestral (filtro reactivo), isExporting + exportFilename state. AlertTriangle en `<span title>` wrapper (Lucide no acepta prop title directa).
-- **StudentPortfolio**: S14 añade timelineHitos (const módulo, 7 hitos Airbnb Málaga), timeline visual CSS vertical, GitCommit import. Sección entre "Crecimiento en competencias" y narrative blocks.
-- **AdminDashboard**: A12 añade showIALogs state, widget "Salud del sistema IA" con 3 KPIs mock + iaLogs (5 entradas) con patrón IIFE. A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state.
+- **PitchLab**: C11 añade inversoresConfig + InversorVoto. C12 añade ensayoMode/Running/Elapsed/Completed + useEffect timer. C13 añade guionPorSeccion (const módulo) + guionOpen state (Set<string>) + panel colapsable Guión de apoyo. BookOpen/ChevronDown/ChevronUp imports.
+- **TeacherGradeBook**: T12 añade handleExportCSV, alertasTrimestral, isExporting/exportFilename. T13 añade sección "Distribución por competencia" con barra segmentada, BarChart3 import.
+- **StudentPortfolio**: S14 añade timelineHitos. S15 añade sección "Mi impacto real" (4 KPIs mock: ocupación/ingresos/reseñas/ranking). BarChart3/MapPin/Users imports.
+- **AdminDashboard**: A12 añade showIALogs. A13 añade metricsVista state ("semana"|"mes") + toggle en gráfico Actividad del tab Metrics. IIFE para actividadDiaria/actividadMensual.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
