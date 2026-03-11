@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Coins,
   Zap,
@@ -17,6 +18,11 @@ import {
   Activity,
   Leaf,
   MessageSquare,
+  Clock,
+  ChevronRight,
+  CheckCircle2,
+  Send,
+  RefreshCw,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -51,6 +57,24 @@ export default function StudentProfile() {
   );
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // S28 — Mi red de apoyo
+  const [mentorMensaje, setMentorMensaje] = useState<Record<string, string>>({});
+  const [enviandoMentor, setEnviandoMentor] = useState<string | null>(null);
+  const [mentorEnviado, setMentorEnviado] = useState<Set<string>>(new Set());
+  const [mentorFormOpen, setMentorFormOpen] = useState<string | null>(null);
+
+  const handlePedirConsejo = (mentorId: string) => {
+    const msg = mentorMensaje[mentorId] ?? "";
+    if (!msg.trim() || enviandoMentor) return;
+    setEnviandoMentor(mentorId);
+    setTimeout(() => {
+      setMentorEnviado((prev) => new Set([...prev, mentorId]));
+      setEnviandoMentor(null);
+      setMentorFormOpen(null);
+      setMentorMensaje((prev) => ({ ...prev, [mentorId]: "" }));
+    }, 1200);
+  };
 
   return (
     <div>
@@ -195,6 +219,143 @@ export default function StudentProfile() {
           ))}
         </div>
       </div>
+
+      {/* S28: Mi red de apoyo */}
+      {(() => {
+        const mentores = [
+          {
+            id: "martinez",
+            nombre: "Profesora Martínez",
+            rol: lbl("Tutora QHUMA", "QHUMA Tutor"),
+            especialidades: ["CE", "STEM"],
+            ultimoMensaje: lbl("«Revisa el modelo financiero — el margen está mal calculado.»", "«Review the financial model — margin miscalculated.»"),
+            tiempoRespuesta: lbl("Responde en ~1h", "Replies in ~1h"),
+            initials: "AM",
+            bgColor: "bg-sidebar",
+          },
+          {
+            id: "blanco",
+            nombre: "Jorge Blanco",
+            rol: lbl("Inversor externo", "External Investor"),
+            especialidades: ["CE", "CCEC"],
+            ultimoMensaje: lbl("«Buen trabajo con la proyección. Necesitas tracción de mercado.»", "«Good projection work. You need market traction.»"),
+            tiempoRespuesta: lbl("Responde en ~2h", "Replies in ~2h"),
+            initials: "JB",
+            bgColor: "bg-accent-text",
+          },
+          {
+            id: "rivas",
+            nombre: "María Rivas",
+            rol: lbl("Alumni QHUMA", "QHUMA Alumni"),
+            especialidades: ["CLC", "CCEC"],
+            ultimoMensaje: lbl("«Yo también usé Airbnb en mi proyecto. Te puedo pasar mis notas.»", "«I also used Airbnb for my project. I can share my notes.»"),
+            tiempoRespuesta: lbl("Responde en ~3h", "Replies in ~3h"),
+            initials: "MR",
+            bgColor: "bg-warning",
+          },
+        ];
+
+        const specialtyColors: Record<string, string> = {
+          CE: "bg-success-light text-success",
+          STEM: "bg-accent-light text-accent-text",
+          CLC: "bg-background text-text-secondary border border-card-border",
+          CCEC: "bg-warning-light text-warning",
+          CD: "bg-urgent-light text-urgent",
+        };
+
+        return (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Users size={16} className="text-text-primary" />
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mi red de apoyo", "My support network")}</h2>
+              <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[11px] font-semibold">3 {lbl("mentores", "mentors")}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {mentores.map((mentor) => {
+                const isEnviado = mentorEnviado.has(mentor.id);
+                const isOpen = mentorFormOpen === mentor.id;
+                return (
+                  <div key={mentor.id} className="bg-card rounded-2xl p-4 border border-card-border">
+                    {/* Avatar + name */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-10 h-10 rounded-full ${mentor.bgColor} text-white text-[13px] font-bold flex items-center justify-center flex-shrink-0`}>
+                        {mentor.initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[13px] font-semibold text-text-primary block truncate">{mentor.nombre}</span>
+                        <span className="text-[10px] text-text-muted">{mentor.rol}</span>
+                      </div>
+                    </div>
+
+                    {/* Specialty badges */}
+                    <div className="flex gap-1.5 flex-wrap mb-3">
+                      {mentor.especialidades.map((sp) => (
+                        <span key={sp} className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${specialtyColors[sp] ?? "bg-background text-text-muted"}`}>
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Last message */}
+                    <p className="text-[10px] text-text-secondary leading-relaxed italic mb-2 truncate">
+                      {mentor.ultimoMensaje}
+                    </p>
+
+                    {/* Response time */}
+                    <div className="flex items-center gap-1 mb-3">
+                      <Clock size={9} className="text-text-muted" />
+                      <span className="text-[9px] text-text-muted">{mentor.tiempoRespuesta}</span>
+                    </div>
+
+                    {/* Pedir consejo button or form */}
+                    {isEnviado ? (
+                      <div className="flex items-center gap-1.5 bg-success-light rounded-xl px-3 py-2">
+                        <CheckCircle2 size={12} className="text-success" />
+                        <span className="text-[10px] font-semibold text-success">{lbl("¡Mensaje enviado!", "Message sent!")}</span>
+                      </div>
+                    ) : isOpen ? (
+                      <div>
+                        <textarea
+                          value={mentorMensaje[mentor.id] ?? ""}
+                          onChange={(e) => setMentorMensaje((prev) => ({ ...prev, [mentor.id]: e.target.value }))}
+                          placeholder={lbl("Escribe tu pregunta o duda…", "Write your question…")}
+                          rows={3}
+                          className="w-full text-[11px] bg-background border border-card-border rounded-xl px-3 py-2 text-text-primary resize-none mb-2 focus:outline-none focus:border-accent-text/40"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handlePedirConsejo(mentor.id)}
+                            disabled={!(mentorMensaje[mentor.id] ?? "").trim() || !!enviandoMentor}
+                            className="flex-1 flex items-center justify-center gap-1.5 bg-sidebar text-white text-[10px] font-bold py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50"
+                          >
+                            {enviandoMentor === mentor.id
+                              ? <><RefreshCw size={10} className="animate-spin" /> {lbl("Enviando…", "Sending…")}</>
+                              : <><Send size={10} /> {lbl("Enviar", "Send")}</>}
+                          </button>
+                          <button
+                            onClick={() => setMentorFormOpen(null)}
+                            className="text-[10px] text-text-muted border border-card-border px-3 py-1.5 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all"
+                          >
+                            {lbl("Cancelar", "Cancel")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setMentorFormOpen(mentor.id)}
+                        className="w-full flex items-center justify-center gap-1.5 bg-accent-light text-accent-text text-[10px] font-bold py-2 rounded-xl cursor-pointer hover:bg-accent/30 transition-all"
+                      >
+                        <MessageSquare size={11} />
+                        {lbl("Pedir consejo", "Ask for advice")}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Competency Overview */}
       <div className="mb-8">
