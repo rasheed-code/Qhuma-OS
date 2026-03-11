@@ -24,6 +24,9 @@ import {
   Send,
   RefreshCw,
   BookOpen,
+  Cpu,
+  TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -58,6 +61,10 @@ export default function StudentProfile() {
   );
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // C31 — Metacognición
+  const [metaEstrategia, setMetaEstrategia] = useState<string | null>(null);
+  const [generandoMeta, setGenerandoMeta] = useState(false);
 
   // C30 — Diario socrático
   const [diarioHoy, setDiarioHoy] = useState("");
@@ -537,6 +544,138 @@ export default function StudentProfile() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* C31 — Metacognición */}
+      {(() => {
+        const franjas = [
+          { hora: "8–9h",   actividad: 62, label: lbl("Antes de clase", "Before class") },
+          { hora: "9–11h",  actividad: 88, label: lbl("Mañana temprana", "Early morning") },
+          { hora: "11–13h", actividad: 74, label: lbl("Media mañana", "Mid morning") },
+          { hora: "16–18h", actividad: 91, label: lbl("Tarde", "Afternoon") },
+          { hora: "18–20h", actividad: 55, label: lbl("Tarde-noche", "Evening") },
+          { hora: "20–22h", actividad: 38, label: lbl("Noche", "Night") },
+        ];
+        const maxActividad = Math.max(...franjas.map(f => f.actividad));
+        const mejorFranja = franjas.reduce((a, b) => a.actividad > b.actividad ? a : b);
+
+        const ratioSocratico = 74; // % de sesiones donde la IA lanzó pregunta de retorno
+        const ratioSolo     = 68; // % tareas completadas en modo individual
+        const ratioGrupo    = 32;
+        const erroresConvertidos = 5; // de 7 errores, 5 se marcaron como "superado"
+
+        const handleGenerarEstrategia = async () => {
+          setGenerandoMeta(true);
+          try {
+            const res = await fetch("/api/tutor-chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                mode: "narrativa",
+                message: `Genera una estrategia de aprendizaje personalizada en 3 frases cortas para Lucas García. Sus datos de metacognición: mejor franja horaria de estudio ${mejorFranja.hora} (${mejorFranja.actividad}% actividad), ratio socrático ${ratioSocratico}% (frecuencia con la que profundiza antes de pedir respuesta), ${erroresConvertidos}/7 errores convertidos en aprendizaje. Proyecto activo: Casa Limón (Airbnb Málaga). Demo Day: viernes 13 mar. Sé directo y específico.`,
+                history: [],
+              }),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              setMetaEstrategia((data.reply as string).trim());
+              setGenerandoMeta(false); return;
+            }
+          } catch { /* noop */ }
+          setMetaEstrategia(lbl(
+            `Lucas, tu pico de rendimiento es a las ${mejorFranja.hora}. Usa esa franja para las tareas STEM y CE del proyecto. Tu ratio socrático del ${ratioSocratico}% indica que procesas bien la información antes de pedir ayuda — una fortaleza que debes potenciar en el pitch del Demo Day.`,
+            `Lucas, your performance peak is at ${mejorFranja.hora}. Use that window for STEM and CE tasks on the project. Your ${ratioSocratico}% Socratic ratio shows you process information well before asking for help — a strength to highlight in your Demo Day pitch.`
+          ));
+          setGenerandoMeta(false);
+        };
+
+        return (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <Cpu size={16} className="text-accent-text" />
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mi metacognición", "My Metacognition")}</h2>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-card-border p-5 space-y-5">
+              {/* ¿Cuándo aprendo mejor? */}
+              <div>
+                <p className="text-[11px] font-semibold text-text-muted mb-3 uppercase tracking-wide">
+                  {lbl("¿Cuándo rindo mejor?", "When do I perform best?")}
+                </p>
+                <div className="flex items-end gap-1.5 h-20">
+                  {franjas.map((f) => {
+                    const hPct = (f.actividad / maxActividad) * 100;
+                    const isBest = f.hora === mejorFranja.hora;
+                    return (
+                      <div key={f.hora} className="flex-1 flex flex-col items-center gap-1">
+                        <span className={`text-[9px] font-bold ${isBest ? "text-accent-text" : "text-text-muted"}`}>
+                          {f.actividad}%
+                        </span>
+                        <div
+                          className={`w-full rounded-t-lg transition-all ${isBest ? "bg-accent-text" : "bg-accent-text/30"}`}
+                          style={{ height: `${hPct * 0.65}px` }}
+                        />
+                        <span className="text-[8px] text-text-muted text-center leading-tight">{f.hora}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-text-muted mt-2">
+                  {lbl(`Pico de rendimiento: ${mejorFranja.hora} (${mejorFranja.actividad}% actividad)`, `Performance peak: ${mejorFranja.hora} (${mejorFranja.actividad}% activity)`)}
+                </p>
+              </div>
+
+              {/* Ratios */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-accent-light rounded-xl p-3 text-center">
+                  <div className="text-[22px] font-bold text-accent-text">{ratioSocratico}%</div>
+                  <div className="text-[9px] text-accent-text leading-tight">{lbl("Ratio socrático", "Socratic ratio")}</div>
+                  <div className="text-[8px] text-text-muted mt-0.5">{lbl("reflexiona antes de pedir", "reflects before asking")}</div>
+                </div>
+                <div className="bg-success-light rounded-xl p-3 text-center">
+                  <div className="text-[22px] font-bold text-success">{erroresConvertidos}/7</div>
+                  <div className="text-[9px] text-success leading-tight">{lbl("Errores superados", "Errors overcome")}</div>
+                  <div className="text-[8px] text-text-muted mt-0.5">{lbl("convertidos en aprendizaje", "turned into learning")}</div>
+                </div>
+                <div className="bg-background rounded-xl p-3 text-center">
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-[16px] font-bold text-text-primary">{ratioSolo}%</span>
+                    <span className="text-[11px] text-text-muted">/</span>
+                    <span className="text-[16px] font-bold text-text-primary">{ratioGrupo}%</span>
+                  </div>
+                  <div className="text-[9px] text-text-muted leading-tight">{lbl("Solo / Equipo", "Solo / Team")}</div>
+                  <div className="text-[8px] text-text-muted mt-0.5">{lbl("distribución de trabajo", "work distribution")}</div>
+                </div>
+              </div>
+
+              {/* AI strategy */}
+              {metaEstrategia ? (
+                <div className="bg-sidebar rounded-xl p-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <TrendingUp size={12} className="text-accent" />
+                    <span className="text-[10px] font-bold text-accent">{lbl("Estrategia personalizada IA", "AI Personalized Strategy")}</span>
+                  </div>
+                  <p className="text-[12px] text-white/90 leading-relaxed">{metaEstrategia}</p>
+                  <button
+                    onClick={() => setMetaEstrategia(null)}
+                    className="mt-3 text-[10px] text-accent/70 hover:text-accent cursor-pointer"
+                  >
+                    {lbl("Regenerar", "Regenerate")}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleGenerarEstrategia}
+                  disabled={generandoMeta}
+                  className="w-full flex items-center justify-center gap-2 bg-accent-light border border-dashed border-accent-text/30 text-accent-text text-[12px] font-semibold py-3 rounded-xl cursor-pointer hover:brightness-95 transition-all disabled:opacity-50"
+                >
+                  {generandoMeta ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                  {generandoMeta ? lbl("Generando estrategia...", "Generating strategy...") : lbl("Generar estrategia de aprendizaje IA", "Generate AI learning strategy")}
+                </button>
+              )}
             </div>
           </div>
         );
