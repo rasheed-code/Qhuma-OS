@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Trophy, Star, Flame, Zap, BarChart3, Globe, Users, BookOpen,
   TrendingUp, FileText, Shield, Target, Sparkles, Lock,
-  Award, Search,
+  Award, Search, Copy, CheckCircle2, MapPin,
 } from "lucide-react";
 
 type Rarity = "Común" | "Raro" | "Legendario";
@@ -123,11 +123,27 @@ const unlocked = achievements.filter((a) => a.unlocked);
 const locked = achievements.filter((a) => !a.unlocked);
 const totalXP = unlocked.reduce((acc, a) => acc + a.xp, 0);
 
+const misionesCompletadas = [
+  { id: "m1", titulo: "Analiza el mercado malagueño", semana: "Semana 1", xp: 120, competencia: "STEM" },
+  { id: "m2", titulo: "Crea la identidad de Casa Limón", semana: "Semana 1", xp: 100, competencia: "CCEC" },
+  { id: "m3", titulo: "Diseña el listing perfecto", semana: "Semana 2", xp: 130, competencia: "CLC" },
+  { id: "m4", titulo: "Lanza la landing page", semana: "Semana 2", xp: 150, competencia: "CD" },
+  { id: "m5", titulo: "Gestiona tus primeras comunicaciones", semana: "Semana 3", xp: 80, competencia: "CLC" },
+];
+
 type FilterRarity = "todas" | Rarity;
 
 export default function StudentAchievements() {
   const [filter, setFilter] = useState<FilterRarity>("todas");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [sharedId, setSharedId] = useState<string | null>(null);
+
+  const handleShare = (id: string, title: string) => {
+    const url = `https://qhuma.es/logros/${id}?alumno=lucas-garcia&logro=${encodeURIComponent(title)}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    setSharedId(id);
+    setTimeout(() => setSharedId(null), 2000);
+  };
 
   const filtered = filter === "todas" ? unlocked : unlocked.filter((a) => a.rarity === filter);
 
@@ -162,6 +178,40 @@ export default function StudentAchievements() {
               </div>
             );
           })}
+        </div>
+
+        {/* S13: Misiones completadas */}
+        <div className="bg-card border border-card-border rounded-2xl p-4 mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin size={13} className="text-accent-text" />
+            <h2 className="text-[13px] font-semibold text-text-primary">Misiones completadas</h2>
+            <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+              Proyecto Airbnb Málaga
+            </span>
+          </div>
+          <div className="space-y-2">
+            {misionesCompletadas.map((m, idx) => (
+              <div key={m.id} className="flex items-center gap-3 py-1.5">
+                <div className="w-6 h-6 rounded-full bg-success-light flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 size={13} className="text-success" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-medium text-text-primary truncate">{m.titulo}</span>
+                    <span className="text-[9px] font-bold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full flex-shrink-0">{m.competencia}</span>
+                  </div>
+                  <span className="text-[10px] text-text-muted">{m.semana}</span>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <TrendingUp size={10} className="text-accent-text" />
+                  <span className="text-[11px] font-bold text-accent-text">+{m.xp} XP</span>
+                </div>
+                {idx < misionesCompletadas.length - 1 && (
+                  <div className="absolute" />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Filter tabs */}
@@ -211,9 +261,22 @@ export default function StudentAchievements() {
                     <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{a.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] text-text-muted">{a.date}</span>
-                      <div className="flex items-center gap-1">
-                        <TrendingUp size={10} className="text-accent-text" />
-                        <span className="text-[11px] font-bold text-accent-text">+{a.xp} XP</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <TrendingUp size={10} className="text-accent-text" />
+                          <span className="text-[11px] font-bold text-accent-text">+{a.xp} XP</span>
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleShare(a.id, a.title); }}
+                          className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-white/60 text-text-muted hover:text-accent-text transition-colors cursor-pointer"
+                          title="Compartir logro"
+                        >
+                          {sharedId === a.id ? (
+                            <><CheckCircle2 size={9} className="text-success" /><span className="text-success">Copiado</span></>
+                          ) : (
+                            <><Copy size={9} /><span>Compartir</span></>
+                          )}
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -313,18 +376,39 @@ export default function StudentAchievements() {
           </div>
         </div>
 
-        {/* Next milestone */}
-        <div className="bg-accent-light border border-accent-text/10 rounded-2xl p-4">
-          <div className="flex items-center gap-2 mb-2">
+        {/* S13: Próximos desbloqueos */}
+        <div className="bg-card border border-card-border rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
             <Target size={13} className="text-accent-text" />
-            <span className="text-[12px] font-semibold text-accent-text">Siguiente logro</span>
+            <span className="text-[12px] font-semibold text-text-primary">Próximos desbloqueos</span>
           </div>
-          <p className="text-[12px] font-semibold text-text-primary mb-0.5">Portfolio de élite</p>
-          <p className="text-[11px] text-text-secondary mb-2">9 / 16 evidencias aprobadas</p>
-          <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
-            <div className="h-full bg-accent-text rounded-full" style={{ width: "56%" }} />
+          <div className="space-y-3">
+            {locked.filter((a) => a.progress).map((a) => {
+              const pct = Math.round(((a.progress!.current) / (a.progress!.total)) * 100);
+              const Icon = a.icon;
+              const cfg = rarityConfig[a.rarity];
+              return (
+                <div key={a.id}>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+                      <Icon size={11} className={cfg.text} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-semibold text-text-primary leading-tight truncate">{a.title}</p>
+                      <p className="text-[9px] text-text-muted">{a.progress!.current} / {a.progress!.total}</p>
+                    </div>
+                    <span className="text-[10px] font-bold text-text-muted flex-shrink-0">{pct}%</span>
+                  </div>
+                  <div className="h-1.5 bg-background rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-accent-text rounded-full transition-all"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <p className="text-[9px] text-accent-text mt-1 font-medium">56% completado</p>
         </div>
 
         {/* Recent unlocks */}
