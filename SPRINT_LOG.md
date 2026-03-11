@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 24 ✅ (push: `6b6e248`)
+- **Último ciclo completo**: Ciclo 25 ✅ (push: `5171810`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 25
+- **Próximo ciclo**: Ciclo 26
 
 ---
 
@@ -1035,6 +1035,55 @@
 
 ---
 
+## Sprints completados — Ciclo 25
+
+### [SPRINT-TEACHER][T24] TeacherRubrica — Panel rubricas guardadas ✅
+- Commit: `d5a2784`
+- Archivo modificado: `src/components/TeacherRubrica.tsx`
+- Panel "Mis rúbricas guardadas" antes del grid principal: 3 rúbricas del proyecto Airbnb Málaga (CLC+CD+CE / CCEC+CLC+CD / STEM+CE+CLC)
+- Distribución de alumnos por nivel (1-4) con barra CSS multi-segmento coloreada por nivel LOMLOE
+- Botón Duplicar: 900ms delay + feedback "Copia creada" vía Set duplicadas
+- Botón Asignar a proyecto: select inline de 3 proyectos activos + badge "Asignada" success-light
+- Botón Descargar PDF: genera HTML blob con tabla de criterios LOMLOE, descarga vía URL.createObjectURL
+- Estados: rubricasDuplicadas (Set), duplicandoId (string|null), asignandoRubricaId (string|null), rubricaAsignada (Record<string,string>), exportandoRubrica (string|null), rubricaExportada (Set)
+- Imports añadidos: Copy, FolderOpen, Download, Layers, Calendar, RefreshCw
+
+### [SPRINT-STUDENT][S26] StudentAchievements — Misiones semanales ✅
+- Commit: `62c9d2e`
+- Archivo modificado: `src/components/StudentAchievements.tsx`
+- Sección "Misiones de esta semana" insertada antes del stats de rareza (al inicio del panel principal)
+- 4 misiones por cluster LOMLOE: CLC+CPL (ficha bilingüe), STEM (margen por reserva), CD (widget reservas), CE+CPSAA (pitch 90s Demo Day)
+- Cada misión: ícono cluster, título, descripción contextualizada en Casa Limón, barra de progreso pasos, XP, badge días restantes
+- Badge días: urgent (hoy), warning (≤3d), muted (>3d)
+- Botón "Completar paso": 700ms delay + animación bounce + actualización progreso
+- Auto-completado: cuando progreso=total, badge "¡Misión completada! +Q-Coins" con CheckCircle2
+- Estados: misionesProgreso Record<string,number>, completandoPaso (string|null), pasoCompletado (Set<string>)
+- Imports añadidos: Clock, ChevronRight
+
+### [SPRINT-ADMIN][A24] AdminDashboard — Panel integridad académica ✅
+- Commit: `4d3f5f9`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Panel "Integridad académica" insertado en tab Inspección después de la sección de documentos
+- 5 alertas mock de similitud entre entregas (75-91%) con alumno1/alumno2 de la clase de 12 alumnos
+- KPIs: total alertas esta semana / revisadas / pendientes en grid 3 columnas
+- Barra CSS de similitud por alerta: urgent (>85%) o warning (70-85%) con badge de nivel
+- Avatares con iniciales de ambos alumnos superpuestos (avatar2 -ml-2)
+- Acciones: "Marcar revisada" → Set, "Solicitar aclaración" → 900ms delay + estado enviada, "Ignorar" → oculta de la lista
+- Estado vacío cuando todas las alertas han sido gestionadas
+- Estados: alertasRevisadas (Set), alertasIgnoradas (Set), solicitandoClarificacion (string|null), clarificacionEnviada (Set)
+
+### [SPRINT-CULTURE][C24] TeacherChat — Modo Deep Dive visual ✅
+- Commit: `5171810`
+- Archivo modificado: `src/components/TeacherChat.tsx`
+- Barra de profundidad 0-100% calculada como (studentMsgCount-6)/10×100, actualizada en useEffect existente
+- Panel "Hilos de exploración activos": extrae las 3 últimas frases de respuestas IA, botón "Explorar" prepopula el input con pregunta socrática profundizadora
+- Botón "Guardar sesión Deep Dive": 1000ms delay → crea sesión con tema detectado, profundidad, 3 insights clave
+- Panel colapsable "N sesiones guardadas": máx 3 sesiones en LIFO, cada una con tema truncado, barra profundidad, hora, insights
+- Estados: deepDiveDepth (0-100), deepDiveHilos (string[]), deepDiveSesiones (array), guardandoSesion, sessionGuardada, showSesiones
+- Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2
+
+---
+
 ## Notas técnicas (leer antes de cada ciclo)
 
 - **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 7)
@@ -1042,7 +1091,7 @@
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
 - **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection" | "metrics" (metrics añadido en Ciclo 9)
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
-- **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
+- **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. S26 añade misionesSemanales (array dentro del componente, 4 misiones LOMLOE), misionesProgreso Record/completandoPaso/pasoCompletado states. Sección "Misiones de esta semana" insertada antes de Stats rarity row. Imports añadidos: Clock, ChevronRight. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
 - **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón. C18 añade ensayoPreguntaIntercalada/ensayoRespuestaIntercalada states + ensayoIntercaladasVisitadas useRef Set + useEffect detección transición sección + handleContinuarTrasIntercalada(). tipoMap: solucion→competencia, mercado→riesgo, financiero→operacional, equipo→inversión. Panel intercalado como 3ª rama del ternario ensayo. C19 añade ensayoScore/ensayoScoreFuerte/ensayoScoreMejora/ensayoScoreLoading states + useEffect sobre ensayoCompleted → fetch pitchcoach + panel score (barra 10 seg + punto fuerte + mejora). handleResetEnsayo() resetea C19 states. C20 añade ensayoTiemposPorSeccion Record<string,number> + ensayoSeccionAnteriorRef. useEffect del ensayo tick actualiza tiempos por sección en cada segundo. Panel running "Tiempo por sección": barras individuales + timer elapsed/objetivo coloreado semáforo. Post-ensayo: tabla tiempos con delta por sección. handleResetEnsayo() resetea C20. C21 añade exportandoGuion/guionExportado states + handleExportarGuion() — HTML blob con 5 secciones completas, guión C13, scores C14, resumen scores. Botón "Descargar guión" bg-accent en header del modo feedback. Badge de éxito col-span-3 con CheckCircle2. Imports añadidos: Download, RefreshCw.
 - **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header. T18 añade expandedAlumno/comentariosTrimestral/generandoFeedback/feedbackGenerado/copiadoFeedback states. Botón expand (MessageSquare+ChevronDown/Up) en celda nombre. Fila expandida con textarea comentario + borrador IA. generarFeedbackMock() función interna. handleGenerarFeedbackIA() fetch /api/tutor-chat mode=pitchcoach. handleCopiarFeedback() clipboard. T20 añade ObjetivoMejora interface + objetivosIniciales (const módulo) + objetivos/showObjetivos/nuevoObjetivoAlumnoId/Comp/Desc/Fecha states. Panel colapsable al final. Alumnos con nivel 1: comps en riesgo como badges urgent, checkbox circular por objetivo, formulario inline añadir. T21 añade exportandoInforme/exportInformeFilename states + handleExportarInformeIndividual(alumnoId) — HTML blob con radar T1/T2/T3, tabla LOMLOE, objetivos, feedback. Botón "Informe individual" (UserCheck icon, bg-sidebar) en modal T19. Import añadido: UserCheck.
@@ -1057,10 +1106,10 @@
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). Leer antes de editar en ciclos futuros.
-- **DeepDive**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat.
+- **DeepDive**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2.
 - **MercadoRealTime**: mercadoTendencias array definido en StudentDashboard.tsx (no en un archivo de datos separado).
 - **TeacherAnalytics**: T23 añade riesgoBase (const módulo, 12 alumnos), computeScore(), nivelRiesgo(), microAccionPorNivel Record. State contactadosSemaforo: Set<string>. Panel "Semáforo de riesgo actualizado" antes de comparativa semanal: donut SVG 3 arcos + distribución 3 KPIs + lista ordenada por score con arrowTendencia + micro-acción + botón Contactar (solo Alto). Imports añadidos: ArrowUp, ArrowDown, Minus, ShieldAlert.
-- **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real.
+- **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real. A24 añade alertasRevisadas/alertasIgnoradas (Set), solicitandoClarificacion (string|null), clarificacionEnviada (Set) states. Panel "Integridad académica" al final del tab Inspección (después de documentos): 5 alertas mock, 3 KPIs, barra similitud, avatares duales, 3 acciones por alerta. IIFE pattern dentro del tab inspection. Estados de control para UI reactiva.
 - **QHUMA Capital**: según QHUMA_Master_Document, inversión real de hasta €10.000. El panel A5 debe mostrar proyectos en distintas fases de evaluación (pitch → votación → aprobado → financiado).
 - **Q-Coins**: canjeables por talleres, equipamiento maker studio, excursiones, prioridad Passion Workshop.
 - Push siempre una vez al final del ciclo (no por sprint).
