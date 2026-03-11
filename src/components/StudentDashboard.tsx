@@ -136,6 +136,16 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
 
+  // S40 — Lean Canvas T2
+  const [canvasData, setCanvasData] = useState<Record<string, string>>({});
+  const [canvasGuardando, setCanvasGuardando] = useState(false);
+  const [canvasGuardado, setCanvasGuardado] = useState(false);
+
+  // C38 — Pausa activa · Neurociencia (Bloque 6 Cuerpo)
+  const [pausaHecha, setPausaHecha] = useState(false);
+  const [pausaEjercicioIdx, setPausaEjercicioIdx] = useState(0);
+  const [showPausaDetalle, setShowPausaDetalle] = useState(false);
+
   // S29 — Modo enfoque Pomodoro
   const [enfoqueMode, setEnfoqueMode] = useState(false);
   const [enfoqueRunning, setEnfoqueRunning] = useState(false);
@@ -2507,6 +2517,258 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 )}
               </p>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S40: Mi Lean Canvas T2 — Food Truck ─────────────────────────── */}
+      {(() => {
+        interface BloqueLean {
+          id: string;
+          titulo: string;
+          tituloEn: string;
+          emoji: string;
+          placeholder: string;
+          placeholderEn: string;
+          prefill: string;
+          prefillEn: string;
+        }
+        const bloques: BloqueLean[] = [
+          {
+            id: "propuesta",
+            titulo: "Propuesta de valor",
+            tituloEn: "Value proposition",
+            emoji: "🎯",
+            placeholder: "¿Qué hace único a tu Food Truck?",
+            placeholderEn: "What makes your Food Truck unique?",
+            prefill: "Comida mediterránea rápida con ingredientes locales de Málaga a un precio accesible.",
+            prefillEn: "Fast Mediterranean food with local Málaga ingredients at an accessible price.",
+          },
+          {
+            id: "segmento",
+            titulo: "Segmento de clientes",
+            tituloEn: "Customer segment",
+            emoji: "👥",
+            placeholder: "¿Quién es tu cliente ideal?",
+            placeholderEn: "Who is your ideal customer?",
+            prefill: "Universitarios y jóvenes profesionales de 18–35 años que buscan comer bien sin gastar mucho.",
+            prefillEn: "University students and young professionals aged 18–35 who want to eat well without spending much.",
+          },
+          {
+            id: "canales",
+            titulo: "Canales de venta",
+            tituloEn: "Sales channels",
+            emoji: "📣",
+            placeholder: "¿Cómo llegas a tus clientes?",
+            placeholderEn: "How do you reach your customers?",
+            prefill: "",
+            prefillEn: "",
+          },
+          {
+            id: "ingresos",
+            titulo: "Fuentes de ingresos",
+            tituloEn: "Revenue streams",
+            emoji: "💰",
+            placeholder: "¿Cómo gana dinero tu Food Truck?",
+            placeholderEn: "How does your Food Truck make money?",
+            prefill: "Venta directa en mercado, pedidos anticipados por WhatsApp y catering para eventos.",
+            prefillEn: "Direct market sales, advance orders via WhatsApp, and event catering.",
+          },
+          {
+            id: "costes",
+            titulo: "Costes clave",
+            tituloEn: "Key costs",
+            emoji: "📦",
+            placeholder: "¿Cuáles son tus mayores gastos?",
+            placeholderEn: "What are your biggest expenses?",
+            prefill: "Ingredientes (45%), alquiler plaza de mercado (20%), packaging (10%), transporte (15%).",
+            prefillEn: "Ingredients (45%), market pitch rental (20%), packaging (10%), transport (15%).",
+          },
+          {
+            id: "socios",
+            titulo: "Socios clave",
+            tituloEn: "Key partners",
+            emoji: "🤝",
+            placeholder: "¿Quién te ayuda a operar?",
+            placeholderEn: "Who helps you operate?",
+            prefill: "",
+            prefillEn: "",
+          },
+        ];
+
+        const handleGuardarCanvas = () => {
+          setCanvasGuardando(true);
+          setTimeout(() => {
+            setCanvasGuardando(false);
+            setCanvasGuardado(true);
+            setTimeout(() => setCanvasGuardado(false), 3000);
+          }, 900);
+        };
+
+        const filledCount = bloques.filter((b) => {
+          const val = canvasData[b.id];
+          return val !== undefined ? val.trim().length > 0 : (lang === "es" ? b.prefill : b.prefillEn).trim().length > 0;
+        }).length;
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-accent-text flex items-center justify-center flex-shrink-0">
+                  <LayoutGrid size={12} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("Mi Lean Canvas T2", "My T2 Lean Canvas")}
+                  </h3>
+                  <span className="text-[10px] text-text-muted">{lbl("Food Truck · Modelo de negocio", "Food Truck · Business model")}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-background px-2.5 py-1 rounded-xl border border-card-border">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent-text" />
+                  <span className="text-[10px] font-semibold text-text-secondary">{filledCount}/6 {lbl("bloques", "blocks")}</span>
+                </div>
+                <button
+                  onClick={handleGuardarCanvas}
+                  disabled={canvasGuardando}
+                  className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                >
+                  {canvasGuardando ? <RefreshCw size={10} className="animate-spin" /> : canvasGuardado ? <CheckCircle2 size={10} /> : <Briefcase size={10} />}
+                  {canvasGuardado ? lbl("¡Guardado!", "Saved!") : lbl("Guardar canvas", "Save canvas")}
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4 mt-2">
+              {lbl(
+                "Define los 6 bloques de tu modelo de negocio. Edita cada bloque directamente — los prefills son sugerencias que puedes mejorar.",
+                "Define the 6 blocks of your business model. Edit each block directly — the prefills are suggestions you can improve."
+              )}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              {bloques.map((b) => {
+                const value = canvasData[b.id] !== undefined ? canvasData[b.id] : (lang === "es" ? b.prefill : b.prefillEn);
+                const hasContent = value.trim().length > 0;
+                return (
+                  <div key={b.id} className={`rounded-xl border p-3 ${hasContent ? "border-accent/30 bg-accent-light/40" : "border-card-border bg-background"}`}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <span className="text-base leading-none">{b.emoji}</span>
+                      <span className="text-[11px] font-semibold text-text-primary">{lang === "es" ? b.titulo : b.tituloEn}</span>
+                      {hasContent && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-success flex-shrink-0" />}
+                    </div>
+                    <textarea
+                      value={value}
+                      onChange={(e) => setCanvasData((prev) => ({ ...prev, [b.id]: e.target.value }))}
+                      placeholder={lang === "es" ? b.placeholder : b.placeholderEn}
+                      rows={3}
+                      className="w-full text-[10px] text-text-primary bg-white/60 border border-card-border rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:ring-1 focus:ring-accent-text/30 placeholder:text-text-muted leading-relaxed"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 bg-sidebar rounded-xl px-3 py-2.5">
+              <p className="text-[9px] font-bold text-accent mb-0.5">{lbl("Por qué esto importa ahora", "Why this matters now")}</p>
+              <p className="text-[10px] text-white/80 leading-snug">
+                {lbl(
+                  "Un Lean Canvas no es un documento escolar — es el mapa de tus decisiones reales. Cada bloque que rellenas esta semana es una hipótesis que validarás con clientes reales en el mercado.",
+                  "A Lean Canvas isn't a school document — it's the map for your real decisions. Every block you fill this week is a hypothesis you'll validate with real customers at the market."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── C38: Pausa activa · Neurociencia (Bloque 6 Cuerpo) ───────────── */}
+      {(() => {
+        const ejercicios = [
+          {
+            nombre: lbl("Respiración 4-7-8", "4-7-8 Breathing"),
+            icono: "🫁",
+            duracion: lbl("2 min", "2 min"),
+            instruccion: lbl(
+              "Inhala 4 seg → aguanta 7 seg → exhala 8 seg. Repite 3 veces. Activa el sistema nervioso parasimpático y reduce el cortisol.",
+              "Inhale 4s → hold 7s → exhale 8s. Repeat 3 times. Activates the parasympathetic nervous system and reduces cortisol."
+            ),
+          },
+          {
+            nombre: lbl("Estiramiento cervical", "Neck stretch"),
+            icono: "🧘",
+            duracion: lbl("90 seg", "90 sec"),
+            instruccion: lbl(
+              "Inclina la cabeza hacia el hombro derecho 15 seg, luego izquierdo 15 seg. Repite 3 veces. Aumenta el flujo sanguíneo a la corteza prefrontal.",
+              "Tilt head to right shoulder 15s, then left 15s. Repeat 3 times. Increases blood flow to the prefrontal cortex."
+            ),
+          },
+          {
+            nombre: lbl("Movimiento ocular 20-20-20", "20-20-20 eye rule"),
+            icono: "👁️",
+            duracion: lbl("1 min", "1 min"),
+            instruccion: lbl(
+              "Cada 20 min de pantalla, mira a 6 metros de distancia durante 20 seg. Reduce la fatiga de los músculos ciliares y mejora la concentración sostenida.",
+              "Every 20 min of screen time, look 6 meters away for 20 seconds. Reduces ciliary muscle fatigue and improves sustained focus."
+            ),
+          },
+        ];
+
+        const ej = ejercicios[pausaEjercicioIdx];
+
+        return (
+          <div className={`rounded-2xl border p-4 mb-5 transition-all ${pausaHecha ? "bg-success-light border-success/30" : "bg-warning-light border-warning/30"}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl leading-none">{pausaHecha ? "✅" : "⏱️"}</span>
+                <div>
+                  <h4 className="text-[12px] font-bold text-text-primary">
+                    {pausaHecha
+                      ? lbl("Pausa completada · Buen trabajo", "Break done · Great job")
+                      : lbl("Pausa activa recomendada · ~90 min de pantalla", "Active break recommended · ~90 min of screen time")}
+                  </h4>
+                  <p className="text-[10px] text-text-secondary leading-snug">
+                    {pausaHecha
+                      ? lbl("Tu corteza prefrontal lleva 2 min recuperándose. Vuelve a la tarea con mejor foco.", "Your prefrontal cortex has been recovering for 2 min. Return with better focus.")
+                      : lbl("Tu corteza prefrontal necesita 2 min de movimiento para mantener el foco profundo.", "Your prefrontal cortex needs 2 min of movement to maintain deep focus.")}
+                  </p>
+                </div>
+              </div>
+              {!pausaHecha && (
+                <button
+                  onClick={() => setShowPausaDetalle((v) => !v)}
+                  className="text-[10px] font-bold text-warning bg-white/70 px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all flex-shrink-0"
+                >
+                  {showPausaDetalle ? lbl("Ocultar", "Hide") : lbl("Ver ejercicio", "View exercise")}
+                </button>
+              )}
+            </div>
+
+            {showPausaDetalle && !pausaHecha && (
+              <div className="mt-3 bg-white/60 rounded-xl px-3 py-3 border border-warning/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base leading-none">{ej.icono}</span>
+                    <span className="text-[12px] font-bold text-text-primary">{ej.nombre}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-warning-light text-warning font-semibold">{ej.duracion}</span>
+                  </div>
+                  <button
+                    onClick={() => setPausaEjercicioIdx((i) => (i + 1) % ejercicios.length)}
+                    className="text-[9px] text-text-muted hover:text-text-secondary cursor-pointer transition-all"
+                  >
+                    {lbl("Cambiar →", "Switch →")}
+                  </button>
+                </div>
+                <p className="text-[10px] text-text-secondary leading-relaxed mb-3">{ej.instruccion}</p>
+                <button
+                  onClick={() => { setPausaHecha(true); setShowPausaDetalle(false); }}
+                  className="w-full flex items-center justify-center gap-2 bg-success text-white text-[11px] font-bold py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                >
+                  <CheckCircle2 size={12} />
+                  {lbl("Pausa completada ✓", "Break completed ✓")}
+                </button>
+              </div>
+            )}
           </div>
         );
       })()}

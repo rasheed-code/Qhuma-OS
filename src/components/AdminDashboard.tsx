@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target, Star, FolderOpen,
+  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target, Star, FolderOpen, Rocket,
 } from "lucide-react";
 import { AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -4377,6 +4377,149 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               );
             })()}
+          </div>
+        );
+      })()}
+
+      {/* ── A38: Mapa de hitos T2 — lanzamiento por clase ──────────────── */}
+      {activeView === "inspection" && (() => {
+        const hitos = [
+          { id: "concepto",   label: lbl("Concepto definido",  "Concept defined"),   emoji: "💡" },
+          { id: "marca",      label: lbl("Nombre y marca",     "Name & brand"),       emoji: "🏷️" },
+          { id: "presupuesto",label: lbl("Presupuesto inicial","Initial budget"),     emoji: "💰" },
+          { id: "menu",       label: lbl("Boceto de menú",     "Menu draft"),         emoji: "🍽️" },
+        ];
+        const clases = [
+          {
+            nombre: "1º ESO A",
+            docente: "Ana Martínez",
+            estado: { concepto: "completo", marca: "completo", presupuesto: "en_progreso", menu: "pendiente" },
+            pctAlumnos: 92,
+          },
+          {
+            nombre: "1º ESO B",
+            docente: "Carlos Rueda",
+            estado: { concepto: "completo", marca: "en_progreso", presupuesto: "en_progreso", menu: "pendiente" },
+            pctAlumnos: 78,
+          },
+          {
+            nombre: "2º ESO A",
+            docente: "Patricia López",
+            estado: { concepto: "en_progreso", marca: "pendiente", presupuesto: "pendiente", menu: "pendiente" },
+            pctAlumnos: 40,
+          },
+          {
+            nombre: "2º ESO B",
+            docente: "Miguel Torres",
+            estado: { concepto: "pendiente", marca: "pendiente", presupuesto: "pendiente", menu: "pendiente" },
+            pctAlumnos: 0,
+          },
+        ];
+        type EstadoHito = "completo" | "en_progreso" | "pendiente";
+        const estadoCfg: Record<EstadoHito, { bg: string; text: string; label: string }> = {
+          completo:     { bg: "bg-success-light",  text: "text-success",      label: lbl("✓ Completo",     "✓ Done") },
+          en_progreso:  { bg: "bg-warning-light",  text: "text-warning",      label: lbl("⏳ En progreso", "⏳ In progress") },
+          pendiente:    { bg: "bg-background",      text: "text-text-muted",   label: lbl("— Pendiente",    "— Pending") },
+        };
+        const totalHitosCompletos = clases.reduce((s, cl) => s + Object.values(cl.estado).filter(v => v === "completo").length, 0);
+        const totalHitosPosibles = clases.length * hitos.length;
+        const claseMasAvanzada = clases.reduce((best, cl) => {
+          const cnt = Object.values(cl.estado).filter(v => v === "completo").length;
+          const bestCnt = Object.values(best.estado).filter(v => v === "completo").length;
+          return cnt > bestCnt ? cl : best;
+        }, clases[0]);
+
+        return (
+          <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Rocket size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Mapa de hitos T2 — Lanzamiento Food Truck", "T2 Milestone Map — Food Truck Launch")}
+                </h3>
+              </div>
+              <span className="text-[9px] text-text-muted bg-background px-2 py-1 rounded-lg border border-card-border">
+                {lbl("Semana 1–2 de T2", "T2 Week 1–2")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4 mt-1">
+              {lbl("Estado de los 4 hitos de arranque por clase.", "Status of the 4 launch milestones per class.")}
+            </p>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="bg-accent-light rounded-xl p-3 text-center">
+                <p className="text-[18px] font-black text-accent-text leading-none">{Math.round((totalHitosCompletos / totalHitosPosibles) * 100)}%</p>
+                <p className="text-[9px] text-text-muted mt-1">{lbl("Hitos completados", "Milestones done")}</p>
+              </div>
+              <div className="bg-success-light rounded-xl p-3 text-center">
+                <p className="text-[12px] font-black text-success leading-none">{claseMasAvanzada.nombre}</p>
+                <p className="text-[9px] text-text-muted mt-1">{lbl("Clase más avanzada", "Most advanced class")}</p>
+              </div>
+              <div className="bg-background rounded-xl p-3 text-center border border-card-border">
+                <p className="text-[18px] font-black text-text-primary leading-none">14</p>
+                <p className="text-[9px] text-text-muted mt-1">{lbl("Días desde lanzamiento", "Days since launch")}</p>
+              </div>
+            </div>
+
+            {/* Grid por clase × hito */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr>
+                    <th className="text-[9px] font-bold text-text-muted pb-2 pr-4 whitespace-nowrap">{lbl("Clase", "Class")}</th>
+                    {hitos.map((h) => (
+                      <th key={h.id} className="text-[9px] font-bold text-text-muted pb-2 px-2 text-center whitespace-nowrap">
+                        <span className="mr-0.5">{h.emoji}</span> {h.label}
+                      </th>
+                    ))}
+                    <th className="text-[9px] font-bold text-text-muted pb-2 pl-2 text-center whitespace-nowrap">{lbl("Alumnos activos", "Active students")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clases.map((cl) => (
+                    <tr key={cl.nombre} className="border-t border-card-border">
+                      <td className="py-2.5 pr-4">
+                        <p className="text-[11px] font-bold text-text-primary">{cl.nombre}</p>
+                        <p className="text-[8px] text-text-muted">{cl.docente}</p>
+                      </td>
+                      {hitos.map((h) => {
+                        const est = cl.estado[h.id as keyof typeof cl.estado] as EstadoHito;
+                        const cfg = estadoCfg[est];
+                        return (
+                          <td key={h.id} className="px-2 py-2 text-center">
+                            <span className={`inline-block text-[8px] font-bold px-2 py-1 rounded-lg ${cfg.bg} ${cfg.text} whitespace-nowrap`}>
+                              {cfg.label}
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td className="px-2 py-2 text-center">
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[12px] font-black text-text-primary">{cl.pctAlumnos}%</span>
+                          <div className="w-16 h-1.5 rounded-full bg-border overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${cl.pctAlumnos >= 80 ? "bg-success" : cl.pctAlumnos >= 50 ? "bg-warning" : "bg-urgent"}`}
+                              style={{ width: `${cl.pctAlumnos}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-4 bg-urgent-light border border-urgent/20 rounded-xl px-3 py-2.5">
+              <p className="text-[9px] font-bold text-urgent mb-1">{lbl("Requiere atención", "Requires attention")}</p>
+              <p className="text-[10px] text-text-secondary leading-snug">
+                {lbl(
+                  "2ºA y 2ºB aún no han completado los hitos iniciales de T2. Recomendado: sesión de arranque con sus docentes esta semana para revisar bloqueos y alinear el calendario de hitos.",
+                  "2A and 2B have not yet completed the T2 initial milestones. Recommended: launch session with their teachers this week to review blockers and align the milestone calendar."
+                )}
+              </p>
+            </div>
           </div>
         );
       })()}

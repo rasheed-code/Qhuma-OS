@@ -1209,6 +1209,125 @@ export default function TeacherAnalytics() {
           </div>
         );
       })()}
+
+      {/* ── T38: Velocidad de arranque T2 vs T1 ──────────────────────────── */}
+      {(() => {
+        // arranqueT1: score (0-100) basado en el seed del alumno — qué tan rápido arrancaron en T1
+        // arranqueT2: score T2 semana 1-2, derivado de talentoT2 y seed diferente
+        const arranqueData = [
+          { nombre: "Lucas García",    avatar: "LG", t1: 82, t2: 91, tendencia: "mejor"  as const },
+          { nombre: "Sofía Torres",    avatar: "ST", t1: 74, t2: 79, tendencia: "mejor"  as const },
+          { nombre: "Pablo Ruiz",      avatar: "PR", t1: 55, t2: 48, tendencia: "peor"   as const },
+          { nombre: "María Santos",    avatar: "MS", t1: 88, t2: 85, tendencia: "similar" as const },
+          { nombre: "Diego López",     avatar: "DL", t1: 63, t2: 71, tendencia: "mejor"  as const },
+          { nombre: "Ana Martín",      avatar: "AM", t1: 90, t2: 93, tendencia: "mejor"  as const },
+          { nombre: "Carlos Rivera",   avatar: "CR", t1: 69, t2: 72, tendencia: "mejor"  as const },
+          { nombre: "Laura Sanz",      avatar: "LS", t1: 78, t2: 77, tendencia: "similar" as const },
+          { nombre: "Tomás Herrera",   avatar: "TH", t1: 51, t2: 44, tendencia: "peor"   as const },
+          { nombre: "Carla Vega",      avatar: "CV", t1: 80, t2: 86, tendencia: "mejor"  as const },
+          { nombre: "Alejandro Pérez", avatar: "AP", t1: 60, t2: 58, tendencia: "similar" as const },
+          { nombre: "Valentina Cruz",  avatar: "VC", t1: 85, t2: 90, tendencia: "mejor"  as const },
+        ];
+
+        const tendCfg = {
+          mejor:   { label: lbl("▲ Mejor arranque", "▲ Better start"), cls: "bg-success-light text-success" },
+          peor:    { label: lbl("▼ Arranque más lento", "▼ Slower start"), cls: "bg-urgent-light text-urgent" },
+          similar: { label: lbl("— Similar", "— Similar"), cls: "bg-background text-text-muted border border-card-border" },
+        } as const;
+
+        const mediaT1 = Math.round(arranqueData.reduce((s, a) => s + a.t1, 0) / arranqueData.length);
+        const mediaT2 = Math.round(arranqueData.reduce((s, a) => s + a.t2, 0) / arranqueData.length);
+        const mejores = arranqueData.filter(a => a.tendencia === "mejor").length;
+        const peores  = arranqueData.filter(a => a.tendencia === "peor").length;
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Velocidad de arranque T2 vs T1", "T2 vs T1 launch velocity")}
+                </h3>
+              </div>
+              <span className="text-[9px] text-text-muted bg-background px-2 py-1 rounded-lg border border-card-border">
+                {lbl("Semana 1–2 · Índice 0–100", "Week 1–2 · Index 0–100")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl(
+                "Compara cómo de rápido ha arrancado cada alumno en T2 (Food Truck) respecto a su velocidad de inicio en T1 (Airbnb).",
+                "Compares each student's T2 (Food Truck) early engagement vs their T1 (Airbnb) launch speed."
+              )}
+            </p>
+
+            {/* KPI strip */}
+            <div className="grid grid-cols-4 gap-3 mb-5">
+              {[
+                { label: lbl("Media arranque T1", "T1 launch avg"),   val: `${mediaT1}`, bg: "bg-background border border-card-border", txt: "text-text-primary" },
+                { label: lbl("Media arranque T2", "T2 launch avg"),   val: `${mediaT2}`, bg: "bg-accent-light", txt: "text-accent-text" },
+                { label: lbl("Mejor arranque T2", "Better T2 start"), val: `${mejores}/12`, bg: "bg-success-light", txt: "text-success" },
+                { label: lbl("Arranque más lento", "Slower T2 start"), val: `${peores}/12`, bg: "bg-urgent-light", txt: "text-urgent" },
+              ].map((k) => (
+                <div key={k.label} className={`rounded-xl p-3 text-center ${k.bg}`}>
+                  <p className={`text-[18px] font-black leading-none ${k.txt}`}>{k.val}</p>
+                  <p className="text-[9px] text-text-muted mt-1">{k.label}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabla comparativa */}
+            <div className="space-y-2">
+              {arranqueData
+                .slice()
+                .sort((a, b) => b.t2 - a.t2)
+                .map((alumno) => {
+                  const cfg = tendCfg[alumno.tendencia];
+                  const maxBar = Math.max(alumno.t1, alumno.t2, 1);
+                  return (
+                    <div key={alumno.avatar} className="bg-background rounded-xl px-3 py-2.5">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                          <span className="text-[8px] font-bold text-accent">{alumno.avatar}</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-text-primary flex-1">{alumno.nombre}</span>
+                        <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.cls}`}>
+                          {cfg.label}
+                        </span>
+                      </div>
+                      {/* Dual bar: T1 (accent-light) vs T2 (sidebar) */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[8px] text-text-muted w-4">T1</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                          <div className="h-full bg-accent-text/50 rounded-full" style={{ width: `${(alumno.t1 / 100) * 100}%` }} />
+                        </div>
+                        <span className="text-[9px] font-bold text-text-secondary w-6 text-right">{alumno.t1}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[8px] text-text-muted w-4">T2</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                          <div className={`h-full rounded-full ${alumno.tendencia === "mejor" ? "bg-success" : alumno.tendencia === "peor" ? "bg-urgent" : "bg-sidebar"}`} style={{ width: `${(alumno.t2 / 100) * 100}%` }} />
+                        </div>
+                        <span className={`text-[9px] font-bold w-6 text-right ${alumno.tendencia === "mejor" ? "text-success" : alumno.tendencia === "peor" ? "text-urgent" : "text-text-secondary"}`}>{alumno.t2}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <div className="mt-4 bg-accent-light rounded-xl px-3 py-2.5 border border-accent/20">
+              <div className="flex items-start gap-2">
+                <Lightbulb size={11} className="text-accent-text flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-accent-text leading-relaxed">
+                  {lbl(
+                    "Un arranque más lento en T2 no indica falta de capacidad — puede reflejar mayor ambición en el proyecto o tiempo dedicado a planificar antes de ejecutar. Contacta a Pablo y Tomás esta semana para identificar bloqueos concretos.",
+                    "A slower T2 start doesn't indicate lack of ability — it may reflect greater project ambition or planning before execution. Check in with Pablo and Tomás this week to identify specific blockers."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
