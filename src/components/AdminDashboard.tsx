@@ -249,6 +249,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   // A16 — Top competencias por clase
   const [compClaseVista, setCompClaseVista] = useState<"1eso" | "2eso">("1eso");
 
+  // A23 — Análisis por franja horaria
+  const [franjaVista, setFranjaVista] = useState<"semana" | "media">("semana");
+  const [mantenimientoSlot, setMantenimientoSlot] = useState<string | null>(null);
+  const [mantenimientoGuardado, setMantenimientoGuardado] = useState<string | null>(null);
+
   // A2 — Users management state
   const [userSearch, setUserSearch] = useState("");
   const [userFilterRol, setUserFilterRol] = useState("Todos");
@@ -3074,6 +3079,170 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                         <span className="text-[9px] text-text-muted">{l.label}</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* A23 — Actividad por franja horaria */}
+            {(() => {
+              const dias = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+              const franjas = [
+                { label: "Mañana 8–10h",        key: "m1" },
+                { label: "Media mañana 10–12h",  key: "m2" },
+                { label: "Tarde 16–18h",         key: "t1" },
+                { label: "Tarde-noche 18–20h",   key: "t2" },
+              ];
+              // Datos de actividad (%) por franja × día: [m1, m2, t1, t2] × [lun, mar, mié, jue, vie]
+              const dataSemana: Record<string, number[][]> = {
+                "semana": [
+                  // lun, mar, mié, jue, vie  — filas = franja, cols = día
+                  [68, 72, 65, 80, 55],  // m1 mañana
+                  [85, 88, 82, 91, 78],  // m2 media mañana ← pico
+                  [45, 50, 38, 55, 30],  // t1 tarde
+                  [22, 25, 18, 28, 12],  // t2 tarde-noche
+                ],
+                "media": [
+                  [62, 68, 60, 75, 52],
+                  [80, 84, 78, 87, 74],
+                  [42, 47, 35, 51, 28],
+                  [20, 22, 16, 25, 10],
+                ],
+              };
+              const data = dataSemana[franjaVista];
+
+              // Detectar pico y valle
+              let pico = { franja: "", dia: "", val: 0 };
+              let valle = { franja: "", dia: "", val: 100 };
+              data.forEach((row, fi) => row.forEach((val, di) => {
+                if (val > pico.val)   pico   = { franja: franjas[fi].label, dia: dias[di], val };
+                if (val < valle.val)  valle  = { franja: franjas[fi].label, dia: dias[di], val };
+              }));
+
+              // Recomendación: franja valle de media como ventana de mantenimiento
+              const slotsPosibles = [
+                "Viernes 18–20h",
+                "Viernes 16–18h",
+                "Miércoles 18–20h",
+              ];
+
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock size={14} className="text-text-primary" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Actividad por franja horaria", "Activity by time slot")}</h3>
+                    {/* Toggle semana / media */}
+                    <div className="ml-auto flex gap-1 bg-background rounded-xl border border-card-border p-0.5">
+                      {(["semana", "media"] as const).map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => setFranjaVista(v)}
+                          className={`px-3 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${franjaVista === v ? "bg-sidebar text-white" : "text-text-muted hover:text-text-secondary"}`}
+                        >
+                          {v === "semana" ? "Esta semana" : "Media 4 semanas"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Heatmap grid */}
+                  <div className="overflow-x-auto mb-4">
+                    <table className="w-full">
+                      <thead>
+                        <tr>
+                          <th className="text-[9px] text-text-muted font-medium text-left pb-2 pr-3 w-36"></th>
+                          {dias.map((d) => (
+                            <th key={d} className="text-[10px] font-semibold text-text-secondary pb-2 text-center w-16">{d}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {franjas.map((franja, fi) => (
+                          <tr key={franja.key}>
+                            <td className="text-[10px] text-text-secondary font-medium py-1 pr-3 whitespace-nowrap">{franja.label}</td>
+                            {data[fi].map((val, di) => {
+                              const isPico  = pico.franja  === franja.label && pico.dia  === dias[di];
+                              const isValle = valle.franja === franja.label && valle.dia === dias[di];
+                              const opacity = Math.round((val / 100) * 8) / 10; // 0.0 – 0.8
+                              return (
+                                <td key={di} className="py-1 px-1 text-center">
+                                  <div
+                                    className={`rounded-lg h-10 flex flex-col items-center justify-center relative ${isPico ? "ring-2 ring-accent-text ring-offset-1" : isValle ? "ring-2 ring-urgent/40 ring-offset-1" : ""}`}
+                                    style={{ backgroundColor: `rgba(31, 81, 76, ${opacity})` }}
+                                    title={`${franja.label} · ${dias[di]}: ${val}%`}
+                                  >
+                                    <span className={`text-[11px] font-bold ${val > 50 ? "text-white" : "text-text-secondary"}`}>{val}%</span>
+                                    {isPico && <span className="text-[7px] font-black text-accent absolute -top-1 left-1/2 -translate-x-1/2 bg-accent-text px-1 rounded-full">PICO</span>}
+                                    {isValle && <span className="text-[7px] font-black text-urgent absolute -top-1 left-1/2 -translate-x-1/2 bg-urgent-light px-1 rounded-full">MIN</span>}
+                                  </div>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Anotaciones */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-success-light rounded-xl p-3 border border-success/20">
+                      <p className="text-[10px] font-bold text-success mb-0.5">Pico de uso</p>
+                      <p className="text-[12px] font-semibold text-text-primary">{pico.dia} · {pico.franja}</p>
+                      <p className="text-[10px] text-text-muted">{pico.val}% de alumnos activos simultáneamente</p>
+                    </div>
+                    <div className="bg-urgent-light rounded-xl p-3 border border-urgent/20">
+                      <p className="text-[10px] font-bold text-urgent mb-0.5">Franja de menor uso</p>
+                      <p className="text-[12px] font-semibold text-text-primary">{valle.dia} · {valle.franja}</p>
+                      <p className="text-[10px] text-text-muted">{valle.val}% de actividad — ventana óptima para mantenimiento</p>
+                    </div>
+                  </div>
+
+                  {/* Leyenda */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-[9px] text-text-muted">Intensidad:</span>
+                    {[10, 30, 50, 70, 90].map((v) => (
+                      <div key={v} className="flex items-center gap-1">
+                        <div className="w-5 h-3 rounded" style={{ backgroundColor: `rgba(31, 81, 76, ${Math.round((v / 100) * 8) / 10})` }} />
+                        <span className="text-[8px] text-text-muted">{v}%</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Programar mantenimiento */}
+                  <div className="bg-background rounded-xl p-4 border border-card-border">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Server size={12} className="text-text-muted" />
+                      <span className="text-[11px] font-semibold text-text-primary">{lbl("Programar ventana de mantenimiento", "Schedule maintenance window")}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <select
+                        value={mantenimientoSlot ?? ""}
+                        onChange={(e) => { setMantenimientoSlot(e.target.value); setMantenimientoGuardado(null); }}
+                        className="flex-1 text-[11px] bg-card border border-card-border rounded-lg px-3 py-2 text-text-secondary cursor-pointer"
+                      >
+                        <option value="">{lbl("Seleccionar franja horaria…", "Select time slot…")}</option>
+                        {slotsPosibles.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (mantenimientoSlot) setMantenimientoGuardado(mantenimientoSlot);
+                        }}
+                        disabled={!mantenimientoSlot}
+                        className={`flex items-center gap-1.5 text-[11px] font-bold px-4 py-2 rounded-xl transition-all cursor-pointer flex-shrink-0 ${
+                          mantenimientoGuardado ? "bg-success-light text-success" : "bg-sidebar text-white hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+                        }`}
+                      >
+                        {mantenimientoGuardado ? <><CheckCircle2 size={12} /> {lbl("Guardado", "Saved")}</> : <><Save size={12} /> {lbl("Guardar", "Save")}</>}
+                      </button>
+                    </div>
+                    {mantenimientoGuardado && (
+                      <p className="text-[10px] text-success mt-2">
+                        Mantenimiento programado para <strong>{mantenimientoGuardado}</strong> — se notificará a todos los usuarios con 24h de antelación.
+                      </p>
+                    )}
                   </div>
                 </div>
               );
