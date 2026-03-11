@@ -106,12 +106,42 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [timerSeconds, setTimerSeconds] = useState(600);
   const [timerRunning, setTimerRunning] = useState(false);
   const [showPreguntaInvitado, setShowPreguntaInvitado] = useState(false);
+  // C10 — CuerpoIA
+  const [iaConsejoDescanso, setIaConsejoDescanso] = useState<string | null>(null);
+  const [loadingConsejo, setLoadingConsejo] = useState(false);
+
+  const fetchConsejoIA = async (tareaActual: string) => {
+    setLoadingConsejo(true);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "cuerpo",
+          message: `Lucas acaba de terminar su pausa activa de 10 minutos. Estaba trabajando en: "${tareaActual}". Genera el micro-consejo de reincorporación.`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      setIaConsejoDescanso(data.reply ?? null);
+    } catch {
+      setIaConsejoDescanso("¡Bienvenido de vuelta! Tu cerebro está listo. Vuelve a la tarea con la mente fresca.");
+    } finally {
+      setLoadingConsejo(false);
+    }
+  };
 
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
     const interval = setInterval(() => {
       setTimerSeconds((s) => {
-        if (s <= 1) { setTimerRunning(false); return 0; }
+        if (s <= 1) {
+          setTimerRunning(false);
+          // C10: fetch IA consejo when timer completes
+          const tareaEnProgreso = today.tasks.find((t) => t.status === "in_progress");
+          fetchConsejoIA(tareaEnProgreso?.title ?? "su proyecto Airbnb Málaga");
+          return 0;
+        }
         return s - 1;
       });
     }, 1000);
@@ -289,29 +319,62 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               Tu cerebro necesita un descanso activo. La neurociencia muestra que el movimiento libera BDNF (Factor Neurotrófico Derivado del Cerebro), mejorando la memoria y la concentración hasta un 20% en las siguientes 2 horas.
             </p>
             <p className="text-[11px] text-white/40 mb-4 italic">Muévete 10 minutos → más capacidad cognitiva para el resto del día.</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-white/10 rounded-xl px-5 py-3 text-center min-w-[80px]">
-                  <span className="text-[28px] font-bold text-white block leading-none">
-                    {String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:{String(timerSeconds % 60).padStart(2, "0")}
-                  </span>
-                  <span className="text-[9px] text-white/35 block mt-0.5">minutos</span>
+            {/* Timer + acciones */}
+            {timerSeconds > 0 ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white/10 rounded-xl px-5 py-3 text-center min-w-[80px]">
+                    <span className="text-[28px] font-bold text-white block leading-none">
+                      {String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:{String(timerSeconds % 60).padStart(2, "0")}
+                    </span>
+                    <span className="text-[9px] text-white/35 block mt-0.5">minutos</span>
+                  </div>
+                  <button
+                    onClick={() => setTimerRunning(!timerRunning)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold rounded-xl transition-all cursor-pointer"
+                  >
+                    {timerRunning ? <Pause size={14} /> : <Play size={14} />}
+                    {timerRunning ? "Pausar" : "Iniciar"}
+                  </button>
                 </div>
                 <button
-                  onClick={() => setTimerRunning(!timerRunning)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold rounded-xl transition-all cursor-pointer"
+                  onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); setIaConsejoDescanso(null); }}
+                  className="px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                 >
-                  {timerRunning ? <Pause size={14} /> : <Play size={14} />}
-                  {timerRunning ? "Pausar" : "Iniciar"}
+                  ✓ Volver al trabajo
                 </button>
               </div>
-              <button
-                onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); }}
-                className="px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
-              >
-                ✓ Volver al trabajo
-              </button>
-            </div>
+            ) : (
+              /* C10 — IA micro-consejo post-pausa */
+              <div className="space-y-3">
+                <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-2">
+                  <Sparkles size={13} className="text-accent flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-accent uppercase tracking-wider">¡10 minutos completados!</span>
+                </div>
+                {loadingConsejo ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <div className="w-4 h-4 rounded-full border-2 border-accent border-t-transparent animate-spin flex-shrink-0" />
+                    <span className="text-[11px] text-white/60">Prof. Ana está preparando tu consejo…</span>
+                  </div>
+                ) : iaConsejoDescanso ? (
+                  <div className="bg-white/8 rounded-xl p-3 border border-accent/20">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <div className="w-4 h-4 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                        <span className="text-sidebar text-[7px] font-black">IA</span>
+                      </div>
+                      <span className="text-[9px] font-semibold text-accent/80">Prof. Ana Martínez</span>
+                    </div>
+                    <p className="text-[12px] text-white/90 leading-relaxed">{iaConsejoDescanso}</p>
+                  </div>
+                ) : null}
+                <button
+                  onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); setIaConsejoDescanso(null); }}
+                  className="w-full px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                >
+                  ✓ Volver al trabajo
+                </button>
+              </div>
+            )}
           </div>
         )}
 
