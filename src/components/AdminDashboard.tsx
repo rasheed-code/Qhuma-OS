@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target,
+  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target, Star,
 } from "lucide-react";
 import { AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -425,6 +425,20 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     { id: "p2", label: "Invitación Demo Day", asunto: "Estáis invitados al Demo Day de 1º ESO — ¡Este viernes!", cuerpo: "Hola,\n\nTenemos el placer de invitaros al Demo Day de los proyectos de 1º ESO, donde nuestros alumnos presentarán sus proyectos ante inversores.\n\nFecha: viernes 13 de marzo · 16:00\nLugar: Sala de usos múltiples QHUMA Málaga\n\n¡Os esperamos!\nEquipo QHUMA Málaga" },
     { id: "p3", label: "Aviso incidencia", asunto: "Comunicado de servicio: incidencia técnica resuelta", cuerpo: "Hola,\n\nOs informamos de que la incidencia técnica detectada esta mañana en la plataforma QHUMA OS ha sido resuelta satisfactoriamente. Todos los servicios funcionan con normalidad.\n\nDisculpad las molestias.\nEquipo técnico QHUMA" },
   ];
+  // A26 — Rendimiento docente
+  const [docenteExpandido, setDocenteExpandido] = useState<string | null>(null);
+  const [docenteReconocido, setDocenteReconocido] = useState<Set<string>>(new Set());
+  const [reconociendoDocente, setReconociendoDocente] = useState<string | null>(null);
+
+  const handleReconocerLogro = (docenteId: string) => {
+    if (reconociendoDocente || docenteReconocido.has(docenteId)) return;
+    setReconociendoDocente(docenteId);
+    setTimeout(() => {
+      setDocenteReconocido((prev) => new Set([...prev, docenteId]));
+      setReconociendoDocente(null);
+    }, 900);
+  };
+
   const handleEnviarComunicado = () => {
     if (!comunicadoAsunto.trim() || !comunicadoCuerpo.trim()) return;
     setComunicadoEnviando(true);
@@ -3674,6 +3688,213 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                         Mantenimiento programado para <strong>{mantenimientoGuardado}</strong> — se notificará a todos los usuarios con 24h de antelación.
                       </p>
                     )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* A26 — Rendimiento docente */}
+            {(() => {
+              const docentesData = [
+                {
+                  id: "d1", nombre: "Ana Martínez",    alumnos: 12, evidencias: 18, tiempoRespuesta: 2.1, usoIA: 87, satisfaccion: 4.8,
+                  feedbacks: ["Revisó el modelo financiero de Lucas con comentarios detallados.", "Generó informe LOMLOE T2 para Pablo Ruiz.", "Lanzó misión flash para toda la clase."],
+                  iaFavorita: "Generador de proyectos",
+                },
+                {
+                  id: "d2", nombre: "Carlos Pérez",    alumnos: 14, evidencias: 14, tiempoRespuesta: 3.8, usoIA: 72, satisfaccion: 4.2,
+                  feedbacks: ["Actualizó notas LOMLOE de 2º ESO.", "Revisó evidencias pendientes de Lucía Fernández.", "Añadió comentario en portfolio de Carmen Vega."],
+                  iaFavorita: "Tutor chat (MentorIA)",
+                },
+                {
+                  id: "d3", nombre: "Isabel Mora",     alumnos: 10, evidencias: 9, tiempoRespuesta: 4.5, usoIA: 61, satisfaccion: 3.9,
+                  feedbacks: ["Lanzó sesión PitchLab con 2º ESO.", "Marcó hito completado: Demo Day.", "Envió recordatorio de entrega a 3 alumnos."],
+                  iaFavorita: "Informes LOMLOE",
+                },
+                {
+                  id: "d4", nombre: "Roberto Sánchez", alumnos: 11, evidencias: 11, tiempoRespuesta: 3.2, usoIA: 78, satisfaccion: 4.4,
+                  feedbacks: ["Revisó plan de acción individual de 5 alumnos.", "Actualizó rúbricas del proyecto Airbnb.", "Comentó errores registrados de la semana."],
+                  iaFavorita: "Tutor chat (MentorIA)",
+                },
+                {
+                  id: "d5", nombre: "Patricia Gómez",  alumnos: 13, evidencias: 7, tiempoRespuesta: 5.1, usoIA: 44, satisfaccion: 3.2,
+                  feedbacks: ["Revisó evidencias de Lucas García.", "Actualizó estado de proyecto Podcast.", "Envió informe familia de Tomás Herrera."],
+                  iaFavorita: "Informes LOMLOE",
+                },
+                {
+                  id: "d6", nombre: "Luis Fernández",  alumnos: 9, evidencias: 13, tiempoRespuesta: 2.8, usoIA: 91, satisfaccion: 4.6,
+                  feedbacks: ["Generó 3 proyectos nuevos con IA.", "Revisó pitches del grupo de 1º ESO.", "Añadió recursos al proyecto App Guía."],
+                  iaFavorita: "Generador de proyectos",
+                },
+              ];
+
+              const avgSatisfaccion = (docentesData.reduce((s, d) => s + d.satisfaccion, 0) / docentesData.length).toFixed(1);
+              const avgRespuesta = (docentesData.reduce((s, d) => s + d.tiempoRespuesta, 0) / docentesData.length).toFixed(1);
+              const totalFeedbacks = docentesData.reduce((s, d) => s + d.evidencias, 0);
+
+              const getBadge = (sat: number) => {
+                if (sat >= 4.5) return { label: "Destacado", bg: "bg-success-light", text: "text-success" };
+                if (sat >= 3.5) return { label: "En progreso", bg: "bg-accent-light", text: "text-accent-text" };
+                return { label: "Apoyo", bg: "bg-warning-light", text: "text-warning" };
+              };
+
+              const renderStars = (val: number) => (
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      size={10}
+                      className={i < Math.round(val) ? "text-warning" : "text-text-muted"}
+                    />
+                  ))}
+                  <span className="text-[10px] font-bold text-text-primary ml-1">{val.toFixed(1)}</span>
+                </div>
+              );
+
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users size={15} className="text-text-primary" />
+                      <h3 className="text-[14px] font-semibold text-text-primary">Rendimiento docente</h3>
+                    </div>
+                  </div>
+
+                  {/* KPI bar */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-accent-light rounded-xl p-3 text-center">
+                      <span className="text-[20px] font-bold text-accent-text block">{avgSatisfaccion}</span>
+                      <span className="text-[9px] text-text-muted">Satisfacción media /5</span>
+                    </div>
+                    <div className="bg-background rounded-xl p-3 text-center">
+                      <span className="text-[20px] font-bold text-text-primary block">{avgRespuesta}h</span>
+                      <span className="text-[9px] text-text-muted">Tiempo medio respuesta</span>
+                    </div>
+                    <div className="bg-success-light rounded-xl p-3 text-center">
+                      <span className="text-[20px] font-bold text-success block">{totalFeedbacks}</span>
+                      <span className="text-[9px] text-text-muted">Feedbacks esta semana</span>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-card-border">
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3">Docente</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3 text-center">Alumnos</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3 text-center">Evidencias/sem</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3 text-center">Resp. (h)</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3 text-center">Uso IA %</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2 pr-3">Satisfacción</th>
+                          <th className="text-[10px] font-bold text-text-muted pb-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {docentesData.map((docente) => {
+                          const badge = getBadge(docente.satisfaccion);
+                          const isExp = docenteExpandido === docente.id;
+                          return (
+                            <>
+                              <tr key={docente.id} className="border-b border-card-border/50 hover:bg-background transition-colors">
+                                <td className="py-2.5 pr-3">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                                      {docente.nombre.split(" ").map(n => n[0]).slice(0,2).join("")}
+                                    </div>
+                                    <div>
+                                      <span className="text-[11px] font-semibold text-text-primary block">{docente.nombre}</span>
+                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${badge.bg} ${badge.text}`}>{badge.label}</span>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 pr-3 text-center">
+                                  <span className="text-[11px] font-semibold text-text-primary">{docente.alumnos}</span>
+                                </td>
+                                <td className="py-2.5 pr-3 text-center">
+                                  <span className="text-[11px] font-semibold text-text-primary">{docente.evidencias}</span>
+                                </td>
+                                <td className="py-2.5 pr-3 text-center">
+                                  <span className={`text-[11px] font-semibold ${docente.tiempoRespuesta <= 3 ? "text-success" : docente.tiempoRespuesta <= 4 ? "text-warning" : "text-urgent"}`}>
+                                    {docente.tiempoRespuesta}h
+                                  </span>
+                                </td>
+                                <td className="py-2.5 pr-3 text-center">
+                                  <div className="flex items-center gap-1 justify-center">
+                                    <div className="w-12 h-1.5 bg-background rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full ${docente.usoIA >= 80 ? "bg-success" : docente.usoIA >= 60 ? "bg-accent-text" : "bg-warning"}`}
+                                        style={{ width: `${docente.usoIA}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-[10px] text-text-muted">{docente.usoIA}%</span>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 pr-3">
+                                  {renderStars(docente.satisfaccion)}
+                                </td>
+                                <td className="py-2.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <button
+                                      onClick={() => setDocenteExpandido(isExp ? null : docente.id)}
+                                      className="flex items-center gap-1 text-[9px] font-bold text-accent-text bg-accent-light px-2 py-1 rounded-lg cursor-pointer hover:bg-accent/20 transition-all"
+                                    >
+                                      <Eye size={9} />
+                                      {isExp ? "Ocultar" : "Ver detalle"}
+                                    </button>
+                                    <button
+                                      onClick={() => handleReconocerLogro(docente.id)}
+                                      disabled={!!reconociendoDocente || docenteReconocido.has(docente.id)}
+                                      className={`flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-all disabled:opacity-60 ${
+                                        docenteReconocido.has(docente.id)
+                                          ? "bg-success-light text-success"
+                                          : "bg-sidebar text-white hover:brightness-110"
+                                      }`}
+                                    >
+                                      {reconociendoDocente === docente.id
+                                        ? <RefreshCw size={9} className="animate-spin" />
+                                        : docenteReconocido.has(docente.id)
+                                        ? <><CheckCircle2 size={9} /> Enviado</>
+                                        : <><Trophy size={9} /> Reconocer</>}
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                              {isExp && (
+                                <tr key={`${docente.id}-exp`}>
+                                  <td colSpan={7} className="pb-3 pt-1">
+                                    <div className="bg-background rounded-xl p-3 mx-1">
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                          <p className="text-[10px] font-bold text-text-secondary mb-2">Últimos 3 feedbacks dados</p>
+                                          <div className="space-y-1.5">
+                                            {docente.feedbacks.map((fb, i) => (
+                                              <div key={i} className="flex items-start gap-2">
+                                                <div className="w-1 h-1 rounded-full bg-accent-text mt-1.5 flex-shrink-0" />
+                                                <span className="text-[10px] text-text-secondary leading-relaxed">{fb}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <p className="text-[10px] font-bold text-text-secondary mb-2">Funcionalidad IA más usada</p>
+                                          <div className="flex items-center gap-2 bg-sidebar rounded-xl px-3 py-2">
+                                            <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                                              <span className="text-accent text-[8px] font-bold">AI</span>
+                                            </div>
+                                            <span className="text-[11px] font-semibold text-white">{docente.iaFavorita}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               );
