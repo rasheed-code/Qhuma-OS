@@ -21,6 +21,7 @@ import {
   FileText,
   Users,
   FileSpreadsheet,
+  Sparkles,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -66,8 +67,9 @@ const adminNav: { icon: typeof LayoutDashboard; labelEs: string; view: AdminView
 ];
 
 const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: TeacherView }[] = [
-  { icon: LayoutDashboard, labelEs: "Inicio",      labelEn: "Dashboard", view: "dashboard" },
-  { icon: FolderKanban,    labelEs: "Proyectos",   labelEn: "Projects",  view: "projects" },
+  { icon: LayoutDashboard, labelEs: "Inicio",      labelEn: "Dashboard",  view: "dashboard" },
+  { icon: FolderKanban,    labelEs: "Proyectos",   labelEn: "Projects",   view: "projects" },
+  { icon: Sparkles,        labelEs: "Generador IA",labelEn: "AI Projects",view: "generator" },
   { icon: BarChart3,       labelEs: "Análisis",    labelEn: "Analytics", view: "analytics" },
   { icon: FileSpreadsheet, labelEs: "Notas",       labelEn: "Grades",    view: "gradebook" },
   { icon: Calendar,        labelEs: "Calendario",  labelEn: "Calendar",  view: "calendar" },
