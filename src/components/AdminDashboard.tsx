@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare, Copy, Check,
+  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles,
 } from "lucide-react";
 import { AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -370,6 +370,26 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [bienestarEncuestaEnviada, setBienestarEncuestaEnviada] = useState(false);
   const [bienestarRespuestas, setBienestarRespuestas] = useState<Record<string, number>>({});
   const [bienestarEnviando, setBienestarEnviando] = useState(false);
+
+  // A22 — Gestión Q-Coins sistema
+  const [showEmitirQCoins, setShowEmitirQCoins] = useState(false);
+  const [emitirMotivo, setEmitirMotivo] = useState("");
+  const [emitirCantidad, setEmitirCantidad] = useState("");
+  const [emitirDestinatario, setEmitirDestinatario] = useState("todos");
+  const [emitiendo, setEmitiendo] = useState(false);
+  const [emitido, setEmitido] = useState(false);
+
+  const handleEmitirQCoins = () => {
+    if (!emitirMotivo.trim() || !emitirCantidad.trim()) return;
+    setEmitiendo(true);
+    setTimeout(() => {
+      setEmitiendo(false);
+      setEmitido(true);
+      setEmitirMotivo("");
+      setEmitirCantidad("");
+      setTimeout(() => { setEmitido(false); setShowEmitirQCoins(false); }, 2500);
+    }, 1400);
+  };
 
   // A20 — Centro de comunicación
   const [comunicadoDestinatario, setComunicadoDestinatario] = useState<"todos" | "docentes" | "familias" | "alumnos">("todos");
@@ -1127,6 +1147,172 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     </div>
                   )}
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* A22: Gestión Q-Coins a nivel sistema */}
+          {(() => {
+            const qcoinsData = {
+              totalCirculacion: 14820,
+              emitidosEsteMes: 3240,
+              canjeadosEsteMes: 1180,
+              crecimientoSemana: 8.4,
+            };
+            const top5Alumnos = [
+              { nombre: "Lucas García",     avatar: "LG", saldo: 980 },
+              { nombre: "Sofía Torres",     avatar: "ST", saldo: 840 },
+              { nombre: "Carmen Vega",      avatar: "CV", saldo: 760 },
+              { nombre: "Diego López",      avatar: "DL", saldo: 640 },
+              { nombre: "Ana Martín",       avatar: "AM", saldo: 520 },
+            ];
+            const top5Transacciones = [
+              { alumno: "Carmen Vega",   motivo: "App de Intercambio Estudiantil — hito completado", cantidad: 200, fecha: "Hoy · 14:22", tipo: "ganada" as const },
+              { alumno: "Lucas García",  motivo: "Canje: Taller de Fotografía Profesional",            cantidad: 120, fecha: "Hoy · 12:15", tipo: "canje"  as const },
+              { alumno: "Sofía Torres",  motivo: "Demo Day — bonus presentación equipo",               cantidad: 150, fecha: "Ayer · 16:40", tipo: "ganada" as const },
+              { alumno: "Diego López",   motivo: "Canje: Revenue Management avanzado",                 cantidad: 200, fecha: "Ayer · 11:05", tipo: "canje"  as const },
+              { alumno: "Ana Martín",    motivo: "Deep Dive — Mentoría STEM 45 min ininterrumpidos",  cantidad: 80,  fecha: "Lun 9 mar",    tipo: "ganada" as const },
+            ];
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Coins size={15} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Gestión Q-Coins — Sistema", "Q-Coins Management — System")}</h3>
+                  <button
+                    onClick={() => setShowEmitirQCoins(!showEmitirQCoins)}
+                    className="ml-auto flex items-center gap-1.5 bg-accent text-sidebar text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                  >
+                    <Sparkles size={11} />
+                    {lbl("Emitir Q-Coins", "Issue Q-Coins")}
+                  </button>
+                </div>
+
+                {/* KPIs */}
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {[
+                    { label: lbl("Total en circulación", "Total in circulation"), valor: qcoinsData.totalCirculacion.toLocaleString("es-ES"), color: "text-sidebar", bg: "bg-sidebar", textAlt: "text-white", bgAlt: "bg-white/8", dark: true },
+                    { label: lbl("Emitidos este mes", "Issued this month"),       valor: `+${qcoinsData.emitidosEsteMes.toLocaleString("es-ES")}`, color: "text-success", bg: "bg-success-light", dark: false },
+                    { label: lbl("Canjeados este mes", "Redeemed this month"),    valor: `-${qcoinsData.canjeadosEsteMes.toLocaleString("es-ES")}`, color: "text-urgent", bg: "bg-urgent-light", dark: false },
+                    { label: lbl("Crecimiento semana", "Weekly growth"),          valor: `+${qcoinsData.crecimientoSemana}%`, color: "text-accent-text", bg: "bg-accent-light", dark: false },
+                  ].map((k) => (
+                    <div key={k.label} className={`rounded-xl p-3 text-center ${k.dark ? "bg-sidebar" : k.bg}`}>
+                      <span className={`text-[18px] font-bold block ${k.dark ? "text-accent" : k.color}`}>{k.valor}</span>
+                      <span className={`text-[9px] ${k.dark ? "text-white/40" : "text-text-muted"}`}>{k.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Top 5 alumnos por saldo */}
+                <div className="mb-4">
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Top 5 alumnos por saldo", "Top 5 students by balance")}</p>
+                  <div className="space-y-1.5">
+                    {top5Alumnos.map((a, i) => {
+                      const maxSaldo = top5Alumnos[0].saldo;
+                      return (
+                        <div key={a.nombre} className="flex items-center gap-2.5">
+                          <span className="text-[9px] font-bold text-text-muted w-3">{i + 1}</span>
+                          <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0">
+                            {a.avatar}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <span className="text-[10px] font-semibold text-text-primary truncate">{a.nombre}</span>
+                              <div className="flex items-center gap-0.5 flex-shrink-0 ml-2">
+                                <Coins size={9} className="text-accent-text" />
+                                <span className="text-[10px] font-bold text-accent-text">{a.saldo}</span>
+                              </div>
+                            </div>
+                            <div className="h-1 bg-background rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${i === 0 ? "bg-accent-text" : "bg-accent-text/50"}`} style={{ width: `${(a.saldo / maxSaldo) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Top 5 transacciones */}
+                <div className="mb-4">
+                  <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Últimas transacciones destacadas", "Latest notable transactions")}</p>
+                  <div className="space-y-2">
+                    {top5Transacciones.map((t, i) => (
+                      <div key={i} className="flex items-center gap-2.5">
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${t.tipo === "ganada" ? "bg-success-light" : "bg-warning-light"}`}>
+                          <Coins size={10} className={t.tipo === "ganada" ? "text-success" : "text-warning"} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[9px] font-semibold text-text-primary truncate block">{t.alumno} — <span className="font-normal text-text-muted">{t.motivo}</span></span>
+                          <span className="text-[8px] text-text-muted">{t.fecha}</span>
+                        </div>
+                        <span className={`text-[10px] font-bold flex-shrink-0 ${t.tipo === "ganada" ? "text-success" : "text-warning"}`}>
+                          {t.tipo === "ganada" ? "+" : "-"}{t.cantidad} QC
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Formulario Emitir Q-Coins */}
+                {showEmitirQCoins && (
+                  <div className="bg-accent-light rounded-xl p-4 border border-accent/20">
+                    <p className="text-[11px] font-semibold text-accent-text mb-3">{lbl("Emitir Q-Coins especiales", "Issue special Q-Coins")}</p>
+                    {emitido ? (
+                      <div className="flex items-center gap-2 py-3 justify-center">
+                        <CheckCircle2 size={16} className="text-success" />
+                        <span className="text-[12px] font-bold text-success">{lbl("¡Q-Coins emitidos correctamente!", "Q-Coins issued successfully!")}</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5">
+                        <div className="flex gap-2">
+                          <select
+                            value={emitirDestinatario}
+                            onChange={(e) => setEmitirDestinatario(e.target.value)}
+                            className="flex-1 text-[11px] bg-card border border-card-border rounded-xl px-3 py-2 text-text-primary outline-none"
+                          >
+                            <option value="todos">{lbl("Todos los alumnos", "All students")}</option>
+                            <option value="lucas">Lucas García</option>
+                            <option value="sofia">Sofía Torres</option>
+                            <option value="carmen">Carmen Vega</option>
+                            <option value="diego">Diego López</option>
+                            <option value="ana">Ana Martín</option>
+                          </select>
+                          <input
+                            type="number"
+                            min="1"
+                            max="500"
+                            placeholder={lbl("Cantidad", "Amount")}
+                            value={emitirCantidad}
+                            onChange={(e) => setEmitirCantidad(e.target.value)}
+                            className="w-24 text-[11px] bg-card border border-card-border rounded-xl px-3 py-2 text-text-primary outline-none focus:border-accent-text/40"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          placeholder={lbl("Motivo de la emisión especial...", "Reason for special issuance...")}
+                          value={emitirMotivo}
+                          onChange={(e) => setEmitirMotivo(e.target.value)}
+                          className="w-full text-[11px] bg-card border border-card-border rounded-xl px-3 py-2 text-text-primary outline-none focus:border-accent-text/40 placeholder:text-text-muted"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setShowEmitirQCoins(false)}
+                            className="text-[10px] font-medium text-text-muted px-3 py-1.5 rounded-xl hover:bg-background cursor-pointer transition-all"
+                          >
+                            {lbl("Cancelar", "Cancel")}
+                          </button>
+                          <button
+                            onClick={handleEmitirQCoins}
+                            disabled={!emitirMotivo.trim() || !emitirCantidad.trim() || emitiendo}
+                            className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-bold px-4 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {emitiendo ? <><RefreshCw size={10} className="animate-spin" />{lbl("Emitiendo…", "Issuing…")}</> : <><Coins size={10} />{lbl("Emitir", "Issue")}</>}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })()}
