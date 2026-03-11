@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Trophy, Star, Flame, Zap, BarChart3, Globe, Users, BookOpen,
   TrendingUp, FileText, Shield, Target, Sparkles, Lock,
-  Award, Search, Copy, CheckCircle2, MapPin, Clock, ChevronRight,
+  Award, Search, Copy, CheckCircle2, MapPin, Clock, ChevronRight, X,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -206,6 +206,123 @@ export default function StudentAchievements() {
     }, 700);
   };
 
+  // S30 — Retos entre compañeros
+  interface RetoCompanero {
+    id: string;
+    desafiador: string;
+    desafiadoNombre: string;
+    competencia: string;
+    descripcion: string;
+    fechaLimite: string;
+    estado: "pendiente" | "aceptado" | "completado";
+    xpEnJuego: number;
+    progreso?: number; // 0-100 solo cuando aceptado
+  }
+
+  const retosIniciales: RetoCompanero[] = [
+    {
+      id: "r1",
+      desafiador: "Compañero A",
+      desafiadoNombre: "Lucas García",
+      competencia: "STEM",
+      descripcion: lbl(
+        "Calcula el RevPAR (Revenue Per Available Room) de Casa Limón para los meses de mayo y junio con datos reales de AirDNA.",
+        "Calculate Casa Limón's RevPAR for May and June using real AirDNA data."
+      ),
+      fechaLimite: lbl("Viernes 13 mar", "Fri 13 Mar"),
+      estado: "aceptado",
+      xpEnJuego: 150,
+      progreso: 45,
+    },
+    {
+      id: "r2",
+      desafiador: "Compañero B",
+      desafiadoNombre: "Lucas García",
+      competencia: "CLC",
+      descripcion: lbl(
+        "Redacta las respuestas a 5 reseñas negativas de un Airbnb en inglés, manteniendo un tono profesional y empático.",
+        "Write responses to 5 negative Airbnb reviews in English, maintaining a professional and empathetic tone."
+      ),
+      fechaLimite: lbl("Lunes 16 mar", "Mon 16 Mar"),
+      estado: "pendiente",
+      xpEnJuego: 120,
+    },
+    {
+      id: "r3",
+      desafiador: "Compañero C",
+      desafiadoNombre: "Lucas García",
+      competencia: "CE",
+      descripcion: lbl(
+        "Diseña una estrategia de precios dinámicos para Casa Limón que maximice los ingresos durante la Semana Santa 2026.",
+        "Design a dynamic pricing strategy for Casa Limón that maximizes revenue during Easter 2026."
+      ),
+      fechaLimite: lbl("Miércoles 18 mar", "Wed 18 Mar"),
+      estado: "completado",
+      xpEnJuego: 200,
+      progreso: 100,
+    },
+  ];
+
+  const [retosActivos, setRetosActivos] = useState<RetoCompanero[]>(retosIniciales);
+  const [retosAceptados, setRetosAceptados] = useState<Set<string>>(new Set(["r1"]));
+  const [lanzandoReto, setLanzandoReto] = useState(false);
+  const [nuevoRetoComp, setNuevoRetoComp] = useState("STEM");
+  const [nuevoRetoDesc, setNuevoRetoDesc] = useState("");
+  const [nuevoRetoDestino, setNuevoRetoDestino] = useState("A");
+  const [nuevoRetoDias, setNuevoRetoDias] = useState<3 | 5 | 7>(3);
+  const [retosEnviados, setRetosEnviados] = useState(0);
+  const [enviandoReto, setEnviandoReto] = useState(false);
+  const [retoEnviadoFeedback, setRetoEnviadoFeedback] = useState(false);
+  const [showLanzarForm, setShowLanzarForm] = useState(false);
+
+  const handleAceptarReto = (retoId: string) => {
+    setRetosActivos((prev) =>
+      prev.map((r) => r.id === retoId ? { ...r, estado: "aceptado", progreso: 0 } : r)
+    );
+    setRetosAceptados((prev) => new Set(prev).add(retoId));
+  };
+
+  const handleLanzarReto = () => {
+    if (!nuevoRetoDesc.trim() || enviandoReto) return;
+    setEnviandoReto(true);
+    setTimeout(() => {
+      const diasLabel = nuevoRetoDias === 3 ? lbl("En 3 días", "In 3 days") : nuevoRetoDias === 5 ? lbl("En 5 días", "In 5 days") : lbl("En 7 días", "In 7 days");
+      const nuevoReto: RetoCompanero = {
+        id: `r-nuevo-${Date.now()}`,
+        desafiador: "Lucas García",
+        desafiadoNombre: `Compañero ${nuevoRetoDestino}`,
+        competencia: nuevoRetoComp,
+        descripcion: nuevoRetoDesc.trim(),
+        fechaLimite: diasLabel,
+        estado: "pendiente",
+        xpEnJuego: nuevoRetoDias === 3 ? 100 : nuevoRetoDias === 5 ? 150 : 200,
+      };
+      setRetosActivos((prev) => [...prev, nuevoReto]);
+      setRetosEnviados((v) => v + 1);
+      setNuevoRetoDesc("");
+      setEnviandoReto(false);
+      setRetoEnviadoFeedback(true);
+      setTimeout(() => { setRetoEnviadoFeedback(false); setShowLanzarForm(false); }, 2500);
+    }, 1000);
+  };
+
+  const compColors: Record<string, string> = {
+    CLC: "bg-accent-light text-accent-text",
+    CPL: "bg-accent-light text-accent-text",
+    STEM: "bg-success-light text-success",
+    CD: "bg-warning-light text-warning",
+    CPSAA: "bg-urgent-light text-urgent",
+    CC: "bg-background text-text-secondary border border-card-border",
+    CE: "bg-sidebar text-accent",
+    CCEC: "bg-warning-light text-warning",
+  };
+
+  const estadoCfg: Record<RetoCompanero["estado"], { label: string; bg: string; text: string }> = {
+    pendiente:  { label: lbl("Pendiente", "Pending"),    bg: "bg-warning-light",  text: "text-warning" },
+    aceptado:   { label: lbl("En curso",  "In progress"), bg: "bg-accent-light",   text: "text-accent-text" },
+    completado: { label: lbl("Completado","Completed"),  bg: "bg-success-light",  text: "text-success" },
+  };
+
   const [filter, setFilter] = useState<FilterRarity>("todas");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
@@ -334,6 +451,176 @@ export default function StudentAchievements() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* S30 — Retos entre compañeros */}
+        <div className="bg-card border border-card-border rounded-2xl p-4 mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Users size={14} className="text-accent-text" />
+            <h2 className="text-[13px] font-semibold text-text-primary">{lbl("Retos entre compañeros", "Peer Challenges")}</h2>
+            <span className="ml-auto text-[9px] font-bold bg-sidebar text-accent px-2 py-0.5 rounded-full">
+              {retosActivos.filter((r) => r.estado !== "completado").length} {lbl("activos", "active")}
+            </span>
+          </div>
+
+          {/* Lista de retos */}
+          <div className="space-y-3 mb-4">
+            {retosActivos.map((reto) => {
+              const estCfg = estadoCfg[reto.estado];
+              const compCfg = compColors[reto.competencia] ?? "bg-background text-text-muted";
+              return (
+                <div
+                  key={reto.id}
+                  className={`rounded-xl p-3.5 border ${estCfg.bg} ${
+                    reto.estado === "pendiente" ? "border-warning/20" :
+                    reto.estado === "aceptado" ? "border-accent-text/15" :
+                    "border-success/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                        <span className="text-accent text-[8px] font-bold">{reto.desafiador.slice(-1)}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-text-muted">{reto.desafiador} {lbl("te desafía", "challenges you")}</span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${compCfg}`}>{reto.competencia}</span>
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${estCfg.bg} ${estCfg.text}`}>{estCfg.label}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-[10px] font-bold text-accent-text block">+{reto.xpEnJuego} XP</span>
+                      <span className="text-[9px] text-text-muted">{reto.fechaLimite}</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{reto.descripcion}</p>
+                  {reto.estado === "aceptado" && reto.progreso !== undefined && (
+                    <div className="mb-2">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[9px] text-text-muted">{lbl("Progreso", "Progress")}</span>
+                        <span className="text-[9px] font-bold text-accent-text">{reto.progreso}%</span>
+                      </div>
+                      <div className="h-1.5 bg-card rounded-full overflow-hidden">
+                        <div className="h-full bg-accent-text rounded-full transition-all" style={{ width: `${reto.progreso}%` }} />
+                      </div>
+                    </div>
+                  )}
+                  {reto.estado === "pendiente" && (
+                    <button
+                      onClick={() => handleAceptarReto(reto.id)}
+                      className="flex items-center gap-1.5 text-[10px] font-semibold bg-sidebar text-white px-3 py-1.5 rounded-xl hover:bg-accent-dark transition-all cursor-pointer"
+                    >
+                      <CheckCircle2 size={10} />
+                      {lbl("Aceptar reto", "Accept challenge")}
+                    </button>
+                  )}
+                  {reto.estado === "completado" && (
+                    <div className="flex items-center gap-1.5">
+                      <CheckCircle2 size={12} className="text-success" />
+                      <span className="text-[11px] font-semibold text-success">{lbl("¡Reto superado!", "Challenge completed!")}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Lanzar reto */}
+          <div className="border-t border-card-border pt-3">
+            {retoEnviadoFeedback ? (
+              <div className="flex items-center gap-2 bg-success-light rounded-xl px-3 py-2.5">
+                <CheckCircle2 size={14} className="text-success" />
+                <span className="text-[12px] font-semibold text-success">
+                  {lbl(`¡Reto enviado a Compañero ${nuevoRetoDestino}!`, `Challenge sent to Classmate ${nuevoRetoDestino}!`)}
+                </span>
+              </div>
+            ) : !showLanzarForm ? (
+              <button
+                onClick={() => setShowLanzarForm(true)}
+                className="flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light px-3 py-2 rounded-xl hover:bg-accent/20 transition-all cursor-pointer w-full justify-center"
+              >
+                <TrendingUp size={12} />
+                {lbl("Lanzar un reto", "Launch a challenge")}
+                {retosEnviados > 0 && <span className="text-[9px] bg-sidebar text-accent px-1.5 py-0.5 rounded-full ml-1">{retosEnviados} {lbl("enviados", "sent")}</span>}
+              </button>
+            ) : (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[12px] font-semibold text-text-primary">{lbl("Nuevo reto", "New challenge")}</span>
+                  <button onClick={() => setShowLanzarForm(false)} className="text-text-muted hover:text-text-primary cursor-pointer">
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[9px] font-semibold text-text-muted block mb-1">{lbl("Competencia", "Competency")}</label>
+                    <select
+                      value={nuevoRetoComp}
+                      onChange={(e) => setNuevoRetoComp(e.target.value)}
+                      className="w-full border border-card-border rounded-xl px-2 py-1.5 text-[11px] bg-background outline-none cursor-pointer"
+                    >
+                      {["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"].map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-semibold text-text-muted block mb-1">{lbl("Compañero", "Classmate")}</label>
+                    <select
+                      value={nuevoRetoDestino}
+                      onChange={(e) => setNuevoRetoDestino(e.target.value)}
+                      className="w-full border border-card-border rounded-xl px-2 py-1.5 text-[11px] bg-background outline-none cursor-pointer"
+                    >
+                      <option value="A">{lbl("Compañero A (anónimo)", "Classmate A (anonymous)")}</option>
+                      <option value="B">{lbl("Compañero B (anónimo)", "Classmate B (anonymous)")}</option>
+                      <option value="C">{lbl("Compañero C (anónimo)", "Classmate C (anonymous)")}</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[9px] font-semibold text-text-muted block mb-1">{lbl("Descripción del reto (Casa Limón / Airbnb Málaga)", "Challenge description")}</label>
+                  <textarea
+                    value={nuevoRetoDesc}
+                    onChange={(e) => setNuevoRetoDesc(e.target.value)}
+                    placeholder={lbl("Ej: Compara los precios de Casa Limón con los 5 competidores más cercanos y propón una mejora...", "E.g. Compare Casa Limón's prices with the 5 nearest competitors...")}
+                    rows={2}
+                    className="w-full border border-card-border rounded-xl px-3 py-2 text-[11px] bg-background outline-none resize-none leading-relaxed"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] font-semibold text-text-muted block mb-1">{lbl("Plazo", "Deadline")}</label>
+                  <div className="flex gap-2">
+                    {([3, 5, 7] as const).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setNuevoRetoDias(d)}
+                        className={`flex-1 py-1.5 rounded-xl text-[10px] font-semibold transition-all cursor-pointer border ${
+                          nuevoRetoDias === d
+                            ? "bg-sidebar text-white border-sidebar"
+                            : "bg-background text-text-secondary border-card-border hover:border-accent-text/30"
+                        }`}
+                      >
+                        {d} {lbl("días", "days")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={handleLanzarReto}
+                  disabled={!nuevoRetoDesc.trim() || enviandoReto}
+                  className="w-full bg-sidebar text-white py-2 rounded-xl text-[12px] font-semibold hover:brightness-110 transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-1.5"
+                >
+                  {enviandoReto ? (
+                    <><TrendingUp size={12} className="animate-bounce" />{lbl("Enviando...", "Sending...")}</>
+                  ) : (
+                    <>{lbl("Lanzar reto · +", "Launch · +")} {nuevoRetoDias === 3 ? 100 : nuevoRetoDias === 5 ? 150 : 200} XP</>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
