@@ -37,6 +37,7 @@ const teacherBadges: Partial<Record<TeacherView, number | string>> = {
 const studentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: StudentView }[] = [
   { icon: LayoutDashboard,        labelEs: "Inicio",        labelEn: "Dashboard",    view: "dashboard" },
   { icon: FolderKanban,           labelEs: "Mi Proyecto",   labelEn: "My Project",   view: "project" },
+  { icon: BookOpen,               labelEs: "Portfolio",     labelEn: "Portfolio",    view: "portfolio" },
   { icon: BarChart3,              labelEs: "Competencias",  labelEn: "Competencies", view: "competencies" },
   { icon: GalleryHorizontalEnd,   labelEs: "Evidencias",    labelEn: "Evidence",     view: "evidences" },
   { icon: Trophy,                 labelEs: "Logros",        labelEn: "Achievements", view: "achievements" },
