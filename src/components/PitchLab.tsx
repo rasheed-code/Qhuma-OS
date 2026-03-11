@@ -186,6 +186,35 @@ const guionPorSeccion: Record<string, {
   },
 };
 
+// C14 — Puntuación por sección (1–10)
+const computeSectionScores = (sections: Record<string, string>): Record<string, number> => {
+  const scores: Record<string, number> = {};
+  for (const section of pitchSections) {
+    const text = sections[section.id] || "";
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const wordRatio = Math.min(1, words / section.wordTarget);
+    let bonus = 0;
+    if (section.id === "problema") {
+      if (text.match(/\d+%|\d+\.?\d*[kK€]/)) bonus += 2;
+      if (/málaga|airbnb|mercado/i.test(text)) bonus += 1;
+    } else if (section.id === "solucion") {
+      if (/diferent|único|ventaj/i.test(text)) bonus += 2;
+      if (text.includes("€")) bonus += 1;
+    } else if (section.id === "mercado") {
+      if (text.match(/\d+/) && /cliente|mercado|segmento/i.test(text)) bonus += 2;
+      if (/málaga|alicant|españa/i.test(text)) bonus += 1;
+    } else if (section.id === "financiero") {
+      if (text.includes("€") || /equilibrio|ingreso|margen/i.test(text)) bonus += 2;
+      if (text.match(/\d+%/)) bonus += 1;
+    } else if (section.id === "equipo") {
+      if (text.length > 50) bonus += 1;
+      if (/necesit|solicito|€|inversion/i.test(text)) bonus += 2;
+    }
+    scores[section.id] = Math.min(10, Math.max(1, Math.round(wordRatio * 7 + bonus)));
+  }
+  return scores;
+};
+
 const generateFeedback = (sections: Record<string, string>): FeedbackScore[] => {
   const totalWords = Object.values(sections).join(" ").split(/\s+/).filter(Boolean).length;
   const filledSections = Object.values(sections).filter(s => s.trim().length > 30).length;
@@ -284,6 +313,9 @@ export default function PitchLab() {
   const [coachingSection, setCoachingSection] = useState<string | null>(null);
   const [inversoresVotos, setInversoresVotos] = useState<Record<string, InversorVoto>>({});
 
+  // C14 — Puntuación por sección
+  const [sectionScores, setSectionScores] = useState<Record<string, number> | null>(null);
+
   // C13 — Guión de apoyo
   const [guionOpen, setGuionOpen] = useState<Set<string>>(new Set());
   const toggleGuion = (sectionId: string) => {
@@ -365,6 +397,7 @@ export default function PitchLab() {
     const fb = generateFeedback(notes);
     const avg = Math.round(fb.reduce((s, f) => s + f.score, 0) / fb.length);
     setFeedback(fb);
+    setSectionScores(computeSectionScores(notes));
     setMode("feedback");
     setInversoresVotos({});
 
@@ -799,7 +832,7 @@ export default function PitchLab() {
               </div>
               <div className="ml-auto flex gap-3">
                 <button
-                  onClick={() => { setMode("write"); setFeedback(null); }}
+                  onClick={() => { setMode("write"); setFeedback(null); setSectionScores(null); }}
                   className="flex items-center gap-1.5 border border-white/20 text-white text-[11px] font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:bg-white/10 transition-all"
                 >
                   <RotateCcw size={13} />
@@ -835,6 +868,52 @@ export default function PitchLab() {
                 </div>
               </div>
             ))}
+
+            {/* C14: Puntuación por sección */}
+            {sectionScores && (
+              <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 size={14} className="text-accent-text" />
+                  <span className="text-[13px] font-semibold text-text-primary">Puntuación por sección</span>
+                  <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+                    Media: {(Object.values(sectionScores).reduce((a, b) => a + b, 0) / Object.values(sectionScores).length).toFixed(1)}/10
+                  </span>
+                </div>
+                {(() => {
+                  const minScore = Math.min(...Object.values(sectionScores));
+                  const weakestId = pitchSections.find((s) => sectionScores[s.id] === minScore)?.id;
+                  return (
+                    <div className="space-y-2.5">
+                      {pitchSections.map((section) => {
+                        const score = sectionScores[section.id] ?? 0;
+                        const isWeakest = section.id === weakestId;
+                        const Icon = section.icon;
+                        const barColor = score >= 7 ? "bg-success" : score >= 5 ? "bg-warning" : "bg-urgent";
+                        const textColor = score >= 7 ? "text-success" : score >= 5 ? "text-warning" : "text-urgent";
+                        return (
+                          <div key={section.id} className={`flex items-center gap-3 rounded-xl px-3 py-2 ${isWeakest ? "bg-urgent-light" : "bg-background"}`}>
+                            <Icon size={13} className="text-text-muted flex-shrink-0" />
+                            <span className="text-[11px] font-medium text-text-primary w-32 flex-shrink-0 truncate">{section.title}</span>
+                            <div className="flex-1 h-2 bg-card rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${barColor}`}
+                                style={{ width: `${score * 10}%` }}
+                              />
+                            </div>
+                            <span className={`text-[14px] font-bold w-5 text-right flex-shrink-0 ${textColor}`}>{score}</span>
+                            <span className="text-[9px] text-text-muted w-7 flex-shrink-0">/10</span>
+                            {isWeakest
+                              ? <span className="text-[8px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">Mejorar</span>
+                              : <div className="w-14 flex-shrink-0" />
+                            }
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
 
             {/* C11: Panel de Inversores Simulados */}
             {Object.keys(inversoresVotos).length > 0 && (() => {
