@@ -3,9 +3,9 @@ export type DayStatus = "completed" | "current" | "upcoming";
 export type Role = "student" | "parent" | "teacher" | "admin";
 export type ViewMode = "daily" | "kanban";
 export type StudentView = "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab";
-export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages";
+export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages" | "rubrica";
 export type ParentView = "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings";
-export type AdminView = "overview" | "users" | "capital" | "ai" | "schools" | "reports";
+export type AdminView = "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection";
 
 export type EvidenceType =
   | "spreadsheet"

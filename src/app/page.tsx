@@ -34,6 +34,7 @@ import TeacherGradeBook from "@/components/TeacherGradeBook";
 import TeacherProjectGenerator from "@/components/TeacherProjectGenerator";
 import TeacherMessages from "@/components/TeacherMessages";
 import PitchLab from "@/components/PitchLab";
+import TeacherRubrica from "@/components/TeacherRubrica";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -143,6 +144,7 @@ export default function Home() {
           {role === "teacher" && activeTeacherView === "gradebook" && <TeacherGradeBook />}
           {role === "teacher" && activeTeacherView === "generator" && <TeacherProjectGenerator />}
           {role === "teacher" && activeTeacherView === "messages" && <TeacherMessages />}
+          {role === "teacher" && activeTeacherView === "rubrica" && <TeacherRubrica />}
           {role === "teacher" && activeTeacherView === "settings" && <TeacherSettings />}
           {role === "admin" && (
             <AdminDashboard activeView={activeAdminView} onNavigate={setActiveAdminView} />

@@ -24,6 +24,8 @@ import {
   Sparkles,
   Mic,
   Landmark,
+  ClipboardCheck,
+  Search,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -62,12 +64,13 @@ const parentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: strin
 ];
 
 const adminNav: { icon: typeof LayoutDashboard; labelEs: string; view: AdminView }[] = [
-  { icon: LayoutDashboard, labelEs: "Resumen",  view: "overview" },
-  { icon: Users,           labelEs: "Usuarios", view: "users" },
-  { icon: Landmark,        labelEs: "Capital",  view: "capital" },
-  { icon: Bot,             labelEs: "IA",       view: "ai" },
-  { icon: Building2,       labelEs: "Colegios", view: "schools" },
-  { icon: FileText,        labelEs: "Informes", view: "reports" },
+  { icon: LayoutDashboard, labelEs: "Resumen",     view: "overview" },
+  { icon: Users,           labelEs: "Usuarios",    view: "users" },
+  { icon: Landmark,        labelEs: "Capital",     view: "capital" },
+  { icon: Bot,             labelEs: "IA",          view: "ai" },
+  { icon: Building2,       labelEs: "Colegios",    view: "schools" },
+  { icon: FileText,        labelEs: "Informes",    view: "reports" },
+  { icon: Search,          labelEs: "Inspección",  view: "inspection" },
 ];
 
 const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: TeacherView }[] = [
@@ -76,6 +79,7 @@ const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: stri
   { icon: Sparkles,        labelEs: "Generador IA",labelEn: "AI Projects",view: "generator" },
   { icon: BarChart3,       labelEs: "Análisis",    labelEn: "Analytics", view: "analytics" },
   { icon: FileSpreadsheet, labelEs: "Notas",       labelEn: "Grades",    view: "gradebook" },
+  { icon: ClipboardCheck,  labelEs: "Rúbricas",    labelEn: "Rubrics",   view: "rubrica" },
   { icon: Calendar,        labelEs: "Calendario",  labelEn: "Calendar",  view: "calendar" },
   { icon: User,            labelEs: "Alumnos",     labelEn: "Students",  view: "students" },
   { icon: MessageSquare,   labelEs: "Mensajes",    labelEn: "Messages",  view: "messages" },
