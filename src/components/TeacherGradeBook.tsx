@@ -43,6 +43,22 @@ const initialGrades: Record<string, Record<CompKey, Nivel>> = {
   "12": { CLC:3, CPL:3, STEM:4, CD:3, CPSAA:3, CC:3, CE:4, CCEC:3 }, // Alba 75%
 };
 
+// T15 — Notas del trimestre anterior (mock T1)
+const gradesTrimAnterior: Record<string, Record<CompKey, Nivel>> = {
+  "1":  { CLC:2, CPL:2, STEM:3, CD:3, CPSAA:3, CC:2, CE:3, CCEC:3 },
+  "2":  { CLC:3, CPL:4, STEM:4, CD:3, CPSAA:3, CC:4, CE:3, CCEC:3 },
+  "3":  { CLC:2, CPL:1, STEM:2, CD:2, CPSAA:1, CC:2, CE:1, CCEC:2 },
+  "4":  { CLC:3, CPL:2, STEM:3, CD:3, CPSAA:3, CC:3, CE:3, CCEC:3 },
+  "5":  { CLC:4, CPL:3, STEM:4, CD:4, CPSAA:4, CC:4, CE:4, CCEC:4 },
+  "6":  { CLC:2, CPL:2, STEM:2, CD:3, CPSAA:3, CC:2, CE:2, CCEC:2 },
+  "7":  { CLC:2, CPL:1, STEM:1, CD:2, CPSAA:2, CC:2, CE:2, CCEC:1 },
+  "8":  { CLC:3, CPL:3, STEM:3, CD:3, CPSAA:3, CC:3, CE:3, CCEC:3 },
+  "9":  { CLC:3, CPL:2, STEM:3, CD:3, CPSAA:2, CC:3, CE:3, CCEC:2 },
+  "10": { CLC:4, CPL:3, STEM:4, CD:4, CPSAA:4, CC:3, CE:4, CCEC:3 },
+  "11": { CLC:2, CPL:2, STEM:2, CD:2, CPSAA:2, CC:2, CE:2, CCEC:2 },
+  "12": { CLC:3, CPL:3, STEM:3, CD:3, CPSAA:3, CC:3, CE:3, CCEC:3 },
+};
+
 interface HistorialCambio {
   alumnoNombre: string;
   competencia: CompKey;
@@ -62,6 +78,9 @@ export default function TeacherGradeBook() {
   // T14 — Historial de cambios
   const [historialCambios, setHistorialCambios] = useState<HistorialCambio[]>([]);
   const [showHistorial, setShowHistorial] = useState(false);
+
+  // T15 — Comparar con trimestre anterior
+  const [compareModo, setCompareModo] = useState(false);
 
   const saveEdit = useCallback(() => {
     if (!editing) return;
@@ -95,6 +114,12 @@ export default function TeacherGradeBook() {
   // Media por competencia
   const colAvg = (comp: CompKey) => {
     const vals = classStudents.map((s) => grades[s.id]?.[comp] ?? 3);
+    return (vals.reduce((a, b) => a + b, 0) / vals.length);
+  };
+
+  // T15: Media T1 por competencia
+  const colAvgT1 = (comp: CompKey) => {
+    const vals = classStudents.map((s) => gradesTrimAnterior[s.id]?.[comp] ?? 3);
     return (vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
@@ -167,9 +192,24 @@ export default function TeacherGradeBook() {
             <span className="text-[10px] text-text-muted">{nivelConfig[n].label}</span>
           </div>
         ))}
-        <div className="ml-auto flex items-center gap-1.5">
-          <Info size={11} className="text-text-muted" />
-          <span className="text-[10px] text-text-muted">Haz clic en cualquier celda para editar</span>
+        <div className="ml-auto flex items-center gap-3">
+          {/* T15: Toggle comparar trimestre */}
+          <button
+            onClick={() => setCompareModo(!compareModo)}
+            className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+              compareModo
+                ? "bg-sidebar text-white border-sidebar"
+                : "bg-card text-text-secondary border-card-border hover:border-accent-text/30"
+            }`}
+          >
+            <ArrowUp size={10} className={compareModo ? "text-accent" : "text-text-muted"} />
+            <ArrowDown size={10} className={compareModo ? "text-white/60" : "text-text-muted"} />
+            Comparar T1
+          </button>
+          <div className="flex items-center gap-1.5">
+            <Info size={11} className="text-text-muted" />
+            <span className="text-[10px] text-text-muted">Haz clic en cualquier celda para editar</span>
+          </div>
         </div>
       </div>
 
@@ -252,6 +292,8 @@ export default function TeacherGradeBook() {
                       const nivel = grades[alumno.id]?.[comp] ?? 3;
                       const cfg = nivelConfig[nivel];
                       const isEditing = editing === cellId;
+                      const nivelT1 = gradesTrimAnterior[alumno.id]?.[comp] ?? 3;
+                      const delta = nivel - nivelT1;
 
                       return (
                         <td key={comp} className="px-0.5 py-1.5 text-center">
@@ -270,13 +312,29 @@ export default function TeacherGradeBook() {
                               className="w-10 h-7 text-center text-[11px] font-bold rounded-lg border border-accent-text/40 bg-card outline-none focus:border-accent-text"
                             />
                           ) : (
-                            <button
-                              onClick={() => { setEditing(cellId); setEditVal(String(nivel)); }}
-                              title={`${cfg.label} — clic para editar`}
-                              className={`w-10 h-7 text-[11px] font-bold rounded-lg cursor-pointer transition-all hover:brightness-90 hover:scale-105 ${cfg.bg} ${cfg.text}`}
-                            >
-                              {nivel}
-                            </button>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <button
+                                onClick={() => { setEditing(cellId); setEditVal(String(nivel)); }}
+                                title={`${cfg.label} — clic para editar`}
+                                className={`w-10 h-7 text-[11px] font-bold rounded-lg cursor-pointer transition-all hover:brightness-90 hover:scale-105 ${cfg.bg} ${cfg.text}`}
+                              >
+                                {nivel}
+                              </button>
+                              {compareModo && (
+                                <div className="flex items-center gap-0.5">
+                                  {delta > 0 ? (
+                                    <ArrowUp size={7} className="text-success" />
+                                  ) : delta < 0 ? (
+                                    <ArrowDown size={7} className="text-urgent" />
+                                  ) : (
+                                    <ArrowRight size={7} className="text-text-muted" />
+                                  )}
+                                  <span className={`text-[8px] font-bold tabular-nums ${delta > 0 ? "text-success" : delta < 0 ? "text-urgent" : "text-text-muted"}`}>
+                                    {delta > 0 ? `+${delta}` : delta === 0 ? "=" : delta}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </td>
                       );
@@ -307,19 +365,59 @@ export default function TeacherGradeBook() {
                 </td>
                 {COMPS.map((comp) => {
                   const avg = colAvg(comp);
+                  const avgT1 = colAvgT1(comp);
+                  const delta = avg - avgT1;
                   return (
                     <td key={comp} className="px-0.5 py-3 text-center">
-                      <span className={`text-[12px] font-bold ${avgColor(avg)}`}>{avg.toFixed(1)}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className={`text-[12px] font-bold ${avgColor(avg)}`}>{avg.toFixed(1)}</span>
+                        {compareModo && (
+                          <div className="flex items-center gap-0.5">
+                            {delta > 0.05 ? (
+                              <ArrowUp size={7} className="text-success" />
+                            ) : delta < -0.05 ? (
+                              <ArrowDown size={7} className="text-urgent" />
+                            ) : (
+                              <ArrowRight size={7} className="text-text-muted" />
+                            )}
+                            <span className={`text-[8px] font-bold tabular-nums ${delta > 0.05 ? "text-success" : delta < -0.05 ? "text-urgent" : "text-text-muted"}`}>
+                              {delta > 0.05 ? `+${delta.toFixed(1)}` : Math.abs(delta) < 0.05 ? "=" : delta.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   );
                 })}
-                <td className="px-3 py-3 text-center">
-                  <span className={`text-[13px] font-bold ${avgColor(
-                    classStudents.reduce((sum, s) => sum + rowAvg(s.id), 0) / classStudents.length
-                  )}`}>
-                    {(classStudents.reduce((sum, s) => sum + rowAvg(s.id), 0) / classStudents.length).toFixed(1)}
-                  </span>
-                </td>
+                {(() => {
+                  const totalAvg = classStudents.reduce((sum, s) => sum + rowAvg(s.id), 0) / classStudents.length;
+                  const totalAvgT1 = classStudents.reduce((sum, s) => {
+                    const vals = COMPS.map((c) => gradesTrimAnterior[s.id]?.[c] ?? 3);
+                    return sum + vals.reduce((a, b) => a + b, 0) / vals.length;
+                  }, 0) / classStudents.length;
+                  const delta = totalAvg - totalAvgT1;
+                  return (
+                    <td className="px-3 py-3 text-center">
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className={`text-[13px] font-bold ${avgColor(totalAvg)}`}>{totalAvg.toFixed(1)}</span>
+                        {compareModo && (
+                          <div className="flex items-center gap-0.5">
+                            {delta > 0.05 ? (
+                              <ArrowUp size={7} className="text-success" />
+                            ) : delta < -0.05 ? (
+                              <ArrowDown size={7} className="text-urgent" />
+                            ) : (
+                              <ArrowRight size={7} className="text-text-muted" />
+                            )}
+                            <span className={`text-[8px] font-bold tabular-nums ${delta > 0.05 ? "text-success" : delta < -0.05 ? "text-urgent" : "text-text-muted"}`}>
+                              {delta > 0.05 ? `+${delta.toFixed(1)}` : Math.abs(delta) < 0.05 ? "=" : delta.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })()}
               </tr>
             </tbody>
           </table>
