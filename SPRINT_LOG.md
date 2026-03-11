@@ -454,12 +454,57 @@
 
 ---
 
-## Sprints pendientes — Ciclo 13
+## Ciclo 13 ✅ completado
 
-- [ ] [T12] TeacherGradeBook mejorado — en el Grade Book, añadir vista "Exportar notas" con tabla completa alumno × competencia × nivel LOMLOE (1-4), botón exportar a CSV (descarga simulada), y badge de "Alerta trimestral" si algún alumno tiene nivel 1 en ≥ 3 competencias
-- [ ] [S14] StudentPortfolio mejorado — añadir sección "Línea del tiempo del proyecto" (timeline visual con los hitos clave del Airbnb Málaga desde la Semana 1), cada hito con competencia LOMLOE, XP obtenido y fecha; última entrada siempre es "Demo Day (próximo)"
-- [ ] [A12] AdminDashboard Overview mejorado — añadir widget "Salud del sistema IA" en tab Overview: latencia media API (mock), tasa de error (mock), tokens consumidos esta semana, botón "Ver logs" que despliega los últimos 5 errores simulados con timestamp y tipo
-- [ ] [C12] PitchLab mejorado — añadir modo "Ensayo cronometrado": botón que inicia temporizador global del pitch completo (suma de durationSeg de todas las secciones = 270s), muestra qué sección debería estar pronunciando según el tiempo transcurrido, y al terminar muestra "Pitch completado en X:XX"
+### [SPRINT-TEACHER][T12] TeacherGradeBook mejorado ✅
+- Commit: `cb094ad`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- `handleExportCSV()`: Blob real con BOM UTF-8, filename dinámico `notas_lomloe_T2_1eso_{YYYY-MM-DD}.csv`, descarga automática vía anchor click
+- CSV incluye cabecera con 8 columnas LOMLOE + Media, una fila por alumno con niveles actuales
+- `alertasTrimestral`: filtra alumnos con nivel 1 en ≥3 competencias, reactivo a edición de celdas
+- Panel bg-urgent-light con AlertTriangle encima de la tabla; badge "Urgente" por alumno afectado
+- Icono AlertTriangle inline junto al nombre en la fila de la tabla (wrap en `<span title="...">`)
+- Estado `isExporting: boolean` + `exportFilename: string | null` para feedback visual
+
+### [SPRINT-STUDENT][S14] StudentPortfolio mejorado ✅
+- Commit: `248dcfe`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- `timelineHitos`: 7 hitos del proyecto Airbnb Málaga (Semanas 1-4), const a nivel de módulo
+- Timeline visual: línea vertical CSS absoluta con gradiente, dot verde ✓ para completados, naranja → para próximo
+- Cada card: título, +XP badge, fecha · fase, competencia LOMLOE usando compColor()
+- Último hito "Demo Day" marcado como `completado: false` con badge "Próximo"
+- Contador "X/7 hitos completados" en el header de la sección
+- Import añadido: GitCommit (lucide-react)
+
+### [SPRINT-ADMIN][A12] AdminDashboard Overview mejorado ✅
+- Commit: `bca6817`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Estado `showIALogs: boolean` añadido al componente
+- Widget "Salud del sistema IA" en tab Overview (columna izquierda, entre Estado del sistema y Acciones rápidas)
+- 3 KPIs en grid: latencia 1.2s / tasa de error 0.3% / tokens 1.84M (valores mock)
+- `iaLogs`: 5 entradas simuladas con timestamp, tipo (error/timeout/warning) y mensaje detallado
+- Botón "Ver logs" toggle `showIALogs`; logs con bg color-coded por tipo (error=urgent-light, timeout=warning-light, warning=background)
+- Patrón IIFE para scoping de `iaLogs` dentro del JSX, consistente con A8-A11
+
+### [SPRINT-CULTURE][C12] PitchLab mejorado ✅
+- Commit: `8dc8a2f`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- `totalPitchSecs = 270` (suma de durationSeg de las 5 secciones); `sectionCumulative` acumulativo
+- Estados: `ensayoMode`, `ensayoRunning`, `ensayoElapsed`, `ensayoCompleted`
+- `useEffect` con `setInterval` (1s): autopausa y marca completado al llegar a 270s
+- `currentEnsayoSectionIdx` deriva la sección activa por `sectionCumulative.findIndex`
+- Barra de progreso global bg-accent; mini dots por sección (verde=done, accent=actual, gris=pendiente)
+- Controles: Empezar/Pausar/Continuar + Reiniciar; el botón "Salir del ensayo" resetea al salir
+- Estado completado: bg-success-light, "Pitch completado en X:XX min", botón Reiniciar
+
+---
+
+## Sprints pendientes — Ciclo 14
+
+- [ ] [T13] TeacherGradeBook — vista comparativa: gráfico de barras CSS mostrando la distribución de niveles LOMLOE (1-4) por competencia para toda la clase; un div por competencia con 4 barras proporcionales al número de alumnos en cada nivel, colores success/warning/urgent/urgent-light
+- [ ] [S15] StudentPortfolio — sección "Mi impacto real": card con métricas del proyecto Airbnb Málaga (ocupación media lograda %, ingresos proyectados €, reseñas positivas simuladas, ranking en su zona); datos mock pero realistas; cada KPI con icono, valor grande y etiqueta descriptiva
+- [ ] [A13] AdminDashboard Metrics mejorado — en tab Metrics, añadir selector "Vista por semana / mes" (toggle) que cambia el gráfico de barras CSS de actividad para mostrar los últimos 7 días (nombres: Lun–Dom) o los últimos 4 semanas (Sem 1–Sem 4), con datos mock distintos para cada vista
+- [ ] [C13] PitchLab mejorado — añadir panel "Guión de apoyo": lista colapsable por sección con bullets de los puntos clave que el alumno debe mencionar (datos concretos del proyecto: cifras de mercado, nombre del listing, modelo financiero), frase de transición sugerida entre secciones, y badge "Clave" para los puntos críticos de cada sección
 
 ---
 
@@ -472,7 +517,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C11 añade inversoresConfig + InversorVoto interface + inversoresVotos state. handleSimulate es ahora async. Inversores se cargan secuencialmente con stagger 950ms vía API pitchcoach.
+- **PitchLab**: C11 añade inversoresConfig + InversorVoto interface + inversoresVotos state. handleSimulate es ahora async. C12 añade ensayoMode/ensayoRunning/ensayoElapsed/ensayoCompleted state + useEffect timer + panel ensayo cronometrado.
+- **TeacherGradeBook**: T12 añade handleExportCSV (Blob real), alertasTrimestral (filtro reactivo), isExporting + exportFilename state. AlertTriangle en `<span title>` wrapper (Lucide no acepta prop title directa).
+- **StudentPortfolio**: S14 añade timelineHitos (const módulo, 7 hitos Airbnb Málaga), timeline visual CSS vertical, GitCommit import. Sección entre "Crecimiento en competencias" y narrative blocks.
+- **AdminDashboard**: A12 añade showIALogs state, widget "Salud del sistema IA" con 3 KPIs mock + iaLogs (5 entradas) con patrón IIFE. A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
