@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -15,6 +15,10 @@ import {
   Trophy,
   Target,
   ChevronRight,
+  LayoutList,
+  Columns,
+  Clock,
+  GripVertical,
 } from "lucide-react";
 import { weekSchedule, trimesterProjects } from "@/data/tasks";
 import { taskEvidence } from "@/data/evidence";
@@ -100,8 +104,52 @@ interface ProjectDetailProps {
   onBack: () => void;
 }
 
+// ── S12: Kanban ────────────────────────────────────────────────────────────
+type KanbanCol = "todo" | "doing" | "review" | "done";
+
+const colConfig: Record<KanbanCol, { label: string; bg: string; border: string; pill: string; pillText: string }> = {
+  todo:   { label: "Por hacer",    bg: "bg-background",    border: "border-card-border",   pill: "bg-card-border text-text-muted",     pillText: "text-text-muted" },
+  doing:  { label: "En curso",     bg: "bg-accent-light",  border: "border-accent/30",     pill: "bg-accent text-sidebar",              pillText: "text-sidebar" },
+  review: { label: "En revisión",  bg: "bg-warning-light", border: "border-warning/30",    pill: "bg-warning-light text-warning",       pillText: "text-warning" },
+  done:   { label: "Completado",   bg: "bg-success-light", border: "border-success/20",    pill: "bg-success-light text-success",       pillText: "text-success" },
+};
+
+const statusToCol: Record<string, KanbanCol> = {
+  completed: "done",
+  in_progress: "doing",
+  upcoming: "todo",
+  locked: "todo",
+};
+
+// Some tasks start in "review" to populate that column
+const reviewOverride = new Set(["mon-3", "mon-5", "tue-1"]);
+
+function initKanban(): Record<string, KanbanCol> {
+  const allTasks = weekSchedule.flatMap((d) => d.tasks);
+  return Object.fromEntries(
+    allTasks.map((t) => [
+      t.id,
+      reviewOverride.has(t.id) ? ("review" as KanbanCol) : statusToCol[t.status] ?? "todo",
+    ])
+  );
+}
+
+// Estimated times in minutes per task (mock)
+const estimadoMin: Record<string, number> = {
+  "mon-1": 60, "mon-2": 60, "mon-3": 60, "mon-4": 60, "mon-5": 90,
+  "tue-1": 90, "tue-2": 60, "tue-3": 60,
+  "wed-1": 90, "wed-2": 60, "wed-3": 90, "wed-4": 60,
+  "thu-1": 120, "thu-2": 90, "thu-3": 60,
+  "fri-1": 90, "fri-2": 90, "fri-3": 60,
+};
+
 export default function ProjectDetail({ onBack }: ProjectDetailProps) {
   const [expandedDay, setExpandedDay] = useState<string | null>("Wednesday");
+  const [proyectoVista, setProyectoVista] = useState<"lista" | "kanban">("lista");
+  const [kanban, setKanban] = useState<Record<string, KanbanCol>>(initKanban);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<KanbanCol | null>(null);
+  const dragTask = useRef<string | null>(null);
 
   const project = trimesterProjects.find((p) => p.status === "active")!;
   const totalTasks = weekSchedule.reduce((sum, d) => sum + d.tasks.length, 0);
@@ -120,14 +168,36 @@ export default function ProjectDetail({ onBack }: ProjectDetailProps) {
 
   return (
     <div>
-      {/* Back button */}
-      <button
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors mb-6 cursor-pointer"
-      >
-        <ArrowLeft size={16} />
-        Back to Dashboard
-      </button>
+      {/* Back button + vista toggle */}
+      <div className="flex items-center justify-between mb-6">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} />
+          Volver al inicio
+        </button>
+        <div className="flex items-center gap-1 bg-background rounded-xl p-1">
+          <button
+            onClick={() => setProyectoVista("lista")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+              proyectoVista === "lista" ? "bg-white shadow-sm text-text-primary" : "text-text-muted hover:text-text-secondary"
+            }`}
+          >
+            <LayoutList size={12} />
+            Lista
+          </button>
+          <button
+            onClick={() => setProyectoVista("kanban")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+              proyectoVista === "kanban" ? "bg-white shadow-sm text-text-primary" : "text-text-muted hover:text-text-secondary"
+            }`}
+          >
+            <Columns size={12} />
+            Kanban
+          </button>
+        </div>
+      </div>
 
       {/* Project header */}
       <div className="mb-6">
@@ -232,7 +302,108 @@ export default function ProjectDetail({ onBack }: ProjectDetailProps) {
         </div>
       </div>
 
-      {/* Day accordion */}
+      {/* ── S12: Vista Kanban ─────────────────────────────────────── */}
+      {proyectoVista === "kanban" && (() => {
+        const allTasks = weekSchedule.flatMap((d) => d.tasks);
+        const cols: KanbanCol[] = ["todo", "doing", "review", "done"];
+
+        const handleDragStart = (e: React.DragEvent, taskId: string) => {
+          dragTask.current = taskId;
+          setDragId(taskId);
+          e.dataTransfer.effectAllowed = "move";
+        };
+
+        const handleDragOver = (e: React.DragEvent, col: KanbanCol) => {
+          e.preventDefault();
+          setDragOverCol(col);
+        };
+
+        const handleDrop = (e: React.DragEvent, col: KanbanCol) => {
+          e.preventDefault();
+          if (dragTask.current) {
+            setKanban((prev) => ({ ...prev, [dragTask.current!]: col }));
+          }
+          setDragId(null);
+          setDragOverCol(null);
+          dragTask.current = null;
+        };
+
+        const handleDragEnd = () => {
+          setDragId(null);
+          setDragOverCol(null);
+          dragTask.current = null;
+        };
+
+        return (
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ minHeight: "420px" }}>
+            {cols.map((col) => {
+              const cfg = colConfig[col];
+              const tasksInCol = allTasks.filter((t) => kanban[t.id] === col);
+              const isOver = dragOverCol === col;
+              return (
+                <div
+                  key={col}
+                  className={`flex-1 min-w-[220px] rounded-2xl border-2 transition-all duration-150 ${
+                    isOver ? "border-accent bg-accent-light/30" : `${cfg.border} ${cfg.bg}`
+                  }`}
+                  onDragOver={(e) => handleDragOver(e, col)}
+                  onDrop={(e) => handleDrop(e, col)}
+                >
+                  {/* Column header */}
+                  <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg.pill}`}>
+                      {tasksInCol.length}
+                    </span>
+                    <span className="text-[12px] font-semibold text-text-primary">{cfg.label}</span>
+                  </div>
+                  {/* Tasks */}
+                  <div className="flex flex-col gap-2 px-2 pb-3" style={{ minHeight: "60px" }}>
+                    {tasksInCol.map((task) => {
+                      const mins = estimadoMin[task.id] ?? 60;
+                      const isDragging = dragId === task.id;
+                      return (
+                        <div
+                          key={task.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task.id)}
+                          onDragEnd={handleDragEnd}
+                          className={`bg-white rounded-xl p-3 border border-card-border cursor-grab active:cursor-grabbing transition-all ${
+                            isDragging ? "opacity-40 scale-95" : "hover:border-accent/30 hover:shadow-sm"
+                          }`}
+                        >
+                          <div className="flex items-start gap-1.5 mb-1.5">
+                            <GripVertical size={11} className="text-text-muted flex-shrink-0 mt-0.5" />
+                            <p className="text-[11px] font-semibold text-text-primary leading-snug flex-1">{task.title}</p>
+                          </div>
+                          <div className="flex items-center gap-2 ml-3.5 flex-wrap">
+                            <div className="flex items-center gap-1">
+                              <Clock size={9} className="text-text-muted" />
+                              <span className="text-[9px] text-text-muted">{mins >= 60 ? `${Math.floor(mins/60)}h${mins%60 ? ` ${mins%60}min` : ""}` : `${mins}min`}</span>
+                            </div>
+                            {task.competencies.slice(0, 2).map((key) => (
+                              <span key={key} className="text-[8px] font-bold bg-background text-accent-text px-1.5 py-0.5 rounded-full">{key}</span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {tasksInCol.length === 0 && (
+                      <div className={`flex-1 rounded-xl border-2 border-dashed flex items-center justify-center min-h-[60px] ${
+                        isOver ? "border-accent bg-accent-light/20" : "border-card-border"
+                      }`}>
+                        <span className="text-[10px] text-text-muted">Arrastra aquí</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
+
+      {/* ── Vista Lista (original) ─────────────────────────────────── */}
+      {proyectoVista === "lista" && (
       <div className="flex flex-col gap-3">
         {weekSchedule.map((day) => {
           const isExpanded = expandedDay === day.day;
@@ -294,6 +465,7 @@ export default function ProjectDetail({ onBack }: ProjectDetailProps) {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
