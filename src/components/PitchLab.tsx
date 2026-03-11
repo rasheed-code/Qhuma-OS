@@ -186,6 +186,53 @@ const guionPorSeccion: Record<string, {
   },
 };
 
+// C15 — Preguntas del jurado (5 específicas del proyecto Airbnb Málaga)
+const preguntasJurado = [
+  {
+    id: "q1",
+    pregunta: "¿Cómo vas a atraer a los primeros 3 propietarios piloto si eres un estudiante de secundaria sin historial de resultados?",
+    inversor: "Marta Ruiz",
+    avatar: "MR",
+    tipo: "tracción",
+  },
+  {
+    id: "q2",
+    pregunta: "El mercado de gestión de Airbnb en Málaga ya tiene actores consolidados como Spotahome o Badi. ¿Qué vas a hacer diferente para no ser aplastado?",
+    inversor: "Javier Torres",
+    avatar: "JT",
+    tipo: "competencia",
+  },
+  {
+    id: "q3",
+    pregunta: "Si el Ayuntamiento de Málaga limita las nuevas licencias turísticas — algo que ya está en debate — ¿cuál es tu plan B?",
+    inversor: "Elena López",
+    avatar: "EL",
+    tipo: "riesgo",
+  },
+  {
+    id: "q4",
+    pregunta: "Dices que puedes gestionar 20 pisos para alcanzar el punto de equilibrio. ¿Cuántas horas semanales te va a costar eso siendo estudiante a tiempo completo?",
+    inversor: "Marta Ruiz",
+    avatar: "MR",
+    tipo: "operacional",
+  },
+  {
+    id: "q5",
+    pregunta: "¿Por qué debería invertir 500€ en ti hoy en lugar de esperar a que demuestres tracción con el primer piso piloto sin financiación externa?",
+    inversor: "Javier Torres",
+    avatar: "JT",
+    tipo: "inversión",
+  },
+];
+
+const tipoColor: Record<string, string> = {
+  tracción:    "bg-accent-light text-accent-text",
+  competencia: "bg-warning-light text-text-primary",
+  riesgo:      "bg-urgent-light text-urgent",
+  operacional: "bg-background text-text-muted border border-card-border",
+  inversión:   "bg-success-light text-success",
+};
+
 // C14 — Puntuación por sección (1–10)
 const computeSectionScores = (sections: Record<string, string>): Record<string, number> => {
   const scores: Record<string, number> = {};
@@ -315,6 +362,36 @@ export default function PitchLab() {
 
   // C14 — Puntuación por sección
   const [sectionScores, setSectionScores] = useState<Record<string, number> | null>(null);
+
+  // C15 — Preguntas del jurado
+  const [respuestasJurado, setRespuestasJurado] = useState<Record<string, string>>({});
+  const [evaluacionesJurado, setEvaluacionesJurado] = useState<Record<string, string | null>>({});
+  const [evaluandoJurado, setEvaluandoJurado] = useState<string | null>(null);
+
+  const handleEvaluarRespuesta = async (preguntaId: string) => {
+    const respuesta = respuestasJurado[preguntaId] ?? "";
+    if (!respuesta.trim() || evaluandoJurado) return;
+    const pregunta = preguntasJurado.find((p) => p.id === preguntaId);
+    if (!pregunta) return;
+    setEvaluandoJurado(preguntaId);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "pitchcoach",
+          message: `Soy ${pregunta.inversor}, inversor/a en el pitch de Lucas García (proyecto Airbnb Málaga).\nMi pregunta fue: "${pregunta.pregunta}"\nLa respuesta del alumno es: "${respuesta}"\n\nEvalúa la respuesta en máximo 3 frases: señala lo que funciona, lo que falta y una sugerencia concreta para mejorarla.`,
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      setEvaluacionesJurado((prev) => ({ ...prev, [preguntaId]: data.reply ?? null }));
+    } catch {
+      setEvaluacionesJurado((prev) => ({ ...prev, [preguntaId]: "Error al conectar con la IA. Inténtalo de nuevo." }));
+    } finally {
+      setEvaluandoJurado(null);
+    }
+  };
 
   // C13 — Guión de apoyo
   const [guionOpen, setGuionOpen] = useState<Set<string>>(new Set());
@@ -1020,6 +1097,77 @@ export default function PitchLab() {
                 </div>
               </div>
             )}
+
+            {/* C15: Panel Preguntas del jurado */}
+            <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users size={14} className="text-accent-text" />
+                <span className="text-[13px] font-semibold text-text-primary">Preguntas del jurado</span>
+                <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+                  5 preguntas · inversores reales del Demo Day
+                </span>
+              </div>
+              <div className="space-y-4">
+                {preguntasJurado.map((pj) => {
+                  const evaluacion = evaluacionesJurado[pj.id] ?? null;
+                  const isEvaluando = evaluandoJurado === pj.id;
+                  const respuesta = respuestasJurado[pj.id] ?? "";
+                  return (
+                    <div key={pj.id} className="bg-background rounded-xl p-4">
+                      {/* Inversor + tipo */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                          {pj.avatar}
+                        </div>
+                        <span className="text-[10px] font-semibold text-text-secondary">{pj.inversor}</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-auto ${tipoColor[pj.tipo]}`}>
+                          {pj.tipo}
+                        </span>
+                      </div>
+                      {/* Pregunta */}
+                      <p className="text-[12px] font-medium text-text-primary leading-relaxed mb-3 italic">
+                        &ldquo;{pj.pregunta}&rdquo;
+                      </p>
+                      {/* Respuesta libre */}
+                      <textarea
+                        value={respuesta}
+                        onChange={(e) => setRespuestasJurado((prev) => ({ ...prev, [pj.id]: e.target.value }))}
+                        placeholder="Escribe tu respuesta aquí... Sé directo, usa datos si los tienes y termina con seguridad."
+                        rows={3}
+                        className="w-full text-[11px] text-text-primary bg-card border border-card-border rounded-xl px-3 py-2.5 outline-none focus:border-accent-text/40 resize-none transition-colors placeholder:text-text-muted mb-2"
+                      />
+                      {/* Evaluar button */}
+                      <div className="flex items-center justify-between gap-3">
+                        <button
+                          onClick={() => handleEvaluarRespuesta(pj.id)}
+                          disabled={!respuesta.trim() || !!evaluandoJurado}
+                          className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-sidebar px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isEvaluando ? (
+                            <><Loader2 size={10} className="animate-spin" />Evaluando...</>
+                          ) : (
+                            <><Sparkles size={10} />Evaluar respuesta</>
+                          )}
+                        </button>
+                        {respuesta.length > 0 && (
+                          <span className="text-[9px] text-text-muted">{respuesta.split(/\s+/).filter(Boolean).length} palabras</span>
+                        )}
+                      </div>
+                      {/* Evaluación IA */}
+                      {evaluacion && (
+                        <div className="mt-3 bg-sidebar/5 rounded-xl border border-sidebar/10 p-3">
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Sparkles size={10} className="text-accent-text" />
+                            <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">Evaluación del jurado IA</span>
+                          </div>
+                          <p className="text-[11px] text-text-secondary leading-relaxed">{evaluacion}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Mentor message */}
             <div className="col-span-3 bg-accent-light rounded-2xl border border-accent-text/20 p-5">
