@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare } from "lucide-react";
+import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare, ArrowUp, ArrowDown, Minus, ShieldAlert } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { useLang } from "@/lib/i18n";
@@ -34,6 +34,39 @@ const sinActividadHoy = [
   { id: "t", nombre: "Tomás Herrera", avatar: "TH", ultimaAct: "Hace 2 días", tarea: "Análisis de mercado" },
 ];
 
+// T23 — Semáforo de riesgo: datos base por alumno (índice alineado con classStudents)
+// score = diasSinActividad×3 + (100 - compMasBlaja)×4/100 + entregasTardias×5
+const riesgoBase = [
+  { nombre: "Lucas García",      avatar: "LG", diasSinAct: 0, compBaja: 88, tardias: 0, tendencia: "bajando"  as const },
+  { nombre: "Sofía Torres",      avatar: "ST", diasSinAct: 1, compBaja: 72, tardias: 1, tendencia: "bajando"  as const },
+  { nombre: "Pablo Ruiz",        avatar: "PR", diasSinAct: 3, compBaja: 45, tardias: 3, tendencia: "subiendo" as const },
+  { nombre: "María Santos",      avatar: "MS", diasSinAct: 0, compBaja: 82, tardias: 0, tendencia: "bajando"  as const },
+  { nombre: "Diego López",       avatar: "DL", diasSinAct: 2, compBaja: 60, tardias: 2, tendencia: "estable"  as const },
+  { nombre: "Ana Martín",        avatar: "AM", diasSinAct: 0, compBaja: 90, tardias: 0, tendencia: "bajando"  as const },
+  { nombre: "Carlos Rivera",     avatar: "CR", diasSinAct: 1, compBaja: 68, tardias: 1, tendencia: "estable"  as const },
+  { nombre: "Laura Sanz",        avatar: "LS", diasSinAct: 0, compBaja: 78, tardias: 0, tendencia: "bajando"  as const },
+  { nombre: "Tomás Herrera",     avatar: "TH", diasSinAct: 2, compBaja: 50, tardias: 2, tendencia: "subiendo" as const },
+  { nombre: "Carla Vega",        avatar: "CV", diasSinAct: 0, compBaja: 85, tardias: 0, tendencia: "bajando"  as const },
+  { nombre: "Alejandro Pérez",   avatar: "AP", diasSinAct: 1, compBaja: 55, tardias: 2, tendencia: "estable"  as const },
+  { nombre: "Valentina Cruz",    avatar: "VC", diasSinAct: 0, compBaja: 92, tardias: 0, tendencia: "bajando"  as const },
+];
+
+const microAccionPorNivel: Record<"Alto" | "Medio" | "Bajo", string> = {
+  Alto:  "Contactar hoy — ofrecer sesión 1:1 de 15 min y revisar carga de trabajo.",
+  Medio: "Enviar mensaje de apoyo y recordar la próxima entrega con fecha concreta.",
+  Bajo:  "Mantener seguimiento semanal regular. Felicitar el avance.",
+};
+
+function computeScore(d: typeof riesgoBase[number]): number {
+  return d.diasSinAct * 3 + Math.round(((100 - d.compBaja) * 4) / 100) + d.tardias * 5;
+}
+
+function nivelRiesgo(score: number): "Alto" | "Medio" | "Bajo" {
+  if (score >= 18) return "Alto";
+  if (score >= 8)  return "Medio";
+  return "Bajo";
+}
+
 function sparklineWeek(si: number, weekIdx: number, currentProgress: number): number {
   const base = Math.max(10, currentProgress - (3 - weekIdx) * 9);
   const noise = ((si * 11 + weekIdx * 7 + 5) % 14) - 7;
@@ -54,6 +87,8 @@ export default function TeacherAnalytics() {
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
 
   const [contactados, setContactados] = useState<Set<string>>(new Set());
+  // T23 — Semáforo de riesgo
+  const [contactadosSemaforo, setContactadosSemaforo] = useState<Set<string>>(new Set());
 
   const progMedio = Math.round(classStudents.reduce((s, a) => s + a.progress, 0) / classStudents.length);
   const totalEntregas = classStudents.reduce((s, a) => s + a.evidencesSubmitted, 0);
@@ -381,6 +416,131 @@ export default function TeacherAnalytics() {
           </div>
         </div>
       </div>
+
+      {/* T23: Semáforo de riesgo actualizado */}
+      {(() => {
+        const alumnosConScore = riesgoBase
+          .map((a) => ({ ...a, score: computeScore(a), nivel: nivelRiesgo(computeScore(a)) }))
+          .sort((a, b) => b.score - a.score);
+        const altos  = alumnosConScore.filter((a) => a.nivel === "Alto");
+        const medios = alumnosConScore.filter((a) => a.nivel === "Medio");
+        const bajos  = alumnosConScore.filter((a) => a.nivel === "Bajo");
+        const nivelCfg = {
+          Alto:  { bg: "bg-urgent-light",   text: "text-urgent",       border: "border-urgent/30",       bar: "bg-urgent",       dot: "bg-urgent"   },
+          Medio: { bg: "bg-warning-light",  text: "text-text-primary", border: "border-warning/30",      bar: "bg-warning",      dot: "bg-warning"  },
+          Bajo:  { bg: "bg-success-light",  text: "text-success",      border: "border-success/30",      bar: "bg-success",      dot: "bg-success"  },
+        } as const;
+        const tendenciaCfg = {
+          subiendo: { icon: ArrowUp,   color: "text-urgent"   },
+          bajando:  { icon: ArrowDown, color: "text-success"  },
+          estable:  { icon: Minus,     color: "text-text-muted" },
+        } as const;
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+            <div className="flex items-center gap-2 mb-4">
+              <ShieldAlert size={14} className="text-urgent" />
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Semáforo de riesgo actualizado", "Updated risk traffic light")}</h3>
+              <span className="ml-auto text-[10px] text-text-muted">{lbl("Score = días sin actividad × 3 + comp. baja × 4 + tardías × 5", "Score = inactivity × 3 + low comp × 4 + late × 5")}</span>
+            </div>
+
+            {/* Donut / distribución resumen */}
+            <div className="flex items-center gap-6 mb-5 p-4 bg-background rounded-xl">
+              <div className="flex flex-col items-center">
+                {/* Donut SVG simulado con 3 arcos */}
+                <svg width="80" height="80" viewBox="0 0 80 80">
+                  {/* Base circle */}
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#f0fdf4" strokeWidth="12" />
+                  {/* Bajo: success */}
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#22c55e" strokeWidth="12"
+                    strokeDasharray={`${(bajos.length / 12) * 175.9} 175.9`}
+                    strokeDashoffset="0" transform="rotate(-90 40 40)" />
+                  {/* Medio: warning — empieza donde termina Bajo */}
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#f59e0b" strokeWidth="12"
+                    strokeDasharray={`${(medios.length / 12) * 175.9} 175.9`}
+                    strokeDashoffset={`-${(bajos.length / 12) * 175.9}`}
+                    transform="rotate(-90 40 40)" />
+                  {/* Alto: urgent */}
+                  <circle cx="40" cy="40" r="28" fill="none" stroke="#ef4444" strokeWidth="12"
+                    strokeDasharray={`${(altos.length / 12) * 175.9} 175.9`}
+                    strokeDashoffset={`-${((bajos.length + medios.length) / 12) * 175.9}`}
+                    transform="rotate(-90 40 40)" />
+                  <text x="40" y="44" textAnchor="middle" className="text-[11px] font-bold fill-current" style={{ fill: "#141414", fontSize: "12px", fontWeight: "bold" }}>{altos.length > 0 ? `${altos.length}⚠` : "✓"}</text>
+                </svg>
+                <span className="text-[9px] text-text-muted mt-1">{lbl("Salud de clase", "Class health")}</span>
+              </div>
+              <div className="flex-1 grid grid-cols-3 gap-3">
+                {([
+                  { label: "Alto riesgo",  count: altos.length,  cfg: nivelCfg["Alto"]  },
+                  { label: "Riesgo medio", count: medios.length, cfg: nivelCfg["Medio"] },
+                  { label: "Bajo riesgo",  count: bajos.length,  cfg: nivelCfg["Bajo"]  },
+                ] as const).map((seg) => (
+                  <div key={seg.label} className={`rounded-xl p-3 border text-center ${seg.cfg.bg} ${seg.cfg.border}`}>
+                    <span className={`text-[24px] font-black block leading-none ${seg.cfg.text}`}>{seg.count}</span>
+                    <span className="text-[9px] text-text-muted">{seg.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Lista ordenada por score */}
+            <div className="space-y-2">
+              {alumnosConScore.map((a) => {
+                const cfg = nivelCfg[a.nivel];
+                const TendIcon = tendenciaCfg[a.tendencia].icon;
+                const tendColor = tendenciaCfg[a.tendencia].color;
+                const yaContactado = contactadosSemaforo.has(a.avatar);
+                return (
+                  <div key={a.avatar} className={`flex items-center gap-3 p-3 rounded-xl border ${cfg.bg} ${cfg.border}`}>
+                    {/* Avatar */}
+                    <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                      {a.avatar}
+                    </div>
+                    {/* Nombre + micro-acción */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[12px] font-semibold text-text-primary">{a.nombre}</span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-card ${cfg.text}`}>{a.nivel}</span>
+                        <TendIcon size={11} className={`flex-shrink-0 ${tendColor}`} title={a.tendencia} />
+                      </div>
+                      {a.nivel !== "Bajo" && (
+                        <p className="text-[10px] text-text-muted leading-snug">{microAccionPorNivel[a.nivel]}</p>
+                      )}
+                    </div>
+                    {/* Score */}
+                    <div className="text-center flex-shrink-0 mr-1">
+                      <span className={`text-[15px] font-bold ${cfg.text} block leading-none`}>{a.score}</span>
+                      <span className="text-[8px] text-text-muted">score</span>
+                    </div>
+                    {/* Barra score/50 */}
+                    <div className="w-16 flex-shrink-0">
+                      <div className="h-1.5 bg-white/50 rounded-full overflow-hidden">
+                        <div className={`h-full ${cfg.bar} rounded-full`} style={{ width: `${Math.min(100, (a.score / 40) * 100)}%` }} />
+                      </div>
+                    </div>
+                    {/* Botón Contactar — solo para riesgo Alto */}
+                    {a.nivel === "Alto" && (
+                      <button
+                        onClick={() => setContactadosSemaforo((prev) => new Set([...prev, a.avatar]))}
+                        className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer flex-shrink-0 ${
+                          yaContactado
+                            ? "bg-success-light text-success"
+                            : "bg-card text-urgent hover:brightness-95 border border-urgent/20"
+                        }`}
+                      >
+                        {yaContactado ? <CheckCircle2 size={11} /> : <MessageSquare size={11} />}
+                        {yaContactado ? lbl("Contactado", "Contacted") : lbl("Contactar", "Contact")}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-text-muted mt-3 text-center border-t border-card-border pt-3">
+              {lbl("Metodología: score alto = mayor prioridad de intervención docente", "Methodology: higher score = higher teaching intervention priority")}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Comparativa de progreso semanal — sparklines */}
       <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
