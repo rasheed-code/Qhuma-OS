@@ -43,6 +43,22 @@ const initialGrades: Record<string, Record<CompKey, Nivel>> = {
   "12": { CLC:3, CPL:3, STEM:4, CD:3, CPSAA:3, CC:3, CE:4, CCEC:3 }, // Alba 75%
 };
 
+// T16 — Notas del 3er trimestre (mock T3 — ligeramente superiores a T2)
+const gradesT3: Record<string, Record<CompKey, Nivel>> = {
+  "1":  { CLC:4, CPL:3, STEM:4, CD:4, CPSAA:4, CC:3, CE:4, CCEC:3 },
+  "2":  { CLC:4, CPL:4, STEM:4, CD:4, CPSAA:4, CC:4, CE:4, CCEC:4 },
+  "3":  { CLC:2, CPL:2, STEM:3, CD:3, CPSAA:2, CC:3, CE:2, CCEC:2 },
+  "4":  { CLC:3, CPL:3, STEM:4, CD:4, CPSAA:4, CC:3, CE:4, CCEC:3 },
+  "5":  { CLC:4, CPL:4, STEM:4, CD:4, CPSAA:4, CC:4, CE:4, CCEC:4 },
+  "6":  { CLC:3, CPL:3, STEM:3, CD:3, CPSAA:3, CC:3, CE:3, CCEC:3 },
+  "7":  { CLC:2, CPL:2, STEM:2, CD:2, CPSAA:2, CC:2, CE:2, CCEC:1 },
+  "8":  { CLC:4, CPL:4, STEM:4, CD:4, CPSAA:4, CC:3, CE:4, CCEC:3 },
+  "9":  { CLC:3, CPL:3, STEM:4, CD:4, CPSAA:3, CC:3, CE:3, CCEC:3 },
+  "10": { CLC:4, CPL:4, STEM:4, CD:4, CPSAA:4, CC:4, CE:4, CCEC:4 },
+  "11": { CLC:3, CPL:3, STEM:3, CD:3, CPSAA:3, CC:3, CE:3, CCEC:2 },
+  "12": { CLC:4, CPL:3, STEM:4, CD:3, CPSAA:3, CC:3, CE:4, CCEC:3 },
+};
+
 // T15 — Notas del trimestre anterior (mock T1)
 const gradesTrimAnterior: Record<string, Record<CompKey, Nivel>> = {
   "1":  { CLC:2, CPL:2, STEM:3, CD:3, CPSAA:3, CC:2, CE:3, CCEC:3 },
@@ -82,6 +98,14 @@ export default function TeacherGradeBook() {
   // T15 — Comparar con trimestre anterior
   const [compareModo, setCompareModo] = useState(false);
 
+  // T16 — Selector de trimestre
+  const [trimestre, setTrimestre] = useState<"T1" | "T2" | "T3">("T2");
+  // T1 = gradesTrimAnterior (read-only), T2 = grades (editable), T3 = gradesT3 (read-only)
+  const activeGrades = trimestre === "T1" ? gradesTrimAnterior : trimestre === "T3" ? gradesT3 : grades;
+  const prevGrades: Record<string, Record<CompKey, Nivel>> | null =
+    trimestre === "T1" ? null : trimestre === "T2" ? gradesTrimAnterior : grades;
+  const editingEnabled = trimestre === "T2";
+
   const saveEdit = useCallback(() => {
     if (!editing) return;
     const [sid, comp] = editing.split("-") as [string, CompKey];
@@ -105,21 +129,22 @@ export default function TeacherGradeBook() {
     setEditing(null);
   }, [editing, editVal]);
 
-  // Media por alumno
+  // Media por alumno (T16: usa activeGrades)
   const rowAvg = (sid: string) => {
-    const vals = COMPS.map((c) => grades[sid]?.[c] ?? 3);
+    const vals = COMPS.map((c) => activeGrades[sid]?.[c] ?? 3);
     return (vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
-  // Media por competencia
+  // Media por competencia (T16: usa activeGrades)
   const colAvg = (comp: CompKey) => {
-    const vals = classStudents.map((s) => grades[s.id]?.[comp] ?? 3);
+    const vals = classStudents.map((s) => activeGrades[s.id]?.[comp] ?? 3);
     return (vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
-  // T15: Media T1 por competencia
-  const colAvgT1 = (comp: CompKey) => {
-    const vals = classStudents.map((s) => gradesTrimAnterior[s.id]?.[comp] ?? 3);
+  // T15/T16: Media trimestre previo por competencia
+  const colAvgPrev = (comp: CompKey): number | null => {
+    if (!prevGrades) return null;
+    const vals = classStudents.map((s) => prevGrades[s.id]?.[comp] ?? 3);
     return (vals.reduce((a, b) => a + b, 0) / vals.length);
   };
 
@@ -130,7 +155,7 @@ export default function TeacherGradeBook() {
   const handleExportCSV = () => {
     setIsExporting(true);
     const fecha = new Date().toISOString().slice(0, 10);
-    const filename = `notas_lomloe_T2_1eso_${fecha}.csv`;
+    const filename = `notas_lomloe_${trimestre}_1eso_${fecha}.csv`;
     const header = ["Alumno", ...COMPS, "Media"];
     const filas = classStudents.map((s) => {
       const avg = rowAvg(s.id).toFixed(2);
@@ -146,9 +171,9 @@ export default function TeacherGradeBook() {
     setTimeout(() => setIsExporting(false), 1200);
   };
 
-  // T12: Alerta trimestral — alumnos con nivel 1 en ≥ 3 competencias
+  // T12: Alerta trimestral — alumnos con nivel 1 en ≥ 3 competencias (T16: usa activeGrades)
   const alertasTrimestral = classStudents.filter((s) =>
-    COMPS.filter((c) => (grades[s.id]?.[c] ?? 3) === 1).length >= 3
+    COMPS.filter((c) => (activeGrades[s.id]?.[c] ?? 3) === 1).length >= 3
   );
 
   return (
@@ -164,15 +189,38 @@ export default function TeacherGradeBook() {
             Competencias LOMLOE · 1º ESO · Semana 3 · Proyecto Airbnb Málaga
           </p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <button
-            onClick={handleExportCSV}
-            disabled={isExporting}
-            className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all disabled:opacity-60"
-          >
-            {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
-            {isExporting ? "Exportando..." : "Exportar notas CSV"}
-          </button>
+        <div className="flex flex-col items-end gap-2">
+          {/* T16: Selector de trimestre */}
+          <div className="flex items-center gap-1 bg-background rounded-xl border border-card-border p-0.5">
+            {(["T1", "T2", "T3"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => { setTrimestre(t); setEditing(null); setCompareModo(false); }}
+                className={`text-[11px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
+                  trimestre === t
+                    ? "bg-sidebar text-white"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportCSV}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all disabled:opacity-60"
+            >
+              {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
+              {isExporting ? "Exportando..." : `Exportar ${trimestre} CSV`}
+            </button>
+          </div>
+          {!editingEnabled && (
+            <span className="text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
+              {trimestre} — solo lectura
+            </span>
+          )}
           {exportFilename && (
             <div className="flex items-center gap-1">
               <CheckCircle2 size={9} className="text-success" />
@@ -193,22 +241,26 @@ export default function TeacherGradeBook() {
           </div>
         ))}
         <div className="ml-auto flex items-center gap-3">
-          {/* T15: Toggle comparar trimestre */}
-          <button
-            onClick={() => setCompareModo(!compareModo)}
-            className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
-              compareModo
-                ? "bg-sidebar text-white border-sidebar"
-                : "bg-card text-text-secondary border-card-border hover:border-accent-text/30"
-            }`}
-          >
-            <ArrowUp size={10} className={compareModo ? "text-accent" : "text-text-muted"} />
-            <ArrowDown size={10} className={compareModo ? "text-white/60" : "text-text-muted"} />
-            Comparar T1
-          </button>
+          {/* T15/T16: Toggle comparar trimestre anterior */}
+          {prevGrades !== null && (
+            <button
+              onClick={() => setCompareModo(!compareModo)}
+              className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                compareModo
+                  ? "bg-sidebar text-white border-sidebar"
+                  : "bg-card text-text-secondary border-card-border hover:border-accent-text/30"
+              }`}
+            >
+              <ArrowUp size={10} className={compareModo ? "text-accent" : "text-text-muted"} />
+              <ArrowDown size={10} className={compareModo ? "text-white/60" : "text-text-muted"} />
+              Comparar {trimestre === "T2" ? "T1" : "T2"}
+            </button>
+          )}
           <div className="flex items-center gap-1.5">
             <Info size={11} className="text-text-muted" />
-            <span className="text-[10px] text-text-muted">Haz clic en cualquier celda para editar</span>
+            <span className="text-[10px] text-text-muted">
+              {editingEnabled ? "Haz clic en cualquier celda para editar" : `${trimestre} — datos de solo lectura`}
+            </span>
           </div>
         </div>
       </div>
@@ -286,14 +338,14 @@ export default function TeacherGradeBook() {
                       </div>
                     </td>
 
-                    {/* Celdas editables */}
+                    {/* Celdas editables (T16: solo T2 editable) */}
                     {COMPS.map((comp) => {
                       const cellId = `${alumno.id}-${comp}`;
-                      const nivel = grades[alumno.id]?.[comp] ?? 3;
+                      const nivel = activeGrades[alumno.id]?.[comp] ?? 3;
                       const cfg = nivelConfig[nivel];
-                      const isEditing = editing === cellId;
-                      const nivelT1 = gradesTrimAnterior[alumno.id]?.[comp] ?? 3;
-                      const delta = nivel - nivelT1;
+                      const isEditing = editing === cellId && editingEnabled;
+                      const nivelPrev = prevGrades?.[alumno.id]?.[comp] ?? nivel;
+                      const delta = prevGrades ? nivel - nivelPrev : 0;
 
                       return (
                         <td key={comp} className="px-0.5 py-1.5 text-center">
@@ -314,13 +366,13 @@ export default function TeacherGradeBook() {
                           ) : (
                             <div className="flex flex-col items-center gap-0.5">
                               <button
-                                onClick={() => { setEditing(cellId); setEditVal(String(nivel)); }}
-                                title={`${cfg.label} — clic para editar`}
-                                className={`w-10 h-7 text-[11px] font-bold rounded-lg cursor-pointer transition-all hover:brightness-90 hover:scale-105 ${cfg.bg} ${cfg.text}`}
+                                onClick={() => { if (!editingEnabled) return; setEditing(cellId); setEditVal(String(nivel)); }}
+                                title={editingEnabled ? `${cfg.label} — clic para editar` : cfg.label}
+                                className={`w-10 h-7 text-[11px] font-bold rounded-lg transition-all ${cfg.bg} ${cfg.text} ${editingEnabled ? "cursor-pointer hover:brightness-90 hover:scale-105" : "cursor-default"}`}
                               >
                                 {nivel}
                               </button>
-                              {compareModo && (
+                              {compareModo && prevGrades && (
                                 <div className="flex items-center gap-0.5">
                                   {delta > 0 ? (
                                     <ArrowUp size={7} className="text-success" />
@@ -365,13 +417,13 @@ export default function TeacherGradeBook() {
                 </td>
                 {COMPS.map((comp) => {
                   const avg = colAvg(comp);
-                  const avgT1 = colAvgT1(comp);
-                  const delta = avg - avgT1;
+                  const avgPrev = colAvgPrev(comp);
+                  const delta = avgPrev !== null ? avg - avgPrev : 0;
                   return (
                     <td key={comp} className="px-0.5 py-3 text-center">
                       <div className="flex flex-col items-center gap-0.5">
                         <span className={`text-[12px] font-bold ${avgColor(avg)}`}>{avg.toFixed(1)}</span>
-                        {compareModo && (
+                        {compareModo && avgPrev !== null && (
                           <div className="flex items-center gap-0.5">
                             {delta > 0.05 ? (
                               <ArrowUp size={7} className="text-success" />
@@ -391,16 +443,18 @@ export default function TeacherGradeBook() {
                 })}
                 {(() => {
                   const totalAvg = classStudents.reduce((sum, s) => sum + rowAvg(s.id), 0) / classStudents.length;
-                  const totalAvgT1 = classStudents.reduce((sum, s) => {
-                    const vals = COMPS.map((c) => gradesTrimAnterior[s.id]?.[c] ?? 3);
-                    return sum + vals.reduce((a, b) => a + b, 0) / vals.length;
-                  }, 0) / classStudents.length;
-                  const delta = totalAvg - totalAvgT1;
+                  const totalAvgPrev = prevGrades
+                    ? classStudents.reduce((sum, s) => {
+                        const vals = COMPS.map((c) => prevGrades[s.id]?.[c] ?? 3);
+                        return sum + vals.reduce((a, b) => a + b, 0) / vals.length;
+                      }, 0) / classStudents.length
+                    : null;
+                  const delta = totalAvgPrev !== null ? totalAvg - totalAvgPrev : 0;
                   return (
                     <td className="px-3 py-3 text-center">
                       <div className="flex flex-col items-center gap-0.5">
                         <span className={`text-[13px] font-bold ${avgColor(totalAvg)}`}>{totalAvg.toFixed(1)}</span>
-                        {compareModo && (
+                        {compareModo && totalAvgPrev !== null && (
                           <div className="flex items-center gap-0.5">
                             {delta > 0.05 ? (
                               <ArrowUp size={7} className="text-success" />
