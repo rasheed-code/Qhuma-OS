@@ -132,6 +132,29 @@ const errorLog: ErrorEntry[] = [
 export default function StudentPortfolio() {
   const [activeComp, setActiveComp] = useState<CompKey | null>(null);
   const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set(["e1"]));
+  const [narrativaIA, setNarrativaIA] = useState<string | null>(null);
+  const [isGenerandoNarrativa, setIsGenerandoNarrativa] = useState(false);
+
+  const handleRegenerarNarrativa = async () => {
+    setIsGenerandoNarrativa(true);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: "Genera un párrafo narrativo de aprendizaje para el portfolio de Lucas García en el Proyecto Airbnb Málaga. Incluye su evolución en CE y STEM, el error del punto de equilibrio que superó, y cómo cambió su forma de pensar sobre los datos.",
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      setNarrativaIA(data.reply ?? null);
+    } catch {
+      setNarrativaIA("Hubo un error al conectar con la IA. Inténtalo de nuevo en unos segundos.");
+    } finally {
+      setIsGenerandoNarrativa(false);
+    }
+  };
 
   const toggleError = (id: string) => {
     setExpandedErrors(prev => {
@@ -149,10 +172,41 @@ export default function StudentPortfolio() {
         <div className="flex items-center gap-2 mb-1">
           <BookOpen size={18} className="text-accent-text" />
           <h1 className="text-[22px] font-bold text-text-primary">Mi Portfolio</h1>
+          <button
+            onClick={handleRegenerarNarrativa}
+            disabled={isGenerandoNarrativa}
+            className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw size={11} className={isGenerandoNarrativa ? "animate-spin" : ""} />
+            {isGenerandoNarrativa ? "Generando..." : "Regenerar narrativa IA"}
+          </button>
         </div>
-        <p className="text-[13px] text-text-secondary mb-6">
+        <p className="text-[13px] text-text-secondary mb-4">
           Narrativa de aprendizaje · Proyecto Airbnb Málaga · Lucas García · 1º ESO
         </p>
+
+        {/* C6: Narrativa generada por IA */}
+        {narrativaIA && (
+          <div className="bg-sidebar rounded-2xl p-5 mb-5 relative overflow-hidden">
+            <div className="absolute top-3 right-4 opacity-10">
+              <MessageSquare size={40} className="text-accent" />
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-5 h-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-accent text-[9px] font-bold">IA</span>
+              </div>
+              <span className="text-[11px] font-bold text-accent uppercase tracking-wider">Narrativa generada por Prof. Ana</span>
+              <button
+                onClick={() => setNarrativaIA(null)}
+                className="ml-auto text-white/30 hover:text-white/60 transition-colors cursor-pointer"
+              >
+                <span className="text-[10px]">✕</span>
+              </button>
+            </div>
+            <p className="text-[13px] text-white/90 leading-relaxed italic">{narrativaIA}</p>
+            <p className="text-[9px] text-white/30 mt-3 text-right">Generado por Gemini · {new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</p>
+          </div>
+        )}
 
         {/* Competency growth overview */}
         <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">

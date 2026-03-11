@@ -38,6 +38,16 @@ REGLAS DE RESPUESTA:
 8. Conoces el rendimiento de Lucas: racha de 12 días, 340 Q-Coins, evidencias 9/16 entregadas
 9. Cuando uses el Modo Socrático, termina con "¿Qué se te ocurre?" o similar para mantener el diálogo abierto`;
 
+const NARRATIVA_SYSTEM_PROMPT = `Eres la Profesora Ana Martínez, mentora de Lucas García en QHUMA. Tu única tarea es generar UN párrafo narrativo (4-5 frases, máximo 80 palabras) en primera persona (voz de Lucas) que resuma su aprendizaje en el Proyecto Airbnb Málaga.
+
+Reglas absolutas:
+- Escribe en primera persona: "Empecé sin saber...", "Descubrí que...", "La mayor sorpresa fue..."
+- Menciona 2-3 competencias LOMLOE (CE, STEM, CLC) de forma natural, sin listarlas
+- Incluye un error concreto que Lucas superó y lo que aprendió de él
+- Termina con una frase de impacto sobre su crecimiento personal o profesional
+- Tono: reflexivo, auténtico, honesto — no corporativo ni genérico
+- NO hagas preguntas. NO uses bullet points. NO uses emojis. Solo el párrafo.`;
+
 const DEEP_DIVE_ADDON = `
 
 MODO EXPLORACIÓN PROFUNDA ACTIVO:
@@ -52,7 +62,7 @@ Lucas ha demostrado interés sostenido en este tema (ha generado más de 6 inter
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history, deepDive } = await request.json();
+    const { message, history, deepDive, mode } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
@@ -76,9 +86,14 @@ export async function POST(request: NextRequest) {
       parts: [{ text: message }],
     });
 
-    const systemInstruction = deepDive === true
-      ? SYSTEM_PROMPT + DEEP_DIVE_ADDON
-      : SYSTEM_PROMPT;
+    let systemInstruction: string;
+    if (mode === "narrativa") {
+      systemInstruction = NARRATIVA_SYSTEM_PROMPT;
+    } else if (deepDive === true) {
+      systemInstruction = SYSTEM_PROMPT + DEEP_DIVE_ADDON;
+    } else {
+      systemInstruction = SYSTEM_PROMPT;
+    }
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
