@@ -1720,6 +1720,152 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
             );
           })()}
 
+          {/* ── A35: Adopción T2 en tiempo real ─────────────────────────────── */}
+          {(() => {
+            const clasesT2 = [
+              { nombre: "1º ESO A", docente: "Ana Martínez", alumnos: 12, iniciados: 10, tareaCompletada: 8, estado: "activo" as const },
+              { nombre: "1º ESO B", docente: "Carlos Rueda", alumnos: 11, iniciados: 9, tareaCompletada: 6, estado: "activo" as const },
+              { nombre: "2º ESO A", docente: "Patricia López", alumnos: 13, iniciados: 0, tareaCompletada: 0, estado: "pendiente" as const },
+              { nombre: "2º ESO B", docente: "Miguel Torres", alumnos: 12, iniciados: 0, tareaCompletada: 0, estado: "pendiente" as const },
+            ];
+            const totalAlumnos = clasesT2.reduce((s, c) => s + c.alumnos, 0);
+            const totalIniciados = clasesT2.reduce((s, c) => s + c.iniciados, 0);
+            const totalTarea1 = clasesT2.reduce((s, c) => s + c.tareaCompletada, 0);
+            const clasesActivas = clasesT2.filter((c) => c.estado === "activo").length;
+            const pctClases = Math.round((clasesActivas / clasesT2.length) * 100);
+            const pctAlumnos = Math.round((totalIniciados / totalAlumnos) * 100);
+            const pctTarea1 = Math.round((totalTarea1 / totalAlumnos) * 100);
+            // T1 day-1 baseline (historical)
+            const baselineClases = 25; // % classes active day 1 of T1
+            const baselineAlumnos = 42; // % students engaged day 1 of T1
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5 mt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Activity size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">
+                      {lbl("Adopción T2 en tiempo real", "T2 adoption in real time")}
+                    </h3>
+                  </div>
+                  <span className="text-[9px] bg-accent-light text-accent-text font-semibold px-2 py-0.5 rounded-full">
+                    {lbl("Semana 1 · Food Truck", "Week 1 · Food Truck")}
+                  </span>
+                </div>
+
+                {/* KPI strip */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {[
+                    {
+                      label: lbl("Clases activas", "Active classes"),
+                      value: `${clasesActivas}/4`,
+                      pct: pctClases,
+                      baseline: baselineClases,
+                      color: "bg-sidebar",
+                    },
+                    {
+                      label: lbl("Alumnos conectados", "Students engaged"),
+                      value: `${totalIniciados}/${totalAlumnos}`,
+                      pct: pctAlumnos,
+                      baseline: baselineAlumnos,
+                      color: "bg-accent-text",
+                    },
+                    {
+                      label: lbl("Tarea 1 entregada", "Task 1 submitted"),
+                      value: `${totalTarea1}/${totalAlumnos}`,
+                      pct: pctTarea1,
+                      baseline: null,
+                      color: "bg-success",
+                    },
+                  ].map((kpi) => (
+                    <div key={kpi.label} className="bg-background rounded-xl p-3">
+                      <p className="text-[9px] text-text-muted mb-1">{kpi.label}</p>
+                      <p className="text-[18px] font-bold text-text-primary leading-none">{kpi.value}</p>
+                      <div className="h-1 rounded-full bg-border mt-2 overflow-hidden">
+                        <div className={`h-full rounded-full ${kpi.color}`} style={{ width: `${kpi.pct}%` }} />
+                      </div>
+                      {kpi.baseline !== null && (
+                        <p className={`text-[8px] mt-1 font-semibold ${kpi.pct > kpi.baseline ? "text-success" : "text-warning"}`}>
+                          {kpi.pct > kpi.baseline
+                            ? `▲ +${kpi.pct - kpi.baseline}pp ${lbl("vs T1 día 1", "vs T1 day 1")}`
+                            : `▼ ${kpi.pct - kpi.baseline}pp ${lbl("vs T1 día 1", "vs T1 day 1")}`}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Per-class rows */}
+                <div className="space-y-2 mb-4">
+                  {clasesT2.map((cl) => {
+                    const engPct = cl.alumnos > 0 ? Math.round((cl.iniciados / cl.alumnos) * 100) : 0;
+                    const t1Pct = cl.alumnos > 0 ? Math.round((cl.tareaCompletada / cl.alumnos) * 100) : 0;
+                    const isActive = cl.estado === "activo";
+                    return (
+                      <div key={cl.nombre} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${isActive ? "bg-accent-light border border-accent/30" : "bg-background border border-card-border"}`}>
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? "bg-success" : "bg-border"}`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-semibold text-text-primary">{cl.nombre}</span>
+                            <span className="text-[9px] text-text-muted">{cl.docente}</span>
+                          </div>
+                          {isActive ? (
+                            <div className="flex gap-3 mt-1">
+                              <span className="text-[9px] text-accent-text font-semibold">{engPct}% {lbl("conectados", "engaged")}</span>
+                              <span className="text-[9px] text-success font-semibold">{t1Pct}% {lbl("tarea 1", "task 1")}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[9px] text-text-muted">{lbl("Inicio pendiente · 17 mar", "Start pending · 17 Mar")}</span>
+                          )}
+                        </div>
+                        {isActive && (
+                          <div className="w-16 h-1.5 rounded-full bg-border overflow-hidden flex-shrink-0">
+                            <div className="h-full rounded-full bg-accent-text" style={{ width: `${engPct}%` }} />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Mini bar chart — engagement vs tarea1 */}
+                <div className="bg-background rounded-xl p-3">
+                  <p className="text-[9px] text-text-muted mb-2 font-semibold uppercase tracking-wide">{lbl("Clases activas: engagement vs entrega tarea 1", "Active classes: engagement vs task 1")}</p>
+                  <div className="space-y-1.5">
+                    {clasesT2.filter((c) => c.estado === "activo").map((cl) => {
+                      const eng = Math.round((cl.iniciados / cl.alumnos) * 100);
+                      const t1 = Math.round((cl.tareaCompletada / cl.alumnos) * 100);
+                      return (
+                        <div key={cl.nombre} className="flex items-center gap-2">
+                          <span className="text-[9px] text-text-muted w-14 shrink-0">{cl.nombre}</span>
+                          <div className="flex-1 space-y-0.5">
+                            <div className="h-2 rounded-full bg-border overflow-hidden">
+                              <div className="h-full rounded-full bg-sidebar" style={{ width: `${eng}%` }} />
+                            </div>
+                            <div className="h-2 rounded-full bg-border overflow-hidden">
+                              <div className="h-full rounded-full bg-success" style={{ width: `${t1}%` }} />
+                            </div>
+                          </div>
+                          <span className="text-[8px] text-text-muted w-8 text-right">{eng}%</span>
+                        </div>
+                      );
+                    })}
+                    <div className="flex gap-3 mt-1">
+                      <span className="flex items-center gap-1 text-[8px] text-text-muted"><span className="w-2 h-2 rounded-full bg-sidebar inline-block" />{lbl("Conectados", "Engaged")}</span>
+                      <span className="flex items-center gap-1 text-[8px] text-text-muted"><span className="w-2 h-2 rounded-full bg-success inline-block" />{lbl("Tarea 1 entregada", "Task 1 submitted")}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-[9px] text-text-muted mt-3 leading-snug">
+                  {lbl(
+                    "Datos actualizados cada 15 min · Las clases activas superan en +33pp el nivel de adopción del primer día de T1.",
+                    "Data updated every 15 min · Active classes are +33pp above T1 day-1 adoption rate."
+                  )}
+                </p>
+              </div>
+            );
+          })()}
+
         {/* Panel derecho — Actividad reciente */}
         <div className="w-[260px] flex-shrink-0">
             <div className="bg-card rounded-2xl border border-card-border p-5 h-full">
