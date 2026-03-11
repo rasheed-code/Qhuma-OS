@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 28 ✅ (push: `f504be2`)
+- **Último ciclo completo**: Ciclo 29 ✅ (push: `0165371`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 29
+- **Próximo ciclo**: Ciclo 30
 
 ---
 
@@ -1245,6 +1245,66 @@
 
 ---
 
+## Sprints completados — Ciclo 29
+
+### [SPRINT-TEACHER][T28] TeacherCalendar — Vista trimestral y duplicar semana ✅
+- Commit: `f9b1a89`
+- Archivo modificado: `src/components/TeacherCalendar.tsx`
+- `VistaCalendario` type extendido a `"semana" | "mes" | "trimestre"`
+- Botón "Trimestre" añadido al toggle vista (3 opciones)
+- `semanasTrimestrales`: array 12 semanas con días lun-vie, fases (1/2/3), flags esDemoDay (S12) / esEntregaT2 (S8)
+- Grid 12 filas × 6 cols (semana label + 5 días): dots de color por tipo de evento, celda vacía si sin eventos
+- Semana actual (S1) en accent-light, Demo Day (S12) en success-light, Entrega T2 (S8) en warning-light
+- Panel "Duplicar semana": select origen + select destino, copia eventos con offset días × 7
+- 900ms delay, chips de copias realizadas en success-light con CheckCircle2
+- `getSemanaPorDia()`: mapeo día → semana (1=9-13, 2=16-20, 3=23-27, resto estimado)
+- Estados añadidos: semanaOrigen, semanaDestino, semanasDuplicadas (Set<string>), duplicando
+- Imports añadidos: Copy, RefreshCw
+
+### [SPRINT-STUDENT][S30] StudentAchievements — Retos entre compañeros ✅
+- Commit: `0424eff`
+- Archivo modificado: `src/components/StudentAchievements.tsx`
+- Interface `RetoCompanero` (id, desafiador, desafiadoNombre, competencia, descripcion, fechaLimite, estado, xpEnJuego, progreso)
+- Sección "Retos entre compañeros" insertada entre S26 misiones semanales y Stats rarity row
+- 3 retos activos: STEM RevPAR (aceptado + barra progreso 45%), CLC reseñas (pendiente), CE precios (completado)
+- "Aceptar reto": cambia estado a aceptado con progreso 0 + barra visible
+- "Lanzar reto" form: select competencia (8 LOMLOE), textarea descripción, 3 destinos anónimos (A/B/C), plazo (3/5/7d)
+- 1s delay → nuevo reto añadido al array + feedback success-light 2.5s + cierre form
+- XP en juego: 100 (3d) / 150 (5d) / 200 (7d)
+- `compColors` y `estadoCfg` Records internos al componente
+- Estados añadidos: retosActivos, retosAceptados (Set), lanzandoReto, nuevoRetoComp/Desc/Destino/Dias, retosEnviados, enviandoReto, retoEnviadoFeedback, showLanzarForm
+- Import añadido: X
+
+### [SPRINT-ADMIN][A28] AdminDashboard — Panel Licencias y facturación en Informes ✅
+- Commit: `0a6b760`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Panel "Estado de licencias y facturación" al FINAL del tab Informes (IIFE), después de Informes recientes
+- 4 KPIs: plan QHUMA Professional (bg-sidebar), renovación 1 sept 2026, seats 312/500 62% (warning si >80%), próx. factura €600
+- Barra de uso de licencias con color semáforo
+- Toggle "Ver detalle"/"Colapsar" (licenciaExpanded state)
+- Tabla módulos: 5 módulos con dot activo/inactivo, badge incluido/add-on, barra uso%, precio/año; total anual en bg-sidebar
+- Historial 4 facturas: concepto, fecha, importe, estado (Pagada=success-light / Pendiente=warning-light), descarga Blob real
+- "Solicitar ampliación": range slider 500-1000 seats, €4.80/alumno extra mostrado, 1.5s delay + éxito success-light
+- `handleSolicitarAmpliacion()` y `handleDescargarFactura(id, filename)` con Blob/createObjectURL
+- Estados añadidos: licenciaExpanded, ampliacionSolicitada, ampliacionSeats (750), solicitandoAmpliacion, descargandoFactura (string|null)
+
+### [SPRINT-CULTURE][C28] TeacherChat — Sesión de tutoría estructurada con agenda ✅
+- Commit: `0165371`
+- Archivo modificado: `src/components/TeacherChat.tsx`
+- Botón "TUTORÍA" (ClipboardList icon) en header del chat — toggle activo/inactivo, accent cuando activo
+- Agenda 4 pasos definida en `agendaTutoria` array (dentro de componente): Check-in 2min, Revisión 5min, Obstáculos 10min, Plan 3min
+- Progress indicator 4 segmentos: success (completado), accent-text (activo), gris (pendiente)
+- Timer countdown por paso con barra de progreso coloreada (urgent si <30s); botón Iniciar/Pausar con useEffect + setInterval
+- `tutoriaIntervalRef` useRef<ReturnType<typeof setInterval>> para cleanup correcto del interval
+- Pregunta sugerida por paso (clickable) → pre-llena el input del chat via `setInput()`
+- Checkbox circular por paso → marca completado + avanza al siguiente step automáticamente
+- `handleGuardarTutoria()`: 1.2s delay, crea sesión con pasos/fecha/duración/resumen, prepend a tutoriaSesiones (máx 5)
+- Panel historial de sesiones: fecha, pasos completados, duración, resumen truncado
+- Estados añadidos: tutoriaMode, tutoriaStep (0-3), tutoriaTimers (number[]), tutoriaCompletados (Set<number>), tutoriaSesiones (array), guardandoTutoria, tutoriaGuardada, tutoriaTimerRunning
+- Imports añadidos: ClipboardList, Timer, X
+
+---
+
 ## Notas técnicas (leer antes de cada ciclo)
 
 - **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 7)
@@ -1252,8 +1312,8 @@
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
 - **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection" | "metrics" (metrics añadido en Ciclo 9)
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". T25 añade PlanAccion interface + planAlumnoId/planAcciones/generandoPlan/planDescargado/accionesEstado states + handleGenerarPlan()/handleDescargarPlan()/handleToggleAccionEstado(). Panel "Plan de acción individual" en vista expandida antes de las barras de competencias. Leer antes de editar en ciclos futuros.
-- **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. S26 añade misionesSemanales (array dentro del componente, 4 misiones LOMLOE), misionesProgreso Record/completandoPaso/pasoCompletado states. Sección "Misiones de esta semana" insertada antes de Stats rarity row. Imports añadidos: Clock, ChevronRight. Leer antes de editar.
-- **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
+- **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. S26 añade misionesSemanales (array dentro del componente, 4 misiones LOMLOE), misionesProgreso Record/completandoPaso/pasoCompletado states. Sección "Misiones de esta semana" insertada antes de Stats rarity row. Imports añadidos: Clock, ChevronRight. S30 añade interface RetoCompanero (id/desafiador/desafiadoNombre/competencia/descripcion/fechaLimite/estado/xpEnJuego/progreso?) definida DENTRO del componente (no en módulo). retosIniciales array de 3 retos mock. retosActivos/retosAceptados/lanzandoReto/nuevoRetoComp-Desc-Destino-Dias/retosEnviados/enviandoReto/retoEnviadoFeedback/showLanzarForm states. Sección "Retos entre compañeros" entre S26 y Stats rarity row. handleAceptarReto()/handleLanzarReto() con 1s delay. compColors y estadoCfg Records internos. Import añadido: X. Leer antes de editar.
+- **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia". A28 añade licenciaExpanded/ampliacionSolicitada/ampliacionSeats/solicitandoAmpliacion/descargandoFactura states + handleSolicitarAmpliacion() + handleDescargarFactura(id,filename). Panel "Estado de licencias y facturación" con IIFE al FINAL del tab Informes (después de Informes recientes): 4 KPIs, barra uso, toggle colapsar, tabla módulos (5), historial facturas (4), slider ampliación 500-1000 seats.
 - **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón. C18 añade ensayoPreguntaIntercalada/ensayoRespuestaIntercalada states + ensayoIntercaladasVisitadas useRef Set + useEffect detección transición sección + handleContinuarTrasIntercalada(). tipoMap: solucion→competencia, mercado→riesgo, financiero→operacional, equipo→inversión. Panel intercalado como 3ª rama del ternario ensayo. C19 añade ensayoScore/ensayoScoreFuerte/ensayoScoreMejora/ensayoScoreLoading states + useEffect sobre ensayoCompleted → fetch pitchcoach + panel score (barra 10 seg + punto fuerte + mejora). handleResetEnsayo() resetea C19 states. C20 añade ensayoTiemposPorSeccion Record<string,number> + ensayoSeccionAnteriorRef. useEffect del ensayo tick actualiza tiempos por sección en cada segundo. Panel running "Tiempo por sección": barras individuales + timer elapsed/objetivo coloreado semáforo. Post-ensayo: tabla tiempos con delta por sección. handleResetEnsayo() resetea C20. C21 añade exportandoGuion/guionExportado states + handleExportarGuion() — HTML blob con 5 secciones completas, guión C13, scores C14, resumen scores. Botón "Descargar guión" bg-accent en header del modo feedback. Badge de éxito col-span-3 con CheckCircle2. Imports añadidos: Download, RefreshCw. C26 añade mode type extendido a "write"|"feedback"|"debate" + tab navigation 3 pills en header (Preparar/Feedback/Debate) + debatePostura/debateArgumentos/debateRespuestas/debateEvaluacion/debatePuntuacion/generandoArgumentos/evaluandoDebate states + handleIniciarDebate(postura)/handleEvaluarDebate()/handleResetDebate(). Pantalla selector postura (A favor/En contra). fetch pitchcoach para generar 3 argumentos opuestos (parse líneas \d\.) y para evaluar debate (parse PUNTUACIÓN/MÁS FUERTE/MÁS DÉBIL). Panel resultado: bg-sidebar score grande + barra 10 seg + evaluación textual coloreada por tipo de línea. Import añadido: TrendingDown.
 - **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header. T18 añade expandedAlumno/comentariosTrimestral/generandoFeedback/feedbackGenerado/copiadoFeedback states. Botón expand (MessageSquare+ChevronDown/Up) en celda nombre. Fila expandida con textarea comentario + borrador IA. generarFeedbackMock() función interna. handleGenerarFeedbackIA() fetch /api/tutor-chat mode=pitchcoach. handleCopiarFeedback() clipboard. T20 añade ObjetivoMejora interface + objetivosIniciales (const módulo) + objetivos/showObjetivos/nuevoObjetivoAlumnoId/Comp/Desc/Fecha states. Panel colapsable al final. Alumnos con nivel 1: comps en riesgo como badges urgent, checkbox circular por objetivo, formulario inline añadir. T21 añade exportandoInforme/exportInformeFilename states + handleExportarInformeIndividual(alumnoId) — HTML blob con radar T1/T2/T3, tabla LOMLOE, objetivos, feedback. Botón "Informe individual" (UserCheck icon, bg-sidebar) en modal T19. Import añadido: UserCheck.
 - **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto. S20 añade ProximoPaso interface + proximosPasosMock (módulo) + proximosPasos/generandoProximosPasos/generandoPaso states + handleGenerarProximosPasos()/handleRegenerarPaso(i). Panel antes de "Crecimiento en competencias" con 3 cards accionables y botón Otro por paso. S21 cambia título sección "Historial de errores" → "Mis errores → Mis aprendizajes". Añade timeline vertical + superadosSet/confirmandoSuperacion/superacionMensaje states + handleMarcarSuperado() fetch pitchcoach. Barra progreso LOMLOE before→after en expanded. Dots timeline coloreados por superación. C22 añade qrVisible/imprimiendoTarjeta states + handleImprimirTarjeta(ev) — QR SVG 7×7 determinista (seed por id), HTML blob tarjeta con Inter + logo + descripción completa + QR embed. Botón "Ver QR" + QR inline en sección expanded de S16. Botón "Imprimir tarjeta" bg-sidebar con descarga directa. Imports añadidos: QrCode, Printer. C23 añade proyeccionVisible/loadingProyeccion/proyeccionData/proyeccionGuardada states + panel "Proyección a 12 meses" insertado entre S15 y S16. Botón "¿Qué pasaría si...?" → fetch narrativa → parse JSON 3 arrays 12 meses → fallback mock → 3 escenarios (conservador/realista/optimista) con KPIs + barras mensuales CSS. Botón "Guardar proyección" bg-sidebar → estado guardado. Import añadido: CheckCircle2. C25 añade timelineVista/exportandoTimeline/timelineExportado states + toggle "Vista narrativa"/"Línea del tiempo" antes del bloque S19. En modo timeline: cronología unificada hitos+errores+evidencias con dots posicionados, leyenda 3 tipos, botón exportar HTML blob. En modo narrativa: todo contenido anterior envuelto en `{timelineVista === "narrativa" && <>...</>}`. Imports añadidos: Trophy, Download. C27 añade badgeExpandida/exportandoBadges/badgesExportadas states + sección "Insignias de habilidad" al FINAL de la columna derecha w-64 (después de Teacher comment). 8 insignias LOMLOE con progreso: desbloqueadas (≥70%) grid 2 cols expand+Compartir; en progreso (40-69%) barra warning; bloqueadas (<40%) grid 4 cols con Lock icon absoluto opacity-40. handleExportarBadges() genera HTML blob grid 4 cols. Imports añadidos: Lock, Shield.
@@ -1267,7 +1327,8 @@
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
-- **DeepDive**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2.
+- **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
+- **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
 - **MercadoRealTime**: mercadoTendencias array definido en StudentDashboard.tsx (no en un archivo de datos separado).
 - **TeacherAnalytics**: T23 añade riesgoBase (const módulo, 12 alumnos), computeScore(), nivelRiesgo(), microAccionPorNivel Record. State contactadosSemaforo: Set<string>. Panel "Semáforo de riesgo actualizado" antes de comparativa semanal: donut SVG 3 arcos + distribución 3 KPIs + lista ordenada por score con arrowTendencia + micro-acción + botón Contactar (solo Alto). Imports añadidos: ArrowUp, ArrowDown, Minus, ShieldAlert.
 - **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real. A24 añade alertasRevisadas/alertasIgnoradas (Set), solicitandoClarificacion (string|null), clarificacionEnviada (Set) states. Panel "Integridad académica" al final del tab Inspección (después de documentos): 5 alertas mock, 3 KPIs, barra similitud, avatares duales, 3 acciones por alerta. IIFE pattern dentro del tab inspection. Estados de control para UI reactiva. A26 añade docenteExpandido (string|null) + docenteReconocido (Set<string>) + reconociendoDocente (string|null) states + handleReconocerLogro() (900ms delay). Panel "Rendimiento docente" al FINAL del tab Métricas (IIFE): 3 KPIs + tabla 6 docentes con badge rendimiento (Destacado/En progreso/Apoyo), barra IA%, stars satisfacción, Ver detalle (expande últimos 3 feedbacks + IA favorita), Trophy Reconocer botón. Import añadido: Star.
