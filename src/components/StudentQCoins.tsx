@@ -115,6 +115,8 @@ export default function StudentQCoins() {
   const [catActiva, setCatActiva] = useState<Categoria>("Todo");
   const [carrito, setCarrito] = useState<ItemMercado[]>([]);
   const [canjeConfirmado, setCanjeConfirmado] = useState(false);
+  // S31 — saldo reactivo (declarado aquí para usarlo en líneas posteriores)
+  const [saldoActual, setSaldoActual] = useState(currentStudent.qcoins);
 
   // C8 — MercadoIntegrado IA
   const [iaDismissed, setIaDismissed] = useState(false);
@@ -181,7 +183,6 @@ export default function StudentQCoins() {
   // S31 — Tienda de experiencias
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [cancelando, setCancelando] = useState<string | null>(null);
-  const [saldoActual, setSaldoActual] = useState(currentStudent.qcoins);
   const [reservandoId, setReservandoId] = useState<string | null>(null);
   const [confirmacionReserva, setConfirmacionReserva] = useState<string | null>(null);
   const [showMisReservas, setShowMisReservas] = useState(false);
