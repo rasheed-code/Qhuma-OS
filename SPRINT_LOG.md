@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 34 ✅ (push: `f289689`)
+- **Último ciclo completo**: Ciclo 35 ✅ (push: `fd5c929`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 35
+- **Próximo ciclo**: Ciclo 36
 
 ---
 
@@ -1242,6 +1242,44 @@
 - "Exportar insignias": HTML blob con grid de 8 insignias + estilos Inter, Blob/createObjectURL, filename insignias_lucas_garcia.html
 - Estados: badgeExpandida string|null, exportandoBadges, badgesExportadas
 - Imports añadidos: Lock, Shield
+
+---
+
+## Sprints completados — Ciclo 35
+
+### [SPRINT-TEACHER][T33] TeacherAnalytics — Tendencia semanal T1: evolución de 8 competencias LOMLOE ✅
+- Commit: `59ae736`
+- Archivo: `src/components/TeacherAnalytics.tsx`
+- Módulo-level: `t1CompTendencia` — 8 competencias × 4 semanas con media de clase (escala 1–4)
+- KPIs: media final T1 / mejora global (delta promedio) / competencia más mejorada con delta
+- Sparklines por competencia: 4 barras CSS (últimas 4 semanas), barra de progreso final, valor + delta color semáforo
+- Eje de semanas S1–S4 al pie. Sin estados nuevos — estático con datos mock contextuales
+
+### [SPRINT-STUDENT][S35] StudentProfile — Industrias Vivas: perfil profesional contextualizado ✅
+- Commit: `a9516ea`
+- Archivo: `src/components/StudentProfile.tsx`
+- Sección "Industrias Vivas" insertada antes de Achievements (culture.md Bloque 4)
+- 3 sectores: Turismo/Hospitalidad (activo · conexión directa con Airbnb Málaga), FinTech, Marketing Digital
+- Por sector: badge, nombre, párrafo de conexión al proyecto, 3 skills LOMLOE usadas, 3 roles con barra match %
+- Banner de tendencia: +34% crecimiento en 5 años en sectores del perfil
+- Imports añadidos: `Briefcase`, `MapPin`
+
+### [SPRINT-ADMIN][A33] AdminDashboard — Mapa de transición T1→T2 ✅
+- Commit: `e251f72`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Panel en Overview (left column, después de A31 Demo Day) — 4 clases con checklist T1 cierre
+- Ítems checklist: Evidencias T1 / Demo Day / Informe LOMLOE / T2 asignado
+- Barra de progreso + semáforo: verde=listo / amarillo=en proceso / rojo=pendiente
+- Proyecto T2 asignado y fecha de inicio visible por clase. Sin estados nuevos.
+
+### [SPRINT-CULTURE][C33] StudentPortfolio — Carta al yo del futuro (cierre T1) ✅
+- Commit: `fd5c929`
+- Archivo: `src/components/StudentPortfolio.tsx`
+- Sección al final de la columna derecha del portfolio (culture.md Bloque 3 — Narrativa propia)
+- Botón "Generar carta IA": fetch /api/tutor-chat → carta personal "Lucas hoy" → "Lucas del futuro"
+- Fallback hardcoded contextual con 4 párrafos: análisis de datos, Error Log, Demo Day, P&L Casa Limón
+- Exportación HTML: `carta_futuro_lucas_garcia_T1.html` con estilos tipográficos serif
+- Estados: `cartaGenerada string|null`, `generandoCarta boolean`, `cartaExportada boolean`
 
 ---
 
