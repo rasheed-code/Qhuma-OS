@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Trophy, Star, Flame, Zap, BarChart3, Globe, Users, BookOpen,
   TrendingUp, FileText, Shield, Target, Sparkles, Lock,
-  Award, Search, Copy, CheckCircle2, MapPin,
+  Award, Search, Copy, CheckCircle2, MapPin, Clock, ChevronRight,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -138,6 +138,74 @@ export default function StudentAchievements() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
 
+  // S26 — Misiones semanales
+  const misionesSemanales = [
+    {
+      id: "ms1",
+      cluster: "CLC+CPL",
+      titulo: lbl("Redacta la ficha bilingüe de Casa Limón", "Write the bilingual profile of Casa Limón"),
+      descripcion: lbl("Crea una descripción en español e inglés (200 palabras c/u) de tu alojamiento para el listing de Airbnb.", "Create a description in Spanish and English (200 words each) of your accommodation for the Airbnb listing."),
+      pasos: 4,
+      xpRecompensa: 180,
+      diasRestantes: 3,
+      completencias: ["CLC", "CPL"],
+      icon: BookOpen,
+    },
+    {
+      id: "ms2",
+      cluster: "STEM",
+      titulo: lbl("Calcula el margen por reserva en 3 escenarios", "Calculate margin per booking in 3 scenarios"),
+      descripcion: lbl("Construye una hoja de cálculo con escenario conservador, realista y optimista para Casa Limón. Incluye ocupación, precio medio y costes fijos.", "Build a spreadsheet with conservative, realistic and optimistic scenarios for Casa Limón."),
+      pasos: 3,
+      xpRecompensa: 200,
+      diasRestantes: 2,
+      completencias: ["STEM"],
+      icon: BarChart3,
+    },
+    {
+      id: "ms3",
+      cluster: "CD",
+      titulo: lbl("Publica el widget de reservas en tu landing", "Publish the booking widget on your landing page"),
+      descripcion: lbl("Integra el botón de reserva en la landing page de Casa Limón y conecta el formulario de contacto. Prueba que funciona desde móvil.", "Integrate the booking button on Casa Limón's landing page and connect the contact form."),
+      pasos: 3,
+      xpRecompensa: 160,
+      diasRestantes: 5,
+      completencias: ["CD"],
+      icon: Globe,
+    },
+    {
+      id: "ms4",
+      cluster: "CE+CPSAA",
+      titulo: lbl("Prepara tu pitch de 90 segundos para el Demo Day", "Prepare your 90-second pitch for Demo Day"),
+      descripcion: lbl("Ensaya y graba un pitch de 90 segundos explicando la propuesta de valor de Casa Limón. Recibe feedback de Prof. Ana antes del viernes.", "Rehearse and record a 90-second pitch explaining Casa Limón's value proposition."),
+      pasos: 5,
+      xpRecompensa: 250,
+      diasRestantes: 1,
+      completencias: ["CE", "CPSAA"],
+      icon: Sparkles,
+    },
+  ];
+
+  const [misionesProgreso, setMisionesProgreso] = useState<Record<string, number>>({
+    ms1: 2, ms2: 1, ms3: 0, ms4: 3,
+  });
+  const [completandoPaso, setCompletandoPaso] = useState<string | null>(null);
+  const [pasoCompletado, setPasoCompletado] = useState<Set<string>>(new Set());
+
+  const handleCompletarPaso = (misionId: string, totalPasos: number) => {
+    if (completandoPaso) return;
+    const current = misionesProgreso[misionId] ?? 0;
+    if (current >= totalPasos) return;
+    setCompletandoPaso(misionId);
+    setTimeout(() => {
+      setMisionesProgreso((prev) => ({ ...prev, [misionId]: current + 1 }));
+      if (current + 1 >= totalPasos) {
+        setPasoCompletado((prev) => new Set(prev).add(misionId));
+      }
+      setCompletandoPaso(null);
+    }, 700);
+  };
+
   const [filter, setFilter] = useState<FilterRarity>("todas");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
@@ -175,6 +243,97 @@ export default function StudentAchievements() {
               <span className="font-medium text-accent-text">{unlocked.length}</span> {lbl("logros conseguidos ·", "achievements earned ·")}{" "}
               <span className="font-medium text-text-primary">{totalXP} XP</span> {lbl("acumulados", "accumulated")}
             </p>
+          </div>
+        </div>
+
+        {/* S26 — Misiones de esta semana */}
+        <div className="bg-card border border-card-border rounded-2xl p-4 mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Target size={14} className="text-accent-text" />
+            <h2 className="text-[13px] font-semibold text-text-primary">{lbl("Misiones de esta semana", "This week's missions")}</h2>
+            <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+              Airbnb Málaga
+            </span>
+          </div>
+          <div className="space-y-3">
+            {misionesSemanales.map((mision) => {
+              const progreso = misionesProgreso[mision.id] ?? 0;
+              const isCompletada = pasoCompletado.has(mision.id) || progreso >= mision.pasos;
+              const pct = Math.min(100, Math.round((progreso / mision.pasos) * 100));
+              const Icon = mision.icon;
+              return (
+                <div
+                  key={mision.id}
+                  className={`rounded-xl p-3.5 border transition-all ${
+                    isCompletada ? "bg-success-light border-success/20" : "bg-background border-card-border"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isCompletada ? "bg-success text-white" : "bg-sidebar"}`}>
+                      {isCompletada ? <CheckCircle2 size={16} className="text-white" /> : <Icon size={14} className="text-accent" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-0.5">
+                        <p className={`text-[12px] font-semibold leading-snug ${isCompletada ? "text-success" : "text-text-primary"}`}>
+                          {mision.titulo}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {/* Días restantes */}
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
+                            mision.diasRestantes <= 1 ? "bg-urgent-light text-urgent" :
+                            mision.diasRestantes <= 3 ? "bg-warning-light text-warning" :
+                            "bg-background text-text-muted"
+                          }`}>
+                            <Clock size={7} />
+                            {mision.diasRestantes === 1 ? lbl("¡Hoy!", "Today!") : `${mision.diasRestantes}d`}
+                          </span>
+                          {/* XP */}
+                          <span className="text-[8px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">
+                            +{mision.xpRecompensa} XP
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-text-muted leading-relaxed mb-2">{mision.descripcion}</p>
+                      {/* Competencias */}
+                      <div className="flex gap-1 mb-2">
+                        {mision.completencias.map((comp) => (
+                          <span key={comp} className="text-[8px] font-bold bg-sidebar text-accent px-1.5 py-0.5 rounded-full">{comp}</span>
+                        ))}
+                      </div>
+                      {/* Barra de progreso */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex-1 h-1.5 bg-card rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${isCompletada ? "bg-success" : "bg-accent-text"}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] font-bold text-text-muted flex-shrink-0">{progreso}/{mision.pasos}</span>
+                      </div>
+                      {/* Botón completar paso */}
+                      {isCompletada ? (
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 size={12} className="text-success" />
+                          <span className="text-[11px] font-semibold text-success">{lbl("¡Misión completada! +Q-Coins", "Mission complete! +Q-Coins")}</span>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleCompletarPaso(mision.id, mision.pasos)}
+                          disabled={!!completandoPaso}
+                          className="flex items-center gap-1.5 text-[10px] font-semibold bg-sidebar text-white px-3 py-1.5 rounded-xl hover:bg-accent-dark transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {completandoPaso === mision.id ? (
+                            <><TrendingUp size={10} className="animate-bounce" />{lbl("Completando paso...", "Completing step...")}</>
+                          ) : (
+                            <><ChevronRight size={10} />{lbl("Completar paso", "Complete step")}</>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
