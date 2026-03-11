@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 31 ✅ (push: `1ed5afb`)
+- **Último ciclo completo**: Ciclo 32 ✅ (push: `5ec906e`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 32
+- **Próximo ciclo**: Ciclo 33
 
 ---
 
@@ -1242,6 +1242,48 @@
 - "Exportar insignias": HTML blob con grid de 8 insignias + estilos Inter, Blob/createObjectURL, filename insignias_lucas_garcia.html
 - Estados: badgeExpandida string|null, exportandoBadges, badgesExportadas
 - Imports añadidos: Lock, Shield
+
+---
+
+## Sprints completados — Ciclo 32
+
+### [SPRINT-TEACHER][T30] TeacherAnalytics — Panel "Correlación esfuerzo × resultado" ✅
+- Commit: `46ade05`
+- Archivo: `src/components/TeacherAnalytics.tsx`
+- CSS scatter plot con 12 alumnos posicionados por effort (44–89%) y result (38–83%) con datos seeded determinísticos
+- 4 cuadrantes: Estrellas (success), Potencial (accent), Apoyo (warning), Prioritario (urgent)
+- Hover tooltip con nombre + valores. Summary pills 4 columnas. Panel de recomendaciones por cuadrante.
+- Nuevos imports: `Target`, `Lightbulb`
+
+### [SPRINT-STUDENT][S32] StudentDashboard — Widget "Preparación Demo Day" ✅
+- Commit: `869a161`
+- Archivo: `src/components/StudentDashboard.tsx`
+- 6 ítems checklist con badges LOMLOE: pitch(CLC), slides(CD), financiero(STEM), ensayo(CE), feedback(CPSAA), equipo(CC)
+- SVG ring (r=22, circ≈138) con color dinámico al 80%/50%. Countdown 2 días → Demo Day viernes 13 mar
+- Toggle por ítem (Set<string>), tachado al marcar. Footer motivacional según % completado
+- Estado inicial: pitch + financiero ya marcados
+
+### [SPRINT-ADMIN][A30] AdminDashboard — Panel seguimiento proyectos activos ✅
+- Commit: `eddea15`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Panel en Overview tab columna izquierda (después del IIFE Q-Coins A22)
+- 12 alumnos con barra de progreso, conteo evidencias, badge status (En curso/Entregado/Retrasado)
+- Summary pills: media clase, nº entregados, nº retrasados
+- Nuevo import: `FolderOpen`
+
+### [SPRINT-CULTURE][C30] StudentProfile — Panel "Diario socrático" (Bloque 1) ✅
+- Commit: `735285b`
+- Archivo: `src/components/StudentProfile.tsx`
+- 3 entradas anteriores con pregunta socrática + respuesta del alumno + pregunta de seguimiento IA
+- Prompt diario rotatorio (3 prompts, rotación por día del mes)
+- Textarea para reflexión de hoy + botón guardar + respuesta IA inline al guardar
+- Nuevo import: `BookOpen`. Nuevo estado: `diarioHoy`, `diarioGuardado`
+
+### [SPRINT-FIX][FX1] Language selector Student/Teacher — alineado con ParentSettings ✅
+- Commit: `5ec906e`
+- Archivos: `src/components/StudentSettings.tsx`, `src/components/TeacherSettings.tsx`
+- Botones con flags 🇪🇸/🇬🇧, Check icon en activo, accent-light active state — idéntico a ParentSettings
+- Solo ES/EN, sin Catalán. Cache .next eliminado para forzar recompilación limpia.
 
 ---
 
