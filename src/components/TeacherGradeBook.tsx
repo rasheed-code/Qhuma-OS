@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3 } from "lucide-react";
+import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -43,6 +43,14 @@ const initialGrades: Record<string, Record<CompKey, Nivel>> = {
   "12": { CLC:3, CPL:3, STEM:4, CD:3, CPSAA:3, CC:3, CE:4, CCEC:3 }, // Alba 75%
 };
 
+interface HistorialCambio {
+  alumnoNombre: string;
+  competencia: CompKey;
+  nivelAnterior: Nivel;
+  nivelNuevo: Nivel;
+  timestamp: string;
+}
+
 export default function TeacherGradeBook() {
   const [grades, setGrades] = useState<Record<string, Record<CompKey, Nivel>>>(initialGrades);
   const [editing, setEditing] = useState<string | null>(null); // "studentId-comp"
@@ -51,12 +59,29 @@ export default function TeacherGradeBook() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportFilename, setExportFilename] = useState<string | null>(null);
 
+  // T14 — Historial de cambios
+  const [historialCambios, setHistorialCambios] = useState<HistorialCambio[]>([]);
+  const [showHistorial, setShowHistorial] = useState(false);
+
   const saveEdit = useCallback(() => {
     if (!editing) return;
     const [sid, comp] = editing.split("-") as [string, CompKey];
     const val = parseInt(editVal) as Nivel;
     if (val >= 1 && val <= 4) {
-      setGrades((prev) => ({ ...prev, [sid]: { ...prev[sid], [comp]: val } }));
+      setGrades((prev) => {
+        const nivelAnterior = (prev[sid]?.[comp] ?? 3) as Nivel;
+        if (nivelAnterior !== val) {
+          const alumno = classStudents.find((s) => s.id === sid);
+          if (alumno) {
+            const hora = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+            setHistorialCambios((h) => [
+              { alumnoNombre: alumno.name.split(" ")[0], competencia: comp, nivelAnterior, nivelNuevo: val, timestamp: `Hoy · ${hora}` },
+              ...h,
+            ].slice(0, 20));
+          }
+        }
+        return { ...prev, [sid]: { ...prev[sid], [comp]: val } };
+      });
     }
     setEditing(null);
   }, [editing, editVal]);
@@ -300,6 +325,64 @@ export default function TeacherGradeBook() {
           </table>
         </div>
       </div>
+
+      {/* T14: Historial de cambios */}
+      {historialCambios.length > 0 && (
+        <div className="mt-5 bg-card rounded-2xl border border-card-border overflow-hidden">
+          <button
+            onClick={() => setShowHistorial(!showHistorial)}
+            className="w-full flex items-center gap-2 px-5 py-3 hover:bg-background transition-colors cursor-pointer"
+          >
+            <History size={14} className="text-text-secondary flex-shrink-0" />
+            <span className="text-[12px] font-semibold text-text-primary flex-1 text-left">Últimos cambios</span>
+            <span className="text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full mr-1">
+              {Math.min(historialCambios.length, 5)} de {historialCambios.length}
+            </span>
+            {showHistorial
+              ? <ChevronUp size={13} className="text-text-muted flex-shrink-0" />
+              : <ChevronDown size={13} className="text-text-muted flex-shrink-0" />
+            }
+          </button>
+          {showHistorial && (
+            <div className="border-t border-card-border">
+              {historialCambios.slice(0, 5).map((cambio, i) => {
+                const subio = cambio.nivelNuevo > cambio.nivelAnterior;
+                return (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3 px-5 py-2.5 border-b border-card-border/50 last:border-0 ${i % 2 === 0 ? "" : "bg-background/40"}`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${subio ? "bg-success-light" : "bg-urgent-light"}`}>
+                      {subio
+                        ? <ArrowUp size={11} className="text-success" />
+                        : <ArrowDown size={11} className="text-urgent" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[11px] font-semibold text-text-primary">{cambio.alumnoNombre}</span>
+                      <span className="text-[11px] text-text-muted mx-1.5">·</span>
+                      <span className="text-[11px] font-bold text-accent-text">{cambio.competencia}</span>
+                      <span className="text-[11px] text-text-muted ml-1.5">
+                        — {nivelConfig[cambio.nivelAnterior].label} → {nivelConfig[cambio.nivelNuevo].label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className={`w-5 h-5 rounded-md ${nivelConfig[cambio.nivelAnterior].bg} flex items-center justify-center`}>
+                        <span className={`text-[8px] font-bold ${nivelConfig[cambio.nivelAnterior].text}`}>{cambio.nivelAnterior}</span>
+                      </div>
+                      <ArrowRight size={10} className="text-text-muted" />
+                      <div className={`w-5 h-5 rounded-md ${nivelConfig[cambio.nivelNuevo].bg} flex items-center justify-center`}>
+                        <span className={`text-[8px] font-bold ${nivelConfig[cambio.nivelNuevo].text}`}>{cambio.nivelNuevo}</span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-text-muted flex-shrink-0 w-16 text-right">{cambio.timestamp}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* T13: Distribución por competencia */}
       <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
