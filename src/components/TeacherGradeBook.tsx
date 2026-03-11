@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3 } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -298,6 +298,69 @@ export default function TeacherGradeBook() {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* T13: Distribución por competencia */}
+      <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <BarChart3 size={14} className="text-accent-text" />
+          <span className="text-[13px] font-semibold text-text-primary">Distribución por competencia</span>
+          <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+            {classStudents.length} alumnos · niveles 1–4
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {COMPS.map((comp) => {
+            const counts = ([1, 2, 3, 4] as Nivel[]).map((n) =>
+              classStudents.filter((s) => (grades[s.id]?.[comp] ?? 3) === n).length
+            );
+            const total = classStudents.length;
+            const avg = colAvg(comp);
+            return (
+              <div key={comp} className="flex items-center gap-3">
+                <div className="w-14 flex-shrink-0">
+                  <span className="text-[10px] font-bold text-text-secondary">{comp}</span>
+                  <span className={`block text-[9px] font-semibold ${avgColor(avg)}`}>{avg.toFixed(1)} media</span>
+                </div>
+                <div className="flex-1 flex h-6 rounded-lg overflow-hidden gap-px bg-background">
+                  {([1, 2, 3, 4] as Nivel[]).map((n, ni) => {
+                    const pct = (counts[ni] / total) * 100;
+                    const cfg = nivelConfig[n];
+                    if (pct === 0) return null;
+                    return (
+                      <div
+                        key={n}
+                        className={`${cfg.bar} flex items-center justify-center transition-all`}
+                        style={{ width: `${pct}%` }}
+                        title={`Nivel ${n} (${cfg.label}): ${counts[ni]} alumno${counts[ni] !== 1 ? "s" : ""}`}
+                      >
+                        {pct > 12 && (
+                          <span className="text-white text-[8px] font-bold">{counts[ni]}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0 w-24">
+                  {([1, 2, 3, 4] as Nivel[]).map((n, ni) => counts[ni] > 0 && (
+                    <span key={n} className={`text-[9px] font-bold ${nivelConfig[n].text} tabular-nums`} title={nivelConfig[n].label}>
+                      {counts[ni]}×{n}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Leyenda */}
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-card-border">
+          {([1, 2, 3, 4] as Nivel[]).map((n) => (
+            <div key={n} className="flex items-center gap-1.5">
+              <div className={`w-3 h-3 rounded-sm ${nivelConfig[n].bar}`} />
+              <span className="text-[9px] text-text-muted">{n} — {nivelConfig[n].label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
