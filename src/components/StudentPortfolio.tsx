@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -211,6 +211,27 @@ export default function StudentPortfolio() {
   const [narrativaIA, setNarrativaIA] = useState<string | null>(null);
   const [isGenerandoNarrativa, setIsGenerandoNarrativa] = useState(false);
 
+  // S19 — Vista pública compartible
+  const [showVistaPublica, setShowVistaPublica] = useState(false);
+  const [vistaPublicaURL, setVistaPublicaURL] = useState<string | null>(null);
+  const [urlCopiada, setUrlCopiada] = useState(false);
+  const [mostrarDatosPersonales, setMostrarDatosPersonales] = useState(true);
+
+  const handleCompartirPortfolio = () => {
+    if (!vistaPublicaURL) {
+      const token = Math.random().toString(36).slice(2, 10);
+      setVistaPublicaURL(`https://qhuma.es/portfolio/lucas-garcia-${token}`);
+    }
+    setShowVistaPublica(true);
+  };
+
+  const handleCopiarURL = async () => {
+    if (!vistaPublicaURL) return;
+    try { await navigator.clipboard.writeText(vistaPublicaURL); } catch { /* noop */ }
+    setUrlCopiada(true);
+    setTimeout(() => setUrlCopiada(false), 2000);
+  };
+
   // S18 — Reflexión semanal IA
   const [reflexionBullets, setReflexionBullets] = useState<string[] | null>(null);
   const [isGenerandoReflexion, setIsGenerandoReflexion] = useState(false);
@@ -321,18 +342,150 @@ export default function StudentPortfolio() {
         <div className="flex items-center gap-2 mb-1">
           <BookOpen size={18} className="text-accent-text" />
           <h1 className="text-[22px] font-bold text-text-primary">Mi Portfolio</h1>
-          <button
-            onClick={handleRegenerarNarrativa}
-            disabled={isGenerandoNarrativa}
-            className="ml-auto flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <RefreshCw size={11} className={isGenerandoNarrativa ? "animate-spin" : ""} />
-            {isGenerandoNarrativa ? "Generando..." : "Regenerar narrativa IA"}
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handleCompartirPortfolio}
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-sidebar bg-accent border border-accent/60 px-3 py-1.5 rounded-full hover:brightness-110 transition-colors cursor-pointer"
+            >
+              <Share2 size={11} />
+              Compartir portfolio
+            </button>
+            <button
+              onClick={handleRegenerarNarrativa}
+              disabled={isGenerandoNarrativa}
+              className="flex items-center gap-1.5 text-[11px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={11} className={isGenerandoNarrativa ? "animate-spin" : ""} />
+              {isGenerandoNarrativa ? "Generando..." : "Regenerar narrativa IA"}
+            </button>
+          </div>
         </div>
         <p className="text-[13px] text-text-secondary mb-4">
           Narrativa de aprendizaje · Proyecto Airbnb Málaga · Lucas García · 1º ESO
         </p>
+
+        {/* S19: Vista pública compartible */}
+        {showVistaPublica && (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            {/* Header del panel */}
+            <div className="flex items-center gap-2 mb-4">
+              <Share2 size={14} className="text-accent-text" />
+              <span className="text-[13px] font-semibold text-text-primary">Vista pública del portfolio</span>
+              <button
+                onClick={() => setMostrarDatosPersonales(!mostrarDatosPersonales)}
+                className={`ml-auto flex items-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-xl border cursor-pointer transition-all ${
+                  mostrarDatosPersonales
+                    ? "bg-sidebar text-white border-sidebar"
+                    : "bg-background text-text-secondary border-card-border hover:border-accent-text/30"
+                }`}
+              >
+                {mostrarDatosPersonales ? <Eye size={10} /> : <EyeOff size={10} />}
+                {mostrarDatosPersonales ? "Datos visibles" : "Datos ocultos"}
+              </button>
+              <button
+                onClick={() => setShowVistaPublica(false)}
+                className="text-text-muted hover:text-text-primary cursor-pointer text-[10px] px-2"
+              >✕</button>
+            </div>
+
+            {/* URL compartible */}
+            <div className="flex items-center gap-2 bg-background rounded-xl border border-card-border px-3 py-2.5 mb-4">
+              <ExternalLink size={12} className="text-accent-text flex-shrink-0" />
+              <span className="flex-1 text-[11px] text-text-secondary font-mono truncate">{vistaPublicaURL}</span>
+              <button
+                onClick={handleCopiarURL}
+                className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-all flex-shrink-0 ${
+                  urlCopiada ? "bg-success-light text-success" : "bg-sidebar text-white hover:brightness-110"
+                }`}
+              >
+                <Copy size={10} />
+                {urlCopiada ? "¡Copiada!" : "Copiar URL"}
+              </button>
+            </div>
+
+            {/* Previsualización */}
+            <div className="bg-background rounded-xl p-4 border border-card-border">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-sidebar text-white font-bold text-[14px] flex items-center justify-center flex-shrink-0">
+                  LG
+                </div>
+                <div>
+                  <p className="text-[14px] font-bold text-text-primary">
+                    {mostrarDatosPersonales ? "Lucas García" : "Alumno QHUMA"}
+                  </p>
+                  <p className="text-[11px] text-text-muted">1º ESO · Proyecto Airbnb Málaga · QHUMA Málaga</p>
+                </div>
+                <div className="ml-auto flex items-center gap-1.5 bg-success-light px-3 py-1.5 rounded-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-success" />
+                  <span className="text-[10px] font-bold text-success">Portfolio activo</span>
+                </div>
+              </div>
+
+              {/* Top competencias */}
+              <div className="mb-4">
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Competencias LOMLOE</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.entries(compProgress) as [CompKey, { before: number; after: number }][])
+                    .sort(([, a], [, b]) => b.after - a.after)
+                    .slice(0, 4)
+                    .map(([key, prog]) => (
+                      <div key={key} className="bg-card rounded-xl border border-card-border px-3 py-2">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-bold text-text-secondary">{key}</span>
+                          <span className="text-[10px] font-bold text-success">
+                            {mostrarDatosPersonales ? `${prog.after}%` : "●●●"}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-background rounded-full overflow-hidden">
+                          <div className="h-full bg-success rounded-full" style={{ width: mostrarDatosPersonales ? `${prog.after}%` : "0%" }} />
+                        </div>
+                        <p className="text-[9px] text-text-muted mt-0.5 truncate">{compFull[key]}</p>
+                      </div>
+                    ))
+                  }
+                </div>
+              </div>
+
+              {/* Hitos completados */}
+              <div className="mb-4">
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Hitos del proyecto</p>
+                <div className="space-y-1.5">
+                  {timelineHitos.filter((h) => h.completado).slice(-3).map((h, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-card rounded-xl border border-card-border px-3 py-2">
+                      <div className="w-4 h-4 rounded-full bg-success flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-[8px] font-bold">✓</span>
+                      </div>
+                      <span className="text-[11px] text-text-primary flex-1 truncate">{h.titulo}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(h.competencia)}`}>{h.competencia}</span>
+                      <span className="text-[9px] font-bold text-success flex-shrink-0">+{h.xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Datos de impacto */}
+              <div>
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Impacto real del proyecto</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Ocupación media", valor: mostrarDatosPersonales ? "72%" : "●●", bg: "bg-success-light text-success" },
+                    { label: "Ingresos proy.", valor: mostrarDatosPersonales ? "1.850€/mes" : "●●●", bg: "bg-accent-light text-accent-text" },
+                    { label: "Ranking zonal", valor: mostrarDatosPersonales ? "Top 8%" : "●●", bg: "bg-sidebar text-accent" },
+                  ].map((item) => (
+                    <div key={item.label} className={`${item.bg} rounded-xl px-3 py-2 text-center`}>
+                      <p className="text-[13px] font-bold">{item.valor}</p>
+                      <p className="text-[9px] opacity-70">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[9px] text-text-muted mt-3 text-center">
+              Esta URL es pública · cualquier persona con el enlace puede ver el portfolio · los datos marcados como ocultos no aparecerán
+            </p>
+          </div>
+        )}
 
         {/* C6: Narrativa generada por IA */}
         {narrativaIA && (
