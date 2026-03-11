@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertTriangle, TrendingUp, Activity, Zap,
   Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
-  Vote, Eye,
+  Vote, Eye, Save, TrendingDown, Minus, Calendar,
 } from "lucide-react";
 import { AdminView } from "@/types";
 
@@ -64,6 +64,41 @@ const usoIA = [
   { feature: "Tutor chat (MentorIA)", llamadas: 1847, coste: 18.47 },
   { feature: "Generador de proyectos", llamadas: 234, coste: 4.68 },
   { feature: "Informes LOMLOE", llamadas: 89, coste: 2.67 },
+];
+
+const heatmapAlumnos = [
+  { nombre: "Lucas García",    rol: "Alumno",  semana: [12, 8, 15, 6, 10] },
+  { nombre: "Sofía Martín",    rol: "Alumno",  semana: [14, 12, 9, 11, 8] },
+  { nombre: "Daniel Torres",   rol: "Alumno",  semana: [11, 9, 13, 7, 12] },
+  { nombre: "Carmen Vega",     rol: "Alumno",  semana: [8, 7, 10, 9, 6] },
+  { nombre: "Lucía Fernández", rol: "Alumno",  semana: [5, 8, 7, 9, 11] },
+  { nombre: "Pablo Ruiz",      rol: "Alumno",  semana: [0, 2, 0, 1, 0] },
+  { nombre: "Tomás Herrera",   rol: "Alumno",  semana: [1, 0, 2, 0, 1] },
+  { nombre: "Ana Martínez",    rol: "Docente", semana: [4, 6, 5, 8, 3] },
+  { nombre: "Carlos Pérez",    rol: "Docente", semana: [3, 5, 4, 6, 2] },
+  { nombre: "Isabel Mora",     rol: "Docente", semana: [5, 4, 6, 5, 4] },
+  { nombre: "María García",    rol: "Familia", semana: [2, 1, 3, 2, 1] },
+  { nombre: "Roberto Núñez",   rol: "Admin",   semana: [6, 8, 7, 9, 5] },
+];
+
+const comparativaSemanal = [
+  { semana: "Sem 1 Feb", llamadas: 487, coste: 6.12 },
+  { semana: "Sem 2 Feb", llamadas: 612, coste: 7.68 },
+  { semana: "Sem 3 Feb", llamadas: 534, coste: 6.71 },
+  { semana: "Sem 1 Mar (actual)", llamadas: 537, coste: 6.74 },
+];
+
+const escalasLOMLOE = [
+  { nivel: 1, etiqueta: "Inicio",               desc: "El alumno necesita apoyo para lograr los aprendizajes esperados",               bg: "bg-urgent-light",  text: "text-urgent" },
+  { nivel: 2, etiqueta: "En proceso",            desc: "El alumno avanza hacia los aprendizajes esperados con apoyo",                  bg: "bg-warning-light", text: "text-warning" },
+  { nivel: 3, etiqueta: "Logro esperado",        desc: "El alumno alcanza los aprendizajes esperados de forma autónoma",               bg: "bg-accent-light",  text: "text-accent-text" },
+  { nivel: 4, etiqueta: "Logro sobresaliente",   desc: "El alumno supera los aprendizajes esperados y los aplica en nuevos contextos", bg: "bg-success-light", text: "text-success" },
+];
+
+const trimestres = [
+  { nombre: "1er Trimestre", inicio: "9 sep 2025", fin: "19 dic 2025", semanas: 15, estado: "completado" as const },
+  { nombre: "2º Trimestre",  inicio: "12 ene 2026", fin: "27 mar 2026", semanas: 11, estado: "activo"     as const },
+  { nombre: "3er Trimestre", inicio: "22 abr 2026", fin: "22 jun 2026", semanas: 9,  estado: "próximo"    as const },
 ];
 
 const competenciasLOMLOE = [
@@ -128,6 +163,16 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [userFilterEstado, setUserFilterEstado] = useState("Todos");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newUser, setNewUser] = useState({ nombre: "", email: "", rol: "Alumno", curso: "" });
+
+  // A4 — School settings state
+  const [compActivas, setCompActivas] = useState<Record<string, boolean>>(
+    Object.fromEntries(competenciasLOMLOE.map((c) => [c.key, c.activa]))
+  );
+  const [schoolForm, setSchoolForm] = useState({
+    nombre: "QHUMA Málaga", director: "Roberto Sánchez",
+    email: "direccion@qhuma-malaga.es", nivel: "Primaria + ESO",
+    direccion: "Calle Larios 12, 29005 Málaga",
+  });
 
   return (
     <div>
@@ -563,87 +608,272 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
       {/* ─── TAB: IA ─── */}
       {activeView === "ai" && (
         <div className="space-y-5">
-          <div className="grid grid-cols-3 gap-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-4 gap-4">
             {[
-              { label: "Llamadas API este mes", valor: "2.170", sub: "Gemini 2.0 Flash", bg: "bg-accent-light", text: "text-accent-text" },
-              { label: "Coste estimado", valor: "€25,82", sub: "Dentro del presupuesto", bg: "bg-success-light", text: "text-success" },
-              { label: "Tiempo de respuesta", valor: "1,2s", sub: "Objetivo <2s ✓", bg: "bg-background", text: "text-text-primary" },
+              { label: "Llamadas API este mes",    valor: "2.170",   sub: "Gemini 2.0 Flash",      bg: "bg-accent-light",  text: "text-accent-text" },
+              { label: "Coste estimado total",     valor: "€25,82",  sub: "Presupuesto: €40/mes",  bg: "bg-success-light", text: "text-success" },
+              { label: "Tiempo medio respuesta",   valor: "1,2s",    sub: "Objetivo <2s ✓",        bg: "bg-background",    text: "text-text-primary" },
+              { label: "Tasa socrática",           valor: "74%",     sub: "Preguntas de retorno",  bg: "bg-warning-light", text: "text-warning" },
             ].map((s) => (
-              <div key={s.label} className={`rounded-2xl p-5 border border-card-border ${s.bg}`}>
-                <p className="text-[11px] text-text-muted mb-1">{s.label}</p>
-                <span className={`text-[26px] font-bold ${s.text} block`}>{s.valor}</span>
-                <span className="text-[10px] text-text-muted">{s.sub}</span>
+              <div key={s.label} className={`rounded-2xl p-4 border border-card-border ${s.bg}`}>
+                <p className="text-[10px] text-text-muted mb-1 leading-tight">{s.label}</p>
+                <span className={`text-[24px] font-bold ${s.text} block leading-none`}>{s.valor}</span>
+                <span className="text-[10px] text-text-muted mt-1 block">{s.sub}</span>
               </div>
             ))}
           </div>
-          <div className="bg-card rounded-2xl border border-card-border p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Bot size={14} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Uso por funcionalidad</h3>
-            </div>
-            <div className="space-y-4">
-              {usoIA.map((u) => (
-                <div key={u.feature}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[12px] font-medium text-text-secondary">{u.feature}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[11px] text-text-muted">{u.llamadas} llamadas</span>
-                      <span className="text-[11px] font-bold text-accent-text">€{u.coste.toFixed(2)}</span>
+
+          <div className="flex gap-5">
+            {/* Uso por funcionalidad */}
+            <div className="flex-1 bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Bot size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Uso por funcionalidad</h3>
+              </div>
+              <div className="space-y-4">
+                {usoIA.map((u) => (
+                  <div key={u.feature}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[12px] font-medium text-text-secondary">{u.feature}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-text-muted">{u.llamadas.toLocaleString()} llamadas</span>
+                        <span className="text-[11px] font-bold text-accent-text">€{u.coste.toFixed(2)}</span>
+                      </div>
                     </div>
+                    <div className="h-2.5 bg-background rounded-full overflow-hidden">
+                      <div className="h-full bg-accent-text rounded-full transition-all" style={{ width: `${(u.llamadas / 2170) * 100}%` }} />
+                    </div>
+                    <span className="text-[9px] text-text-muted block mt-1">
+                      {Math.round((u.llamadas / 2170) * 100)}% del total
+                    </span>
                   </div>
-                  <div className="h-2.5 bg-background rounded-full overflow-hidden">
-                    <div className="h-full bg-accent-text rounded-full" style={{ width: `${(u.llamadas / 2170) * 100}%` }} />
-                  </div>
+                ))}
+              </div>
+
+              {/* Comparativa semanal */}
+              <div className="mt-5 pt-4 border-t border-card-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Activity size={12} className="text-text-primary" />
+                  <span className="text-[12px] font-semibold text-text-primary">Comparativa semanal</span>
                 </div>
-              ))}
+                <div className="flex items-end gap-2 h-[80px]">
+                  {comparativaSemanal.map((s) => {
+                    const maxLlamadas = Math.max(...comparativaSemanal.map((x) => x.llamadas));
+                    const pct = Math.round((s.llamadas / maxLlamadas) * 100);
+                    const isActual = s.semana.includes("actual");
+                    return (
+                      <div key={s.semana} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[9px] text-text-muted">{s.llamadas}</span>
+                        <div className="w-full flex items-end" style={{ height: "52px" }}>
+                          <div
+                            className={`w-full rounded-t-lg transition-all ${isActual ? "bg-accent-text" : "bg-accent-light"}`}
+                            style={{ height: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[8px] text-text-muted text-center leading-tight">{s.semana.replace(" (actual)", "")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Heatmap de uso por alumno */}
+            <div className="w-[320px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Users size={14} className="text-text-primary" />
+                <h3 className="text-[13px] font-semibold text-text-primary">Actividad por usuario</h3>
+                <span className="ml-auto text-[9px] text-text-muted">Lun–Vie esta semana</span>
+              </div>
+              {/* Cabecera días */}
+              <div className="flex gap-1 mb-1 pl-[88px]">
+                {["L", "M", "X", "J", "V"].map((d) => (
+                  <div key={d} className="flex-1 text-center text-[9px] text-text-muted font-bold">{d}</div>
+                ))}
+              </div>
+              <div className="space-y-0.5">
+                {heatmapAlumnos.map((a) => {
+                  const total = a.semana.reduce((acc, v) => acc + v, 0);
+                  return (
+                    <div key={a.nombre} className="flex items-center gap-1">
+                      <div className="w-[84px] flex-shrink-0 flex items-center gap-1.5">
+                        <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[7px] font-bold flex items-center justify-center flex-shrink-0">
+                          {a.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        </div>
+                        <span className="text-[9px] text-text-secondary truncate">{a.nombre.split(" ")[0]}</span>
+                      </div>
+                      {a.semana.map((val, i) => {
+                        const t = Math.min(val / 15, 1);
+                        const r = Math.round(195 + (31 - 195) * t);
+                        const g = Math.round(244 + (81 - 244) * t);
+                        const b = Math.round(153 + (76 - 153) * t);
+                        return (
+                          <div
+                            key={i}
+                            className="flex-1 h-5 rounded-md flex items-center justify-center"
+                            style={{ backgroundColor: val === 0 ? "#f4f0e9" : `rgb(${r},${g},${b})` }}
+                            title={`${a.nombre} — ${["Lun","Mar","Mié","Jue","Vie"][i]}: ${val} llamadas`}
+                          >
+                            {val > 0 && (
+                              <span className="text-[7px] font-bold" style={{ color: t > 0.5 ? "white" : "#2f574d" }}>{val}</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                      <span className="text-[8px] text-text-muted w-5 text-right flex-shrink-0">{total}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Leyenda */}
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-card-border">
+                <span className="text-[9px] text-text-muted">Menos</span>
+                {[0, 3, 6, 9, 12, 15].map((v) => {
+                  const t = Math.min(v / 15, 1);
+                  const r = Math.round(195 + (31 - 195) * t);
+                  const g = Math.round(244 + (81 - 244) * t);
+                  const b = Math.round(153 + (76 - 153) * t);
+                  return (
+                    <div key={v} className="w-4 h-4 rounded-sm" style={{ backgroundColor: v === 0 ? "#f4f0e9" : `rgb(${r},${g},${b})` }} />
+                  );
+                })}
+                <span className="text-[9px] text-text-muted">Más</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── TAB: COLEGIOS ─── */}
+      {/* ─── TAB: COLEGIOS (A4 — AdminSchoolSettings) ─── */}
       {activeView === "schools" && (
-        <div className="space-y-4">
-          {(Object.keys(colegios) as Colegio[]).map((key) => {
-            const c = colegios[key];
-            return (
-              <div key={key} className="bg-card rounded-2xl border border-card-border p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-[16px] font-bold text-text-primary">{c.nombre}</h3>
-                    <p className="text-[12px] text-text-secondary">{c.nivel} · {c.clases} clases</p>
-                  </div>
-                  <div className="flex items-center gap-2 bg-success-light px-3 py-1.5 rounded-full">
-                    <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                    <span className="text-[10px] font-bold text-success">Operativo</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-4 gap-3">
-                  {[
-                    { label: "Alumnos", val: c.alumnos },
-                    { label: "Docentes", val: c.docentes },
-                    { label: "Proyectos activos", val: c.proyectos },
-                    { label: "Salud del sistema", val: `${c.salud}/100` },
-                  ].map((s) => (
-                    <div key={s.label} className="bg-background rounded-xl p-3 text-center">
-                      <span className="text-[18px] font-bold text-text-primary block">{s.val}</span>
-                      <span className="text-[9px] text-text-muted">{s.label}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t border-card-border">
-                  <p className="text-[11px] font-semibold text-text-primary mb-2">Competencias LOMLOE activas</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {competenciasLOMLOE.map((comp) => (
-                      <span key={comp.key} className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
-                        {comp.key}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+        <div className="space-y-5">
+          {/* Información general del colegio */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Building2 size={14} className="text-text-primary" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Información del colegio — {colegio.nombre}</h3>
               </div>
-            );
-          })}
+              <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
+                <Save size={11} />
+                Guardar cambios
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Nombre del colegio", key: "nombre",    placeholder: "QHUMA Málaga" },
+                { label: "Director/a",         key: "director",  placeholder: "Nombre y apellidos" },
+                { label: "Email institucional", key: "email",    placeholder: "direccion@colegio.es" },
+                { label: "Nivel educativo",    key: "nivel",     placeholder: "Ej. Primaria + ESO" },
+              ].map((field) => (
+                <div key={field.key}>
+                  <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{field.label}</label>
+                  <input
+                    type="text"
+                    value={schoolForm[field.key as keyof typeof schoolForm]}
+                    onChange={(e) => setSchoolForm({ ...schoolForm, [field.key]: e.target.value })}
+                    placeholder={field.placeholder}
+                    className="w-full bg-background text-[12px] text-text-primary px-3 py-2.5 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
+                  />
+                </div>
+              ))}
+              <div className="col-span-2">
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Dirección postal</label>
+                <input
+                  type="text"
+                  value={schoolForm.direccion}
+                  onChange={(e) => setSchoolForm({ ...schoolForm, direccion: e.target.value })}
+                  placeholder="Calle, número, código postal, ciudad"
+                  className="w-full bg-background text-[12px] text-text-primary px-3 py-2.5 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Competencias LOMLOE — toggles */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle2 size={14} className="text-accent-text" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Competencias LOMLOE activas</h3>
+              <span className="ml-auto text-[10px] text-text-muted">
+                {Object.values(compActivas).filter(Boolean).length}/8 activas
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">Según Real Decreto 217/2022 (ESO) y 243/2022 (Bachillerato). Desactivar una competencia la oculta de los informes del colegio.</p>
+            <div className="grid grid-cols-2 gap-3">
+              {competenciasLOMLOE.map((comp) => {
+                const activa = compActivas[comp.key] ?? true;
+                return (
+                  <div
+                    key={comp.key}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                      activa ? "bg-accent-light border-accent/30" : "bg-background border-card-border opacity-60"
+                    }`}
+                    onClick={() => setCompActivas({ ...compActivas, [comp.key]: !activa })}
+                  >
+                    <div className={`w-10 h-5 rounded-full relative flex-shrink-0 transition-colors ${activa ? "bg-accent-text" : "bg-text-muted/30"}`}>
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${activa ? "left-5" : "left-0.5"}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[11px] font-bold text-accent-text block">{comp.key}</span>
+                      <span className="text-[10px] text-text-secondary truncate block">{comp.nombre}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Calendario académico */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={14} className="text-text-primary" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Calendario académico 2025-2026</h3>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              {trimestres.map((t) => (
+                <div key={t.nombre} className={`rounded-2xl p-4 border ${
+                  t.estado === "activo"     ? "bg-accent-light border-accent/30"
+                  : t.estado === "completado" ? "bg-success-light border-success/20"
+                  : "bg-background border-card-border opacity-70"
+                }`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[12px] font-bold text-text-primary">{t.nombre}</span>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                      t.estado === "activo"     ? "bg-accent text-sidebar"
+                      : t.estado === "completado" ? "bg-success text-white"
+                      : "bg-background border border-card-border text-text-muted"
+                    }`}>
+                      {t.estado === "activo" ? "En curso" : t.estado === "completado" ? "Completado" : "Próximo"}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-text-muted mb-0.5">{t.inicio} → {t.fin}</p>
+                  <p className="text-[10px] font-semibold text-accent-text">{t.semanas} semanas lectivas</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Escala de evaluación LOMLOE */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield size={14} className="text-text-primary" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Escala de evaluación LOMLOE (1-4)</h3>
+              <span className="ml-auto text-[10px] text-text-muted">Conforme a los criterios oficiales del MEC</span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {escalasLOMLOE.map((e) => (
+                <div key={e.nivel} className={`${e.bg} rounded-xl p-4 border border-card-border`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-7 h-7 rounded-lg bg-white flex items-center justify-center text-[16px] font-bold ${e.text}`}>{e.nivel}</div>
+                    <span className={`text-[11px] font-bold ${e.text}`}>{e.etiqueta}</span>
+                  </div>
+                  <p className="text-[10px] text-text-secondary leading-snug">{e.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
