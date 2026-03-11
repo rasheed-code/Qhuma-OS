@@ -73,13 +73,6 @@ const bloomColors: Record<string, string> = {
   Crear: "bg-pink-50 text-pink-600",
 };
 
-const groupingLabels: Record<string, string> = {
-  individual: "Individual",
-  pairs: "Parejas",
-  small_group: "Grupo pequeño",
-  full_class: "Gran grupo",
-};
-
 const groupingIcons: Record<string, string> = {
   individual: "👤",
   pairs: "👥",
@@ -87,13 +80,7 @@ const groupingIcons: Record<string, string> = {
   full_class: "🏫",
 };
 
-
 const gradeOptions = ["1º ESO", "2º ESO", "3º ESO", "4º ESO", "1º Bachillerato", "2º Bachillerato"];
-const durationOptions = ["1 semana", "2 semanas", "3 semanas", "4 semanas"];
-const bloomOptions = ["Cualquiera", "Recordar y Comprender", "Aplicar y Analizar", "Evaluar y Crear"];
-const groupingOptions = ["Mixto", "Individual", "Parejas", "Grupos pequeños", "Gran grupo"];
-const modalityOptions = ["Presencial", "Híbrida", "Online"];
-const projectStyleOptions = ["Cualquiera", "Investigación y presentación", "Producto/prototipo", "Campaña o evento", "Emprendimiento", "Resolución de problema real"];
 
 const subjectChips = [
   "Matemáticas", "Lengua Castellana", "Ciencias Naturales", "Historia", "Geografía",
@@ -104,6 +91,19 @@ const subjectChips = [
 export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjectsProps) {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const groupingLabels: Record<string, string> = {
+    individual: lbl("Individual", "Individual"),
+    pairs: lbl("Parejas", "Pairs"),
+    small_group: lbl("Grupo pequeño", "Small group"),
+    full_class: lbl("Gran grupo", "Full class"),
+  };
+
+  const durationOptions = [lbl("1 semana", "1 week"), lbl("2 semanas", "2 weeks"), lbl("3 semanas", "3 weeks"), lbl("4 semanas", "4 weeks")];
+  const bloomOptions = [lbl("Cualquiera", "Any"), lbl("Recordar y Comprender", "Remember & Understand"), lbl("Aplicar y Analizar", "Apply & Analyse"), lbl("Evaluar y Crear", "Evaluate & Create")];
+  const groupingOptions = [lbl("Mixto", "Mixed"), lbl("Individual", "Individual"), lbl("Parejas", "Pairs"), lbl("Grupos pequeños", "Small groups"), lbl("Gran grupo", "Full class")];
+  const modalityOptions = [lbl("Presencial", "In-person"), lbl("Híbrida", "Hybrid"), lbl("Online", "Online")];
+  const projectStyleOptions = [lbl("Cualquiera", "Any"), lbl("Investigación y presentación", "Research & presentation"), lbl("Producto/prototipo", "Product/prototype"), lbl("Campaña o evento", "Campaign or event"), lbl("Emprendimiento", "Entrepreneurship"), lbl("Resolución de problema real", "Real-world problem solving")];
 
   const processingPhases = [
     { msg: lbl("Leyendo el documento curricular...", "Reading the curricular document..."), icon: "📄" },
@@ -131,12 +131,12 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
   const [file, setFile] = useState<File | null>(null);
   const [urlInput, setUrlInput] = useState("");
   const [descriptionInput, setDescriptionInput] = useState("");
-  const [gradeLevel, setGradeLevel] = useState("1º ESO");
-  const [durationWeeks, setDurationWeeks] = useState("2 semanas");
-  const [bloomFocus, setBloomFocus] = useState("Cualquiera");
-  const [grouping, setGrouping] = useState("Mixto");
-  const [modality, setModality] = useState("Presencial");
-  const [projectStyle, setProjectStyle] = useState("Cualquiera");
+  const [gradeLevel, setGradeLevel] = useState(0);
+  const [durationWeeks, setDurationWeeks] = useState(1);
+  const [bloomFocusIdx, setBloomFocusIdx] = useState(0);
+  const [groupingIdx, setGroupingIdx] = useState(0);
+  const [modalityIdx, setModalityIdx] = useState(0);
+  const [projectStyleIdx, setProjectStyleIdx] = useState(0);
   const [extraContext, setExtraContext] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -180,13 +180,13 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
       return;
     }
 
-    formData.append("grade", gradeLevel);
-    formData.append("duration", durationWeeks);
+    formData.append("grade", gradeOptions[gradeLevel]);
+    formData.append("duration", durationOptions[durationWeeks]);
     if (selectedSubjects.length > 0) formData.append("subjects", selectedSubjects.join(", "));
-    if (bloomFocus !== "Cualquiera") formData.append("bloomFocus", bloomFocus);
-    if (grouping !== "Mixto") formData.append("grouping", grouping);
-    if (modality !== "Presencial") formData.append("modality", modality);
-    if (projectStyle !== "Cualquiera") formData.append("projectStyle", projectStyle);
+    if (bloomFocusIdx !== 0) formData.append("bloomFocus", bloomOptions[bloomFocusIdx]);
+    if (groupingIdx !== 0) formData.append("grouping", groupingOptions[groupingIdx]);
+    if (modalityIdx !== 0) formData.append("modality", modalityOptions[modalityIdx]);
+    if (projectStyleIdx !== 0) formData.append("projectStyle", projectStyleOptions[projectStyleIdx]);
     if (extraContext.trim()) formData.append("extraContext", extraContext.trim());
     if (extraRefinement) formData.append("refinement", extraRefinement);
 
@@ -207,7 +207,7 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
       setError(err instanceof Error ? err.message : "Algo salió mal. Inténtalo de nuevo.");
       setStep("input");
     }
-  }, [inputTab, file, urlInput, descriptionInput, gradeLevel, durationWeeks, selectedSubjects, bloomFocus, grouping, modality, projectStyle, extraContext]);
+  }, [inputTab, file, urlInput, descriptionInput, gradeLevel, durationWeeks, selectedSubjects, bloomFocusIdx, groupingIdx, modalityIdx, projectStyleIdx, extraContext, bloomOptions, groupingOptions, modalityOptions, projectStyleOptions, gradeOptions]);
 
   const toggleSubject = (s: string) =>
     setSelectedSubjects((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
@@ -416,14 +416,14 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <label className="text-[12px] font-medium text-text-secondary mb-2 block">{lbl("Curso", "Grade")}</label>
-              <select value={gradeLevel} onChange={(e) => setGradeLevel(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                {gradeOptions.map(o => <option key={o}>{o}</option>)}
+              <select value={gradeLevel} onChange={(e) => setGradeLevel(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                {gradeOptions.map((o, i) => <option key={o} value={i}>{o}</option>)}
               </select>
             </div>
             <div>
               <label className="text-[12px] font-medium text-text-secondary mb-2 block">{lbl("Duración", "Duration")}</label>
-              <select value={durationWeeks} onChange={(e) => setDurationWeeks(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                {durationOptions.map(o => <option key={o}>{o}</option>)}
+              <select value={durationWeeks} onChange={(e) => setDurationWeeks(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                {durationOptions.map((o, i) => <option key={i} value={i}>{o}</option>)}
               </select>
             </div>
           </div>
@@ -466,32 +466,32 @@ export default function TeacherProjects({ onNavigateToDashboard }: TeacherProjec
                   <label className="text-[12px] font-medium text-text-secondary mb-2 block flex items-center gap-1">
                     <Brain size={13} />{lbl("Nivel cognitivo (Bloom)", "Cognitive level (Bloom)")}
                   </label>
-                  <select value={bloomFocus} onChange={(e) => setBloomFocus(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                    {bloomOptions.map(o => <option key={o}>{o}</option>)}
+                  <select value={bloomFocusIdx} onChange={(e) => setBloomFocusIdx(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                    {bloomOptions.map((o, i) => <option key={i} value={i}>{o}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-[12px] font-medium text-text-secondary mb-2 block flex items-center gap-1">
                     <Users size={13} />{lbl("Agrupamiento", "Grouping")}
                   </label>
-                  <select value={grouping} onChange={(e) => setGrouping(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                    {groupingOptions.map(o => <option key={o}>{o}</option>)}
+                  <select value={groupingIdx} onChange={(e) => setGroupingIdx(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                    {groupingOptions.map((o, i) => <option key={i} value={i}>{o}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-[12px] font-medium text-text-secondary mb-2 block flex items-center gap-1">
                     <Globe size={13} />{lbl("Modalidad", "Modality")}
                   </label>
-                  <select value={modality} onChange={(e) => setModality(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                    {modalityOptions.map(o => <option key={o}>{o}</option>)}
+                  <select value={modalityIdx} onChange={(e) => setModalityIdx(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                    {modalityOptions.map((o, i) => <option key={i} value={i}>{o}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-[12px] font-medium text-text-secondary mb-2 block flex items-center gap-1">
                     <Rocket size={13} />{lbl("Tipo de proyecto", "Project type")}
                   </label>
-                  <select value={projectStyle} onChange={(e) => setProjectStyle(e.target.value)} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
-                    {projectStyleOptions.map(o => <option key={o}>{o}</option>)}
+                  <select value={projectStyleIdx} onChange={(e) => setProjectStyleIdx(Number(e.target.value))} className="w-full border border-card-border rounded-xl px-4 py-2.5 text-[13px] text-text-primary bg-background focus:outline-none focus:ring-2 focus:ring-sidebar/20 cursor-pointer">
+                    {projectStyleOptions.map((o, i) => <option key={i} value={i}>{o}</option>)}
                   </select>
                 </div>
               </div>

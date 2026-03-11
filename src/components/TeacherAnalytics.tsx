@@ -51,11 +51,6 @@ const riesgoBase = [
   { nombre: "Valentina Cruz",    avatar: "VC", diasSinAct: 0, compBaja: 92, tardias: 0, tendencia: "bajando"  as const },
 ];
 
-const microAccionPorNivel: Record<"Alto" | "Medio" | "Bajo", string> = {
-  Alto:  "Contactar hoy — ofrecer sesión 1:1 de 15 min y revisar carga de trabajo.",
-  Medio: "Enviar mensaje de apoyo y recordar la próxima entrega con fecha concreta.",
-  Bajo:  "Mantener seguimiento semanal regular. Felicitar el avance.",
-};
 
 function computeScore(d: typeof riesgoBase[number]): number {
   return d.diasSinAct * 3 + Math.round(((100 - d.compBaja) * 4) / 100) + d.tardias * 5;
@@ -85,6 +80,12 @@ const tiempoAsignatura = [
 export default function TeacherAnalytics() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const microAccionPorNivel: Record<"Alto" | "Medio" | "Bajo", string> = {
+    Alto:  lbl("Contactar hoy — ofrecer sesión 1:1 de 15 min y revisar carga de trabajo.", "Contact today — offer a 15-min 1:1 session and review workload."),
+    Medio: lbl("Enviar mensaje de apoyo y recordar la próxima entrega con fecha concreta.", "Send a supportive message and remind them of the next deadline."),
+    Bajo:  lbl("Mantener seguimiento semanal regular. Felicitar el avance.", "Maintain regular weekly check-in. Acknowledge their progress."),
+  };
 
   const [contactados, setContactados] = useState<Set<string>>(new Set());
   // T23 — Semáforo de riesgo
@@ -470,10 +471,10 @@ export default function TeacherAnalytics() {
               </div>
               <div className="flex-1 grid grid-cols-3 gap-3">
                 {([
-                  { label: "Alto riesgo",  count: altos.length,  cfg: nivelCfg["Alto"]  },
-                  { label: "Riesgo medio", count: medios.length, cfg: nivelCfg["Medio"] },
-                  { label: "Bajo riesgo",  count: bajos.length,  cfg: nivelCfg["Bajo"]  },
-                ] as const).map((seg) => (
+                  { label: lbl("Alto riesgo", "High risk"),    count: altos.length,  cfg: nivelCfg["Alto"]  },
+                  { label: lbl("Riesgo medio", "Medium risk"),  count: medios.length, cfg: nivelCfg["Medio"] },
+                  { label: lbl("Bajo riesgo", "Low risk"),     count: bajos.length,  cfg: nivelCfg["Bajo"]  },
+                ]).map((seg) => (
                   <div key={seg.label} className={`rounded-xl p-3 border text-center ${seg.cfg.bg} ${seg.cfg.border}`}>
                     <span className={`text-[24px] font-black block leading-none ${seg.cfg.text}`}>{seg.count}</span>
                     <span className="text-[9px] text-text-muted">{seg.label}</span>

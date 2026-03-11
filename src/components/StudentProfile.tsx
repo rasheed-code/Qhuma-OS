@@ -222,11 +222,11 @@ export default function StudentProfile() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
           <Brain size={16} className="text-text-primary" />
-          <h2 className="text-[20px] font-semibold text-text-primary">Perfil de Inteligencias</h2>
+          <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Perfil de Inteligencias", "Intelligence Profile")}</h2>
           <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[11px] font-semibold">Gardner</span>
         </div>
         <p className="text-[12px] text-text-muted mb-5 leading-relaxed">
-          Construido a través de 30 días de interacción activa, no de un test inicial. Cada dimensión refleja cómo aprendes y resuelves problemas en tu proyecto.
+          {lbl("Construido a través de 30 días de interacción activa, no de un test inicial. Cada dimensión refleja cómo aprendes y resuelves problemas en tu proyecto.", "Built through 30 days of active interaction, not an initial test. Each dimension reflects how you learn and solve problems in your project.")}
         </p>
         <div className="grid grid-cols-2 gap-3">
           {inteligencias.map((intel) => {

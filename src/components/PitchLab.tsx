@@ -19,78 +19,6 @@ interface PitchSection {
   durationSeg: number; // seconds
 }
 
-const pitchSections: PitchSection[] = [
-  {
-    id: "problema",
-    title: "El Problema",
-    subtitle: "¿Qué problema real estás resolviendo?",
-    icon: AlertCircle,
-    placeholder: "Describe el problema que identificaste. ¿Quién lo sufre? ¿Con qué frecuencia? ¿Cuánto les cuesta no resolverlo?\n\nEj: «En Málaga hay 3.200 pisos en alquiler vacacional pero solo el 18% supera el 65% de ocupación. Los propietarios no saben cómo optimizar precios ni su anuncio...»",
-    tips: [
-      "Empieza con un dato concreto — los números dan credibilidad",
-      "Habla en primera persona: «Descubrí que...»",
-      "El problema debe resonar en los primeros 15 segundos",
-    ],
-    wordTarget: 80,
-    durationSeg: 60,
-  },
-  {
-    id: "solucion",
-    title: "La Solución",
-    subtitle: "¿Qué propones exactamente?",
-    icon: Lightbulb,
-    placeholder: "Explica tu solución de forma clara y simple. Si tu abuela no lo entendería, simplifica.\n\nEj: «Mi propuesta es un sistema de gestión Airbnb para familias locales: anuncio optimizado, guía de precios dinámica y comunicación profesional con huéspedes. Todo por menos de 200€/mes...»",
-    tips: [
-      "La solución en 1 frase antes de los detalles",
-      "Menciona qué la hace diferente a lo que ya existe",
-      "Cuantifica el beneficio si puedes: «Sube el ingreso un X%»",
-    ],
-    wordTarget: 80,
-    durationSeg: 60,
-  },
-  {
-    id: "mercado",
-    title: "El Mercado",
-    subtitle: "¿Quién es tu cliente y cuánto vale el mercado?",
-    icon: Users,
-    placeholder: "Define tu cliente ideal y el tamaño del mercado potencial.\n\nEj: «Mi cliente ideal son familias malagueñas con un piso en el centro histórico que quieren ingresar entre 800€ y 2.000€/mes sin complicaciones. Solo en Málaga hay 4.500 perfiles así...»",
-    tips: [
-      "Sé específico: «Familias de 35-50 años en Málaga» no «todo el mundo»",
-      "Usa datos del INE o Airbnb para validar el tamaño",
-      "Calcula ingresos posibles: precio × clientes × % conversión",
-    ],
-    wordTarget: 70,
-    durationSeg: 50,
-  },
-  {
-    id: "financiero",
-    title: "Modelo Financiero",
-    subtitle: "¿Cómo ganas dinero? ¿Es sostenible?",
-    icon: TrendingUp,
-    placeholder: "Explica cómo monetizas, tu punto de equilibrio y proyección a 12 meses.\n\nEj: «Cobro 150€/mes por piso gestionado. Con 20 pisos alcanza el punto de equilibrio. En 12 meses proyecto 30 pisos activos = 4.500€/mes de ingresos recurrentes. Coste marginal por nuevo cliente: 20€...»",
-    tips: [
-      "Menciona el punto de equilibrio — muestra que sabes cuándo ganas",
-      "Distingue ingresos de ganancias: los inversores saben la diferencia",
-      "Sé honesto con los márgenes — la credibilidad vale más que las cifras infladas",
-    ],
-    wordTarget: 80,
-    durationSeg: 60,
-  },
-  {
-    id: "equipo",
-    title: "Equipo y Próximos Pasos",
-    subtitle: "¿Quiénes sois y qué necesitáis para crecer?",
-    icon: Star,
-    placeholder: "Preséntate y explica qué necesitas para dar el siguiente paso.\n\nEj: «Soy Lucas García, estudiante de 1º ESO en QHUMA. Llevo 3 semanas construyendo este proyecto. Necesito 500€ para lanzar los primeros 3 pisos piloto y validar el modelo antes de escalar...»",
-    tips: [
-      "Conecta tu experiencia con por qué puedes resolver este problema",
-      "Sé específico con el uso del dinero: «500€ para X, Y, Z»",
-      "Termina con una pregunta o llamada a la acción clara",
-    ],
-    wordTarget: 60,
-    durationSeg: 40,
-  },
-];
 
 interface FeedbackScore {
   categoria: string;
@@ -244,7 +172,7 @@ const tipoColor: Record<string, string> = {
 };
 
 // C14 — Puntuación por sección (1–10)
-const computeSectionScores = (sections: Record<string, string>): Record<string, number> => {
+const computeSectionScores = (sections: Record<string, string>, pitchSections: PitchSection[]): Record<string, number> => {
   const scores: Record<string, number> = {};
   for (const section of pitchSections) {
     const text = sections[section.id] || "";
@@ -272,49 +200,6 @@ const computeSectionScores = (sections: Record<string, string>): Record<string, 
   return scores;
 };
 
-const generateFeedback = (sections: Record<string, string>): FeedbackScore[] => {
-  const totalWords = Object.values(sections).join(" ").split(/\s+/).filter(Boolean).length;
-  const filledSections = Object.values(sections).filter(s => s.trim().length > 30).length;
-
-  const estructuraScore = Math.min(100, Math.round((filledSections / 5) * 80 + 20));
-  const claridadScore = Math.min(100, Math.round(totalWords > 100 ? 70 + Math.min(30, (totalWords - 100) / 5) : totalWords * 0.7));
-  const persuasionScore = Math.min(100, Math.round(
-    (sections.problema?.length > 50 ? 20 : 0) +
-    (sections.financiero?.includes("€") ? 25 : 0) +
-    (sections.mercado?.match(/\d/) ? 20 : 0) +
-    (sections.equipo?.length > 30 ? 20 : 0) +
-    15
-  ));
-
-  return [
-    {
-      categoria: "Estructura",
-      score: estructuraScore,
-      comentario: filledSections === 5
-        ? "Cubre todas las secciones clave. Un pitch completo."
-        : `Has completado ${filledSections}/5 secciones. Trabaja las que faltan.`,
-      mejora: filledSections < 5
-        ? "Completa las secciones vacías — especialmente el modelo financiero."
-        : "Asegúrate de que cada sección fluye hacia la siguiente de forma natural.",
-    },
-    {
-      categoria: "Claridad",
-      score: claridadScore,
-      comentario: totalWords > 150
-        ? "Buen nivel de detalle. Recuerda que en el pitch real debes hablar, no leer."
-        : "El pitch es conciso. Asegúrate de no perder información clave por brevedad.",
-      mejora: "Practica en voz alta y cronométrate. 5 minutos = ~650 palabras habladas.",
-    },
-    {
-      categoria: "Persuasión",
-      score: persuasionScore,
-      comentario: sections.financiero?.includes("€")
-        ? "Bien: usas cifras financieras concretas. Los inversores lo valoran."
-        : "Añade más datos cuantitativos — cifras específicas generan confianza.",
-      mejora: "Incluye al menos 3 datos numéricos: tamaño de mercado, proyección de ingresos, punto de equilibrio.",
-    },
-  ];
-};
 
 function TimerBlock({ totalSecs, onComplete }: { totalSecs: number; onComplete: () => void }) {
   const [remaining, setRemaining] = useState(totalSecs);
@@ -363,6 +248,138 @@ function TimerBlock({ totalSecs, onComplete }: { totalSecs: number; onComplete: 
 export default function PitchLab() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const pitchSections: PitchSection[] = [
+    {
+      id: "problema",
+      title: lbl("El Problema", "The Problem"),
+      subtitle: lbl("¿Qué problema real estás resolviendo?", "What real problem are you solving?"),
+      icon: AlertCircle,
+      placeholder: lbl(
+        "Describe el problema que identificaste. ¿Quién lo sufre? ¿Con qué frecuencia? ¿Cuánto les cuesta no resolverlo?\n\nEj: «En Málaga hay 3.200 pisos en alquiler vacacional pero solo el 18% supera el 65% de ocupación. Los propietarios no saben cómo optimizar precios ni su anuncio...»",
+        "Describe the problem you identified. Who suffers from it? How often? What does it cost them to leave it unsolved?\n\nE.g.: «In Málaga there are 3,200 vacation rental flats but only 18% exceed 65% occupancy. Owners don't know how to optimise their pricing or listing...»"
+      ),
+      tips: [
+        lbl("Empieza con un dato concreto — los números dan credibilidad", "Start with a concrete fact — numbers build credibility"),
+        lbl("Habla en primera persona: «Descubrí que...»", "Speak in first person: «I discovered that...»"),
+        lbl("El problema debe resonar en los primeros 15 segundos", "The problem should resonate within the first 15 seconds"),
+      ],
+      wordTarget: 80,
+      durationSeg: 60,
+    },
+    {
+      id: "solucion",
+      title: lbl("La Solución", "The Solution"),
+      subtitle: lbl("¿Qué propones exactamente?", "What exactly are you proposing?"),
+      icon: Lightbulb,
+      placeholder: lbl(
+        "Explica tu solución de forma clara y simple. Si tu abuela no lo entendería, simplifica.\n\nEj: «Mi propuesta es un sistema de gestión Airbnb para familias locales: anuncio optimizado, guía de precios dinámica y comunicación profesional con huéspedes. Todo por menos de 200€/mes...»",
+        "Explain your solution clearly and simply. If your grandmother wouldn't understand it, simplify.\n\nE.g.: «My proposal is an Airbnb management system for local families: optimised listing, dynamic pricing guide, and professional guest communication. All for under €200/month...»"
+      ),
+      tips: [
+        lbl("La solución en 1 frase antes de los detalles", "The solution in 1 sentence before the details"),
+        lbl("Menciona qué la hace diferente a lo que ya existe", "Mention what makes it different from what already exists"),
+        lbl("Cuantifica el beneficio si puedes: «Sube el ingreso un X%»", "Quantify the benefit if you can: «Increases revenue by X%»"),
+      ],
+      wordTarget: 80,
+      durationSeg: 60,
+    },
+    {
+      id: "mercado",
+      title: lbl("El Mercado", "The Market"),
+      subtitle: lbl("¿Quién es tu cliente y cuánto vale el mercado?", "Who is your customer and how big is the market?"),
+      icon: Users,
+      placeholder: lbl(
+        "Define tu cliente ideal y el tamaño del mercado potencial.\n\nEj: «Mi cliente ideal son familias malagueñas con un piso en el centro histórico que quieren ingresar entre 800€ y 2.000€/mes sin complicaciones. Solo en Málaga hay 4.500 perfiles así...»",
+        "Define your ideal customer and the size of the potential market.\n\nE.g.: «My ideal customer is Málaga families with a flat in the historic centre who want to earn between €800–€2,000/month hassle-free. In Málaga alone there are 4,500 such profiles...»"
+      ),
+      tips: [
+        lbl("Sé específico: «Familias de 35-50 años en Málaga» no «todo el mundo»", "Be specific: «Families aged 35–50 in Málaga» not «everyone»"),
+        lbl("Usa datos del INE o Airbnb para validar el tamaño", "Use INE or Airbnb data to validate the size"),
+        lbl("Calcula ingresos posibles: precio × clientes × % conversión", "Calculate potential revenue: price × customers × % conversion"),
+      ],
+      wordTarget: 70,
+      durationSeg: 50,
+    },
+    {
+      id: "financiero",
+      title: lbl("Modelo Financiero", "Financial Model"),
+      subtitle: lbl("¿Cómo ganas dinero? ¿Es sostenible?", "How do you make money? Is it sustainable?"),
+      icon: TrendingUp,
+      placeholder: lbl(
+        "Explica cómo monetizas, tu punto de equilibrio y proyección a 12 meses.\n\nEj: «Cobro 150€/mes por piso gestionado. Con 20 pisos alcanza el punto de equilibrio. En 12 meses proyecto 30 pisos activos = 4.500€/mes de ingresos recurrentes. Coste marginal por nuevo cliente: 20€...»",
+        "Explain how you monetise, your break-even point, and 12-month projection.\n\nE.g.: «I charge €150/month per managed flat. With 20 flats I reach break-even. In 12 months I project 30 active flats = €4,500/month recurring revenue. Marginal cost per new customer: €20...»"
+      ),
+      tips: [
+        lbl("Menciona el punto de equilibrio — muestra que sabes cuándo ganas", "Mention the break-even point — show you know when you profit"),
+        lbl("Distingue ingresos de ganancias: los inversores saben la diferencia", "Distinguish revenue from profit: investors know the difference"),
+        lbl("Sé honesto con los márgenes — la credibilidad vale más que las cifras infladas", "Be honest with margins — credibility is worth more than inflated figures"),
+      ],
+      wordTarget: 80,
+      durationSeg: 60,
+    },
+    {
+      id: "equipo",
+      title: lbl("Equipo y Próximos Pasos", "Team & Next Steps"),
+      subtitle: lbl("¿Quiénes sois y qué necesitáis para crecer?", "Who are you and what do you need to grow?"),
+      icon: Star,
+      placeholder: lbl(
+        "Preséntate y explica qué necesitas para dar el siguiente paso.\n\nEj: «Soy Lucas García, estudiante de 1º ESO en QHUMA. Llevo 3 semanas construyendo este proyecto. Necesito 500€ para lanzar los primeros 3 pisos piloto y validar el modelo antes de escalar...»",
+        "Introduce yourself and explain what you need to take the next step.\n\nE.g.: «I'm Lucas García, a Year 7 student at QHUMA. I've spent 3 weeks building this project. I need €500 to launch the first 3 pilot flats and validate the model before scaling...»"
+      ),
+      tips: [
+        lbl("Conecta tu experiencia con por qué puedes resolver este problema", "Connect your experience to why you can solve this problem"),
+        lbl("Sé específico con el uso del dinero: «500€ para X, Y, Z»", "Be specific about the use of funds: «€500 for X, Y, Z»"),
+        lbl("Termina con una pregunta o llamada a la acción clara", "End with a clear question or call to action"),
+      ],
+      wordTarget: 60,
+      durationSeg: 40,
+    },
+  ];
+
+  const generateFeedback = (sections: Record<string, string>): FeedbackScore[] => {
+    const totalWords = Object.values(sections).join(" ").split(/\s+/).filter(Boolean).length;
+    const filledSections = Object.values(sections).filter(s => s.trim().length > 30).length;
+
+    const estructuraScore = Math.min(100, Math.round((filledSections / 5) * 80 + 20));
+    const claridadScore = Math.min(100, Math.round(totalWords > 100 ? 70 + Math.min(30, (totalWords - 100) / 5) : totalWords * 0.7));
+    const persuasionScore = Math.min(100, Math.round(
+      (sections.problema?.length > 50 ? 20 : 0) +
+      (sections.financiero?.includes("€") ? 25 : 0) +
+      (sections.mercado?.match(/\d/) ? 20 : 0) +
+      (sections.equipo?.length > 30 ? 20 : 0) +
+      15
+    ));
+
+    return [
+      {
+        categoria: lbl("Estructura", "Structure"),
+        score: estructuraScore,
+        comentario: filledSections === 5
+          ? lbl("Cubre todas las secciones clave. Un pitch completo.", "Covers all key sections. A complete pitch.")
+          : lbl(`Has completado ${filledSections}/5 secciones. Trabaja las que faltan.`, `You've completed ${filledSections}/5 sections. Work on the missing ones.`),
+        mejora: filledSections < 5
+          ? lbl("Completa las secciones vacías — especialmente el modelo financiero.", "Complete the empty sections — especially the financial model.")
+          : lbl("Asegúrate de que cada sección fluye hacia la siguiente de forma natural.", "Make sure each section flows naturally into the next."),
+      },
+      {
+        categoria: lbl("Claridad", "Clarity"),
+        score: claridadScore,
+        comentario: totalWords > 150
+          ? lbl("Buen nivel de detalle. Recuerda que en el pitch real debes hablar, no leer.", "Good level of detail. Remember that in the real pitch you should speak, not read.")
+          : lbl("El pitch es conciso. Asegúrate de no perder información clave por brevedad.", "The pitch is concise. Make sure you don't lose key information for the sake of brevity."),
+        mejora: lbl("Practica en voz alta y cronométrate. 5 minutos = ~650 palabras habladas.", "Practise out loud and time yourself. 5 minutes = ~650 spoken words."),
+      },
+      {
+        categoria: lbl("Persuasión", "Persuasion"),
+        score: persuasionScore,
+        comentario: sections.financiero?.includes("€")
+          ? lbl("Bien: usas cifras financieras concretas. Los inversores lo valoran.", "Good: you use concrete financial figures. Investors appreciate that.")
+          : lbl("Añade más datos cuantitativos — cifras específicas generan confianza.", "Add more quantitative data — specific figures build trust."),
+        mejora: lbl("Incluye al menos 3 datos numéricos: tamaño de mercado, proyección de ingresos, punto de equilibrio.", "Include at least 3 numerical data points: market size, revenue projection, break-even point."),
+      },
+    ];
+  };
 
   const [activeSection, setActiveSection] = useState(0);
   const [notes, setNotes] = useState<Record<string, string>>({});
@@ -735,7 +752,7 @@ export default function PitchLab() {
     const fb = generateFeedback(notes);
     const avg = Math.round(fb.reduce((s, f) => s + f.score, 0) / fb.length);
     setFeedback(fb);
-    setSectionScores(computeSectionScores(notes));
+    setSectionScores(computeSectionScores(notes, pitchSections));
     setMode("feedback");
     setInversoresVotos({});
 
