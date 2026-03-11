@@ -1633,9 +1633,8 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             </div>
           );
         })())}
-      </div>
 
-      {/* S33 — Resumen semanal inteligente */}
+        {/* S33 — Resumen semanal inteligente */}
       {(() => {
         const statsSemanales = [
           { label: lbl("Tareas completadas", "Tasks done"),   valor: 7, de: 9,    icon: CheckCircle2, bg: "bg-success-light",  color: "text-success"      },
@@ -1964,6 +1963,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           <ArrowRight size={13} />
         </button>
       </div>
+      </div>{/* /flex-1 min-w-0 */}
 
       {/* Right: AI Chat — now fully powered by Gemini */}
       <div className="w-[300px] flex-shrink-0">

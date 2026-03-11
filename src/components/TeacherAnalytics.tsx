@@ -77,6 +77,23 @@ const tiempoAsignatura = [
   { nombre: "Arte",           pct: 6  },
 ];
 
+// ── T34: Talento emergente T2 — perfiles Food Truck ───────────────────────
+// Perfil por alumno: comp dominante T1 → rol Food Truck recomendado
+const talentoT2 = [
+  { nombre: "Lucas García",    avatar: "LG", compDom: "CE",    rol: "Fundador / CEO",            cluster: "financiero" as const },
+  { nombre: "Sofía Torres",    avatar: "ST", compDom: "CCEC",  rol: "Directora de Marca",         cluster: "creativo"   as const },
+  { nombre: "Pablo Ruiz",      avatar: "PR", compDom: "STEM",  rol: "Analista Financiero",        cluster: "financiero" as const },
+  { nombre: "María Santos",    avatar: "MS", compDom: "CLC",   rol: "Responsable de Comunicación",cluster: "creativo"   as const },
+  { nombre: "Diego López",     avatar: "DL", compDom: "CC",    rol: "Gestor de Equipo",           cluster: "gestor"     as const },
+  { nombre: "Ana Martín",      avatar: "AM", compDom: "CPSAA", rol: "Coordinadora de Operaciones",cluster: "gestor"     as const },
+  { nombre: "Carlos Rivera",   avatar: "CR", compDom: "CD",    rol: "Desarrollador Digital",      cluster: "gestor"     as const },
+  { nombre: "Laura Sanz",      avatar: "LS", compDom: "CLC",   rol: "Community Manager",          cluster: "creativo"   as const },
+  { nombre: "Tomás Herrera",   avatar: "TH", compDom: "STEM",  rol: "Jefe de Costes",             cluster: "financiero" as const },
+  { nombre: "Carla Vega",      avatar: "CV", compDom: "CCEC",  rol: "Diseñadora de Menú/Imagen",  cluster: "creativo"   as const },
+  { nombre: "Alejandro Pérez", avatar: "AP", compDom: "CE",    rol: "Responsable de Ventas",      cluster: "financiero" as const },
+  { nombre: "Valentina Cruz",  avatar: "VC", compDom: "CC",    rol: "Gestora de Clientes",        cluster: "gestor"     as const },
+];
+
 // ── T33: Tendencia semanal T1 ─────────────────────────────────────────────
 const t1CompTendencia: Record<string, { sem: number[] }> = {
   CLC:   { sem: [2.1, 2.4, 2.7, 3.1] },
@@ -1047,6 +1064,151 @@ export default function TeacherAnalytics() {
           ))}
         </div>
       </div>
+
+      {/* ── T34: Talento emergente T2 — perfiles Food Truck ─────────────────── */}
+      {(() => {
+        const [clusterActivo, setClusterActivo] = useState<"financiero" | "creativo" | "gestor">("financiero");
+        const [rolesAsignados, setRolesAsignados] = useState<Set<string>>(new Set());
+        const [asignandoRol, setAsignandoRol] = useState<string | null>(null);
+
+        const clusterConfig = {
+          financiero: {
+            label: lbl("Financieros", "Financial"),
+            desc: lbl("Dominan CE y STEM — liderarán el modelo de negocio del Food Truck", "Strong CE & STEM — will lead the Food Truck business model"),
+            color: "bg-success-light border-success/30 text-success",
+            iconBg: "bg-success/10",
+            badge: "bg-success-light text-success",
+          },
+          creativo: {
+            label: lbl("Creativos", "Creative"),
+            desc: lbl("Alta CCEC y CLC — definirán la identidad visual y comunicación de marca", "High CCEC & CLC — will define visual identity and brand communication"),
+            color: "bg-accent-light border-accent/30 text-accent-text",
+            iconBg: "bg-accent/20",
+            badge: "bg-accent-light text-accent-text",
+          },
+          gestor: {
+            label: lbl("Gestores", "Managers"),
+            desc: lbl("Fuertes en CC y CPSAA — coordinarán equipos, clientes y operaciones", "Strong CC & CPSAA — will coordinate teams, clients and operations"),
+            color: "bg-warning-light border-warning/30 text-text-primary",
+            iconBg: "bg-warning/10",
+            badge: "bg-warning-light text-warning",
+          },
+        } as const;
+
+        const clusterAlumnos = talentoT2.filter(a => a.cluster === clusterActivo);
+        const cfg = clusterConfig[clusterActivo];
+
+        const handleAsignar = (avatar: string) => {
+          setAsignandoRol(avatar);
+          setTimeout(() => {
+            setRolesAsignados(prev => new Set([...prev, avatar]));
+            setAsignandoRol(null);
+          }, 800);
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <Target size={16} className="text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                    {lbl("Talento emergente T2", "Emerging T2 Talent")}
+                  </h2>
+                  <p className="text-[10px] text-text-muted">{lbl("Proyecto Food Truck · Asignación de roles por perfil LOMLOE", "Food Truck Project · Role assignment by LOMLOE profile")}</p>
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-sidebar bg-accent-light px-2 py-0.5 rounded-full">
+                {lbl(`${rolesAsignados.size}/12 asignados`, `${rolesAsignados.size}/12 assigned`)}
+              </span>
+            </div>
+
+            {/* Cluster toggle */}
+            <div className="flex gap-2 mb-4">
+              {(["financiero", "creativo", "gestor"] as const).map((cl) => (
+                <button
+                  key={cl}
+                  onClick={() => setClusterActivo(cl)}
+                  className={`flex-1 text-[11px] font-semibold py-1.5 rounded-lg border transition-colors cursor-pointer ${
+                    clusterActivo === cl
+                      ? "bg-sidebar text-white border-transparent"
+                      : "bg-background text-text-secondary border-card-border hover:bg-accent-light"
+                  }`}
+                >
+                  {clusterConfig[cl].label}
+                  <span className="ml-1 text-[9px] opacity-70">
+                    ({talentoT2.filter(a => a.cluster === cl).length})
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Cluster description */}
+            <div className={`rounded-xl border p-3 mb-4 ${cfg.color}`}>
+              <p className="text-[11px] leading-snug font-medium">{cfg.desc}</p>
+            </div>
+
+            {/* Alumnos del cluster */}
+            <div className="flex flex-col gap-2">
+              {clusterAlumnos.map((alumno) => {
+                const asignado = rolesAsignados.has(alumno.avatar);
+                const cargando = asignandoRol === alumno.avatar;
+                return (
+                  <div
+                    key={alumno.avatar}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
+                      asignado
+                        ? "bg-success-light border-success/20"
+                        : "bg-background border-card-border"
+                    }`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                      <span className="text-[9px] font-bold text-accent">{alumno.avatar}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-text-primary truncate">{alumno.nombre}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${cfg.badge}`}>{alumno.compDom}</span>
+                        <span className="text-[10px] text-text-secondary truncate">{alumno.rol}</span>
+                      </div>
+                    </div>
+                    {asignado ? (
+                      <span className="flex items-center gap-1 text-[10px] font-semibold text-success flex-shrink-0">
+                        <CheckCircle2 size={12} />
+                        {lbl("Asignado", "Assigned")}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleAsignar(alumno.avatar)}
+                        disabled={cargando}
+                        className="text-[10px] font-semibold text-sidebar bg-accent-light px-2 py-1 rounded-lg hover:bg-accent transition-colors cursor-pointer flex-shrink-0 disabled:opacity-60"
+                      >
+                        {cargando ? lbl("...", "...") : lbl("Asignar rol", "Assign role")}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer with recommendation */}
+            <div className="mt-4 bg-background rounded-xl p-3 border border-card-border">
+              <div className="flex items-start gap-2">
+                <Lightbulb size={12} className="text-warning flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-text-secondary leading-relaxed">
+                  {lbl(
+                    "La asignación de roles es orientativa. Cada alumno puede ejercer varios roles durante el trimestre — el objetivo es que identifiquen su área de mayor impacto en el Food Truck.",
+                    "Role assignment is a guide. Each student may take on multiple roles during the term — the goal is to identify where they have the greatest impact on the Food Truck."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
