@@ -140,6 +140,30 @@ const timelineHitos = [
   { fecha: "Próximo", titulo: "Demo Day — Pitch ante inversores reales", competencia: "CE" as CompKey, xp: 200, completado: false, fase: "Semana 4" },
 ];
 
+// S17 — Progreso semanal por competencia (4 semanas)
+const competenciaMesSemanal: Record<CompKey, number[]> = {
+  CLC:   [52, 60, 67, 72],
+  CPL:   [44, 50, 55, 58],
+  STEM:  [65, 72, 80, 85],
+  CD:    [60, 70, 82, 88],
+  CPSAA: [55, 62, 70, 74],
+  CC:    [52, 58, 64, 68],
+  CE:    [58, 70, 82, 90],
+  CCEC:  [38, 44, 50, 55],
+};
+
+// S17 — Reto personalizado por competencia del mes
+const retosPersonalizados: Record<CompKey, string> = {
+  CLC:   "Escribe un email profesional a un proveedor de limpieza para tu Airbnb usando vocabulario formal y estructura clara.",
+  CPL:   "Traduce el apartado 'Normas de la casa' de tu listing al inglés sin usar traductor automático.",
+  STEM:  "Añade un escenario de precios dinámicos según festivos a tu modelo financiero.",
+  CD:    "Crea un tablero de Notion para gestionar las reservas de Casa Limón con automatizaciones básicas.",
+  CPSAA: "Identifica 3 momentos del proyecto donde cambiaste de opinión gracias al feedback de otros.",
+  CC:    "Investiga la normativa local de alquiler vacacional en Málaga y redacta un resumen de una página.",
+  CE:    "Diseña el plan de crecimiento de Casa Limón para el año 2: ¿un segundo piso o optimizar el primero?",
+  CCEC:  "Crea un moodboard visual para la temporada de verano de Casa Limón con paleta y fotografía.",
+};
+
 // S16 — Evidencias destacadas
 const evidenciasDestacadas = [
   {
@@ -661,18 +685,54 @@ export default function StudentPortfolio() {
           </div>
         </div>
 
-        {/* Top competency */}
-        <div className="bg-success-light rounded-2xl border border-card-border p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Star size={13} className="text-success" />
-            <span className="text-[11px] font-bold text-success">Mejor competencia</span>
-          </div>
-          <p className="text-[14px] font-bold text-text-primary mb-0.5">CE — Emprendedora</p>
-          <p className="text-[11px] text-text-secondary">Pasaste de 52% a 90% (+38%)</p>
-          <div className="h-2 bg-white/60 rounded-full overflow-hidden mt-2">
-            <div className="h-full bg-success rounded-full" style={{ width: "90%" }} />
-          </div>
-        </div>
+        {/* S17: Competencia del mes */}
+        {(() => {
+          const topComp = (Object.keys(compProgress) as CompKey[]).reduce((best, c) =>
+            compProgress[c].after - compProgress[c].before > compProgress[best].after - compProgress[best].before ? c : best
+          , "CLC" as CompKey);
+          const { before, after } = compProgress[topComp];
+          const gain = after - before;
+          const semanas = competenciaMesSemanal[topComp];
+          const maxVal = Math.max(...semanas);
+          const reto = retosPersonalizados[topComp];
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp size={13} className="text-success" />
+                <span className="text-[11px] font-bold text-success">Competencia del mes</span>
+                <span className="ml-auto text-[9px] font-bold bg-success-light text-success px-2 py-0.5 rounded-full">+{gain}%</span>
+              </div>
+              <p className="text-[13px] font-bold text-text-primary mb-0.5">{topComp} — {compFull[topComp]}</p>
+              <p className="text-[10px] text-text-muted mb-3">{before}% → {after}% · Mayor crecimiento</p>
+              {/* Gráfico semanal CSS */}
+              <div className="mb-3">
+                <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-1.5">Progreso semanal</span>
+                <div className="flex items-end gap-1.5 h-14">
+                  {semanas.map((val, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                      <span className="text-[8px] font-bold text-accent-text tabular-nums">{val}%</span>
+                      <div className="w-full bg-background rounded-t-sm overflow-hidden" style={{ height: "36px" }}>
+                        <div
+                          className="w-full bg-success rounded-t-sm transition-all"
+                          style={{ height: `${(val / maxVal) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[7px] text-text-muted">S{i + 1}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Reto de la semana */}
+              <div className="bg-accent-light rounded-xl p-3">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <Lightbulb size={10} className="text-accent-text flex-shrink-0" />
+                  <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">Reto para la semana siguiente</span>
+                </div>
+                <p className="text-[10px] text-text-secondary leading-relaxed">{reto}</p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Awards */}
         <div className="bg-card rounded-2xl border border-card-border p-4">
