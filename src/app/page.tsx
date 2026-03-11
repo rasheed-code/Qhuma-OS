@@ -27,6 +27,7 @@ import StudentSettings from "@/components/StudentSettings";
 import TaskWorkspace from "@/components/TaskWorkspace";
 import EvidenceGallery from "@/components/EvidenceGallery";
 import StudentAchievements from "@/components/StudentAchievements";
+import StreakCalendar from "@/components/StreakCalendar";
 import AdminDashboard from "@/components/AdminDashboard";
 import TeacherGradeBook from "@/components/TeacherGradeBook";
 
@@ -117,6 +118,7 @@ export default function Home() {
           {role === "student" && activeView === "settings" && <StudentSettings />}
           {role === "student" && activeView === "evidences" && <EvidenceGallery />}
           {role === "student" && activeView === "achievements" && <StudentAchievements />}
+          {role === "student" && activeView === "streak" && <StreakCalendar />}
           {role === "parent" && activeParentView === "overview" && (
             <ParentDashboard onNavigate={setActiveParentView} />
           )}
