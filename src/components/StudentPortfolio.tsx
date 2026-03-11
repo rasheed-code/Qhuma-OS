@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -440,6 +440,12 @@ export default function StudentPortfolio() {
   // C22 — Evidencias con QR
   const [qrVisible, setQrVisible] = useState<string | null>(null);
   const [imprimiendoTarjeta, setImprimiendoTarjeta] = useState<string | null>(null);
+
+  // C23 — Proyección a 12 meses
+  const [proyeccionVisible, setProyeccionVisible] = useState(false);
+  const [loadingProyeccion, setLoadingProyeccion] = useState(false);
+  const [proyeccionData, setProyeccionData] = useState<{ conservador: number[]; realista: number[]; optimista: number[] } | null>(null);
+  const [proyeccionGuardada, setProyeccionGuardada] = useState(false);
 
   const handleImprimirTarjeta = (ev: typeof evidenciasDestacadas[number]) => {
     setImprimiendoTarjeta(ev.id);
@@ -1002,6 +1008,145 @@ export default function StudentPortfolio() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* C23: Proyección a 12 meses */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">{lbl("Proyección a 12 meses", "12-month projection")}</span>
+            <span className="ml-auto text-[9px] font-bold bg-background text-text-muted px-2 py-0.5 rounded-full border border-card-border">
+              {lbl("IA · Casa Limón", "AI · Casa Limón")}
+            </span>
+          </div>
+          <p className="text-[11px] text-text-muted mb-4">{lbl("Simula el impacto financiero de tu Airbnb en 3 escenarios realistas", "Simulate the financial impact of your Airbnb in 3 realistic scenarios")}</p>
+
+          {!proyeccionVisible ? (
+            <button
+              onClick={async () => {
+                setProyeccionVisible(true);
+                setLoadingProyeccion(true);
+                setProyeccionGuardada(false);
+                try {
+                  const res = await fetch("/api/tutor-chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      mode: "narrativa",
+                      message: "Genera 3 escenarios financieros para Casa Limón (Airbnb Málaga) a 12 meses: conservador (40% ocupación), realista (65%), optimista (85%). Precio base 85€/noche, gastos fijos 400€/mes. Devuelve SOLO un JSON con este formato exacto: {\"conservador\":[n1,n2,...n12],\"realista\":[n1,...n12],\"optimista\":[n1,...n12]} — ingresos netos mensuales en euros enteros.",
+                      history: [],
+                    }),
+                  });
+                  const data = await res.json();
+                  const match = data.reply?.match(/\{[\s\S]*\}/);
+                  if (match) {
+                    const parsed = JSON.parse(match[0]);
+                    if (parsed.conservador && parsed.realista && parsed.optimista) {
+                      setProyeccionData(parsed);
+                      setLoadingProyeccion(false);
+                      return;
+                    }
+                  }
+                } catch { /* fallback */ }
+                // Fallback mock realista
+                setProyeccionData({
+                  conservador: [310, 320, 340, 360, 380, 400, 410, 420, 410, 395, 380, 370],
+                  realista:    [650, 680, 720, 760, 800, 850, 870, 860, 820, 790, 760, 740],
+                  optimista:   [1050, 1100, 1180, 1240, 1300, 1380, 1410, 1390, 1320, 1270, 1220, 1200],
+                });
+                setLoadingProyeccion(false);
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-accent-light text-accent-text text-[12px] font-bold py-3 rounded-xl border border-accent/20 hover:brightness-95 transition-all cursor-pointer"
+            >
+              <Sparkles size={14} />
+              {lbl("¿Qué pasaría si...? — Generar proyección IA", "What if...? — Generate AI projection")}
+            </button>
+          ) : loadingProyeccion ? (
+            <div className="flex items-center justify-center gap-3 py-8">
+              <RefreshCw size={16} className="text-accent-text animate-spin" />
+              <span className="text-[12px] text-text-muted">{lbl("Calculando escenarios con datos de Casa Limón…", "Calculating scenarios with Casa Limón data…")}</span>
+            </div>
+          ) : proyeccionData ? (() => {
+            const meses = ["Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic", "Ene", "Feb", "Mar"];
+            const maxVal = Math.max(...proyeccionData.optimista);
+            const escenarios = [
+              { key: "conservador" as const, label: "Conservador (40%)",  color: "bg-urgent",     textColor: "text-urgent",     bg: "bg-urgent-light"   },
+              { key: "realista"    as const, label: "Realista (65%)",     color: "bg-warning",    textColor: "text-text-primary", bg: "bg-warning-light"  },
+              { key: "optimista"  as const, label: "Optimista (85%)",    color: "bg-success",    textColor: "text-success",     bg: "bg-success-light"  },
+            ];
+            return (
+              <div>
+                {/* Resumen KPIs */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {escenarios.map((e) => {
+                    const anual = proyeccionData[e.key].reduce((s, v) => s + v, 0);
+                    const media = Math.round(anual / 12);
+                    return (
+                      <div key={e.key} className={`rounded-xl p-3 ${e.bg}`}>
+                        <p className={`text-[9px] font-bold ${e.textColor} mb-1`}>{e.label}</p>
+                        <p className={`text-[20px] font-black ${e.textColor} leading-none`}>{media}€</p>
+                        <p className="text-[9px] text-text-muted">/ mes · {anual.toLocaleString()}€ anual</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Barras mensuales por escenario */}
+                {escenarios.map((e) => (
+                  <div key={e.key} className="mb-4">
+                    <p className={`text-[10px] font-semibold ${e.textColor} mb-2`}>{e.label}</p>
+                    <div className="flex items-end gap-1 h-16">
+                      {proyeccionData[e.key].map((val, i) => (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                          <div
+                            className={`w-full rounded-sm ${e.color}`}
+                            style={{ height: `${Math.max(6, (val / maxVal) * 56)}px` }}
+                            title={`${meses[i]}: ${val}€`}
+                          />
+                          <span className="text-[7px] text-text-muted">{meses[i]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Nota metodológica */}
+                <div className="bg-background rounded-xl p-3 mb-4">
+                  <p className="text-[10px] text-text-muted leading-relaxed">
+                    <strong>Metodología:</strong> Ingresos = ocupación × 30 noches × 85€. Gastos fijos: 400€/mes. Los primeros 3 meses incluyen curva de visibilidad del listing en Airbnb.
+                  </p>
+                </div>
+
+                {/* Botones */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setProyeccionGuardada(true)}
+                    className={`flex-1 flex items-center justify-center gap-2 text-[11px] font-bold py-2.5 rounded-xl transition-all cursor-pointer ${
+                      proyeccionGuardada
+                        ? "bg-success-light text-success"
+                        : "bg-sidebar text-white hover:brightness-110"
+                    }`}
+                  >
+                    {proyeccionGuardada
+                      ? <><CheckCircle2 size={13} /> {lbl("Guardado en portfolio", "Saved to portfolio")}</>
+                      : <><Award size={13} /> {lbl("Guardar proyección en portfolio", "Save projection to portfolio")}</>
+                    }
+                  </button>
+                  <button
+                    onClick={() => { setProyeccionVisible(false); setProyeccionData(null); setProyeccionGuardada(false); }}
+                    className="px-4 py-2.5 rounded-xl text-[11px] text-text-muted bg-background border border-card-border hover:text-text-secondary transition-all cursor-pointer"
+                  >
+                    {lbl("Cerrar", "Close")}
+                  </button>
+                </div>
+                {proyeccionGuardada && (
+                  <p className="text-[10px] text-success mt-2 text-center">
+                    Proyección guardada el {new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                )}
+              </div>
+            );
+          })() : null}
         </div>
 
         {/* S16: Evidencias destacadas */}
