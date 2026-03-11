@@ -23,6 +23,7 @@ import {
   FileSpreadsheet,
   Sparkles,
   Mic,
+  Landmark,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -63,9 +64,10 @@ const parentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: strin
 const adminNav: { icon: typeof LayoutDashboard; labelEs: string; view: AdminView }[] = [
   { icon: LayoutDashboard, labelEs: "Resumen",  view: "overview" },
   { icon: Users,           labelEs: "Usuarios", view: "users" },
-  { icon: Bot,             labelEs: "IA",        view: "ai" },
-  { icon: Building2,       labelEs: "Colegios",  view: "schools" },
-  { icon: FileText,        labelEs: "Informes",  view: "reports" },
+  { icon: Landmark,        labelEs: "Capital",  view: "capital" },
+  { icon: Bot,             labelEs: "IA",       view: "ai" },
+  { icon: Building2,       labelEs: "Colegios", view: "schools" },
+  { icon: FileText,        labelEs: "Informes", view: "reports" },
 ];
 
 const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: TeacherView }[] = [

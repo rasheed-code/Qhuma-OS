@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Users, Bot, Building2, FileText, Shield,
   CheckCircle2, AlertTriangle, TrendingUp, Activity, Zap,
   Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
-  Server, Database, RefreshCw, Clock,
+  Server, Database, RefreshCw, Clock, Search, X, Landmark,
+  Vote, Eye,
 } from "lucide-react";
 import { AdminView } from "@/types";
 
@@ -45,14 +46,18 @@ const estadoSistema = [
 ];
 
 const usuariosMock = [
-  { id: "1", nombre: "Lucas García",    email: "lucas@qhuma.es",    rol: "Alumno",  curso: "1º ESO", activo: true },
-  { id: "2", nombre: "Sofía Martín",    email: "sofia@qhuma.es",    rol: "Alumno",  curso: "1º ESO", activo: true },
-  { id: "3", nombre: "Pablo Ruiz",      email: "pablo@qhuma.es",    rol: "Alumno",  curso: "1º ESO", activo: false },
-  { id: "4", nombre: "Ana Martínez",    email: "ana@qhuma.es",      rol: "Docente", curso: "Mentor 1º ESO", activo: true },
-  { id: "5", nombre: "Carlos Pérez",    email: "carlos@qhuma.es",   rol: "Docente", curso: "Mentor 2º ESO", activo: true },
-  { id: "6", nombre: "María García",    email: "maria@qhuma.es",    rol: "Familia", curso: "Familia Lucas", activo: true },
-  { id: "7", nombre: "Daniel Torres",   email: "daniel@qhuma.es",   rol: "Alumno",  curso: "1º ESO", activo: true },
-  { id: "8", nombre: "Carmen Vega",     email: "carmen@qhuma.es",   rol: "Alumno",  curso: "1º ESO", activo: true },
+  { id: "1",  nombre: "Lucas García",      email: "lucas@qhuma.es",      rol: "Alumno",  curso: "1º ESO",               activo: true  },
+  { id: "2",  nombre: "Sofía Martín",      email: "sofia@qhuma.es",      rol: "Alumno",  curso: "1º ESO",               activo: true  },
+  { id: "3",  nombre: "Pablo Ruiz",        email: "pablo@qhuma.es",      rol: "Alumno",  curso: "1º ESO",               activo: false },
+  { id: "4",  nombre: "Ana Martínez",      email: "ana@qhuma.es",        rol: "Docente", curso: "Mentor 1º ESO",        activo: true  },
+  { id: "5",  nombre: "Carlos Pérez",      email: "carlos@qhuma.es",     rol: "Docente", curso: "Mentor 2º ESO",        activo: true  },
+  { id: "6",  nombre: "María García",      email: "maria@qhuma.es",      rol: "Familia", curso: "Familia Lucas",        activo: true  },
+  { id: "7",  nombre: "Daniel Torres",     email: "daniel@qhuma.es",     rol: "Alumno",  curso: "1º ESO",               activo: true  },
+  { id: "8",  nombre: "Carmen Vega",       email: "carmen@qhuma.es",     rol: "Alumno",  curso: "1º ESO",               activo: true  },
+  { id: "9",  nombre: "Lucía Fernández",   email: "lucia@qhuma.es",      rol: "Alumno",  curso: "2º ESO",               activo: true  },
+  { id: "10", nombre: "Tomás Herrera",     email: "tomas@qhuma.es",      rol: "Alumno",  curso: "2º ESO",               activo: false },
+  { id: "11", nombre: "Isabel Mora",       email: "isabel@qhuma.es",     rol: "Docente", curso: "Mentor 2º ESO",        activo: true  },
+  { id: "12", nombre: "Roberto Núñez",     email: "roberto@qhuma.es",    rol: "Admin",   curso: "Administrador",        activo: true  },
 ];
 
 const usoIA = [
@@ -72,10 +77,57 @@ const competenciasLOMLOE = [
   { key: "CCEC", nombre: "Conciencia y Expresión Culturales", activa: true },
 ];
 
+const qhumaCapitalProyectos = [
+  {
+    id: "1", alumno: "Lucas García", clase: "1º ESO",
+    nombre: "El Airbnb de Lucas — Málaga",
+    descripcion: "Plataforma de alquiler turístico en Málaga para financiar experiencias educativas locales",
+    inversion: 8500, fase: "votación" as const, votos: 7, votosMax: 12,
+  },
+  {
+    id: "2", alumno: "Sofía Martín", clase: "1º ESO",
+    nombre: "Huerto Urbano Digital",
+    descripcion: "Sistema IoT para gestión de huertos urbanos con app de seguimiento y sostenibilidad",
+    inversion: 3200, fase: "aprobado" as const, votos: 11, votosMax: 12,
+  },
+  {
+    id: "3", alumno: "Daniel Torres", clase: "1º ESO",
+    nombre: "Podcast Escolar — Historias de Barrio",
+    descripcion: "Serie de podcasts que explora la historia del barrio con entrevistas a vecinos",
+    inversion: 1800, fase: "pitch" as const, votos: 0, votosMax: 12,
+  },
+  {
+    id: "4", alumno: "Carmen Vega", clase: "1º ESO",
+    nombre: "App de Intercambio Estudiantil",
+    descripcion: "Plataforma peer-to-peer para intercambio de materiales y servicios entre estudiantes",
+    inversion: 5000, fase: "financiado" as const, votos: 12, votosMax: 12,
+  },
+  {
+    id: "5", alumno: "Lucía Fernández", clase: "2º ESO",
+    nombre: "Estudio de Animación DIY",
+    descripcion: "Miniestudio de stop-motion y animación 2D para producir contenido educativo",
+    inversion: 2400, fase: "pitch" as const, votos: 0, votosMax: 12,
+  },
+];
+
+const faseConfig = {
+  pitch:      { label: "Pitch",     color: "bg-background text-text-secondary border border-card-border" },
+  votación:   { label: "Votación",  color: "bg-warning-light text-warning" },
+  aprobado:   { label: "Aprobado",  color: "bg-accent-light text-accent-text" },
+  financiado: { label: "Financiado", color: "bg-success-light text-success" },
+};
+
 export default function AdminDashboard({ activeView, onNavigate }: AdminDashboardProps) {
   const [colegioActivo, setColegioActivo] = useState<Colegio>("malaga");
   const [showColegioMenu, setShowColegioMenu] = useState(false);
   const colegio = colegios[colegioActivo];
+
+  // A2 — Users management state
+  const [userSearch, setUserSearch] = useState("");
+  const [userFilterRol, setUserFilterRol] = useState("Todos");
+  const [userFilterEstado, setUserFilterEstado] = useState("Todos");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newUser, setNewUser] = useState({ nombre: "", email: "", rol: "Alumno", curso: "" });
 
   return (
     <div>
@@ -120,11 +172,12 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
       {/* Tabs de navegación */}
       <div className="flex gap-1 bg-background rounded-xl p-1 mb-5">
         {([
-          { key: "overview" as AdminView, label: "Resumen", icon: LayoutDashboard },
-          { key: "users" as AdminView, label: "Usuarios", icon: Users },
-          { key: "ai" as AdminView, label: "IA", icon: Bot },
-          { key: "schools" as AdminView, label: "Colegios", icon: Building2 },
-          { key: "reports" as AdminView, label: "Informes", icon: FileText },
+          { key: "overview" as AdminView, label: "Resumen",  icon: LayoutDashboard },
+          { key: "users"    as AdminView, label: "Usuarios", icon: Users },
+          { key: "capital"  as AdminView, label: "Capital",  icon: Landmark },
+          { key: "ai"       as AdminView, label: "IA",       icon: Bot },
+          { key: "schools"  as AdminView, label: "Colegios", icon: Building2 },
+          { key: "reports"  as AdminView, label: "Informes", icon: FileText },
         ]).map((tab) => (
           <button
             key={tab.key}
@@ -260,56 +313,249 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
       )}
 
       {/* ─── TAB: USUARIOS ─── */}
-      {activeView === "users" && (
-        <div className="bg-card rounded-2xl border border-card-border p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[14px] font-semibold text-text-primary">Usuarios — {colegio.nombre}</h3>
-            <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
-              <UserPlus size={12} />
-              Añadir usuario
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-card-border">
-                  {["Nombre", "Email", "Rol", "Grupo/Curso", "Estado"].map((h) => (
-                    <th key={h} className="text-[10px] font-bold text-text-muted text-left pb-3 pr-4">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {usuariosMock.map((u) => (
-                  <tr key={u.id} className="border-b border-card-border/50 hover:bg-background/50 transition-colors">
-                    <td className="py-3 pr-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
-                          {u.nombre.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                        </div>
-                        <span className="text-[12px] font-medium text-text-primary">{u.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-4 text-[11px] text-text-secondary">{u.email}</td>
-                    <td className="py-3 pr-4">
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                        u.rol === "Docente" ? "bg-accent-light text-accent-text"
-                        : u.rol === "Alumno" ? "bg-background text-text-primary"
-                        : "bg-warning-light text-text-primary"
-                      }`}>{u.rol}</span>
-                    </td>
-                    <td className="py-3 pr-4 text-[11px] text-text-secondary">{u.curso}</td>
-                    <td className="py-3">
-                      <div className={`flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-full ${u.activo ? "bg-success-light" : "bg-urgent-light"}`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${u.activo ? "bg-success" : "bg-urgent"}`} />
-                        <span className={`text-[9px] font-semibold ${u.activo ? "text-success" : "text-urgent"}`}>
-                          {u.activo ? "Activo" : "Inactivo"}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
+      {activeView === "users" && (() => {
+        const filtered = usuariosMock.filter((u) => {
+          const matchSearch = userSearch === "" || u.nombre.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
+          const matchRol = userFilterRol === "Todos" || u.rol === userFilterRol;
+          const matchEstado = userFilterEstado === "Todos" || (userFilterEstado === "Activo" ? u.activo : !u.activo);
+          return matchSearch && matchRol && matchEstado;
+        });
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[14px] font-semibold text-text-primary">Usuarios — {colegio.nombre}</h3>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+              >
+                <UserPlus size={12} />
+                Añadir usuario
+              </button>
+            </div>
+            {/* Search + Filters */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1 relative">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder="Buscar por nombre o email..."
+                  className="w-full bg-background text-[12px] text-text-primary pl-8 pr-3 py-2 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
+                />
+              </div>
+              <select
+                value={userFilterRol}
+                onChange={(e) => setUserFilterRol(e.target.value)}
+                className="bg-background text-[11px] text-text-secondary px-3 py-2 rounded-xl border border-card-border outline-none cursor-pointer"
+              >
+                {["Todos", "Alumno", "Docente", "Familia", "Admin"].map((r) => (
+                  <option key={r}>{r}</option>
                 ))}
-              </tbody>
-            </table>
+              </select>
+              <select
+                value={userFilterEstado}
+                onChange={(e) => setUserFilterEstado(e.target.value)}
+                className="bg-background text-[11px] text-text-secondary px-3 py-2 rounded-xl border border-card-border outline-none cursor-pointer"
+              >
+                {["Todos", "Activo", "Inactivo"].map((e) => (
+                  <option key={e}>{e}</option>
+                ))}
+              </select>
+              <span className="text-[11px] text-text-muted flex-shrink-0">{filtered.length} usuarios</span>
+            </div>
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-card-border">
+                    {["Nombre", "Email", "Rol", "Grupo/Curso", "Estado"].map((h) => (
+                      <th key={h} className="text-[10px] font-bold text-text-muted text-left pb-3 pr-4">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((u) => (
+                    <tr key={u.id} className="border-b border-card-border/50 hover:bg-background/50 transition-colors">
+                      <td className="py-3 pr-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                            {u.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                          </div>
+                          <span className="text-[12px] font-medium text-text-primary">{u.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 pr-4 text-[11px] text-text-secondary">{u.email}</td>
+                      <td className="py-3 pr-4">
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          u.rol === "Docente" ? "bg-accent-light text-accent-text"
+                          : u.rol === "Alumno" ? "bg-background text-text-primary border border-card-border"
+                          : u.rol === "Admin"  ? "bg-sidebar text-white"
+                          : "bg-warning-light text-text-primary"
+                        }`}>{u.rol}</span>
+                      </td>
+                      <td className="py-3 pr-4 text-[11px] text-text-secondary">{u.curso}</td>
+                      <td className="py-3">
+                        <div className={`flex items-center gap-1.5 w-fit px-2 py-0.5 rounded-full ${u.activo ? "bg-success-light" : "bg-urgent-light"}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${u.activo ? "bg-success" : "bg-urgent"}`} />
+                          <span className={`text-[9px] font-semibold ${u.activo ? "text-success" : "text-urgent"}`}>
+                            {u.activo ? "Activo" : "Inactivo"}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-[12px] text-text-muted">No hay usuarios que coincidan con los filtros.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Modal — Añadir usuario */}
+            {showAddModal && (
+              <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4">
+                <div className="bg-card rounded-2xl border border-card-border p-6 w-full max-w-[420px]">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2">
+                      <UserPlus size={16} className="text-accent-text" />
+                      <h3 className="text-[15px] font-bold text-text-primary">Añadir nuevo usuario</h3>
+                    </div>
+                    <button onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-text-primary cursor-pointer transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { label: "Nombre completo", key: "nombre", type: "text", placeholder: "Ej. Elena Rodríguez" },
+                      { label: "Email",            key: "email", type: "email", placeholder: "elena@qhuma.es" },
+                      { label: "Grupo/Curso",      key: "curso", type: "text", placeholder: "Ej. 1º ESO" },
+                    ].map((field) => (
+                      <div key={field.key}>
+                        <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">{field.label}</label>
+                        <input
+                          type={field.type}
+                          value={newUser[field.key as keyof typeof newUser]}
+                          onChange={(e) => setNewUser({ ...newUser, [field.key]: e.target.value })}
+                          placeholder={field.placeholder}
+                          className="w-full bg-background text-[12px] text-text-primary px-3 py-2.5 rounded-xl border border-card-border outline-none focus:border-accent-text/40 transition-colors"
+                        />
+                      </div>
+                    ))}
+                    <div>
+                      <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Rol</label>
+                      <select
+                        value={newUser.rol}
+                        onChange={(e) => setNewUser({ ...newUser, rol: e.target.value })}
+                        className="w-full bg-background text-[12px] text-text-primary px-3 py-2.5 rounded-xl border border-card-border outline-none cursor-pointer"
+                      >
+                        {["Alumno", "Docente", "Familia", "Admin"].map((r) => <option key={r}>{r}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-5">
+                    <button
+                      onClick={() => setShowAddModal(false)}
+                      className="flex-1 py-2.5 bg-background text-text-secondary text-[12px] font-medium rounded-xl cursor-pointer hover:bg-card-border/20 border border-card-border transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => { setShowAddModal(false); setNewUser({ nombre: "", email: "", rol: "Alumno", curso: "" }); }}
+                      className="flex-1 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                    >
+                      Crear usuario
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* ─── TAB: QHUMA CAPITAL ─── */}
+      {activeView === "capital" && (
+        <div className="space-y-5">
+          {/* Header stats */}
+          <div className="grid grid-cols-4 gap-4">
+            {[
+              { label: "Proyectos en evaluación", valor: "5",      sub: "Este trimestre",            bg: "bg-accent-light",   text: "text-accent-text" },
+              { label: "Inversión total solicitada", valor: "€21.900", sub: "Máx. €10.000 por proyecto", bg: "bg-background",     text: "text-text-primary" },
+              { label: "Proyectos financiados",   valor: "1",      sub: "Carmen Vega · €5.000",       bg: "bg-success-light",  text: "text-success" },
+              { label: "Votos emitidos (docentes)", valor: "30",   sub: "De 48 posibles",             bg: "bg-warning-light",  text: "text-warning" },
+            ].map((s) => (
+              <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-card-border`}>
+                <p className="text-[10px] text-text-muted mb-1 leading-tight">{s.label}</p>
+                <span className={`text-[24px] font-bold ${s.text} block leading-none`}>{s.valor}</span>
+                <span className="text-[10px] text-text-muted mt-1 block">{s.sub}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Proyectos */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Landmark size={14} className="text-accent-text" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Proyectos QHUMA Capital</h3>
+              <span className="ml-auto text-[10px] text-text-muted">Fases: Pitch → Votación → Aprobado → Financiado</span>
+            </div>
+            <div className="space-y-3">
+              {qhumaCapitalProyectos.map((p) => {
+                const fase = faseConfig[p.fase];
+                const porcentajeVotos = p.votosMax > 0 ? Math.round((p.votos / p.votosMax) * 100) : 0;
+                return (
+                  <div key={p.id} className="bg-background rounded-2xl p-4 flex items-start gap-4">
+                    {/* Avatar alumno */}
+                    <div className="w-9 h-9 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {p.alumno.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div>
+                          <p className="text-[13px] font-semibold text-text-primary leading-snug">{p.nombre}</p>
+                          <p className="text-[10px] text-text-muted">{p.alumno} · {p.clase}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full ${fase.color}`}>{fase.label}</span>
+                          <span className="text-[12px] font-bold text-accent-text">€{p.inversion.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{p.descripcion}</p>
+                      {/* Votos */}
+                      {p.fase !== "pitch" && (
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <Vote size={11} className="text-text-muted" />
+                            <span className="text-[10px] text-text-muted">{p.votos}/{p.votosMax} votos</span>
+                          </div>
+                          <div className="flex-1 h-1.5 bg-white rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                p.fase === "financiado" ? "bg-success"
+                                : p.fase === "aprobado"  ? "bg-accent"
+                                : "bg-warning"
+                              }`}
+                              style={{ width: `${porcentajeVotos}%` }}
+                            />
+                          </div>
+                          <span className="text-[10px] font-semibold text-text-muted">{porcentajeVotos}%</span>
+                        </div>
+                      )}
+                    </div>
+                    {/* Acción */}
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-light text-accent-text text-[10px] font-bold rounded-xl hover:brightness-95 transition-all cursor-pointer flex-shrink-0">
+                      <Eye size={11} />
+                      Revisar pitch
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
