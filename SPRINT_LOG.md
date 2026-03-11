@@ -50,76 +50,101 @@
 
 ## Estado actual
 
-- **Último ciclo**: Ciclo 1 parcial (interrumpido tras S2)
+- **Último ciclo completo**: Ciclo 3 ✅ (push: `3aede28`)
 - **Fecha**: 2026-03-11
+- **Próximo ciclo**: Ciclo 4 (integración culture.md)
 
 ---
 
 ## Sprints completados
 
+### Ciclo 1
 ### [SPRINT-STUDENT][S1] EvidenceGallery ✅
-- Archivo: `src/components/EvidenceGallery.tsx`
+- Commit: `a5eae4f`
 - 12 evidencias mock Airbnb Málaga, thumbnails por tipo, badges LOMLOE, calificación 1-4
 - Panel derecho: progreso circular, desglose asignatura, próxima entrega
-- Commit: `a5eae4f`
 
 ### [SPRINT-STUDENT][S2] StudentAchievements ✅
-- Archivo: `src/components/StudentAchievements.tsx`
-- 10 logros desbloqueados + 5 bloqueados con progreso visible
-- Rareza: Común/Raro/Legendario con colores del design system
-- Tipos: `StudentView += "achievements"`, `Role += "admin"` (prep A1)
 - Commit: `8f9b553`
+- 10 logros desbloqueados + 5 bloqueados. Rareza: Común/Raro/Legendario
+- Tipos StudentView += achievements, Role += admin
+
+### Ciclo 2
+### [SPRINT-TEACHER][T1] TeacherAnalytics ✅
+- Commit: `b06b20f`
+- Heatmap 12×8 LOMLOE, barras CSS entregas vs objetivo, tabla de riesgo 0-100
+- Todo en español. Solo design system colors.
+
+### [SPRINT-ADMIN][A1] AdminDashboard ✅
+- Commit: `ede462a`
+- 5 tabs: Resumen, Usuarios, IA, Colegios, Informes. Selector de colegio.
+- SVG health ring, sistema activo, actividad reciente, acciones rápidas.
+
+### [SPRINT-TEACHER][T2] TeacherGradeBook ✅
+- Commit: `5756af0`
+- Tabla 12 alumnos × 8 competencias LOMLOE. Click-to-edit. Color coded 1-4.
+- Media por alumno y por competencia. Distribución de niveles en 4 cards.
+
+### [SPRINT-STUDENT][S3] StreakCalendar ✅
+- Commit: `c508d63`
+- Heatmap 5 semanas × 6 días con rgba inline para intensidad de color
+- Racha actual: 12 días. Panel derecho: contador, stats, próximo hito.
+
+### Ciclo 3
+### [SPRINT-STUDENT][S4] StudentPortfolio ✅
+- Commit: `6beaee7`
+- Narrativa semanal del proyecto con reflexiones personales y crecimiento LOMLOE
+- Gráfica antes/después por competencia (click para detalles). Nota de mentora.
+- culture.md Bloque 3: "Narrativa propia". Vista "portfolio" en sidebar.
+
+### [SPRINT-STUDENT][S5] LevelUpModal ✅
+- Commit: `4e1bdc7`
+- Modal animado con gradient, badge de nivel, XP ganados, perks por nivel 2-5
+- Perks conectados a culture.md (Modo Socrático, QHUMA Capital, Pitch Lab)
+- Trigger demo en barra XP de StudentDashboard.
+
+### [SPRINT-TEACHER][T3] TeacherProjectGenerator ✅
+- Commit: `54f7cee`
+- Config: área de conocimiento, duración, competencias LOMLOE prioritarias
+- 3 plantillas de proyecto completas con fases, entregables, criterios eval, impacto real
+- Integración QHUMA Capital para proyectos de alto potencial.
+
+### [SPRINT-TEACHER][T4] TeacherMessages ✅
+- Commit: `3aede28`
+- Chat por alumno, historial, indicadores de estado on_track/needs_attention/excelling
+- 8 plantillas de respuesta rápida. Panel de próximos check-ins.
 
 ---
 
-## Sprints pendientes — Ciclo 2 (implementar en este orden)
+## Sprints pendientes — Ciclo 4 (integrar culture.md — PRIORIDAD ALTA)
 
-- [ ] [T1] TeacherAnalytics — reemplazar componente existente, todo en español
-- [ ] [A1] AdminDashboard — panel admin completo con Role/AdminView/RoleSelector/Sidebar
-- [ ] [T2] TeacherGradeBook — cuaderno notas LOMLOE 1-4 editable
-- [ ] [S3] StreakCalendar — heatmap 30 días actividad
-
----
-
-## Sprints pendientes — Ciclo 3
-
-- [ ] [S4] StudentPortfolio — portfolio personal con Narrativa propia (culture.md Bloque 3)
-- [ ] [S5] LevelUpModal — overlay celebración subida de nivel
-- [ ] [T3] TeacherProjectGenerator — formulario + /api/generate-projects
-- [ ] [T4] TeacherMessages — centro mensajes con plantillas rápidas
+- [ ] [T5] ClassHealthWidget — reemplazar hero de TeacherDashboard con anillo SVG de salud de clase (% alumnos on_track, riesgo, excelling). Mostrar alertas críticas.
+- [ ] [C1] ModoSocratico — modificar `/api/tutor-chat/route.ts`: primera respuesta siempre es pregunta de retorno socrática. Si no existe la ruta, crear el handler con lógica de system prompt.
+- [ ] [C2] ErrorLog — nueva sección en StudentPortfolio: "Mis errores aprendidos". Cada error = título, qué asumí, dónde falló, qué cambiaría. Lista editable con badge de competencia.
+- [ ] [C3] PitchLab — nuevo componente standalone accesible desde sidebar del alumno. Cronómetro, guía de estructura del pitch (problema/solución/mercado/financiero/equipo), input de notas por sección, botón "Simular audiencia".
 
 ---
 
-## Sprints pendientes — Ciclo 4 (integrar culture.md)
+## Sprints pendientes — Ciclo 5
 
-- [ ] [T5] ClassHealthWidget — anillo salud clase SVG en TeacherDashboard
-- [ ] [C1] ModoSocratico — modificar /api/tutor-chat: primera respuesta = pregunta socrática, no respuesta directa. Registrar ratio pregunta/respuesta en datos del alumno.
-- [ ] [C2] ErrorLog — sección "Mis errores" en StudentPortfolio: cada reenvío de evidencia genera mini-análisis IA ("¿Qué asumiste? ¿Dónde falló? ¿Qué cambiarías?")
-- [ ] [C3] PitchLab — componente de práctica para Demo Day: el alumno ensaya con IA, recibe feedback sobre estructura/claridad/persuasión. Conectar con /api/tutor-chat con system prompt de coach.
-- [ ] [C4] PerfilInteligencias — visualización del mapa de inteligencias en StudentProfile: 8 dimensiones construidas desde interacciones (simular con mock data + explicar metodología)
-- [ ] [C5] CuerpoHerramienta — widget de descanso activo que aparece tras 90 min: micro-contenido sobre neurociencia del movimiento, temporizador de 10 min, botón de vuelta al trabajo
-
----
-
-## Sprints pendientes — Ciclo 5 (Admin avanzado)
-
-- [ ] [A2] AdminUserManagement — tabla usuarios, modal añadir, toggle activo/inactivo
-- [ ] [A3] AdminAIUsage — gráficas uso IA, coste €, heatmap por alumno
-- [ ] [A4] AdminSchoolSettings — config colegio, checklist 8 competencias LOMLOE, calendario
-- [ ] [A5] QHUMACapital — panel de QHUMA Capital: proyectos en pitch, inversión solicitada, votación
+- [ ] [C4] PerfilInteligencias — visualización en StudentProfile de 8 dimensiones de inteligencia construidas desde interacciones (mock data + metodología Gardner)
+- [ ] [C5] CuerpoHerramienta — widget de descanso activo: aparece tras 90 min en pantalla, micro-contenido neurociencia, temporizador 10 min
+- [ ] [A2] AdminUserManagement — tabla usuarios, modal añadir, toggle activo/inactivo, buscador
+- [ ] [A5] QHUMACapital — panel de QHUMA Capital: proyectos en pitch, inversión solicitada hasta €10.000, votación
 
 ---
 
 ## Notas técnicas (leer antes de cada ciclo)
 
-- **Role type**: ya incluye `"admin"` (añadido en S2). AdminView type: aún no creado — crear en A1.
-- **TeacherAnalytics**: componente existente en `src/components/TeacherAnalytics.tsx` — REEMPLAZAR contenido, no crear nuevo. Actualmente tiene texto en inglés y colores fuera del design system.
-- **RoleSelector**: `src/components/RoleSelector.tsx` — añadir admin con icono `Shield` y label "Admin QHUMA"
-- **Sidebar**: para admin, añadir `activeAdminView` prop + nav admin. Actualmente el roleInfo ya tiene `admin` (añadido en S2 fix).
-- **page.tsx**: para admin, añadir `useState<AdminView>("overview")` + `<AdminDashboard />` cuando role="admin"
+- **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio"
+- **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages"
+- **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
+- **AdminView type**: "overview" | "users" | "ai" | "schools" | "reports"
+- **Sidebar**: todos los roles y sus nav arrays están en `src/components/Sidebar.tsx`. Añadir icono de lucide-react, labelEs, view.
+- **page.tsx**: renderiza componentes con condición `role === X && activeView === Y`. Siempre importar el componente nuevo arriba.
 - **culture.md módulos**: no son páginas nuevas, son capas de comportamiento. Implementar como: modificaciones al chat API, secciones dentro de componentes existentes, o widgets contextuales.
-- **Datos LOMLOE oficiales**: Real Decreto 217/2022 define las 8 competencias clave para ESO. Usar nomenclatura exacta del BOE cuando se muestren en UI formal (admin/informes).
-- **QHUMA Capital**: proyectos reales con inversión hasta €10.000. En el dashboard docente puede aparecer como proyecto especial de Bachillerato.
-- **Q-Coins**: según QHUMA_Master_Document, son canjeables por talleres exclusivos, equipamiento maker studio, excursiones, y prioridad en Passion Workshop.
+- **Datos LOMLOE oficiales**: Real Decreto 217/2022 define las 8 competencias clave para ESO.
+- **QHUMA Capital**: proyectos reales con inversión hasta €10.000.
+- **Q-Coins**: canjeables por talleres, equipamiento maker studio, excursiones, prioridad Passion Workshop.
 - Push siempre una vez al final del ciclo (no por sprint).
-- Todo el texto en español. Solo colores del design system. Solo lucide-react para iconos.
+- Todo el texto en español. Solo colores del design system. Solo lucide-react para iconos. NUNCA shadow-lg/xl.
