@@ -196,6 +196,28 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const trimestreLabel: Record<string, string> = { "1": "1er Trimestre 2025-26", "2": "2º Trimestre 2025-26", "3": "3er Trimestre 2025-26" };
   const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección" };
 
+  // A9 — Capital deep state
+  const [votosEnVivo, setVotosEnVivo] = useState(7); // proyecto "Airbnb de Lucas"
+  const [votandoId, setVotandoId] = useState<string | null>(null);
+  const [cartaProyectoId, setCartaProyectoId] = useState("2"); // Huerto Urbano aprobado
+  const [generandoCarta, setGenerandoCarta] = useState(false);
+  const [cartaGenerada, setCartaGenerada] = useState(false);
+
+  const handleEmitirVoto = (proyId: string) => {
+    if (votandoId) return;
+    setVotandoId(proyId);
+    setTimeout(() => {
+      setVotosEnVivo((v) => Math.min(12, v + 1));
+      setVotandoId(null);
+    }, 800);
+  };
+
+  const handleGenerarCarta = () => {
+    setGenerandoCarta(true);
+    setCartaGenerada(false);
+    setTimeout(() => { setGenerandoCarta(false); setCartaGenerada(true); }, 1600);
+  };
+
   return (
     <div>
       {/* Header */}
@@ -624,6 +646,180 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 );
               })}
             </div>
+          </div>
+
+          {/* ── A9: Votación en tiempo real ──────────────────────────── */}
+          {(() => {
+            const p = qhumaCapitalProyectos[0]; // "El Airbnb de Lucas" en votación
+            const votos = votosEnVivo;
+            const quorum = 9;
+            const pct = Math.round((votos / p.votosMax) * 100);
+            const aprobado = votos >= quorum;
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Vote size={14} className="text-warning" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">Votación del claustro — en directo</h3>
+                  <span className={`ml-auto text-[9px] font-bold px-2.5 py-0.5 rounded-full ${aprobado ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
+                    {aprobado ? "Quórum alcanzado" : `Faltan ${quorum - votos} votos`}
+                  </span>
+                </div>
+                <div className="bg-background rounded-xl p-4">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div>
+                      <p className="text-[13px] font-semibold text-text-primary">{p.nombre}</p>
+                      <p className="text-[11px] text-text-muted">{p.alumno} · {p.clase} · €{p.inversion.toLocaleString()}</p>
+                    </div>
+                    <button
+                      onClick={() => handleEmitirVoto(p.id)}
+                      disabled={votandoId === p.id || votos >= p.votosMax}
+                      className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex-shrink-0 ${
+                        votos >= p.votosMax
+                          ? "bg-success-light text-success cursor-not-allowed"
+                          : votandoId === p.id
+                          ? "bg-warning-light text-warning"
+                          : "bg-accent text-sidebar hover:brightness-105"
+                      }`}
+                    >
+                      <Vote size={12} />
+                      {votos >= p.votosMax ? "Completado" : votandoId === p.id ? "Registrando…" : "Emitir voto del claustro"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-1 h-3 bg-white rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-700 ${aprobado ? "bg-success" : "bg-warning"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <span className="text-[12px] font-bold text-text-primary flex-shrink-0">{votos}/{p.votosMax}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 flex gap-0.5">
+                      {Array.from({ length: p.votosMax }).map((_, i) => (
+                        <div key={i} className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${i < votos ? (aprobado ? "bg-success" : "bg-warning") : "bg-card-border"}`} />
+                      ))}
+                    </div>
+                    <span className="text-[9px] text-text-muted flex-shrink-0">Quórum: {quorum}/{p.votosMax}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── A9: Historial de pitches T1 ──────────────────────────── */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={14} className="text-text-secondary" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Historial de pitches — 1er Trimestre</h3>
+              <span className="ml-auto text-[10px] text-text-muted bg-background px-2.5 py-0.5 rounded-full">Sep – Dic 2025</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { alumno: "Carmen Vega",    proyecto: "App de Intercambio Estudiantil",   fecha: "18 dic 2025", resultado: "financiado", inversion: 5000,  nota: "Pitch sobresaliente. Modelo de negocio muy sólido." },
+                { alumno: "Sofía Martín",   proyecto: "Huerto Urbano Digital",             fecha: "16 dic 2025", resultado: "aprobado",   inversion: 3200,  nota: "Impacto ambiental excelente. Escalabilidad pendiente." },
+                { alumno: "Lucas García",   proyecto: "El Airbnb de Lucas",                fecha: "15 dic 2025", resultado: "votación",   inversion: 8500,  nota: "Inversión alta. Claustro pide más evidencias de mercado." },
+                { alumno: "Lucía Fernández",proyecto: "Estudio de Animación DIY",          fecha: "12 dic 2025", resultado: "pendiente",  inversion: 2400,  nota: "Proyecto creativo. Necesita plan de negocio más detallado." },
+                { alumno: "Daniel Torres",  proyecto: "Podcast Escolar — Historias de Barrio", fecha: "10 dic 2025", resultado: "rechazado", inversion: 1800, nota: "Dificultad para monetizar. Se recomienda reformular." },
+              ].map((h) => {
+                const resCfg: Record<string, { bg: string; text: string; label: string }> = {
+                  financiado: { bg: "bg-success-light", text: "text-success",    label: "Financiado" },
+                  aprobado:   { bg: "bg-accent-light",  text: "text-accent-text", label: "Aprobado" },
+                  votación:   { bg: "bg-warning-light", text: "text-warning",    label: "En votación" },
+                  pendiente:  { bg: "bg-background",    text: "text-text-muted", label: "Pendiente" },
+                  rechazado:  { bg: "bg-urgent-light",  text: "text-urgent",     label: "Rechazado" },
+                };
+                const cfg = resCfg[h.resultado] ?? resCfg["pendiente"];
+                return (
+                  <div key={h.alumno} className="flex items-start gap-3 p-3 bg-background rounded-xl">
+                    <div className="w-8 h-8 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                      {h.alumno.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[12px] font-semibold text-text-primary leading-snug">{h.proyecto}</p>
+                          <p className="text-[10px] text-text-muted">{h.alumno} · {h.fecha}</p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>{cfg.label}</span>
+                          <span className="text-[11px] font-bold text-accent-text">€{h.inversion.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <p className="text-[10px] text-text-secondary mt-1 leading-relaxed italic">"{h.nota}"</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── A9: Generador de carta de aprobación ─────────────────── */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardCheck size={14} className="text-accent-text" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Generador de carta de aprobación</h3>
+            </div>
+            <div className="flex items-center gap-3 mb-4">
+              <select
+                value={cartaProyectoId}
+                onChange={(e) => { setCartaProyectoId(e.target.value); setCartaGenerada(false); }}
+                className="flex-1 bg-background text-text-primary text-[12px] border border-card-border rounded-xl px-3 py-2 focus:outline-none focus:border-accent cursor-pointer"
+              >
+                {qhumaCapitalProyectos
+                  .filter((p) => p.fase === "aprobado" || p.fase === "financiado")
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>{p.nombre} — {p.alumno}</option>
+                  ))}
+              </select>
+              <button
+                onClick={handleGenerarCarta}
+                disabled={generandoCarta}
+                className="flex items-center gap-1.5 px-4 py-2 bg-accent text-sidebar text-[11px] font-bold rounded-xl hover:brightness-105 transition-all cursor-pointer disabled:opacity-60 flex-shrink-0"
+              >
+                {generandoCarta ? <RefreshCw size={12} className="animate-spin" /> : <Save size={12} />}
+                {generandoCarta ? "Generando…" : "Generar carta"}
+              </button>
+            </div>
+            {cartaGenerada && (() => {
+              const p = qhumaCapitalProyectos.find((x) => x.id === cartaProyectoId)!;
+              return (
+                <div className="bg-background rounded-xl p-5 border border-card-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest">QHUMA Capital · Carta oficial</p>
+                      <p className="text-[11px] text-text-muted">11 de marzo de 2026</p>
+                    </div>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-accent-light text-accent-text text-[10px] font-bold rounded-xl hover:brightness-95 cursor-pointer">
+                      <Download size={10} />
+                      Descargar PDF
+                    </button>
+                  </div>
+                  <div className="space-y-2 text-[12px] text-text-primary leading-relaxed">
+                    <p className="font-semibold">Estimado/a {p.alumno},</p>
+                    <p>
+                      En nombre del claustro de QHUMA Capital, nos complace comunicarte que tu proyecto
+                      <span className="font-semibold"> "{p.nombre}"</span> ha sido
+                      formalmente <span className="font-semibold text-success">aprobado para financiación</span> por
+                      un importe de <span className="font-semibold">€{p.inversion.toLocaleString()}</span>.
+                    </p>
+                    <p>
+                      El claustro ha valorado positivamente la solidez del modelo de negocio,
+                      el impacto educativo y la alineación con las competencias LOMLOE.
+                      El desembolso se realizará en dos tramos, condicionado a la presentación
+                      del plan de acción detallado antes del 25 de marzo de 2026.
+                    </p>
+                    <p className="text-text-muted italic">
+                      Esta carta tiene validez oficial en el contexto del programa QHUMA Capital
+                      y será registrada en el expediente académico del alumno.
+                    </p>
+                    <p className="font-semibold mt-3">Atentamente,<br />
+                      <span className="text-text-muted font-normal">Dirección Académica · QHUMA OS</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
