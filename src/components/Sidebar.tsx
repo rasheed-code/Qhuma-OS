@@ -22,6 +22,7 @@ import {
   Users,
   FileSpreadsheet,
   Sparkles,
+  Mic,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView, AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -39,6 +40,7 @@ const studentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: stri
   { icon: LayoutDashboard,        labelEs: "Inicio",        labelEn: "Dashboard",    view: "dashboard" },
   { icon: FolderKanban,           labelEs: "Mi Proyecto",   labelEn: "My Project",   view: "project" },
   { icon: BookOpen,               labelEs: "Portfolio",     labelEn: "Portfolio",    view: "portfolio" },
+  { icon: Mic,                    labelEs: "Pitch Lab",     labelEn: "Pitch Lab",    view: "pitchlab" },
   { icon: BarChart3,              labelEs: "Competencias",  labelEn: "Competencies", view: "competencies" },
   { icon: GalleryHorizontalEnd,   labelEs: "Evidencias",    labelEn: "Evidence",     view: "evidences" },
   { icon: Trophy,                 labelEs: "Logros",        labelEn: "Achievements", view: "achievements" },

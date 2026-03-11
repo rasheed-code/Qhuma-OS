@@ -33,6 +33,7 @@ import AdminDashboard from "@/components/AdminDashboard";
 import TeacherGradeBook from "@/components/TeacherGradeBook";
 import TeacherProjectGenerator from "@/components/TeacherProjectGenerator";
 import TeacherMessages from "@/components/TeacherMessages";
+import PitchLab from "@/components/PitchLab";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -123,6 +124,7 @@ export default function Home() {
           {role === "student" && activeView === "achievements" && <StudentAchievements />}
           {role === "student" && activeView === "streak" && <StreakCalendar />}
           {role === "student" && activeView === "portfolio" && <StudentPortfolio />}
+          {role === "student" && activeView === "pitchlab" && <PitchLab />}
           {role === "parent" && activeParentView === "overview" && (
             <ParentDashboard onNavigate={setActiveParentView} />
           )}
