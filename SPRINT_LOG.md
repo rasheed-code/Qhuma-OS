@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 43 ✅ (push: `c013bdb`)
+- **Último ciclo completo**: Ciclo 44 ✅ (push: `989fd17`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 44
+- **Próximo ciclo**: Ciclo 45
 
 ---
 
@@ -1343,6 +1343,57 @@
 - Panel narrativa IA (cuando generado): bg-sidebar/5 con cita en cursiva + opción eliminar
 - Nota pedagógica bg-accent-light: Bloque 3 — Narrativa propia
 - Insertado al final de la columna izquierda (último panel antes del cierre `</div>` de la columna)
+
+---
+
+## Sprints completados — Ciclo 44
+
+### [SPRINT-TEACHER][T42] TeacherGradeBook — Proyección T2 · impacto en calificación final ✅
+- Commit: `989fd17`
+- Archivo: `src/components/TeacherGradeBook.tsx`
+- `proyeccionT2` array 12 alumnos con flags canvasOk/presupOk/equipoOk/pitchOk — derivado con `.map()`
+- `t2Score` calculado: (canvas×0.4 + presup×0.3 + equipo×0.2 + pitch×0.1) × 100
+- 4 KPIs: score medio, mejoran/sin cambio/en riesgo
+- `impactoCfg(score)`: ≥70=mejora(success), ≥40=estable(accent), <40=riesgo(urgent)
+- Lista por alumno: 4 mini-badges de hitos + flecha impacto + score numérico
+- Alerta accent-light: Pablo, Alejandro, Tomás en riesgo → intervención semana 5
+- Sin estados nuevos (IIFE puro); sin imports nuevos (ArrowUp, ArrowRight, ArrowDown, TrendingUp ya existían)
+
+### [SPRINT-STUDENT][S44] StudentDashboard — Mi pitch T2 · estructura 90 segundos ✅
+- Commit: `989fd17`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Estados añadidos: `pitchTextos Record<string,string>`, `pitchGuardando boolean`, `pitchGuardado boolean`
+- 5 secciones: problema(30s/50pal), solución(20s/35pal), mercado(15s/25pal), modelo(15s/25pal), equipo(10s/20pal)
+- Contador de palabras en tiempo real con alerta si se excede el límite
+- Barra de progreso rellenadas/5; dot check verde por sección completada
+- Botón "Guardar" 900ms delay + CheckCircle2 feedback 3s
+- Nota pedagógica: Bloque 3 Pitch Lab — estructura de 90s para Demo Day
+- Insertado antes de C42 en el bloque T2
+
+### [SPRINT-ADMIN][A42] AdminDashboard Metrics — Evolución LOMLOE T2 por clase · semanas 1–4 ✅
+- Commit: `989fd17`
+- Archivo: `src/components/AdminDashboard.tsx`
+- `claseT2Data`: Record 4 clases, cada una con `activa: boolean` + 8 LOMLOE competencies × 4 semanas (escala 1–4)
+- 1ºESO A y 1ºB: activas con datos de progresión; 2ºESO A y B: pendientes de lanzar T2
+- 3 KPIs: media global T2, comp más avanzada de 1ºA (CE), semana actual
+- Por clase activa: filas por competencia con 4 barras mini CSS (S1–S4), barra S4 coloreada por semáforo LOMLOE
+- Delta +N.N por competencia (color success/accent/warning según magnitud)
+- Alerta warning-light: 2ºESO pendiente de empezar T2 en semana 5
+- Leyenda 4 niveles LOMLOE con colores del design system
+- IIFE puro; sin estados nuevos; sin imports nuevos (TrendingUp, AlertTriangle ya existían)
+- Insertado al FINAL del tab Métricas (después del mapa de riesgo de abandono)
+
+### [SPRINT-CULTURE][C42] StudentDashboard — Empresa por dentro · Bloque 2 ✅
+- Commit: `989fd17`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Principio culture.md Bloque 2: Empresa por dentro — estructuras organizativas reales a través del proyecto activo
+- `roles` array 4 roles Food Truck (CEO/CFO/CMO/COO) mapeados a miembros del equipo (Sofía/Diego/Ana/Lucas)
+- `[rolExpandido, setRolExpandido] = useState<string|null>(null)` — useState dentro del IIFE (patrón aceptado)
+- Cada rol: cargo, nombre, emoji, descripción de función, analogía con empresa real (Airbnb/Spotify/Netflix/Zara)
+- Expandido: compañero de equipo + responsabilidad en el Food Truck + analogía inspiradora
+- Grid 2×2, colores por rol: sidebar/warning-light/accent-light/success-light
+- Nota pedagógica: "Conocer la estructura te ayuda a entender cómo tu trabajo encaja con el del equipo"
+- Insertado entre S44 (pitch 90s) y C41 (Deep Dive)
 
 ---
 
