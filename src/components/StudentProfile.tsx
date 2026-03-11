@@ -30,6 +30,8 @@ import {
   Briefcase,
   MapPin,
   AlertCircle,
+  Copy,
+  Download,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -64,6 +66,12 @@ export default function StudentProfile() {
   );
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // S37 — Carta de presentación profesional
+  const [cartaProfesional, setCartaProfesional] = useState<string | null>(null);
+  const [generandoCarta, setGenerandoCarta] = useState(false);
+  const [cartaCopiada, setCartaCopiada] = useState(false);
+  const [cartaDescargada, setCartaDescargada] = useState(false);
 
   // C34 — Plan de aprendizaje T2
   const [planT2Generado, setPlanT2Generado] = useState<string[] | null>(null);
@@ -1013,6 +1021,158 @@ export default function StudentProfile() {
                 )}
               </p>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S37: Carta de presentación profesional — Bloque 3 Narrativa propia ── */}
+      {(() => {
+        const cartaFallback = lbl(
+          `Estimado/a equipo de selección,\n\nMi nombre es Lucas García y soy estudiante de 1º de ESO en QHUMA, la primera escuela con IA de España. Este primer trimestre he liderado el proyecto Casa Limón — una plataforma de alquiler vacacional en el Centro Histórico de Málaga con modelo de precios dinámicos basado en datos reales de AirDNA.\n\nA lo largo de 12 semanas he desarrollado y demostrado:\n\n• Competencia Emprendedora (CE): diseñé el modelo de negocio desde cero, calculé el punto de equilibrio en €750/mes y proyecté ingresos de €1.850/mes en escenario realista con una ocupación del 65%.\n\n• Competencia STEM: elaboré el análisis de rentabilidad con datos reales del mercado vacacional malagueño — RevPAR, ADR y ocupación por temporada — utilizando hojas de cálculo y visualizaciones propias.\n\n• Comunicación Lingüística (CLC): presenté el proyecto ante un panel de inversores simulados en el Demo Day del 13 de marzo, obteniendo una puntuación media de 3,4/4 en los criterios LOMLOE.\n\nEstoy en búsqueda de una beca o prácticas donde pueda aplicar estas competencias en un entorno real. El proyecto Casa Limón me ha enseñado que la mejor forma de aprender es cuando los resultados importan de verdad.\n\nAtentamente,\nLucas García\nQHUMA · 1º ESO · Marzo 2026`,
+          `Dear Hiring Team,\n\nMy name is Lucas García and I am a Year 7 student at QHUMA, Spain's first AI-powered school. This first term I led Casa Limón — a holiday rental platform in Málaga's Historic Centre with dynamic pricing based on real AirDNA data.\n\nOver 12 weeks I developed and demonstrated:\n\n• Entrepreneurial Competency (CE): designed the business model from scratch, calculated break-even at €750/month and projected revenues of €1,850/month at a 65% realistic occupancy scenario.\n\n• STEM: built a profitability analysis using real Málaga holiday-market data — RevPAR, ADR and seasonal occupancy — in self-built spreadsheets and visualisations.\n\n• Linguistic Communication (CLC): presented the project to a simulated investor panel on Demo Day (13 March), achieving an average score of 3.4/4 on LOMLOE assessment criteria.\n\nI am looking for an internship or scholarship where I can apply these skills in a real environment. Casa Limón taught me that the best learning happens when the stakes are real.\n\nSincerely,\nLucas García\nQHUMA · Year 7 · March 2026`
+        );
+
+        const handleGenerarCarta = async () => {
+          setGenerandoCarta(true);
+          try {
+            const res = await fetch("/api/tutor-chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                mode: "narrativa",
+                message: lbl(
+                  "Genera una carta de presentación profesional para Lucas García, alumno de 1º ESO en QHUMA. T1: proyecto Casa Limón (Airbnb Málaga), CE 82%, STEM 74%, CLC 71%, Demo Day 13 mar (nota media 3.4/4), ingresos proyectados €1.850/mes. Tono: profesional pero auténtico, primera persona, 4 párrafos, sin emojis. Para: solicitud de beca o prácticas.",
+                  "Generate a professional cover letter for Lucas García, a Year 7 student at QHUMA. T1: Casa Limón project (Airbnb Málaga), CE 82%, STEM 74%, CLC 71%, Demo Day 13 Mar (avg score 3.4/4), projected revenue €1,850/month. Tone: professional but authentic, first person, 4 paragraphs, no emojis. For: scholarship or internship application."
+                ),
+              }),
+            });
+            const data = await res.json();
+            const texto: string = data.message ?? "";
+            setCartaProfesional(texto.length > 100 ? texto : cartaFallback);
+          } catch {
+            setCartaProfesional(cartaFallback);
+          } finally {
+            setGenerandoCarta(false);
+          }
+        };
+
+        const handleCopiar = () => {
+          if (!cartaProfesional) return;
+          navigator.clipboard.writeText(cartaProfesional).then(() => {
+            setCartaCopiada(true);
+            setTimeout(() => setCartaCopiada(false), 2000);
+          });
+        };
+
+        const handleDescargar = () => {
+          if (!cartaProfesional) return;
+          const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Carta de Presentación — Lucas García</title><style>body{font-family:Georgia,serif;max-width:680px;margin:60px auto;padding:40px;color:#141414;line-height:1.8;font-size:13px}h1{font-size:18px;margin-bottom:4px}p.subtitle{color:#666;font-size:11px;margin-bottom:32px}pre{white-space:pre-wrap;font-family:Georgia,serif;font-size:13px;line-height:1.8}</style></head><body><h1>Carta de Presentación Profesional</h1><p class="subtitle">Lucas García · QHUMA · Marzo 2026</p><pre>${cartaProfesional}</pre></body></html>`;
+          const blob = new Blob([html], { type: "text/html" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "carta_presentacion_lucas_garcia.pdf";
+          a.click();
+          URL.revokeObjectURL(url);
+          setCartaDescargada(true);
+          setTimeout(() => setCartaDescargada(false), 3000);
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <FileText size={16} className="text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-[18px] font-semibold text-text-primary leading-tight">
+                    {lbl("Carta de presentación profesional", "Professional cover letter")}
+                  </h2>
+                  <p className="text-[11px] text-text-muted">{lbl("Generada desde tus datos reales de T1 · Bloque 3 culture.md", "Generated from your real T1 data · Block 3 culture.md")}</p>
+                </div>
+              </div>
+              {cartaProfesional && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopiar}
+                    className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] px-3 py-1.5 rounded-xl hover:bg-accent-light transition-colors cursor-pointer"
+                  >
+                    {cartaCopiada ? <CheckCircle2 size={12} className="text-success" /> : <Copy size={12} />}
+                    {cartaCopiada ? lbl("Copiada", "Copied") : lbl("Copiar", "Copy")}
+                  </button>
+                  <button
+                    onClick={handleDescargar}
+                    className="flex items-center gap-1.5 bg-sidebar text-accent text-[11px] font-bold px-3 py-1.5 rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                  >
+                    {cartaDescargada ? <CheckCircle2 size={12} /> : <Download size={12} />}
+                    {cartaDescargada ? lbl("Descargada", "Downloaded") : lbl("Descargar PDF", "Download PDF")}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Context chips */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                { label: lbl("Casa Limón · Airbnb Málaga", "Casa Limón · Airbnb Málaga"), bg: "bg-accent-light text-accent-text" },
+                { label: lbl("CE 82% · STEM 74% · CLC 71%", "CE 82% · STEM 74% · CLC 71%"), bg: "bg-background text-text-secondary" },
+                { label: lbl("Demo Day 3.4/4", "Demo Day 3.4/4"), bg: "bg-success-light text-success" },
+              ].map((chip) => (
+                <span key={chip.label} className={`text-[9px] font-semibold px-2.5 py-1 rounded-full ${chip.bg}`}>{chip.label}</span>
+              ))}
+            </div>
+
+            {!cartaProfesional ? (
+              <div className="flex flex-col items-center py-8 gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-accent-light flex items-center justify-center">
+                  <Send size={22} className="text-accent-text" />
+                </div>
+                <p className="text-[13px] font-semibold text-text-primary">
+                  {lbl("La IA redacta tu carta desde tu historial real", "AI drafts your letter from your real history")}
+                </p>
+                <p className="text-[11px] text-text-muted text-center max-w-xs leading-snug">
+                  {lbl(
+                    "No es una plantilla genérica. Cada párrafo está construido con tus datos reales: proyecto, competencias LOMLOE, Demo Day y resultados financieros.",
+                    "Not a generic template. Each paragraph is built from your real data: project, LOMLOE competencies, Demo Day and financial results."
+                  )}
+                </p>
+                <button
+                  onClick={handleGenerarCarta}
+                  disabled={generandoCarta}
+                  className="flex items-center gap-2 bg-sidebar text-white text-[12px] font-bold px-5 py-2.5 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  {generandoCarta ? (
+                    <><RefreshCw size={13} className="animate-spin" />{lbl("Redactando carta...", "Drafting letter...")}</>
+                  ) : (
+                    <><Sparkles size={13} />{lbl("Generar carta con IA", "Generate letter with AI")}</>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="bg-background rounded-xl border border-card-border p-4 mb-3">
+                  <pre className="text-[11px] text-text-secondary leading-relaxed whitespace-pre-wrap font-sans">{cartaProfesional}</pre>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleGenerarCarta}
+                    disabled={generandoCarta}
+                    className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] px-3 py-2 rounded-xl hover:bg-accent-light cursor-pointer disabled:opacity-60 transition-colors"
+                  >
+                    <RefreshCw size={12} className={generandoCarta ? "animate-spin" : ""} />
+                    {lbl("Regenerar", "Regenerate")}
+                  </button>
+                  <p className="text-[10px] text-text-muted leading-snug flex-1">
+                    {lbl(
+                      "Carta generada desde tus evidencias y resultados reales. Revísala antes de enviar.",
+                      "Letter generated from your real evidence and results. Review before sending."
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
