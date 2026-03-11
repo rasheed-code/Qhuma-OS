@@ -3311,6 +3311,123 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
             );
           })()}
+
+          {/* ── A41: IA en T2 — Interacciones por módulo ────────────────────── */}
+          {(() => {
+            const modulosIAT2 = [
+              { id: "canvas",   nombre: lbl("Lean Canvas T2",        "T2 Lean Canvas"),       interacciones: 87,  tipoPred: lbl("Socrático",  "Socratic"),  pct: 74 },
+              { id: "finanzas", nombre: lbl("Modelo financiero",     "Financial model"),       interacciones: 62,  tipoPred: lbl("Tutor",      "Tutor"),      pct: 58 },
+              { id: "equipo",   nombre: lbl("Dinámicas de equipo",   "Team dynamics"),         interacciones: 41,  tipoPred: lbl("Narrativa",  "Narrative"),  pct: 82 },
+              { id: "menu",     nombre: lbl("Diseño del menú",       "Menu design"),           interacciones: 38,  tipoPred: lbl("Socrático",  "Socratic"),  pct: 71 },
+              { id: "pitch",    nombre: lbl("Preparación pitch",     "Pitch preparation"),     interacciones: 29,  tipoPred: lbl("PitchCoach", "PitchCoach"), pct: 65 },
+            ];
+            const totalInteracciones = modulosIAT2.reduce((s, m) => s + m.interacciones, 0);
+            const avgPorAlumno = Math.round(totalInteracciones / 12);
+            const topSocratico = Math.round(modulosIAT2.filter(m => m.tipoPred === lbl("Socrático", "Socratic")).reduce((s, m) => s + m.interacciones, 0) / totalInteracciones * 100);
+
+            const alumnosTopIA = [
+              { nombre: "Lucas García",   avatar: "LG", interacciones: 38, modulo: lbl("Lean Canvas T2",    "T2 Lean Canvas"),  tipo: lbl("Socrático", "Socratic"),  color: "bg-success-light text-success" },
+              { nombre: "Ana Martín",     avatar: "AM", interacciones: 31, modulo: lbl("Modelo financiero", "Financial model"), tipo: lbl("Tutor",     "Tutor"),       color: "bg-accent-light text-accent-text" },
+              { nombre: "Sofía Torres",   avatar: "ST", interacciones: 27, modulo: lbl("Diseño del menú",   "Menu design"),     tipo: lbl("Socrático", "Socratic"),   color: "bg-success-light text-success" },
+              { nombre: "Diego López",    avatar: "DL", interacciones: 24, modulo: lbl("Dinámicas equipo",  "Team dynamics"),   tipo: lbl("Narrativa", "Narrative"),   color: "bg-warning-light text-warning" },
+              { nombre: "Laura Sanz",     avatar: "LS", interacciones: 19, modulo: lbl("Lean Canvas T2",    "T2 Lean Canvas"),  tipo: lbl("Socrático", "Socratic"),   color: "bg-success-light text-success" },
+            ];
+            const maxInteracciones = Math.max(...alumnosTopIA.map(a => a.interacciones));
+
+            const tipoBadge = (tipo: string) => {
+              if (tipo === lbl("Socrático", "Socratic"))  return "bg-success-light text-success";
+              if (tipo === lbl("Narrativa", "Narrative")) return "bg-warning-light text-warning";
+              if (tipo === lbl("PitchCoach","PitchCoach"))return "bg-[#eff6ff] text-[#3b82f6]";
+              return "bg-accent-light text-accent-text";
+            };
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bot size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("IA en T2 — Interacciones por módulo", "AI in T2 — Interactions by module")}
+                  </h3>
+                  <span className="ml-auto text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                    {lbl("Semana 3", "Week 3")}
+                  </span>
+                </div>
+
+                {/* KPI strip */}
+                <div className="grid grid-cols-3 gap-3 mb-5">
+                  {[
+                    { label: lbl("Total interacciones T2", "Total T2 interactions"), val: totalInteracciones.toString(), bg: "bg-accent-light", txt: "text-accent-text" },
+                    { label: lbl("Media por alumno",        "Avg per student"),       val: `${avgPorAlumno}/alumno`,       bg: "bg-background",    txt: "text-text-primary" },
+                    { label: lbl("% modo socrático",        "% socratic mode"),       val: `${topSocratico}%`,             bg: "bg-success-light", txt: "text-success" },
+                  ].map((k) => (
+                    <div key={k.label} className={`rounded-xl p-3 text-center ${k.bg}`}>
+                      <p className={`text-[18px] font-black leading-none ${k.txt}`}>{k.val}</p>
+                      <p className="text-[9px] text-text-muted mt-1">{k.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Módulos T2 */}
+                <h4 className="text-[12px] font-semibold text-text-primary mb-3">{lbl("Uso por módulo T2", "Usage by T2 module")}</h4>
+                <div className="space-y-2.5 mb-5">
+                  {modulosIAT2.map((m) => (
+                    <div key={m.id} className="flex items-center gap-3">
+                      <div className="w-[140px] flex-shrink-0">
+                        <p className="text-[11px] font-medium text-text-secondary truncate">{m.nombre}</p>
+                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${tipoBadge(m.tipoPred)}`}>
+                          {m.tipoPred}
+                        </span>
+                      </div>
+                      <div className="flex-1 h-2 bg-background rounded-full overflow-hidden border border-card-border">
+                        <div
+                          className="h-full bg-accent-text rounded-full"
+                          style={{ width: `${(m.interacciones / totalInteracciones) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-bold text-accent-text flex-shrink-0 w-8 text-right">{m.interacciones}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Top alumnos por IA */}
+                <h4 className="text-[12px] font-semibold text-text-primary mb-3">{lbl("Top alumnos por interacciones IA en T2", "Top students by T2 AI interactions")}</h4>
+                <div className="space-y-2">
+                  {alumnosTopIA.map((a) => (
+                    <div key={a.nombre} className="flex items-center gap-3 bg-background rounded-xl px-3 py-2">
+                      <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                        <span className="text-[8px] font-bold text-accent">{a.avatar}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[11px] font-semibold text-text-primary">{a.nombre}</span>
+                          <span className={`text-[7px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${tipoBadge(a.tipo)}`}>
+                            {a.tipo}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-card rounded-full overflow-hidden border border-card-border">
+                          <div
+                            className="h-full bg-accent-text rounded-full"
+                            style={{ width: `${(a.interacciones / maxInteracciones) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-accent-text flex-shrink-0 w-7 text-right">{a.interacciones}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Insight */}
+                <div className="mt-4 bg-accent-light rounded-xl px-3 py-2.5">
+                  <p className="text-[10px] text-accent-text leading-relaxed">
+                    {lbl(
+                      "El modo Socrático es el más utilizado en T2 (74% del uso en Lean Canvas). Esto indica que los alumnos están formulando preguntas estratégicas sobre su proyecto, no buscando respuestas directas — señal de madurez emprendedora.",
+                      "Socratic mode is the most used in T2 (74% of Lean Canvas usage). This indicates students are asking strategic questions about their project, not seeking direct answers — a sign of entrepreneurial maturity."
+                    )}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 

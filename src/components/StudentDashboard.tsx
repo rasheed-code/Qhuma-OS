@@ -136,6 +136,9 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
 
+  // C41 — Deep Dive · Bloque 1 Mentalidad
+  const [deepDiveEnviado, setDeepDiveEnviado] = useState<string | null>(null);
+
   // C40 — Consulta Socrática · Bloque 1 Mentalidad
   const [preguntaSocratica, setPreguntaSocratica] = useState("");
   const [respuestaSocratica, setRespuestaSocratica] = useState<string | null>(null);
@@ -2525,6 +2528,294 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                   "Lo que estás construyendo en clase no es un ejercicio — es una simulación del mercado real de hostelería. Las decisiones de precio, marca y finanzas que tomas hoy son las mismas que toman los emprendedores reales del sector.",
                   "What you're building in class isn't an exercise — it's a real-market simulation of the hospitality sector. The pricing, branding and financial decisions you make today are the same ones real entrepreneurs make."
                 )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── C41: Deep Dive · Bloque 1 Mentalidad ────────────────────────── */}
+      {(() => {
+        const [topicExpandido, setTopicExpandido] = useState<string | null>(null);
+        const temas = [
+          {
+            id: "pricing",
+            titulo: lbl("Estrategia de precios en hostelería", "Pricing strategy in hospitality"),
+            resumen: lbl(
+              "Has estado analizando tu modelo de costes esta semana. La fijación de precios en food trucks combina psicología del consumidor, análisis de competencia y margen objetivo.",
+              "You've been analysing your cost model this week. Food truck pricing combines consumer psychology, competitive analysis and target margin."
+            ),
+            comp: "CE",
+            lecturaMin: 6,
+            preguntas: [
+              lbl("¿Por qué el precio 8,40€ genera diferente percepción que 8,50€?", "Why does €8.40 generate a different perception than €8.50?"),
+              lbl("¿Cómo afecta la ubicación del food truck al precio que puedes cobrar?", "How does the truck location affect the price you can charge?"),
+              lbl("¿Qué pasaría con tu margen si redujeras el precio 0,50€ y vendieras 20% más?", "What would happen to your margin if you cut the price by €0.50 and sold 20% more?"),
+            ],
+          },
+          {
+            id: "branding",
+            titulo: lbl("Identidad de marca y naming", "Brand identity and naming"),
+            resumen: lbl(
+              "El diseño de tu logo y nombre son decisiones estratégicas. El naming en el sector food truck sigue patrones de memorabilidad, originalidad y resonancia cultural.",
+              "Your logo design and naming are strategic decisions. Food truck naming follows patterns of memorability, originality and cultural resonance."
+            ),
+            comp: "CCEC",
+            lecturaMin: 5,
+            preguntas: [
+              lbl("¿Qué emociones quieres que evoque el nombre de tu food truck en Málaga?", "What emotions do you want your food truck name to evoke in Málaga?"),
+              lbl("¿Cómo diferencias tu marca de los 3.200 food trucks que ya existen en España?", "How do you differentiate your brand from the 3,200 food trucks already in Spain?"),
+              lbl("¿Tu logo funciona igual en blanco y negro que en color?", "Does your logo work equally well in black and white as in colour?"),
+            ],
+          },
+          {
+            id: "localizacion",
+            titulo: lbl("Análisis de localización urbana", "Urban location analysis"),
+            resumen: lbl(
+              "La ubicación es el factor más determinante del éxito de un food truck. En Málaga, el análisis incluye rutas turísticas, oficinas, eventos y competencia en radio 500m.",
+              "Location is the most decisive factor in food truck success. In Málaga, analysis includes tourist routes, offices, events and competition within 500m radius."
+            ),
+            comp: "STEM",
+            lecturaMin: 7,
+            preguntas: [
+              lbl("¿Cómo medirías el tráfico de personas en los 3 puntos candidatos?", "How would you measure footfall at your 3 candidate locations?"),
+              lbl("¿Qué datos necesitarías del Ayuntamiento de Málaga para elegir bien?", "What data would you need from Málaga City Council to choose well?"),
+              lbl("¿Cómo cambia tu estrategia de localización entre temporada alta y baja?", "How does your location strategy change between high and low season?"),
+            ],
+          },
+        ];
+        const compColors: Record<string, string> = {
+          CE: "bg-accent-light text-accent-text",
+          CCEC: "bg-warning-light text-warning",
+          STEM: "bg-[#eff6ff] text-[#3b82f6]",
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Lightbulb size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Deep Dive — Profundiza en tu proyecto", "Deep Dive — Go deeper into your project")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-sidebar text-white font-bold px-2 py-1 rounded-full">
+                {lbl("Bloque 1 · Mentalidad", "Block 1 · Mindset")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl(
+                "Basándome en tu actividad esta semana, he detectado 3 temas donde puedes profundizar. Cuando un tema te atrae, la IA profundiza contigo en vez de redirigirte.",
+                "Based on your activity this week, I've detected 3 topics you can go deeper on. When a topic draws you in, the AI goes deeper with you instead of redirecting."
+              )}
+            </p>
+
+            <div className="space-y-2.5">
+              {temas.map((t) => {
+                const isOpen = topicExpandido === t.id;
+                return (
+                  <div key={t.id} className={`rounded-xl border transition-all ${isOpen ? "bg-accent-light border-accent/30" : "bg-background border-card-border"}`}>
+                    <button
+                      onClick={() => setTopicExpandido(isOpen ? null : t.id)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-semibold text-text-primary leading-snug">{t.titulo}</p>
+                        <p className="text-[9px] text-text-muted mt-0.5">{t.lecturaMin} min · {t.comp}</p>
+                      </div>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${compColors[t.comp] ?? "bg-background text-text-muted"}`}>
+                        {t.comp}
+                      </span>
+                      {isOpen ? <ChevronRight size={12} className="text-accent-text rotate-90 flex-shrink-0" /> : <ChevronRight size={12} className="text-text-muted flex-shrink-0" />}
+                    </button>
+
+                    {isOpen && (
+                      <div className="px-3 pb-3">
+                        <p className="text-[11px] text-text-secondary leading-relaxed mb-3">{t.resumen}</p>
+                        <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-2">
+                          {lbl("Preguntas para explorar con la IA:", "Questions to explore with the AI:")}
+                        </p>
+                        <div className="space-y-1.5 mb-3">
+                          {t.preguntas.map((p, i) => (
+                            <div key={i} className="flex items-start gap-2 bg-white/60 rounded-lg px-2.5 py-1.5">
+                              <span className="text-[8px] font-bold text-accent-text flex-shrink-0 mt-0.5">{i + 1}.</span>
+                              <p className="text-[10px] text-text-secondary leading-snug">{p}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => { setDeepDiveEnviado(t.id); setTimeout(() => setDeepDiveEnviado(null), 2500); }}
+                          className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                            deepDiveEnviado === t.id
+                              ? "bg-success-light text-success"
+                              : "bg-sidebar text-white hover:bg-accent-dark"
+                          }`}
+                        >
+                          {deepDiveEnviado === t.id ? (
+                            <><CheckCircle2 size={11} />{lbl("¡Listo para explorar!", "Ready to explore!")}</>
+                          ) : (
+                            <><Brain size={11} />{lbl("Explorar con la IA →", "Explore with AI →")}</>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 bg-sidebar/5 rounded-xl px-3 py-2">
+              <p className="text-[9px] text-text-muted leading-relaxed">
+                {lbl(
+                  "🔍 Deep Dive (Bloque 1): cuando llevas tiempo explorando un tema por iniciativa, la IA profundiza en vez de redirigirte. Los temas de arriba los he detectado de tu actividad esta semana.",
+                  "🔍 Deep Dive (Block 1): when you've been exploring a topic on your own initiative, the AI goes deeper instead of redirecting you. The topics above were detected from your activity this week."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S43: Progreso T2 — semanas 1 a 4 ────────────────────────────────── */}
+      {(() => {
+        const semanasT2 = [
+          {
+            num: 1,
+            titulo: lbl("Investigación de mercado", "Market research"),
+            comp: "STEM",
+            qCoins: 20,
+            completada: true,
+            descripcion: lbl("3 food trucks de referencia analizados, tendencias del sector identificadas.", "3 reference food trucks analysed, sector trends identified."),
+          },
+          {
+            num: 2,
+            titulo: lbl("Lean Canvas completo", "Full Lean Canvas"),
+            comp: "CE",
+            qCoins: 25,
+            completada: true,
+            descripcion: lbl("6/6 bloques rellenados: propuesta, segmento, canales, ingresos, costes, socios.", "6/6 blocks filled: value prop, segment, channels, revenue, costs, partners."),
+          },
+          {
+            num: 3,
+            titulo: lbl("Modelo financiero", "Financial model"),
+            comp: "CE",
+            qCoins: 35,
+            completada: true,
+            descripcion: lbl("Coste por ración (3,60€), precio venta (8,40€), margen 57%, equilibrio 53 raciones/día.", "Cost per portion (€3.60), selling price (€8.40), margin 57%, breakeven 53 portions/day."),
+          },
+          {
+            num: 4,
+            titulo: lbl("Menú definitivo + marca", "Final menu + branding"),
+            comp: "CCEC",
+            qCoins: 40,
+            completada: false,
+            descripcion: lbl("Diseña los 5 platos del menú con descripción y foto, finaliza logo y paleta de colores.", "Design the 5 menu items with description and photo, finalise logo and colour palette."),
+          },
+        ];
+        const completadas = semanasT2.filter(s => s.completada).length;
+        const totalQCoins = semanasT2.filter(s => s.completada).reduce((sum, s) => sum + s.qCoins, 0);
+        const pctAvance = Math.round((completadas / semanasT2.length) * 100);
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <CalendarDays size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Progreso T2 — semanas 1 a 4", "T2 progress — weeks 1 to 4")}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                  {completadas}/4 {lbl("semanas", "weeks")}
+                </span>
+                <span className="text-[9px] bg-sidebar text-accent font-bold px-2 py-1 rounded-full">
+                  +{totalQCoins} Q
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Tu recorrido en el proyecto Food Truck. Cada semana desarrolla una competencia LOMLOE diferente.", "Your Food Truck project journey. Each week develops a different LOMLOE competency.")}
+            </p>
+
+            {/* Progress bar */}
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-[10px] font-semibold text-text-muted">{pctAvance}% {lbl("completado", "complete")}</span>
+                <span className="text-[9px] text-text-muted">{lbl("Objetivo: Demo Day semana 8", "Target: Demo Day week 8")}</span>
+              </div>
+              <div className="h-2 bg-background rounded-full overflow-hidden border border-card-border">
+                <div
+                  className="h-full bg-accent-text rounded-full transition-all"
+                  style={{ width: `${pctAvance}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Weeks timeline */}
+            <div className="space-y-2 mb-4">
+              {semanasT2.map((sem, i) => (
+                <div key={sem.num} className={`flex gap-3 rounded-xl border px-3 py-2.5 ${
+                  sem.completada ? "bg-success-light border-success/20" : "bg-background border-card-border"
+                }`}>
+                  {/* Indicator */}
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0 pt-0.5">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      sem.completada ? "bg-success" : i === completadas ? "bg-accent-text" : "bg-border"
+                    }`}>
+                      {sem.completada ? (
+                        <CheckCircle2 size={12} className="text-white" />
+                      ) : (
+                        <span className="text-[9px] font-bold text-white">{sem.num}</span>
+                      )}
+                    </div>
+                    {i < semanasT2.length - 1 && (
+                      <div className={`w-0.5 h-3 ${sem.completada ? "bg-success/40" : "bg-border"}`} />
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className={`text-[11px] font-semibold ${sem.completada ? "text-success" : i === completadas ? "text-text-primary" : "text-text-muted"}`}>
+                        Sem {sem.num} · {sem.titulo}
+                      </span>
+                      {!sem.completada && i === completadas && (
+                        <span className="text-[8px] bg-accent text-sidebar font-bold px-1.5 py-0.5 rounded-full">
+                          {lbl("Esta semana", "This week")}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-text-muted leading-snug">{sem.descripcion}</p>
+                  </div>
+
+                  {/* Right */}
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar/10 text-sidebar">
+                      {sem.comp}
+                    </span>
+                    <span className={`text-[9px] font-bold ${sem.completada ? "text-success" : "text-text-muted"}`}>
+                      +{sem.qCoins} Q
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Semana 5 preview */}
+            <div className="bg-sidebar rounded-xl px-3 py-2.5">
+              <div className="flex items-center gap-2 mb-1">
+                <Rocket size={11} className="text-accent" />
+                <span className="text-[10px] font-bold text-accent">{lbl("Semana 5 · Próximamente", "Week 5 · Coming up")}</span>
+              </div>
+              <p className="text-[10px] text-white/80 leading-relaxed">
+                {lbl(
+                  "Preparación del pitch de 90 segundos: estructura, datos clave y práctica con la IA. Competencia CLC + CE · +50 Q-Coins disponibles.",
+                  "90-second pitch preparation: structure, key data and AI practice. CLC + CE competency · +50 Q-Coins available."
+                )}
+              </p>
+              <p className="text-[9px] text-white/50 mt-1">
+                {lbl("🔒 Se desbloquea al completar Semana 4", "🔒 Unlocks when you complete Week 4")}
               </p>
             </div>
           </div>

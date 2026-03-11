@@ -1328,6 +1328,150 @@ export default function TeacherAnalytics() {
           </div>
         );
       })()}
+
+      {/* ── T41: Evolución competencias T2 — 4 semanas ──────────────────────── */}
+      {(() => {
+        // Media de clase por competencia por semana (escala 1-4 LOMLOE)
+        const compEvolucion: { comp: string; nombre: string; semanas: [number, number, number, number] }[] = [
+          { comp: "STEM",  nombre: "STEM",          semanas: [2.4, 2.6, 2.9, 3.1] },
+          { comp: "CLC",   nombre: "Com. Lingüística", semanas: [2.8, 2.9, 3.0, 3.0] },
+          { comp: "CE",    nombre: "Emprendimiento", semanas: [2.2, 2.5, 2.8, 3.2] },
+          { comp: "CD",    nombre: "Com. Digital",   semanas: [2.5, 2.7, 2.8, 2.9] },
+          { comp: "CPSAA", nombre: "Aut. Personal",  semanas: [2.9, 3.0, 3.1, 3.2] },
+          { comp: "CC",    nombre: "Ciudadanía",     semanas: [2.6, 2.7, 2.9, 3.1] },
+          { comp: "CPL",   nombre: "Plurilingüe",    semanas: [2.1, 2.1, 2.2, 2.3] },
+          { comp: "CCEC",  nombre: "Expresión Crea.", semanas: [2.3, 2.7, 3.0, 3.4] },
+        ];
+        const semLabels = ["Sem 1", "Sem 2", "Sem 3", "Sem 4"];
+        const maxVal = 4;
+
+        // Identify best and worst growth
+        const growths = compEvolucion.map(c => ({ comp: c.comp, growth: c.semanas[3] - c.semanas[0] }));
+        const bestGrowth = growths.reduce((a, b) => a.growth > b.growth ? a : b);
+        const worstGrowth = growths.reduce((a, b) => a.growth < b.growth ? a : b);
+
+        const levelBg = (val: number) => {
+          if (val >= 3.5) return "bg-success";
+          if (val >= 2.8) return "bg-accent-text";
+          if (val >= 2.0) return "bg-warning";
+          return "bg-urgent";
+        };
+
+        return (
+          <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Layers size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Evolución de competencias T2 — semana a semana", "T2 competency evolution — week by week")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                {lbl("Semanas 1–4", "Weeks 1–4")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Media de clase por competencia LOMLOE durante T2 (escala 1–4). Detecta qué competencias crecen y cuáles necesitan refuerzo.", "Class average per LOMLOE competency during T2 (1–4 scale). Detect which competencies are growing and which need support.")}
+            </p>
+
+            {/* Sem labels header */}
+            <div className="flex items-center mb-2 pl-[110px] gap-1">
+              {semLabels.map((s) => (
+                <span key={s} className="flex-1 text-center text-[9px] font-bold text-text-muted">{s}</span>
+              ))}
+              <span className="w-10 text-right text-[9px] font-bold text-text-muted">{lbl("Δ", "Δ")}</span>
+            </div>
+
+            {/* Rows */}
+            <div className="space-y-2">
+              {compEvolucion.map((row) => {
+                const growthVal = (row.semanas[3] - row.semanas[0]);
+                const isBest = row.comp === bestGrowth.comp;
+                const isWorst = row.comp === worstGrowth.comp;
+                return (
+                  <div key={row.comp} className={`flex items-center gap-2 rounded-xl px-3 py-2 ${isBest ? "bg-success-light border border-success/20" : isWorst ? "bg-urgent-light border border-urgent/20" : "bg-background"}`}>
+                    <div className="w-[110px] flex-shrink-0 flex items-center gap-1.5">
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${isBest ? "bg-success text-white" : isWorst ? "bg-urgent text-white" : "bg-sidebar/10 text-sidebar"}`}>
+                        {row.comp}
+                      </span>
+                      <span className="text-[10px] text-text-secondary truncate">{row.nombre}</span>
+                    </div>
+                    {row.semanas.map((val, i) => (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                        <div className="w-full h-5 bg-card rounded-md overflow-hidden border border-card-border">
+                          <div
+                            className={`h-full ${levelBg(val)} rounded-md transition-all`}
+                            style={{ width: `${(val / maxVal) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[8px] font-bold text-text-muted">{val.toFixed(1)}</span>
+                      </div>
+                    ))}
+                    <div className="w-10 text-right flex-shrink-0">
+                      {growthVal > 0 ? (
+                        <span className="text-[9px] font-bold text-success flex items-center justify-end gap-0.5">
+                          <ArrowUp size={8} />+{growthVal.toFixed(1)}
+                        </span>
+                      ) : growthVal < 0 ? (
+                        <span className="text-[9px] font-bold text-urgent flex items-center justify-end gap-0.5">
+                          <ArrowDown size={8} />{growthVal.toFixed(1)}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold text-text-muted flex items-center justify-end gap-0.5">
+                          <Minus size={8} />0.0
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Leyenda colores */}
+            <div className="flex items-center gap-4 mt-3 mb-4">
+              {[
+                { bg: "bg-urgent",     label: lbl("Iniciado (<2)", "Started (<2)") },
+                { bg: "bg-warning",    label: lbl("En proceso (2–2.8)", "In progress (2–2.8)") },
+                { bg: "bg-accent-text",label: lbl("Adquirido (2.8–3.5)", "Achieved (2.8–3.5)") },
+                { bg: "bg-success",    label: lbl("Avanzado (>3.5)", "Advanced (>3.5)") },
+              ].map((l) => (
+                <div key={l.label} className="flex items-center gap-1.5">
+                  <div className={`w-3 h-3 rounded-sm ${l.bg} flex-shrink-0`} />
+                  <span className="text-[9px] text-text-muted">{l.label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Insight footer */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-success-light rounded-xl px-3 py-2.5 border border-success/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <TrendingUp size={10} className="text-success" />
+                  <span className="text-[9px] font-bold text-success">{lbl("Mayor crecimiento", "Highest growth")}</span>
+                </div>
+                <p className="text-[10px] text-text-secondary">
+                  {lbl(
+                    `${compEvolucion.find(c => c.comp === bestGrowth.comp)?.nombre} (${bestGrowth.comp}) ha crecido +${bestGrowth.growth.toFixed(1)} puntos en 4 semanas. El diseño del menú está desarrollando esta competencia de forma natural.`,
+                    `${compEvolucion.find(c => c.comp === bestGrowth.comp)?.nombre} (${bestGrowth.comp}) has grown +${bestGrowth.growth.toFixed(1)} points in 4 weeks. Menu design is naturally developing this competency.`
+                  )}
+                </p>
+              </div>
+              <div className="bg-urgent-light rounded-xl px-3 py-2.5 border border-urgent/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertTriangle size={10} className="text-urgent" />
+                  <span className="text-[9px] font-bold text-urgent">{lbl("Refuerzo recomendado", "Needs support")}</span>
+                </div>
+                <p className="text-[10px] text-text-secondary">
+                  {lbl(
+                    `${compEvolucion.find(c => c.comp === worstGrowth.comp)?.nombre} (${worstGrowth.comp}) muestra poco crecimiento (+${worstGrowth.growth.toFixed(1)}). Considera incluir actividades plurilingües en la semana 5.`,
+                    `${compEvolucion.find(c => c.comp === worstGrowth.comp)?.nombre} (${worstGrowth.comp}) shows low growth (+${worstGrowth.growth.toFixed(1)}). Consider adding multilingual activities in week 5.`
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
