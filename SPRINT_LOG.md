@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 29 ✅ (push: `0165371`)
+- **Último ciclo completo**: Ciclo 30 ✅ (push: `ddb4a9b`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 30
+- **Próximo ciclo**: Ciclo 31
 
 ---
 
@@ -1245,6 +1245,65 @@
 
 ---
 
+## Sprints completados — Ciclo 30
+
+### [SPRINT-TEACHER][T29] TeacherAnalytics — Comparativa entre grupos y exportar análisis ✅
+- Commit: `5aac928`
+- Archivo modificado: `src/components/TeacherAnalytics.tsx`
+- Panel "Comparativa entre grupos" al FINAL de TeacherAnalytics (después de sparklines semanales)
+- Grupo A: Lucas, Sofía, Pablo, María, Diego, Ana. Grupo B: Carlos, Laura, Tomás, Carla, Alejandro, Valentina
+- Vista "Por competencia": 8 barras LOMLOE lado a lado (sidebar=A, accent-text/60=B), badge "lidera" por comp
+- Vista "Por indicador": 3 indicadores (racha/entregas/riesgo) con barras y badge "Lidera: Grupo X"
+- KPI summary grid 3 columnas: racha media, entregas a tiempo %, riesgo medio — con badge A/B líder
+- Toggle "Por competencia" / "Por indicador" (bg-background/card pattern)
+- "Exportar análisis comparativo": Blob HTML con tabla LOMLOE 8 comps + indicadores + fecha. Blob/createObjectURL download `analisis_comparativo_grupos_{fecha}.pdf`
+- Estados añadidos: `grupoComparativaVista ("competencia"|"indicador")`, `exportandoAnalisis`, `analisisExportado`
+- Imports añadidos: `Download`, `Layers`
+
+### [SPRINT-STUDENT][S31] StudentQCoins — Tienda de experiencias con reserva de plaza ✅
+- Commit: `c530e61` (fix TS: `ddb4a9b`)
+- Archivo modificado: `src/components/StudentQCoins.tsx`
+- Tipo `Categoria` ampliado con "Experiencias". Interface `Experiencia` + `Reserva` definidas en módulo
+- 4 experiencias: Visita empresa tech Málaga (500QC, 10/12), Workshop foto profesional (350QC, 6/8), Charla inversor QHUMA Capital (250QC, 12/15), Mentoría 1:1 alumni (400QC, 3/5)
+- Cada card: placeholder imagen (bg-sidebar/10 + icono), título, fecha pill warning, descripción, aforo con barra CSS (success/warning/urgent según %) y "N libres"
+- "Reservar plaza": verifica saldo → deduce de `saldoActual` → añade a `reservas` → muestra confirmación con ticket code `QHM-{id}-{random}`
+- "Mis reservas" toggle: lista de reservas activas con ticket badge + "Cancelar" (refund QC)
+- `saldoActual` state inicializado a `currentStudent.qcoins`, declarado junto a otros Mercado states (antes de la primera referencia)
+- catColors y catLabels actualizados con "Experiencias" (bg-sidebar/10)
+- Sección visible cuando catActiva === "Todo" || "Experiencias"
+- Estados añadidos: `saldoActual`, `reservas`, `cancelando`, `reservandoId`, `confirmacionReserva`, `showMisReservas`
+- Imports añadidos: `Building2`, `BookOpen`, `Briefcase`, `UserCheck`, `Ticket`
+
+### [SPRINT-ADMIN][A29] AdminDashboard — Mapa de riesgo de abandono en Métricas ✅
+- Commit: `15845be`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Panel "Mapa de riesgo de abandono" al FINAL del tab Métricas (después de A26 rendimiento docente)
+- 12 alumnos clasificados por engagement (bajo/medio/alto) × progreso (bajo/medio/alto) en grid 3×3
+- Colores de celda: critico (urgent-light + border urgent + animate-pulse), warning (warning-light), success (success-light), neutral (background)
+- Chips por alumno con iniciales: urgent (critico), warning, success según cuadrante
+- Zona crítica (bajo+bajo): borde pulsante + etiqueta "⚠ Zona crítica"
+- Resumen urgent-light: X alumnos en zona crítica + 3 acciones recomendadas numeradas
+- "Generar informe de riesgo": HTML blob tabla completa 12 alumnos + zona crítica destacada, download `informe_riesgo_abandono_{fecha}.pdf`
+- Leyenda colores + counter (warning + OK) en pie del panel
+- Estados añadidos: `riesgoInformeGenerado (boolean)`, `generandoRiesgoInforme (boolean)`
+- Imports: Download, RefreshCw, AlertTriangle, CheckCircle2 (ya existían)
+
+### [SPRINT-CULTURE][C29] StudentDashboard — Reflexión diaria socrática ✅
+- Commit: `a8beb64`
+- Archivo modificado: `src/components/StudentDashboard.tsx`
+- Widget "Reflexión del día" insertado como PRIMER elemento del main content (antes del hero CD1)
+- Fecha y día de la semana calculados en tiempo real con `new Date()`
+- 5 prompts rotativos por día de semana (lunes→viernes) sobre el proyecto Casa Limón / Airbnb Málaga — todos en modo socrático
+- Fines de semana usan el prompt de viernes
+- Textarea max 300 chars con contador (warning al llegar a 280)
+- "Guardar reflexión": 700ms delay → guarda `{ texto, dia, fecha }` al array `reflexionesGuardadas` (max 5, LIFO) → "Reflexión guardada ✓" 3s
+- "Ver mis reflexiones" toggle: lista de últimas 5 con día + fecha + texto completo en bg-background cards
+- IIFE pattern para `prompts` / `handleGuardar` / fecha — variables scoped al bloque
+- Estados añadidos: `reflexionHoy (string)`, `reflexionesGuardadas (array)`, `guardandoReflexion`, `reflexionGuardada`, `showReflexiones`
+- Sin imports nuevos (CheckCircle2 ya existía)
+
+---
+
 ## Sprints completados — Ciclo 29
 
 ### [SPRINT-TEACHER][T28] TeacherCalendar — Vista trimestral y duplicar semana ✅
@@ -1321,8 +1380,8 @@
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
-- **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado. S22 añade sección "Economía de mi proyecto" entre IndustriasVivas y Mercado (4 KPIs, desglose 6 líneas, bloque IA socrático). S23 añade sección "Perfil cognitivo activo" entre Economía y Mercado — IIFE pattern, 8 inteligencias Gardner mapeadas a CompKey, inteligencia activa derivada de tareaActiva.competencies[0], panel bg-sidebar + grid top-3. Import añadido: Brain. S25 añade sección "Habilidad de la semana" entre S23 y Mercado — IIFE, compScores/compNames/ejercicios como vars locales del IIFE, detecta comp más baja, ejercicio contextualizado en Casa Limón con dificultad/tiempo/evidencia, botones Marcar (+45 Q-Coins alert) y Pedir otro (fetch narrativa). Sin estados nuevos. S27 añade sección "Mi tribu aprende" entre S25 y S6 (Mercado) — IIFE pattern, 3 stats grid, 3 logros anónimos array, banner bg-sidebar ranking hint, heatmap 7 días barras CSS. Sin estados nuevos. S29 añade botón flotante "Modo enfoque" + panel Pomodoro al final del today view (después de S27): enfoqueMode/enfoqueRunning/enfoqueElapsed/enfoqueFase/sesionesHoy/enfoqueCompleted states + useEffect timer (cleanup setInterval). Ring SVG r=44 con strokeDasharray dinámico. Panel: ring + controles + tarea activa + log sesiones. Imports añadidos: Focus, RotateCcw, X.
-- **StudentQCoins**: S24 añade evolucionMensual (const módulo, 6 meses) + transaccionesPendientes (2 entradas mock) + filtroTx state (type local "todo"|"ganadas"|"gastadas"|"pendientes"). Panel derecho: gráfico barras CSS side-by-side (sidebar/urgent) + badge "Racha gasto inteligente" (bg-sidebar, activo si ratio < 50% × 3 meses) + historial con filtros 4 pills. Imports añadidos: BarChart3, Filter, Award.
+- **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado. S22 añade sección "Economía de mi proyecto" entre IndustriasVivas y Mercado (4 KPIs, desglose 6 líneas, bloque IA socrático). S23 añade sección "Perfil cognitivo activo" entre Economía y Mercado — IIFE pattern, 8 inteligencias Gardner mapeadas a CompKey, inteligencia activa derivada de tareaActiva.competencies[0], panel bg-sidebar + grid top-3. Import añadido: Brain. S25 añade sección "Habilidad de la semana" entre S23 y Mercado — IIFE, compScores/compNames/ejercicios como vars locales del IIFE, detecta comp más baja, ejercicio contextualizado en Casa Limón con dificultad/tiempo/evidencia, botones Marcar (+45 Q-Coins alert) y Pedir otro (fetch narrativa). Sin estados nuevos. S27 añade sección "Mi tribu aprende" entre S25 y S6 (Mercado) — IIFE pattern, 3 stats grid, 3 logros anónimos array, banner bg-sidebar ranking hint, heatmap 7 días barras CSS. Sin estados nuevos. S29 añade botón flotante "Modo enfoque" + panel Pomodoro al final del today view (después de S27): enfoqueMode/enfoqueRunning/enfoqueElapsed/enfoqueFase/sesionesHoy/enfoqueCompleted states + useEffect timer (cleanup setInterval). Ring SVG r=44 con strokeDasharray dinámico. Panel: ring + controles + tarea activa + log sesiones. Imports añadidos: Focus, RotateCcw, X. C29 añade widget "Reflexión del día" como PRIMER elemento del main content (antes del hero CD1): IIFE pattern con prompts Record<number,{es,en}> (lunes=1→viernes=5), fecha real `new Date()`, diaSemana calculado por getDay(). Textarea max 300 chars con contador warning@280. handleGuardar() 700ms → prepend reflexion {texto,dia,fecha} a reflexionesGuardadas (max 5 LIFO) → feedback "Reflexión guardada ✓" 3s. Toggle "Ver mis reflexiones" → lista últimas 5 en bg-background cards. reflexionHoy/reflexionesGuardadas/guardandoReflexion/reflexionGuardada/showReflexiones states declarados al inicio del componente. Sin nuevos imports.
+- **StudentQCoins**: S24 añade evolucionMensual (const módulo, 6 meses) + transaccionesPendientes (2 entradas mock) + filtroTx state (type local "todo"|"ganadas"|"gastadas"|"pendientes"). Panel derecho: gráfico barras CSS side-by-side (sidebar/urgent) + badge "Racha gasto inteligente" (bg-sidebar, activo si ratio < 50% × 3 meses) + historial con filtros 4 pills. Imports añadidos: BarChart3, Filter, Award. S31 añade Categoria type extendido con "Experiencias", interfaces Experiencia/Reserva a nivel módulo. saldoActual state (inicializado a currentStudent.qcoins) declarado junto a otros Mercado states al inicio del componente. experienciasData array de 4 items definido DENTRO del componente (usa lbl()). reservas/cancelando/reservandoId/confirmacionReserva/showMisReservas states. handleReservar(): verifica saldo, 1s delay, genera ticket QHM-{id}-{random}, deduce de saldoActual, prepend a reservas, confirmacion 5s. handleCancelar(): 800ms delay, remove + refund. Sección "Tienda de Experiencias" visible cuando catActiva==="Todo"||"Experiencias": grid 2 cols, placeholder imagen bg-sidebar/10, aforo con barra CSS, "Reservar plaza" btn. "Mis reservas" toggle colapsable. Confirmación toast success-light con ticket code. catColors/catLabels actualizados con "Experiencias". saldoDisponible ahora apunta a saldoActual. Imports añadidos: Building2, BookOpen, Briefcase, UserCheck, Ticket.
 - **TeacherDashboard**: T22 añade proximasEntregas (const módulo, 5 entregas) + interface EntregaProxima + type EstadoEntrega + recordadas Set + recordandoId state + handleRecordar() (900ms). Panel "Próximas entregas" insertado entre urgencias (T10) y seguimiento individual: lista con badge días (urgent/warning/success), fondo row por estado, botón Recordar con Bell icon + feedback CheckCircle2. Imports añadidos: Bell, ClipboardList. T26 añade semanaExpanded/semanaResumen/generandoResumen/resumenCopiado states + handleGenerarResumen() (fetch narrativa) + handleCopiarResumen() (clipboard). Panel colapsable "Semana en números" como PRIMER elemento del main content (antes del hero): 5 stats con trend arrows, card AI narrativa, botones Generar+Compartir. Imports añadidos: ChevronDown, ChevronUp, Coins, Trophy, Copy.
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
@@ -1330,8 +1389,8 @@
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
 - **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
 - **MercadoRealTime**: mercadoTendencias array definido en StudentDashboard.tsx (no en un archivo de datos separado).
-- **TeacherAnalytics**: T23 añade riesgoBase (const módulo, 12 alumnos), computeScore(), nivelRiesgo(), microAccionPorNivel Record. State contactadosSemaforo: Set<string>. Panel "Semáforo de riesgo actualizado" antes de comparativa semanal: donut SVG 3 arcos + distribución 3 KPIs + lista ordenada por score con arrowTendencia + micro-acción + botón Contactar (solo Alto). Imports añadidos: ArrowUp, ArrowDown, Minus, ShieldAlert.
-- **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real. A24 añade alertasRevisadas/alertasIgnoradas (Set), solicitandoClarificacion (string|null), clarificacionEnviada (Set) states. Panel "Integridad académica" al final del tab Inspección (después de documentos): 5 alertas mock, 3 KPIs, barra similitud, avatares duales, 3 acciones por alerta. IIFE pattern dentro del tab inspection. Estados de control para UI reactiva. A26 añade docenteExpandido (string|null) + docenteReconocido (Set<string>) + reconociendoDocente (string|null) states + handleReconocerLogro() (900ms delay). Panel "Rendimiento docente" al FINAL del tab Métricas (IIFE): 3 KPIs + tabla 6 docentes con badge rendimiento (Destacado/En progreso/Apoyo), barra IA%, stars satisfacción, Ver detalle (expande últimos 3 feedbacks + IA favorita), Trophy Reconocer botón. Import añadido: Star.
+- **TeacherAnalytics**: T23 añade riesgoBase (const módulo, 12 alumnos), computeScore(), nivelRiesgo(), microAccionPorNivel Record. State contactadosSemaforo: Set<string>. Panel "Semáforo de riesgo actualizado" antes de comparativa semanal: donut SVG 3 arcos + distribución 3 KPIs + lista ordenada por score con arrowTendencia + micro-acción + botón Contactar (solo Alto). Imports añadidos: ArrowUp, ArrowDown, Minus, ShieldAlert. T29 añade grupoComparativaVista/exportandoAnalisis/analisisExportado states. Panel "Comparativa entre grupos" al FINAL (después de sparklines). grupoA/grupoB arrays de 6 alumnos c/u con racha/entregasATiempo/riesgo. avgA_comps/avgB_comps calculados vía seededLevel(si,ci) / seededLevel(si+6,ci). Toggle vista competencia/indicador. Vista competencia: 8 barras LOMLOE side-by-side sidebar/accent-text + badge lidera. Vista indicador: 3 indicadores con 2 barras + badge. KPI summary grid 3 cols. handleExportar() → HTML Blob download. Imports añadidos: Download, Layers.
+- **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real. A24 añade alertasRevisadas/alertasIgnoradas (Set), solicitandoClarificacion (string|null), clarificacionEnviada (Set) states. Panel "Integridad académica" al final del tab Inspección (después de documentos): 5 alertas mock, 3 KPIs, barra similitud, avatares duales, 3 acciones por alerta. IIFE pattern dentro del tab inspection. Estados de control para UI reactiva. A26 añade docenteExpandido (string|null) + docenteReconocido (Set<string>) + reconociendoDocente (string|null) states + handleReconocerLogro() (900ms delay). Panel "Rendimiento docente" al FINAL del tab Métricas (IIFE): 3 KPIs + tabla 6 docentes con badge rendimiento (Destacado/En progreso/Apoyo), barra IA%, stars satisfacción, Ver detalle (expande últimos 3 feedbacks + IA favorita), Trophy Reconocer botón. Import añadido: Star. A29 añade riesgoInformeGenerado (boolean) + generandoRiesgoInforme (boolean) states. Panel "Mapa de riesgo de abandono" al FINAL del tab Métricas (IIFE, después de A26): alumnos array de 12 con engagement/progreso/riesgo. celdas array 9 entradas (3×3 grid). tipoBg/chipColor Records. Grid CSS 3 cols: fila alto/medio/bajo progreso, cada celda con chips alumno coloreados por cuadrante. Zona critica (bajo+bajo): border urgent + animate-pulse + etiqueta. Resumen urgent-light: lista criticos + 3 acciones. handleGenerarInforme() → HTML blob con tabla 12 alumnos + fecha. Sin nuevos imports (Download/RefreshCw/AlertTriangle/CheckCircle2 ya existían).
 - **QHUMA Capital**: según QHUMA_Master_Document, inversión real de hasta €10.000. El panel A5 debe mostrar proyectos en distintas fases de evaluación (pitch → votación → aprobado → financiado).
 - **Q-Coins**: canjeables por talleres, equipamiento maker studio, excursiones, prioridad Passion Workshop.
 - Push siempre una vez al final del ciclo (no por sprint).
