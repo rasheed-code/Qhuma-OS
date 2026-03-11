@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 11 ✅ (push: `d9e7c46`)
+- **Último ciclo completo**: Ciclo 12 ✅ (push: `50f7a9f`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 12
+- **Próximo ciclo**: Ciclo 13
 
 ---
 
@@ -409,12 +409,57 @@
 
 ---
 
-## Sprints pendientes — Ciclo 12
+## Ciclo 12 ✅ completado
 
-- [ ] [T11] TeacherStudents mejorado — en la vista Alumnos, añadir panel de "Historial de intervenciones" por alumno (últimas 5 acciones del docente: comentarios, prórrogas, contactos), filtro rápido por estado de riesgo (Todos / En riesgo / Brillando)
-- [ ] [S13] StudentAchievements mejorado — añadir sistema de "Misiones completadas" (5 misiones mock del proyecto Airbnb), sección "Próximos desbloqueos" con barra de progreso hacia el siguiente logro, compartir logro (simula copiar URL)
-- [ ] [A11] AdminReports mejorado — en el tab Informes, añadir plantillas de informe predefinidas (LOMLOE completo, Inspección, Familia), vista previa con datos reales de los alumnos mock, descarga simulada con nombre de archivo dinámico
-- [ ] [C11] PitchLabScoring mejorado — en PitchLab modo "Simular audiencia", añadir panel de "Inversores simulados" (3 perfiles: conservador/moderado/arriesgado), cada uno vota ✓/✗ con una razón breve generada por IA (mode="pitchcoach" adaptado), resultado final con "capital conseguido"
+### [SPRINT-TEACHER][T11] TeacherStudents mejorado ✅
+- Commit: `67aba19`
+- Archivo modificado: `src/components/TeacherStudents.tsx`
+- Interfaz `HistorialIntervencion` (tipo: "comentario" | "prorroga" | "contacto", descripcion, fecha)
+- `historialPorAlumno` constante a nivel de módulo: 5 entradas para Lucas (idx 0), 3 para needs_attention, 2 para excelling, [] para on_track
+- Panel "Historial de intervenciones" en vista expandida (antes de Comentarios): chips con icono MessageSquare/Clock/Phone, badge de tipo, fecha y descripción
+- Filtros renombrados: "Todos los alumnos" → "Todos" · "Destacados" → "Brillando" · "Necesitan atención" → "En riesgo"
+- Import añadido: Phone (Lucide)
+
+### [SPRINT-STUDENT][S13] StudentAchievements mejorado ✅
+- Commit: `40f8ed0`
+- Archivo modificado: `src/components/StudentAchievements.tsx`
+- `misionesCompletadas`: 5 misiones del proyecto Airbnb Málaga (Semanas 1-3) con competencia LOMLOE y XP cada una
+- Sección "Misiones completadas": card bg-card con íconos CheckCircle2 por misión, etiqueta competencia, XP ganado
+- Botón "Compartir" por logro desbloqueado: simula `navigator.clipboard.writeText` con URL canónica QHUMA; feedback visual "Copiado" 2s vía `sharedId` state
+- Panel derecho "Próximos desbloqueos": reemplaza "Siguiente logro" con lista dinámica de todos los logros bloqueados que tienen `progress`, con barra de progreso individual y porcentaje
+- Estado `sharedId: string | null` para gestionar feedback de copia
+- Imports añadidos: Copy, CheckCircle2, MapPin
+
+### [SPRINT-ADMIN][A11] AdminReports mejorado ✅
+- Commit: `df9b6de`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- 3 plantillas predefinidas clickables (LOMLOE Completo 📋 / Inspección 🔍 / Informe Familia 👨‍👩‍👦): cards con descripción; click aplica tipo y resetea preview
+- `reportTipo` ampliado con "familia"; `tipoLabel` y selector `<select>` actualizados con la nueva opción
+- `downloadedFilename` state: genera nombre dinámico `informe_{alumno-slug}_T{trimestre}_{tipo}_{AAAAMMDD}.pdf` visible bajo el botón de descarga
+- Preview enriquecido por tipo: secciones distintas para lomloe/inspeccion/familia/individual/grupo usando datos reales del alumno seleccionado y `reportAlumnos.length`
+- Preview usa IIFE para capturar `alumnoData`, `previewFilename` y `secciones` según tipo activo
+- Estado `downloadedFilename: string | null`
+
+### [SPRINT-CULTURE][C11] PitchLabScoring mejorado ✅
+- Commit: `50f7a9f`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- Interfaz `InversorVoto` (decision: "si"|"no"|null, razon: string|null, loading: boolean)
+- `inversoresConfig`: 3 perfiles — conservadora Marta Ruiz (30k€, umbral 72), moderado Javier Torres (75k€, umbral 58), arriesgada Elena López (150k€, umbral 40)
+- `inversoresVotos: Record<string, InversorVoto>` state
+- `handleSimulate` convertida a `async`: tras calcular feedback local, lanza 3 llamadas API pitchcoach escalonadas (950ms entre cada una)
+- Decisión determinista: avgScore vs umbral de perfil; razón generada por Gemini con contexto del inversor
+- Panel "Inversores simulados" en modo feedback (antes del panel IA por sección): 3 tarjetas con avatar, badge ✓/✗ animado, spinner de carga, razón entrecomillada
+- Banner "Capital conseguido" (bg-success-light) suma los capitales de inversores con voto "si"
+- Mensaje de refuerzo si capitalConseguido === 0 y todos terminaron de votar
+
+---
+
+## Sprints pendientes — Ciclo 13
+
+- [ ] [T12] TeacherGradeBook mejorado — en el Grade Book, añadir vista "Exportar notas" con tabla completa alumno × competencia × nivel LOMLOE (1-4), botón exportar a CSV (descarga simulada), y badge de "Alerta trimestral" si algún alumno tiene nivel 1 en ≥ 3 competencias
+- [ ] [S14] StudentPortfolio mejorado — añadir sección "Línea del tiempo del proyecto" (timeline visual con los hitos clave del Airbnb Málaga desde la Semana 1), cada hito con competencia LOMLOE, XP obtenido y fecha; última entrada siempre es "Demo Day (próximo)"
+- [ ] [A12] AdminDashboard Overview mejorado — añadir widget "Salud del sistema IA" en tab Overview: latencia media API (mock), tasa de error (mock), tokens consumidos esta semana, botón "Ver logs" que despliega los últimos 5 errores simulados con timestamp y tipo
+- [ ] [C12] PitchLab mejorado — añadir modo "Ensayo cronometrado": botón que inicia temporizador global del pitch completo (suma de durationSeg de todas las secciones = 270s), muestra qué sección debería estar pronunciando según el tiempo transcurrido, y al terminar muestra "Pitch completado en X:XX"
 
 ---
 
@@ -424,7 +469,10 @@
 - **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages" | "rubrica" (sin cambios en Ciclo 9)
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
 - **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection" | "metrics" (metrics añadido en Ciclo 9)
-- **TeacherStudents**: C7 modificado (TeacherComentarios). Leer antes de editar en ciclos futuros.
+- **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
+- **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
+- **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
+- **PitchLab**: C11 añade inversoresConfig + InversorVoto interface + inversoresVotos state. handleSimulate es ahora async. Inversores se cargan secuencialmente con stagger 950ms vía API pitchcoach.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
