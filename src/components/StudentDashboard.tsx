@@ -136,6 +136,11 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
 
+  // S41 — Mi equipo Food Truck
+  const [mensajeEquipo, setMensajeEquipo] = useState("");
+  const [enviandoMensaje, setEnviandoMensaje] = useState(false);
+  const [mensajeEnviado, setMensajeEnviado] = useState(false);
+
   // S40 — Lean Canvas T2
   const [canvasData, setCanvasData] = useState<Record<string, string>>({});
   const [canvasGuardando, setCanvasGuardando] = useState(false);
@@ -2517,6 +2522,126 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 )}
               </p>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S41: Mi equipo Food Truck ────────────────────────────────────── */}
+      {(() => {
+        const equipo = {
+          nombre: lbl("Food & Fam", "Food & Fam"),
+          concepto: lbl("Cocina mediterránea de autor con ingredientes malagueños", "Artisan Mediterranean cuisine with local Málaga ingredients"),
+          progreso: 62,
+          mision: lbl("Completar el Lean Canvas + borrador de pitch antes del viernes", "Complete Lean Canvas + pitch draft before Friday"),
+          misionComp: "CE",
+        };
+        const compañeros = [
+          { nombre: "Sofía Torres",  avatar: "ST", rol: lbl("Directora de Marca",    "Brand Director"),     comp: "CCEC", completado: true  },
+          { nombre: "Diego López",   avatar: "DL", rol: lbl("Gestor de Equipo",       "Team Manager"),       comp: "CC",   completado: true  },
+          { nombre: "Ana Martín",    avatar: "AM", rol: lbl("Coordinadora Operaciones","Operations Lead"),   comp: "CPSAA",completado: false },
+        ];
+
+        const handleEnviar = () => {
+          if (!mensajeEquipo.trim()) return;
+          setEnviandoMensaje(true);
+          setTimeout(() => {
+            setEnviandoMensaje(false);
+            setMensajeEnviado(true);
+            setMensajeEquipo("");
+            setTimeout(() => setMensajeEnviado(false), 3000);
+          }, 900);
+        };
+
+        const r = 20;
+        const circ = 2 * Math.PI * r;
+        const dash = (equipo.progreso / 100) * circ;
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <Users size={15} className="text-accent" />
+                </div>
+                <div>
+                  <h3 className="text-[14px] font-bold text-text-primary">{equipo.nombre}</h3>
+                  <p className="text-[10px] text-text-muted leading-snug">{equipo.concepto}</p>
+                </div>
+              </div>
+              {/* Progress ring */}
+              <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
+                <svg width="52" height="52" viewBox="0 0 52 52">
+                  <circle cx="26" cy="26" r={r} fill="none" stroke="#e5e7eb" strokeWidth="4" />
+                  <circle
+                    cx="26" cy="26" r={r} fill="none"
+                    stroke="#2f574d" strokeWidth="4"
+                    strokeDasharray={`${dash} ${circ - dash}`}
+                    strokeDashoffset={circ / 4}
+                    strokeLinecap="round"
+                  />
+                  <text x="26" y="30" textAnchor="middle" fontSize="11" fontWeight="700" fill="#141414">{equipo.progreso}%</text>
+                </svg>
+                <span className="text-[8px] text-text-muted">{lbl("Progreso", "Progress")}</span>
+              </div>
+            </div>
+
+            {/* Compañeros */}
+            <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-2">{lbl("Miembros del equipo", "Team members")}</p>
+            <div className="space-y-2 mb-4">
+              {compañeros.map((c) => (
+                <div key={c.avatar} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${c.completado ? "border-success/20 bg-success-light" : "border-card-border bg-background"}`}>
+                  <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                    <span className="text-[9px] font-bold text-accent">{c.avatar}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-semibold text-text-primary truncate">{c.nombre}</p>
+                    <p className="text-[9px] text-text-secondary">{c.rol}</p>
+                  </div>
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-accent-light text-accent-text flex-shrink-0">{c.comp}</span>
+                  {c.completado
+                    ? <CheckCircle2 size={12} className="text-success flex-shrink-0" />
+                    : <div className="w-3 h-3 rounded-full border-2 border-border flex-shrink-0" />
+                  }
+                </div>
+              ))}
+            </div>
+
+            {/* Misión colectiva */}
+            <div className="bg-accent-light rounded-xl px-3 py-2.5 mb-4 border border-accent/20">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <Zap size={10} className="text-accent-text" />
+                <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">{lbl("Misión del equipo esta semana", "Team mission this week")}</span>
+                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar/10 text-sidebar ml-auto">{equipo.misionComp}</span>
+              </div>
+              <p className="text-[11px] text-text-primary font-medium">{equipo.mision}</p>
+            </div>
+
+            {/* Mensaje al equipo */}
+            <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-1.5">{lbl("Mensaje al equipo", "Message to team")}</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={mensajeEquipo}
+                onChange={(e) => setMensajeEquipo(e.target.value)}
+                placeholder={lbl("Escribe algo al equipo...", "Write something to the team...")}
+                className="flex-1 text-[11px] bg-background border border-card-border rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-accent-text/30 placeholder:text-text-muted"
+              />
+              <button
+                onClick={handleEnviar}
+                disabled={!mensajeEquipo.trim() || enviandoMensaje}
+                className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 flex-shrink-0"
+              >
+                {mensajeEnviado ? <CheckCircle2 size={11} /> : enviandoMensaje ? <RefreshCw size={11} className="animate-spin" /> : <Send size={11} />}
+                {mensajeEnviado ? lbl("¡Enviado!", "Sent!") : lbl("Enviar", "Send")}
+              </button>
+            </div>
+
+            <p className="text-[9px] text-text-muted mt-3 leading-snug">
+              {lbl(
+                "Bloque 4 · Inteligencias múltiples: Tu competencia CC (interpersonal) se desarrolla en cada decisión de equipo — no solo en las que salen bien.",
+                "Block 4 · Multiple intelligences: Your CC (interpersonal) competency develops with every team decision — not just the ones that go well."
+              )}
+            </p>
           </div>
         );
       })()}

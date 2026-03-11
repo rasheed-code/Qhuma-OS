@@ -1042,6 +1042,100 @@ export default function TeacherDashboard() {
           })()}
         </div>
 
+        {/* ── T39: Radar T2 — Seguimiento semanal de arranque ─────────── */}
+        {(() => {
+          const t2Alumnos = [
+            { nombre: "Lucas García",    avatar: "LG", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Sofía Torres",    avatar: "ST", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Pablo Ruiz",      avatar: "PR", canvas: false, presupuesto: false, equipo: false },
+            { nombre: "María Santos",    avatar: "MS", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Diego López",     avatar: "DL", canvas: true,  presupuesto: false, equipo: true  },
+            { nombre: "Ana Martín",      avatar: "AM", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Carlos Rivera",   avatar: "CR", canvas: true,  presupuesto: false, equipo: true  },
+            { nombre: "Laura Sanz",      avatar: "LS", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Tomás Herrera",   avatar: "TH", canvas: false, presupuesto: false, equipo: false },
+            { nombre: "Carla Vega",      avatar: "CV", canvas: true,  presupuesto: true,  equipo: true  },
+            { nombre: "Alejandro Pérez", avatar: "AP", canvas: false, presupuesto: false, equipo: true  },
+            { nombre: "Valentina Cruz",  avatar: "VC", canvas: true,  presupuesto: true,  equipo: true  },
+          ];
+          const canvasOk    = t2Alumnos.filter(a => a.canvas).length;
+          const presupOk    = t2Alumnos.filter(a => a.presupuesto).length;
+          const equiposOk   = [...new Set(t2Alumnos.filter(a => a.equipo).map(a => a.avatar))].length;
+          const sinCanvas   = t2Alumnos.filter(a => !a.canvas);
+
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Activity size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("Radar T2 — Seguimiento de arranque", "T2 Radar — Launch tracking")}
+                  </h3>
+                </div>
+                <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                  {lbl("Semana 2 de T2", "T2 Week 2")}
+                </span>
+              </div>
+              <p className="text-[11px] text-text-muted mb-4">
+                {lbl("Estado de los 3 hitos de arranque por alumno (Lean Canvas · Presupuesto · Equipo).", "Status of the 3 launch milestones per student (Lean Canvas · Budget · Team).")}
+              </p>
+
+              {/* KPIs */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { label: lbl("Canvas enviados", "Canvas submitted"), val: `${canvasOk}/12`, bg: canvasOk >= 10 ? "bg-success-light" : "bg-warning-light", txt: canvasOk >= 10 ? "text-success" : "text-warning" },
+                  { label: lbl("Presupuestos activos", "Budgets active"), val: `${presupOk}/12`, bg: presupOk >= 8 ? "bg-success-light" : "bg-warning-light", txt: presupOk >= 8 ? "text-success" : "text-warning" },
+                  { label: lbl("Alumnos en equipo", "Students in teams"), val: `${equiposOk}/12`, bg: "bg-accent-light", txt: "text-accent-text" },
+                ].map((k) => (
+                  <div key={k.label} className={`rounded-xl p-3 text-center ${k.bg}`}>
+                    <p className={`text-[18px] font-black leading-none ${k.txt}`}>{k.val}</p>
+                    <p className="text-[9px] text-text-muted mt-1">{k.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tabla por alumno */}
+              <div className="space-y-1.5 mb-4">
+                {t2Alumnos.map((a) => {
+                  const hitos = [a.canvas, a.presupuesto, a.equipo];
+                  const ok = hitos.filter(Boolean).length;
+                  const rowBg = ok === 3 ? "bg-success-light border-success/20" : ok === 0 ? "bg-urgent-light border-urgent/20" : "bg-background border-card-border";
+                  return (
+                    <div key={a.avatar} className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${rowBg}`}>
+                      <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                        <span className="text-[8px] font-bold text-accent">{a.avatar}</span>
+                      </div>
+                      <span className="text-[11px] font-medium text-text-primary flex-1 truncate">{a.nombre}</span>
+                      {[
+                        { v: a.canvas,      l: "Canvas" },
+                        { v: a.presupuesto, l: lbl("Presup.", "Budget") },
+                        { v: a.equipo,      l: lbl("Equipo", "Team") },
+                      ].map((h) => (
+                        <span key={h.l} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${h.v ? "bg-success-light text-success" : "bg-border text-text-muted"}`}>
+                          {h.v ? "✓" : "·"} {h.l}
+                        </span>
+                      ))}
+                      <span className="text-[9px] font-bold text-text-muted flex-shrink-0 w-8 text-right">{ok}/3</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {sinCanvas.length > 0 && (
+                <div className="bg-urgent-light border border-urgent/20 rounded-xl px-3 py-2.5 flex items-start gap-2">
+                  <AlertTriangle size={11} className="text-urgent flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-urgent leading-snug">
+                    {lbl(
+                      `${sinCanvas.map(a => a.nombre.split(" ")[0]).join(", ")} aún no han enviado el Lean Canvas. Contactar esta semana.`,
+                      `${sinCanvas.map(a => a.nombre.split(" ")[0]).join(", ")} haven't submitted their Lean Canvas. Follow up this week.`
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Bottom: Competency Progress */}
         <div className="grid grid-cols-2 gap-5">
           <CompetencyProgress />

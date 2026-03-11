@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download, Lock, Shield, Coins, TrendingDown } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download, Lock, Shield, Coins, TrendingDown, Rocket } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -449,6 +449,10 @@ export default function StudentPortfolio() {
 
   // C25 — Línea del tiempo integrada
   const [timelineVista, setTimelineVista] = useState<"narrativa" | "timeline">("narrativa");
+
+  // C39 — Narrativa T2 (Bloque 3 — Narrativa propia)
+  const [narrativaT2, setNarrativaT2] = useState<string | null>(null);
+  const [generandoNarrativaT2, setGenerandoNarrativaT2] = useState(false);
   const [exportandoTimeline, setExportandoTimeline] = useState(false);
   const [timelineExportado, setTimelineExportado] = useState(false);
 
@@ -2201,6 +2205,133 @@ Lucas García — 1º ESO · March 2026`
             </div>
           );
         })()}
+        {/* ── C39: Narrativa T2 — Mis primeras 2 semanas ─────────────────── */}
+        {(() => {
+          const handleGenerarNarrativaT2 = async () => {
+            setGenerandoNarrativaT2(true);
+            try {
+              const res = await fetch("/api/tutor-chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  mode: "narrativa",
+                  message: "Lucas García acaba de empezar el proyecto Food Truck (T2). Semana 1: eligió concepto 'Truck Mediterráneo', investigó 5 food trucks locales, definió segmento (universitarios 18-35). Semana 2: completó el Lean Canvas con 6 bloques, propuso canales WhatsApp + mercado, calculó primer presupuesto de 3.600 QC. Genera un párrafo narrativo en primera persona que cuente su historia de las primeras 2 semanas, con tono emprendedor real. Máximo 80 palabras.",
+                  history: [],
+                }),
+              });
+              const data = await res.json();
+              setNarrativaT2(data.reply ?? null);
+            } catch {
+              setNarrativaT2(
+                "Arranqué el Food Truck sin tener idea de lo que hacía. En la primera semana visité cinco trucks de Málaga y me di cuenta de que todos vendían lo mismo: bocadillos y hamburguesas. Ahí vi el hueco. Elegí cocina mediterránea rápida porque nadie la estaba haciendo bien. En la segunda semana monté el Lean Canvas: me costó entender 'propuesta de valor' hasta que lo conecté con lo que yo haría diferente. Ahora tiene sentido."
+              );
+            } finally {
+              setGenerandoNarrativaT2(false);
+            }
+          };
+
+          const entradasT2 = [
+            {
+              semana: lbl("Semana 1 · T2", "Week 1 · T2"),
+              titulo: lbl("Eligiendo el concepto del Food Truck", "Choosing the Food Truck concept"),
+              cuerpo: lbl(
+                "Empezamos T2 con una visita virtual a 5 food trucks de Málaga. Investigué precios, menús y ubicaciones. Me di cuenta de que el nicho mediterráneo rápido estaba casi vacío. Elegí el concepto 'Truck Mediterráneo' después de hablar con 3 compañeros y descartar dos ideas anteriores.",
+                "We started T2 with a virtual visit to 5 food trucks in Málaga. I researched prices, menus and locations. I noticed the fast Mediterranean niche was almost empty. I chose the 'Mediterranean Truck' concept after talking with 3 classmates and discarding two earlier ideas."
+              ),
+              competencias: ["STEM", "CE", "CC"] as const,
+              evidencia: lbl("Informe de investigación · 5 fichas de competidores", "Research report · 5 competitor profiles"),
+              reflexion: lbl("Copiar no es emprender. El hueco en el mercado lo encontré siendo curioso.", "Copying isn't entrepreneurship. I found the market gap by being curious."),
+            },
+            {
+              semana: lbl("Semana 2 · T2", "Week 2 · T2"),
+              titulo: lbl("Lean Canvas: del post-it a un modelo real", "Lean Canvas: from sticky note to real model"),
+              cuerpo: lbl(
+                "Completé los 6 bloques del Lean Canvas con datos reales. El más difícil fue 'propuesta de valor' — lo reescribí cuatro veces. El presupuesto inicial de 3.600 QC me forzó a priorizar: no podía tenerlo todo, así que elegí los costes que más impactaban en el margen.",
+                "I completed the 6 Canvas blocks with real data. The hardest was 'value proposition' — I rewrote it four times. The initial budget of 3,600 QC forced me to prioritize: I couldn't have everything, so I chose the costs with the biggest margin impact."
+              ),
+              competencias: ["CE", "STEM", "CPSAA"] as const,
+              evidencia: lbl("Lean Canvas completo · Presupuesto inicial T2", "Full Lean Canvas · T2 initial budget"),
+              reflexion: lbl("Un modelo de negocio no es teoría — es la historia de tus decisiones reales.", "A business model isn't theory — it's the story of your real decisions."),
+            },
+          ];
+
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Rocket size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("Narrativa T2 — Mis primeras 2 semanas", "T2 Narrative — My first 2 weeks")}
+                  </h3>
+                  <span className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+                    {lbl("Food Truck", "Food Truck")}
+                  </span>
+                </div>
+                <button
+                  onClick={handleGenerarNarrativaT2}
+                  disabled={generandoNarrativaT2}
+                  className="flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-accent-light border border-accent/30 px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all disabled:opacity-60"
+                >
+                  <RefreshCw size={10} className={generandoNarrativaT2 ? "animate-spin" : ""} />
+                  {generandoNarrativaT2 ? lbl("Generando…", "Generating…") : lbl("Narrativa IA", "AI narrative")}
+                </button>
+              </div>
+              <p className="text-[11px] text-text-muted mb-4">
+                {lbl("Tu historia de emprendedor comienza aquí. Dos semanas de decisiones reales.", "Your entrepreneurial story starts here. Two weeks of real decisions.")}
+              </p>
+
+              {/* Narrativa IA (si generada) */}
+              {narrativaT2 && (
+                <div className="bg-sidebar/5 rounded-xl border border-sidebar/10 px-4 py-3 mb-5">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Sparkles size={10} className="text-sidebar" />
+                    <span className="text-[9px] font-bold text-sidebar uppercase tracking-wide">{lbl("Narrativa generada por IA", "AI-generated narrative")}</span>
+                  </div>
+                  <p className="text-[12px] text-text-primary leading-relaxed italic">&ldquo;{narrativaT2}&rdquo;</p>
+                  <button
+                    onClick={() => setNarrativaT2(null)}
+                    className="mt-2 text-[9px] text-text-muted hover:text-accent-text cursor-pointer transition-colors"
+                  >
+                    {lbl("Eliminar y regenerar", "Delete and regenerate")}
+                  </button>
+                </div>
+              )}
+
+              {/* Entradas T2 */}
+              <div className="space-y-4">
+                {entradasT2.map((entrada) => (
+                  <div key={entrada.semana} className="border-l-2 border-accent-text/30 pl-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">{entrada.semana}</span>
+                    </div>
+                    <h4 className="text-[13px] font-semibold text-text-primary mb-2">{entrada.titulo}</h4>
+                    <p className="text-[11px] text-text-secondary leading-relaxed mb-3">{entrada.cuerpo}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      {entrada.competencias.map((c) => (
+                        <span key={c} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${compColor(c as CompKey)}`}>{c}</span>
+                      ))}
+                      <span className="text-[9px] text-text-muted ml-auto">{entrada.evidencia}</span>
+                    </div>
+                    <div className="bg-background rounded-lg px-3 py-2 border border-card-border">
+                      <p className="text-[10px] text-text-secondary italic">&ldquo;{entrada.reflexion}&rdquo;</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 bg-accent-light rounded-xl px-3 py-2.5 border border-accent/20">
+                <p className="text-[9px] font-bold text-accent-text mb-0.5">{lbl("Bloque 3 — Narrativa propia", "Block 3 — Personal narrative")}</p>
+                <p className="text-[10px] text-text-secondary leading-snug">
+                  {lbl(
+                    "Tu portfolio no es un archivo de documentos — es el relato de lo que has creado, resuelto y aprendido. Cada semana añade un nuevo capítulo a tu historia de emprendedor.",
+                    "Your portfolio isn't a document archive — it's the story of what you've created, solved and learned. Each week adds a new chapter to your entrepreneurial story."
+                  )}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
       </div>
     </div>
   );

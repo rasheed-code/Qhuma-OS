@@ -2876,6 +2876,129 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
             );
           })()}
+          {/* ── A39: Scouting T2 — Proyectos Food Truck con potencial de inversión ── */}
+          {(() => {
+            const proyectosT2 = [
+              {
+                alumno: "Lucas García",  avatar: "LG", concepto: lbl("Truck Mediterráneo — Málaga centro","Mediterranean Truck — Málaga centre"),
+                canvas: 6, presupuesto: 94, equipo: 3, engagement: 91,
+                fortaleza: lbl("Modelo financiero sólido con punto de equilibrio calculado","Solid financial model with break-even calculated"),
+              },
+              {
+                alumno: "Ana Martín",    avatar: "AM", concepto: lbl("La Boca del Sur — tapas fusión","La Boca del Sur — fusion tapas"),
+                canvas: 6, presupuesto: 88, equipo: 3, engagement: 93,
+                fortaleza: lbl("Identidad de marca diferenciada y plan de comunicación","Differentiated brand identity and communication plan"),
+              },
+              {
+                alumno: "Carla Vega",    avatar: "CV", concepto: lbl("Sweet Corner — repostería artesanal","Sweet Corner — artisan pastries"),
+                canvas: 5, presupuesto: 76, equipo: 3, engagement: 85,
+                fortaleza: lbl("Segmento muy claro: madres + eventos infantiles Málaga","Very clear segment: mothers + children's events in Málaga"),
+              },
+              {
+                alumno: "Sofía Torres",  avatar: "ST", concepto: lbl("Verde Market — cocina plant-based","Verde Market — plant-based kitchen"),
+                canvas: 5, presupuesto: 70, equipo: 2, engagement: 79,
+                fortaleza: lbl("Propuesta de valor alineada con tendencia creciente","Value proposition aligned with growing market trend"),
+              },
+              {
+                alumno: "Diego López",   avatar: "DL", concepto: lbl("El Viajero — street food del mundo","El Viajero — world street food"),
+                canvas: 4, presupuesto: 55, equipo: 2, engagement: 68,
+                fortaleza: lbl("Concepto diferenciador — necesita reforzar el modelo financiero","Differentiating concept — needs stronger financial model"),
+              },
+            ];
+
+            // Score compuesto: canvas (40%) + presupuesto (30%) + equipo (10%) + engagement (20%)
+            const scoreProyecto = (p: typeof proyectosT2[number]) =>
+              Math.round((p.canvas / 6) * 40 + (p.presupuesto / 100) * 30 + (p.equipo / 3) * 10 + (p.engagement / 100) * 20);
+
+            const potencial = (score: number) =>
+              score >= 80 ? { label: lbl("Alto potencial", "High potential"), cls: "bg-success-light text-success" }
+              : score >= 65 ? { label: lbl("Potencial medio", "Mid potential"), cls: "bg-accent-light text-accent-text" }
+              : { label: lbl("Desarrollando", "Developing"), cls: "bg-warning-light text-warning" };
+
+            const sorted = [...proyectosT2].map(p => ({ ...p, score: scoreProyecto(p) })).sort((a, b) => b.score - a.score);
+            const maxScore = sorted[0].score;
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <Rocket size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">
+                      {lbl("Scouting T2 — Potencial de inversión QHUMA Capital", "T2 Scouting — QHUMA Capital investment potential")}
+                    </h3>
+                  </div>
+                  <span className="text-[9px] text-text-muted bg-background px-2 py-1 rounded-lg border border-card-border">
+                    {lbl("Semana 2 · Score compuesto", "Week 2 · Composite score")}
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted mb-4 mt-1">
+                  {lbl(
+                    "Score basado en: canvas completado (40%) · presupuesto (30%) · tamaño equipo (10%) · engagement (20%).",
+                    "Score based on: canvas completed (40%) · budget (30%) · team size (10%) · engagement (20%)."
+                  )}
+                </p>
+
+                <div className="space-y-3">
+                  {sorted.map((p, i) => {
+                    const pot = potencial(p.score);
+                    return (
+                      <div key={p.avatar} className="bg-background rounded-xl p-3 border border-card-border">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-[11px] font-black text-text-muted w-4 flex-shrink-0">#{i + 1}</span>
+                          <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                            <span className="text-[9px] font-bold text-accent">{p.avatar}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-text-primary truncate">{p.concepto}</p>
+                            <p className="text-[9px] text-text-muted">{p.alumno}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full ${pot.cls}`}>{pot.label}</span>
+                            <span className="text-[13px] font-black text-text-primary">{p.score}</span>
+                          </div>
+                        </div>
+                        {/* Score bar */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${p.score >= 80 ? "bg-success" : p.score >= 65 ? "bg-accent-text" : "bg-warning"}`}
+                              style={{ width: `${(p.score / maxScore) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                        {/* Métricas individuales */}
+                        <div className="flex gap-2 mb-2">
+                          {[
+                            { l: "Canvas",              v: `${p.canvas}/6` },
+                            { l: lbl("Presup.", "Budget"), v: `${p.presupuesto}%` },
+                            { l: lbl("Equipo", "Team"),    v: `${p.equipo} pers.` },
+                            { l: "Engage",              v: `${p.engagement}%` },
+                          ].map((m) => (
+                            <div key={m.l} className="flex-1 text-center bg-card rounded-lg py-1 border border-card-border">
+                              <p className="text-[9px] font-bold text-text-primary">{m.v}</p>
+                              <p className="text-[7px] text-text-muted">{m.l}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[9px] text-text-secondary leading-snug italic">{p.fortaleza}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-4 bg-sidebar rounded-xl px-3 py-2.5">
+                  <p className="text-[9px] font-bold text-accent mb-0.5">{lbl("Criterio de inversión QHUMA Capital", "QHUMA Capital investment criteria")}</p>
+                  <p className="text-[10px] text-white/80 leading-snug">
+                    {lbl(
+                      "Los proyectos con score ≥80 en semana 4 pasan a fase de pitch formal ante el claustro inversor. El scouting es orientativo — el pitch final puede cambiar el ranking.",
+                      "Projects with score ≥80 at week 4 advance to formal pitch before the investor faculty. Scouting is indicative — the final pitch may change the ranking."
+                    )}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
         </div>
       )}
 
