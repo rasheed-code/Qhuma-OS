@@ -544,6 +544,10 @@ export default function PitchLab() {
   const [ensayoScoreMejora, setEnsayoScoreMejora] = useState<string | null>(null);
   const [ensayoScoreLoading, setEnsayoScoreLoading] = useState(false);
 
+  // C20 — Cronómetro por sección (tiempo real vs objetivo)
+  const [ensayoTiemposPorSeccion, setEnsayoTiemposPorSeccion] = useState<Record<string, number>>({});
+  const ensayoSeccionAnteriorRef = useRef<number>(-1);
+
   // C18 — Preguntas intercaladas al cambiar de sección
   const [ensayoPreguntaIntercalada, setEnsayoPreguntaIntercalada] = useState<typeof preguntasJurado[number] | null>(null);
   const [ensayoRespuestaIntercalada, setEnsayoRespuestaIntercalada] = useState("");
@@ -558,7 +562,21 @@ export default function PitchLab() {
           setEnsayoCompleted(true);
           return totalPitchSecs;
         }
-        return e + 1;
+        const nextE = e + 1;
+        // C20: track per-section elapsed time
+        const secIdx = Math.min(
+          pitchSections.map((_, i) => pitchSections.slice(0, i + 1).reduce((a, s) => a + s.durationSeg, 0)).findIndex((c) => nextE <= c),
+          pitchSections.length - 1
+        );
+        if (secIdx >= 0) {
+          const secStart = secIdx === 0 ? 0 : pitchSections.slice(0, secIdx).reduce((a, s) => a + s.durationSeg, 0);
+          const secElapsed = nextE - secStart;
+          setEnsayoTiemposPorSeccion((prev) => ({
+            ...prev,
+            [pitchSections[secIdx].id]: secElapsed,
+          }));
+        }
+        return nextE;
       });
     }, 1000);
     return () => clearInterval(interval);
@@ -638,6 +656,9 @@ export default function PitchLab() {
     setEnsayoScoreFuerte(null);
     setEnsayoScoreMejora(null);
     setEnsayoScoreLoading(false);
+    // C20
+    setEnsayoTiemposPorSeccion({});
+    ensayoSeccionAnteriorRef.current = -1;
   };
 
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
@@ -837,6 +858,36 @@ export default function PitchLab() {
                     )}
                   </div>
                 ) : null}
+                {/* C20 — Resumen de tiempos por sección */}
+                {Object.keys(ensayoTiemposPorSeccion).length > 0 && (
+                  <div className="bg-white/5 rounded-2xl px-4 py-3 mt-3">
+                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">{lbl("Tiempos por sección", "Times per section")}</p>
+                    <div className="space-y-2">
+                      {pitchSections.map((s) => {
+                        const secElapsed = ensayoTiemposPorSeccion[s.id] ?? 0;
+                        const pctSec = Math.min(100, Math.round((secElapsed / s.durationSeg) * 100));
+                        const overTime = secElapsed > s.durationSeg;
+                        const delta = secElapsed - s.durationSeg;
+                        const barColor = overTime ? "bg-urgent" : secElapsed > s.durationSeg * 0.7 ? "bg-success" : "bg-warning";
+                        const deltaText = delta === 0 ? "exacto" : delta > 0 ? `+${delta}s` : `${delta}s`;
+                        const deltaColor = overTime ? "text-urgent" : Math.abs(delta) <= 5 ? "text-success" : "text-warning";
+                        return (
+                          <div key={s.id} className="flex items-center gap-2">
+                            <span className="text-[9px] font-semibold text-white/50 w-20 flex-shrink-0 truncate">{s.title.split(" ")[0]}</span>
+                            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                              <div className={`h-full ${barColor} rounded-full`} style={{ width: `${pctSec}%` }} />
+                            </div>
+                            <span className="text-[9px] tabular-nums text-white/60 flex-shrink-0 w-14 text-right">
+                              {Math.floor(secElapsed / 60)}:{String(secElapsed % 60).padStart(2, "0")}/{s.durationSeg}s
+                            </span>
+                            <span className={`text-[9px] font-bold flex-shrink-0 w-10 text-right ${deltaColor}`}>{deltaText}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[9px] text-white/30 mt-2">{lbl("Verde = dentro del objetivo · Naranja = por debajo del tiempo · Rojo = pasado de tiempo", "Green = on target · Orange = under time · Red = over time")}</p>
+                  </div>
+                )}
               </div>
             ) : ensayoPreguntaIntercalada ? (
               /* C18: Pregunta intercalada del jurado */
@@ -930,6 +981,43 @@ export default function PitchLab() {
                     );
                   })}
                 </div>
+                {/* C20 — Cronómetro por sección en tiempo real */}
+                <div className="bg-white/5 rounded-xl p-3 mb-3">
+                  <p className="text-[9px] font-bold text-white/40 uppercase tracking-widest mb-2">{lbl("Tiempo por sección", "Time per section")}</p>
+                  <div className="space-y-1.5">
+                    {pitchSections.map((s, idx) => {
+                      const secStart = idx === 0 ? 0 : pitchSections.slice(0, idx).reduce((a, ss) => a + ss.durationSeg, 0);
+                      const isCurrent = idx === (currentEnsayoSectionIdx < 0 ? pitchSections.length - 1 : currentEnsayoSectionIdx);
+                      const isDone = ensayoElapsed >= secStart + s.durationSeg;
+                      const secElapsed = isDone ? s.durationSeg : isCurrent ? Math.max(0, ensayoElapsed - secStart) : 0;
+                      const pctSec = Math.min(100, Math.round((secElapsed / s.durationSeg) * 100));
+                      const overTime = secElapsed > s.durationSeg;
+                      const barColor = overTime ? "bg-urgent" : secElapsed > s.durationSeg * 0.85 ? "bg-warning" : "bg-success";
+                      const timeColor = isDone && !overTime ? "text-success/80" : overTime ? "text-urgent" : isCurrent ? "text-accent" : "text-white/20";
+                      return (
+                        <div key={s.id} className="flex items-center gap-2">
+                          <span className={`text-[9px] font-bold w-16 flex-shrink-0 truncate ${isCurrent ? "text-accent" : isDone ? "text-white/50" : "text-white/20"}`}>
+                            {s.title.split(" ")[0]}
+                          </span>
+                          <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                            {(isCurrent || isDone) && (
+                              <div
+                                className={`h-full ${barColor} rounded-full transition-all duration-1000`}
+                                style={{ width: `${pctSec}%` }}
+                              />
+                            )}
+                          </div>
+                          <span className={`text-[9px] tabular-nums font-bold flex-shrink-0 w-10 text-right ${timeColor}`}>
+                            {(isCurrent || isDone)
+                              ? `${Math.floor(secElapsed / 60)}:${String(secElapsed % 60).padStart(2, "0")}/${s.durationSeg}s`
+                              : `—`}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Controls */}
                 <div className="flex gap-2">
                   <button
