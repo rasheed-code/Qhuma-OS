@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 33 ✅ (push: `b2b4603`)
+- **Último ciclo completo**: Ciclo 34 ✅ (push: `f289689`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 34
+- **Próximo ciclo**: Ciclo 35
 
 ---
 
@@ -1242,6 +1242,52 @@
 - "Exportar insignias": HTML blob con grid de 8 insignias + estilos Inter, Blob/createObjectURL, filename insignias_lucas_garcia.html
 - Estados: badgeExpandida string|null, exportandoBadges, badgesExportadas
 - Imports añadidos: Lock, Shield
+
+---
+
+## Sprints completados — Ciclo 34
+
+### [SPRINT-TEACHER][T32] TeacherDashboard — Balance Demo Day ✅
+- Commit: `6ae2ff0`
+- Archivo: `src/components/TeacherDashboard.tsx`
+- Módulo-level: `interface DemoDayScore` + `demoDayScores: DemoDayScore[]` — 12 alumnos, 4 criterios LOMLOE (A/B/C/D, escala 1–4), Q-Coins por alumno
+- Tabla completa 12 alumnos: columnas A/B/C/D + Media (color semáforo: ≥3.5 azul, ≥2.5 success) + Q (amber)
+- Top-3 performers via sort + slice: medallas 1°/2°/3° con fondos dorado/gris/cobre + avatar + media + Q-Coins
+- Total Q-Coins distribuidas en header del top-3
+- Botón "Carta de felicitación" → `cartaEnviada` state (3s feedback CheckCircle2 "Cartas enviadas")
+- Badge "T1 · Airbnb Málaga" en header; Trophy icon amber
+- Estado añadido: `cartaEnviada: boolean`
+
+### [SPRINT-STUDENT][S34] StudentDashboard — Siguiente proyecto: adelanto T2 ✅
+- Commit: `6bebd06`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Tarjeta "Diseña tu Food Truck" en bg-sidebar con nombre proyecto, descripción, 4 badges LOMLOE y badge "Nuevo"
+- 3 tareas desbloqueables: Investiga 3 food trucks (STEM +20Q) / Elige concepto y nombre (CE +25Q) / Boceto logo (CCEC +30Q, locked)
+- Panel "Habilidades a desarrollar": 5 chips (Branding, Lean Canvas, costes variables, marketing local, pitch visual)
+- Botón "Ver proyecto completo" con ArrowRight
+- Sin estados nuevos — completamente estático (mock preview)
+- Imports añadidos: `ArrowRight`, `Rocket`
+
+### [SPRINT-ADMIN][A32] AdminDashboard — Informe ejecutivo comparativo ✅
+- Commit: `64fef75`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Grid 2×2 de métricas comparativas: alumnos (312 vs 187), media LOMLOE (3.1 vs 2.9), proyectos (14 vs 8), docentes (28 vs 19)
+- Cada métrica: barra bicolor sidebar (Málaga) / accent-dark (Madrid) con porcentajes
+- Botón "Generar informe": 1.4s delay → revela panel monoespaciado con 6 puntos ejecutivos + total red 499 alumnos
+- Botón "Descargar PDF" activo post-generación; "¡Descargado!" feedback 2.5s
+- Placeholder "empty state" cuando no generado (Building2 icon + descripción)
+- Estados añadidos: `ejecutivoGenerado`, `generandoEjecutivo`, `ejecutivoDescargado`
+
+### [SPRINT-CULTURE][C32] StudentPortfolio — Balance financiero del proyecto ✅
+- Commit: `f289689`
+- Archivo: `src/components/StudentPortfolio.tsx`
+- P&L de Casa Limón (Airbnb Málaga T1): ingresos 1.932 € (alquiler + extras) / costes 530 € (5 partidas) / beneficio 1.402 €
+- KPI strip 3 columnas: Ingresos (success) / Costes (urgent) / Margen neto 72% (azul)
+- Desglose línea a línea de ingresos (2 filas) y costes (5 filas) con separador
+- ROI 116% calculado sobre inversión inicial estimada 1.200 €; interpretación en bg-accent-light
+- Principio culture.md Bloque 2: Educación financiera integrada en el proyecto activo
+- Sin estados nuevos — IIFE con cálculos inline
+- Imports añadidos: `Coins`, `TrendingDown`
 
 ---
 
