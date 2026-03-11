@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, ChevronRight, RotateCcw, Copy, Check, BookOpen, Target, Clock, Users } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -97,6 +98,9 @@ const projectTemplates: GeneratedProject[] = [
 ];
 
 export default function TeacherProjectGenerator() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [step, setStep] = useState<"config" | "result">("config");
   const [subject, setSubject] = useState("");
   const [duration, setDuration] = useState("5");
@@ -147,10 +151,10 @@ export default function TeacherProjectGenerator() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={18} className="text-accent-text" />
-            <h1 className="text-[22px] font-bold text-text-primary">Generador de Proyectos</h1>
+            <h1 className="text-[22px] font-bold text-text-primary">{lbl("Generador de Proyectos", "Project Generator")}</h1>
           </div>
           <p className="text-[13px] text-text-secondary">
-            Genera proyectos LOMLOE alineados con competencias y contexto real · IA educativa QHUMA
+            {lbl("Genera proyectos LOMLOE alineados con competencias y contexto real · IA educativa QHUMA", "Generate LOMLOE projects aligned with competencies and real-world context · QHUMA educational AI")}
           </p>
         </div>
         {step === "result" && (
@@ -159,14 +163,14 @@ export default function TeacherProjectGenerator() {
               onClick={() => setStep("config")}
               className="text-[11px] text-text-secondary border border-card-border rounded-xl px-3 py-2 hover:border-accent-text/30 transition-all cursor-pointer"
             >
-              Nueva configuración
+              {lbl("Nueva configuración", "New configuration")}
             </button>
             <button
               onClick={handleCopy}
               className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all"
             >
               {copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
-              {copied ? "¡Copiado!" : "Copiar proyecto"}
+              {copied ? lbl("¡Copiado!", "Copied!") : lbl("Copiar proyecto", "Copy project")}
             </button>
             <button
               onClick={handleRegenerate}
@@ -174,7 +178,7 @@ export default function TeacherProjectGenerator() {
               className="flex items-center gap-1.5 bg-sidebar text-accent text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50"
             >
               <RotateCcw size={13} className={generating ? "animate-spin" : ""} />
-              Regenerar
+              {lbl("Regenerar", "Regenerate")}
             </button>
           </div>
         )}
@@ -187,12 +191,12 @@ export default function TeacherProjectGenerator() {
             {/* Context / subject */}
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <label className="block text-[12px] font-semibold text-text-primary mb-2">
-                Contexto o área de conocimiento
+                {lbl("Contexto o área de conocimiento", "Context or area of knowledge")}
               </label>
               <textarea
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Ej: Economía local, emprendimiento, turismo, tecnología, medio ambiente…"
+                placeholder={lbl("Ej: Economía local, emprendimiento, turismo, tecnología, medio ambiente…", "E.g.: Local economy, entrepreneurship, tourism, technology, environment…")}
                 rows={3}
                 className="w-full text-[12px] text-text-primary bg-background rounded-xl border border-card-border px-3 py-2.5 outline-none focus:border-accent-text/50 resize-none placeholder:text-text-muted"
               />
@@ -201,7 +205,7 @@ export default function TeacherProjectGenerator() {
             {/* Duration */}
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <label className="block text-[12px] font-semibold text-text-primary mb-3">
-                Duración del proyecto
+                {lbl("Duración del proyecto", "Project duration")}
               </label>
               <div className="flex gap-2">
                 {["3", "4", "5", "6", "8"].map((w) => (
@@ -214,7 +218,7 @@ export default function TeacherProjectGenerator() {
                         : "bg-background text-text-secondary hover:bg-accent-light"
                     }`}
                   >
-                    {w} sem.
+                    {w} {lbl("sem.", "wks.")}
                   </button>
                 ))}
               </div>
@@ -223,7 +227,7 @@ export default function TeacherProjectGenerator() {
             {/* Competencies */}
             <div className="bg-card rounded-2xl border border-card-border p-5">
               <label className="block text-[12px] font-semibold text-text-primary mb-3">
-                Competencias prioritarias LOMLOE
+                {lbl("Competencias prioritarias LOMLOE", "Priority LOMLOE competencies")}
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {COMPS.map((c) => {
@@ -255,15 +259,17 @@ export default function TeacherProjectGenerator() {
                 <span className="text-[11px] font-bold text-accent-text">Metodología QHUMA</span>
               </div>
               <p className="text-[11px] text-accent-text leading-relaxed">
-                Los proyectos generados siguen el marco pedagógico de QHUMA: aprendizaje basado en retos reales,
-                evaluación competencial LOMLOE y conexión con el mundo laboral.
+                {lbl(
+                  "Los proyectos generados siguen el marco pedagógico de QHUMA: aprendizaje basado en retos reales, evaluación competencial LOMLOE y conexión con el mundo laboral.",
+                  "Generated projects follow the QHUMA pedagogical framework: real-world challenge-based learning, LOMLOE competency assessment and connection to the professional world."
+                )}
               </p>
             </div>
             <div className="bg-card rounded-2xl border border-card-border p-4 space-y-3">
               {[
-                { icon: Target, text: "Proyectos conectados a retos locales reales" },
-                { icon: Clock, text: "Fases ajustadas al calendario escolar" },
-                { icon: Users, text: "Rol del estudiante como protagonista activo" },
+                { icon: Target, text: lbl("Proyectos conectados a retos locales reales", "Projects connected to real local challenges") },
+                { icon: Clock, text: lbl("Fases ajustadas al calendario escolar", "Phases aligned to the school calendar") },
+                { icon: Users, text: lbl("Rol del estudiante como protagonista activo", "Student as active protagonist") },
               ].map(({ icon: Icon, text }, i) => (
                 <div key={i} className="flex items-start gap-2">
                   <Icon size={12} className="text-accent-text mt-0.5 flex-shrink-0" />
@@ -279,12 +285,12 @@ export default function TeacherProjectGenerator() {
               {generating ? (
                 <>
                   <Sparkles size={15} className="animate-pulse" />
-                  Generando…
+                  {lbl("Generando…", "Generating…")}
                 </>
               ) : (
                 <>
                   <Sparkles size={15} />
-                  Generar proyecto
+                  {lbl("Generar proyecto", "Generate project")}
                   <ChevronRight size={15} />
                 </>
               )}
@@ -301,7 +307,7 @@ export default function TeacherProjectGenerator() {
               <div className={`bg-card rounded-2xl border border-card-border p-5 ${generating ? "opacity-50 pointer-events-none" : ""}`}>
                 {generating && (
                   <div className="text-[11px] text-accent-text font-semibold mb-3 flex items-center gap-1.5">
-                    <Sparkles size={12} className="animate-pulse" /> Regenerando…
+                    <Sparkles size={12} className="animate-pulse" /> {lbl("Regenerando…", "Regenerating…")}
                   </div>
                 )}
                 <div className="flex gap-2 mb-2">
@@ -317,7 +323,7 @@ export default function TeacherProjectGenerator() {
 
               {/* Phases */}
               <div className="bg-card rounded-2xl border border-card-border p-5">
-                <h3 className="text-[13px] font-bold text-text-primary mb-3">Fases del proyecto</h3>
+                <h3 className="text-[13px] font-bold text-text-primary mb-3">{lbl("Fases del proyecto", "Project phases")}</h3>
                 <div className="space-y-3">
                   {result.phases.map((p, i) => (
                     <div key={i} className="flex gap-3">
@@ -338,7 +344,7 @@ export default function TeacherProjectGenerator() {
 
               {/* Deliverables */}
               <div className="bg-card rounded-2xl border border-card-border p-5">
-                <h3 className="text-[13px] font-bold text-text-primary mb-3">Entregables</h3>
+                <h3 className="text-[13px] font-bold text-text-primary mb-3">{lbl("Entregables", "Deliverables")}</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {result.deliverables.map((d, i) => (
                     <div key={i} className="flex items-start gap-2 bg-background rounded-xl px-3 py-2">
@@ -354,7 +360,7 @@ export default function TeacherProjectGenerator() {
             <div className="space-y-4">
               {/* Evaluation */}
               <div className="bg-card rounded-2xl border border-card-border p-4">
-                <h3 className="text-[12px] font-bold text-text-primary mb-3">Criterios de evaluación</h3>
+                <h3 className="text-[12px] font-bold text-text-primary mb-3">{lbl("Criterios de evaluación", "Assessment criteria")}</h3>
                 <div className="space-y-3">
                   {result.evaluationCriteria.map((ec, i) => (
                     <div key={i} className="bg-accent-light rounded-xl p-3">
@@ -369,7 +375,7 @@ export default function TeacherProjectGenerator() {
               <div className="bg-success-light rounded-2xl border border-card-border p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Target size={12} className="text-success" />
-                  <span className="text-[11px] font-bold text-success">Impacto real</span>
+                  <span className="text-[11px] font-bold text-success">{lbl("Impacto real", "Real-world impact")}</span>
                 </div>
                 <p className="text-[11px] text-text-secondary leading-relaxed">{result.realWorldConnection}</p>
               </div>
