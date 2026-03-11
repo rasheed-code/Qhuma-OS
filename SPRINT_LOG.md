@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 38 ✅ (push: `85abef2`)
+- **Último ciclo completo**: Ciclo 39 ✅ (push: `e82bdb3`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 39
+- **Próximo ciclo**: Ciclo 40
 
 ---
 
@@ -1297,6 +1297,58 @@
 
 ---
 
+## Sprints completados — Ciclo 39
+
+### [SPRINT-TEACHER][T37] TeacherRubrica — Rúbricas T2 Food Truck con tab T1/T2 ✅
+- Commit: `ebf6058`
+- Archivo: `src/components/TeacherRubrica.tsx`
+- Módulo-level: `rubricasT2Mock: RubricaMock[]` (4 rúbricas) + `allRubricasMock` combinado
+- 4 fases: Concepto+naming (CLC/CE/CCEC), Diseño menú (STEM/CCEC/CE), Modelo financiero (STEM/CE), Pitch Demo Day (CLC/CE/CPSAA)
+- `initScores()` actualizado para iterar `allRubricasMock` (T1+T2)
+- Estado `trimestreRubrica: "T1" | "T2"` y derivado `rubricasActivas`
+- `rubrica` derivado de `rubricasActivas.find()` con fallback al primer elemento
+- Tab toggle T1(Airbnb Málaga) / T2(Food Truck) con count de rúbricas por trimestre
+- Al cambiar tab: `setActiveRubrica` reset al primer id del trimestre seleccionado
+- Subtitle dinámico según trimestre activo
+- `rubricasMock.map` en panel izquierdo cambiado a `rubricasActivas.map`
+
+### [SPRINT-STUDENT][S39] StudentAchievements — Insignias Food Truck T2 ✅
+- Commit: `33e5af0`
+- Archivo: `src/components/StudentAchievements.tsx`
+- Insertado antes de "Stats rarity row" (sección principal de logros T1)
+- Interface `InsigniaT2` interna al IIFE: id/nombre/emoji/descripcion/comp/fase/xp/desbloqueada/progreso?
+- 8 insignias: Concepto en pie (CE) ✅, Marca propia (CCEC) ✅, Maestro del menú 3/5, Punto de equilibrio 0/1, Inversor convencido, Financiero del año, Triple competencia, Food Truck lanzado
+- Desbloqueadas: grid-cols-2 bg-success-light con comp badge y XP
+- En progreso: barra warning con progreso actual/total
+- Bloqueadas: grid-cols-4 con opacity-30 en emojis
+- KPI header: X/8 desbloqueadas + XP acumulado
+- Sin imports nuevos
+
+### [SPRINT-ADMIN][A37] AdminDashboard — Análisis LOMLOE T1→T2 en tab Inspección ✅
+- Commit: `cae2ae2`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Insertado al FINAL del tab Inspección (después de A24 Integridad académica), antes del cierre del tab
+- Heat table: 4 clases × 8 competencias con valor T2 + delta vs T1 inline
+- Colores semáforo: ≥75 success, 60-74 accent-light, 45-59 warning-light, <45 urgent-light
+- 1ºA y 1ºB: valores T2 con deltas positivos. 2ºA y 2ºB: T2=T1 ("Pend." en columna Δ)
+- Columna Media y Δ global por clase
+- Leyenda escala LOMLOE + nota pedagógica
+- IIFE pattern. Sin imports nuevos (BarChart3 ya existía)
+
+### [SPRINT-CULTURE][C37] StudentDashboard — Industrias Vivas: sector hostelería (Bloque 4) ✅
+- Commit: `e82bdb3`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Insertado entre C36 (Dinero Real) y S34 (Siguiente proyecto)
+- Principio culture.md Bloque 4 "Industrias Vivas": inmersión en sector real desde los 14 años
+- 4 tendencias de mercado 2025: €890M, 62% éxito primer año, ticket €8.40, 3200+ food trucks España
+- 4 perfiles profesionales expandibles: emprendedor, chef, marketing, controller financiero
+- Cada perfil expandido muestra skills LOMLOE + conexión explícita con el proyecto del alumno
+- Conexión footer: panel bg-sidebar explicando que el proyecto es simulación real del sector
+- IIFE con `perfilExpandido useState<number|null>` y `compColors` Record internos
+- Sin imports nuevos (TrendingUp, ChevronRight ya existían)
+
+---
+
 ## Sprints completados — Ciclo 38
 
 ### [SPRINT-TEACHER][T36] TeacherStudents — Ficha T2: rol Food Truck y avance por alumno ✅
@@ -1766,7 +1818,11 @@
 - **Ciclo 38 — TeacherStudents T36**: `rolT2PorAlumno` y `avanceSem1T2Mock` a nivel módulo (constantes, no dentro del componente). `t36FiltroRol` state al nivel del componente (no en IIFE). Import añadido: Briefcase.
 - **Ciclo 38 — StudentDashboard S38**: useState (valores, guardando, guardado) dentro del IIFE — patrón aceptado en este codebase. 6 partidas con interface `Partida` local. TOTAL = 3600 const.
 - **Ciclo 38 — AdminDashboard A36**: `clasesRanking` definido dentro del IIFE. Ordenación por engagement `.filter().sort()` para construir el podio. Sin estados nuevos (panel es estático con data mock).
-- **Ciclo 38 — StudentDashboard C36**: `productos` useState con interface `ProductoMenu` interna al IIFE. Fórmulas: margenBruto=(precio-coste)/precio*100, breakeven=costosFijos/((ingresos-costes)/N), beneficioNeto=ventas*(ingresos-costes)/N-fijos. Todos derivados en cada render.
+- **Ciclo 38 — StudentDashboard C36**: `productos` useState con interface `ProductoMenu` interna al IIFE.
+- **Ciclo 39 — TeacherRubrica T37**: `rubricasT2Mock` + `allRubricasMock` a nivel módulo. `trimestreRubrica` state para derivar `rubricasActivas`. `initScores` usa `allRubricasMock`. El `rubrica` derivado cambia a `rubricasActivas.find() ?? rubricasActivas[0]`. Panel izquierdo usa `rubricasActivas.map`. Tab toggle resetea `activeRubrica` al cambiar trimestre.
+- **Ciclo 39 — StudentAchievements S39**: IIFE con interface `InsigniaT2` y `insigniasT2` array (8 items). Tres secciones: desbloqueadas/en progreso/bloqueadas. Sin estados nuevos en el componente — todo dentro del IIFE.
+- **Ciclo 39 — AdminDashboard A37**: Heat table con datos mock 4×8 inline. `levelColor(v)` y `deltaColor(d)` helpers dentro del IIFE. `t2Started` calculado comparando `t2[i] !== t1[i]`. Sin estados nuevos.
+- **Ciclo 39 — StudentDashboard C37**: `perfilExpandido useState<number|null>` y `compColors Record` dentro del IIFE. `Tendencia` y `Perfil` interfaces internas. `tendencias` y `perfiles` arrays constantes dentro del IIFE (usan lbl()). Fórmulas: margenBruto=(precio-coste)/precio*100, breakeven=costosFijos/((ingresos-costes)/N), beneficioNeto=ventas*(ingresos-costes)/N-fijos. Todos derivados en cada render.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
 - **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
