@@ -25,6 +25,7 @@ import StudentQCoins from "@/components/StudentQCoins";
 import StudentProfile from "@/components/StudentProfile";
 import StudentSettings from "@/components/StudentSettings";
 import TaskWorkspace from "@/components/TaskWorkspace";
+import EvidenceGallery from "@/components/EvidenceGallery";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -110,6 +111,7 @@ export default function Home() {
           {role === "student" && activeView === "qcoins" && <StudentQCoins />}
           {role === "student" && activeView === "profile" && <StudentProfile />}
           {role === "student" && activeView === "settings" && <StudentSettings />}
+          {role === "student" && activeView === "evidences" && <EvidenceGallery />}
           {role === "parent" && activeParentView === "overview" && (
             <ParentDashboard onNavigate={setActiveParentView} />
           )}

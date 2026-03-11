@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   BookOpen,
   MessageSquare,
+  GalleryHorizontalEnd,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -26,13 +27,14 @@ const teacherBadges: Partial<Record<TeacherView, number | string>> = {
 };
 
 const studentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: StudentView }[] = [
-  { icon: LayoutDashboard, labelEs: "Inicio",        labelEn: "Dashboard",    view: "dashboard" },
-  { icon: FolderKanban,   labelEs: "Mi Proyecto",   labelEn: "My Project",   view: "project" },
-  { icon: BarChart3,      labelEs: "Competencias",  labelEn: "Competencies", view: "competencies" },
-  { icon: Calendar,       labelEs: "Calendario",    labelEn: "Calendar",     view: "calendar" },
-  { icon: Coins,          labelEs: "Q-Coins",       labelEn: "Q-Coins",      view: "qcoins" },
-  { icon: User,           labelEs: "Perfil",        labelEn: "Profile",      view: "profile" },
-  { icon: Settings,       labelEs: "Ajustes",       labelEn: "Settings",     view: "settings" },
+  { icon: LayoutDashboard,        labelEs: "Inicio",        labelEn: "Dashboard",    view: "dashboard" },
+  { icon: FolderKanban,           labelEs: "Mi Proyecto",   labelEn: "My Project",   view: "project" },
+  { icon: BarChart3,              labelEs: "Competencias",  labelEn: "Competencies", view: "competencies" },
+  { icon: GalleryHorizontalEnd,   labelEs: "Evidencias",    labelEn: "Evidence",     view: "evidences" },
+  { icon: Calendar,               labelEs: "Calendario",    labelEn: "Calendar",     view: "calendar" },
+  { icon: Coins,                  labelEs: "Q-Coins",       labelEn: "Q-Coins",      view: "qcoins" },
+  { icon: User,                   labelEs: "Perfil",        labelEn: "Profile",      view: "profile" },
+  { icon: Settings,               labelEs: "Ajustes",       labelEn: "Settings",     view: "settings" },
 ];
 
 const parentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: ParentView }[] = [
