@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone, Target, Sparkles, Download, Trophy, Star, BookOpen, RefreshCw, Play, Pause, RotateCcw, ClipboardList } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone, Target, Sparkles, Download, Trophy, Star, BookOpen, RefreshCw, Play, Pause, RotateCcw, ClipboardList, Briefcase } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
@@ -80,6 +80,23 @@ function studentCompScore(studentIdx: number, compIdx: number): number {
 const recentTasks = weekSchedule
   .flatMap((day) => day.tasks.filter((t) => t.status === "completed"))
   .slice(0, 4);
+
+// T36 — Ficha T2: roles Food Truck y avance semana 1
+const rolT2PorAlumno: { rol: string; emoji: string; comp: string }[] = [
+  { rol: "CEO / Líder",      emoji: "👑", comp: "CE"    },
+  { rol: "CFO / Finanzas",   emoji: "💰", comp: "STEM"  },
+  { rol: "CMO / Marketing",  emoji: "📣", comp: "CLC"   },
+  { rol: "COO / Operaciones",emoji: "⚙️", comp: "CPSAA" },
+  { rol: "CTO / Tecnología", emoji: "💻", comp: "CD"    },
+  { rol: "CEO / Líder",      emoji: "👑", comp: "CE"    },
+  { rol: "CFO / Finanzas",   emoji: "💰", comp: "STEM"  },
+  { rol: "COO / Operaciones",emoji: "⚙️", comp: "CPSAA" },
+  { rol: "CMO / Marketing",  emoji: "📣", comp: "CLC"   },
+  { rol: "CTO / Tecnología", emoji: "💻", comp: "CD"    },
+  { rol: "CEO / Líder",      emoji: "👑", comp: "CE"    },
+  { rol: "CMO / Marketing",  emoji: "📣", comp: "CLC"   },
+];
+const avanceSem1T2Mock = [2, 3, 1, 0, 3, 2, 2, 1, 3, 0, 3, 2]; // tareas completadas de 3
 
 function initComentarios(): Record<string, Comentario[]> {
   const result: Record<string, Comentario[]> = {};
@@ -161,6 +178,9 @@ export default function TeacherStudents() {
   const [generandoPlan, setGenerandoPlan] = useState<string | null>(null);
   const [planDescargado, setPlanDescargado] = useState<Set<string>>(new Set());
   const [accionesEstado, setAccionesEstado] = useState<Record<string, "pendiente" | "progreso" | "completado">>({});
+
+  // T36 — Ficha T2
+  const [t36FiltroRol, setT36FiltroRol] = useState<string>("todos");
 
   // T31 — Demo Day evaluación en directo
   const [demoDaySlot, setDemoDaySlot] = useState<string | null>(null);
@@ -975,6 +995,119 @@ export default function TeacherStudents() {
                 {lbl("Haz clic en los números de criterio para cambiar el nivel (1–4)", "Click criterion numbers to change LOMLOE level (1–4)")}
               </span>
             </div>
+          </div>
+        );
+      })()}
+
+      {/* ── T36: Ficha T2 — rol Food Truck y avance por alumno ─────────── */}
+      {(() => {
+        const rolesUnicos = Array.from(new Set(rolT2PorAlumno.map((r) => r.rol)));
+        const filtrados = classStudents.filter((_, i) =>
+          t36FiltroRol === "todos" || rolT2PorAlumno[i]?.rol === t36FiltroRol
+        );
+        const completaron3 = avanceSem1T2Mock.filter((v) => v === 3).length;
+        const avgTareas = (avanceSem1T2Mock.reduce((s, v) => s + v, 0) / avanceSem1T2Mock.length).toFixed(1);
+        return (
+          <div className="mt-6 bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Briefcase size={15} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Ficha T2 — Rol Food Truck por alumno", "T2 — Food Truck role per student")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-0.5 rounded-full">
+                {lbl("Sem 1 · Food Truck", "Wk 1 · Food Truck")}
+              </span>
+            </div>
+
+            {/* KPI strip */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-sidebar rounded-xl p-3 text-center">
+                <span className="text-[20px] font-bold text-white block">{classStudents.length}/{classStudents.length}</span>
+                <span className="text-[9px] text-white/50">{lbl("Roles asignados", "Roles assigned")}</span>
+              </div>
+              <div className="bg-accent-light rounded-xl p-3 text-center">
+                <span className="text-[20px] font-bold text-accent-text block">{avgTareas}</span>
+                <span className="text-[9px] text-text-muted">{lbl("Tareas sem1 (media)", "Tasks wk1 (avg)")}</span>
+              </div>
+              <div className="bg-success-light rounded-xl p-3 text-center">
+                <span className="text-[20px] font-bold text-success block">{completaron3}</span>
+                <span className="text-[9px] text-text-muted">{lbl("Completaron 3/3", "Completed 3/3")}</span>
+              </div>
+            </div>
+
+            {/* Role filter pills */}
+            <div className="flex gap-1.5 flex-wrap mb-3">
+              <button
+                onClick={() => setT36FiltroRol("todos")}
+                className={`text-[9px] font-semibold px-2.5 py-1 rounded-full transition-all cursor-pointer ${t36FiltroRol === "todos" ? "bg-sidebar text-white" : "bg-background text-text-muted hover:text-text-secondary"}`}
+              >
+                {lbl("Todos", "All")} ({classStudents.length})
+              </button>
+              {rolesUnicos.map((rol) => {
+                const count = rolT2PorAlumno.filter((r) => r.rol === rol).length;
+                const data = rolT2PorAlumno.find((r) => r.rol === rol)!;
+                return (
+                  <button
+                    key={rol}
+                    onClick={() => setT36FiltroRol(rol)}
+                    className={`flex items-center gap-1 text-[9px] font-semibold px-2.5 py-1 rounded-full transition-all cursor-pointer ${t36FiltroRol === rol ? "bg-sidebar text-white" : "bg-background text-text-muted hover:text-text-secondary"}`}
+                  >
+                    <span>{data.emoji}</span>
+                    {data.rol.split("/")[0].trim()} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Student rows */}
+            <div className="space-y-1.5">
+              {filtrados.map((s) => {
+                const globalIdx = classStudents.findIndex((cs) => cs.id === s.id);
+                const rolInfo = rolT2PorAlumno[globalIdx] ?? { rol: "—", emoji: "?", comp: "—" };
+                const tareas = avanceSem1T2Mock[globalIdx] ?? 0;
+                const pct = Math.round((tareas / 3) * 100);
+                const isCompleto = tareas === 3;
+                const isNada = tareas === 0;
+                return (
+                  <div
+                    key={s.id}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${isCompleto ? "bg-success-light border border-success/20" : isNada ? "bg-urgent-light border border-urgent/20" : "bg-background border border-card-border"}`}
+                  >
+                    <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                      <span className="text-[9px] font-bold text-white">{s.avatar}</span>
+                    </div>
+                    <div className="w-[110px] flex-shrink-0">
+                      <p className="text-[11px] font-semibold text-text-primary truncate">{s.name}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-sm leading-none">{rolInfo.emoji}</span>
+                      <span className="text-[9px] font-semibold text-text-primary">{rolInfo.rol.split("/")[0].trim()}</span>
+                      <span className="text-[7px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">{rolInfo.comp}</span>
+                    </div>
+                    <div className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${isCompleto ? "bg-success" : isNada ? "bg-urgent" : "bg-warning"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className={`text-[9px] font-bold w-7 text-right flex-shrink-0 ${isCompleto ? "text-success" : isNada ? "text-urgent" : "text-warning"}`}>
+                        {tareas}/3
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="text-[9px] text-text-muted mt-3 leading-snug">
+              {lbl(
+                "Los roles se asignan según la competencia dominante en T1 y pueden revisarse al inicio de T2. Verde = 3/3 tareas · Rojo = sin avance.",
+                "Roles are assigned based on dominant T1 competency and can be revised at T2 start. Green = 3/3 tasks · Red = no progress."
+              )}
+            </p>
           </div>
         );
       })()}
