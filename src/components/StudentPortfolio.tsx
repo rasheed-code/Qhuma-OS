@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -339,6 +339,65 @@ export default function StudentPortfolio() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* S15: Mi impacto real */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Award size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">Mi impacto real</span>
+            <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+              Casa Limón · Airbnb Málaga
+            </span>
+          </div>
+          <p className="text-[11px] text-text-muted mb-4">Métricas reales del proyecto al finalizar la Semana 3</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-success-light rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 size={14} className="text-success" />
+                <span className="text-[11px] font-semibold text-text-primary">Ocupación media lograda</span>
+              </div>
+              <p className="text-[28px] font-bold text-success leading-none mb-1">72%</p>
+              <p className="text-[10px] text-text-muted">vs 45% de media del sector en Málaga</p>
+              <div className="mt-2 h-1.5 bg-white/60 rounded-full overflow-hidden">
+                <div className="h-full bg-success rounded-full" style={{ width: "72%" }} />
+              </div>
+            </div>
+            <div className="bg-accent-light rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp size={14} className="text-accent-text" />
+                <span className="text-[11px] font-semibold text-text-primary">Ingresos proyectados</span>
+              </div>
+              <p className="text-[28px] font-bold text-accent-text leading-none mb-1">1.850€</p>
+              <p className="text-[10px] text-text-muted">al mes · a partir del mes 3 de operación</p>
+              <p className="text-[9px] text-text-muted mt-1">Punto de equilibrio: 20 pisos × 150€/mes</p>
+            </div>
+            <div className="bg-warning-light rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Star size={14} className="text-warning" />
+                <span className="text-[11px] font-semibold text-text-primary">Reseñas positivas</span>
+              </div>
+              <p className="text-[28px] font-bold text-text-primary leading-none mb-1">14 <span className="text-[14px] text-text-muted font-normal">de 15</span></p>
+              <p className="text-[10px] text-text-muted">reseñas simuladas en el listing de prueba</p>
+              <div className="flex gap-0.5 mt-2">
+                {Array.from({ length: 15 }, (_, i) => (
+                  <div key={i} className={`w-2 h-2 rounded-full ${i < 14 ? "bg-warning" : "bg-background"}`} />
+                ))}
+              </div>
+            </div>
+            <div className="bg-sidebar rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin size={14} className="text-accent" />
+                <span className="text-[11px] font-semibold text-white">Ranking en su zona</span>
+              </div>
+              <p className="text-[28px] font-bold text-accent leading-none mb-1">Top 8%</p>
+              <p className="text-[10px] text-white/60">de Málaga Centro Histórico</p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <Users size={10} className="text-white/40" />
+                <span className="text-[9px] text-white/40">Entre 1.200 listings registrados en la zona</span>
+              </div>
             </div>
           </div>
         </div>
