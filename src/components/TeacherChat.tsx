@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Brain } from "lucide-react";
 import { chatMessages as initialMessages } from "@/data/students";
 import { Role, ChatMessage } from "@/types";
 
@@ -157,8 +157,16 @@ export default function TeacherChat({ role }: { role: Role }) {
             <span className="text-[10px] text-white/70">{subtitle}</span>
           </div>
         </div>
-        <div className="text-[10px] text-white/60 font-medium bg-white/10 px-2 py-0.5 rounded-full">
-          IA
+        <div className="flex flex-col items-end gap-1">
+          <div className="text-[10px] text-white/60 font-medium bg-white/10 px-2 py-0.5 rounded-full">
+            IA
+          </div>
+          {role === "student" && (
+            <div className="flex items-center gap-1 bg-accent/20 px-2 py-0.5 rounded-full">
+              <Brain size={8} className="text-accent" />
+              <span className="text-[8px] text-accent font-bold tracking-wide">SOCRÁTICO</span>
+            </div>
+          )}
         </div>
       </div>
 
