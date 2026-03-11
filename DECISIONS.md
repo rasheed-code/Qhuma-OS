@@ -5,12 +5,79 @@
 
 ---
 
+## 0. PLAN MAESTRO — La Mejor Plataforma Educativa del Mundo
+
+> Actualizado: Marzo 2026
+
+### Visión
+qhumaOS no es un LMS genérico. Es una **capa de orquestación** que conecta:
+1. **IA adaptativa** (Gemini) — tutoring contextual, generación de proyectos, informes LOMLOE
+2. **Aprendizaje por proyectos** — el currículo completo entregado a través de proyectos reales del mundo
+3. **Gamificación Octalysis** — 8 Core Drives aplicados a la educación
+4. **3 perspectivas integradas** — Alumno, Familia, Docente en una sola experiencia coherente
+
+### Lo que nos diferencia de Duolingo, Khan Academy, Google Classroom
+| Característica | qhumaOS | Competidores |
+|---|---|---|
+| IA contextual por tarea | ✅ Mentor por paso | ❌ Solo búsqueda |
+| Aprendizaje por proyectos reales | ✅ Airbnb, Food Truck | ❌ Ejercicios abstractos |
+| 3 roles integrados | ✅ Alumno/Familia/Docente | ❌ Silos separados |
+| LOMLOE nativo | ✅ 8 competencias clave | ❌ Genérico |
+| Gamificación Octalysis | ✅ 8 Core Drives | ❌ Solo puntos/badges |
+| Impacto real medible | ✅ €847/mes proyectados | ❌ Solo notas |
+
+### Roadmap de Mejoras (ejecutado Marzo 2026)
+
+**Sprint 1: IA Real**
+- ✅ `TeacherChat` → Chat IA real con Gemini 2.0 Flash
+- ✅ API `/api/tutor-chat` — Profa. Ana contextual con historial
+- ✅ API `/api/generate-lomloe-report` — Informes LOMLOE automáticos para familias e inspección
+
+**Sprint 2: Vista Semanal**
+- ✅ `WeeklyProgressView` — Nuevo componente: 5 columnas, competencias por tarea, navegación real
+- ✅ `StudentDashboard` — Toggle Hoy/Semana con transición suave
+
+**Sprint 3: Dashboard Docente Predictivo**
+- ✅ `TeacherDashboard` — Scoring de riesgo por alumno (0-100), barra de salud de clase, alertas interactivas dismissibles, hitos próximos
+
+**Sprint 4: Proyecto y Espacio de Tarea**
+- ✅ `ProjectDetail` — Métricas de impacto real (€847/mes, 32 huéspedes, 4.8★), timeline horizontal de los 4 proyectos del trimestre
+- ✅ `TaskWorkspace` — MentorIA sidebar contextual: ayuda por paso, preguntas rápidas, integración con `/api/tutor-chat`
+
+**Sprint 5: Sistema y Navegación**
+- ✅ `Sidebar` — Indicadores de rol, badge de alertas urgentes, LOMLOE compliance badge, nav en español, active indicator pill
+- ✅ `StudentCompetencies` — Media general visible, títulos en español, diseño mejorado
+
+**Sprint 6: Portal de Familias**
+- ✅ `ParentDashboard` — Botón "Informe IA" que genera narrativa personalizada con Gemini
+
+### Próximos sprints recomendados
+
+**Sprint 7: Demo Day Experience**
+- Componente `DemoDay` — Contador regresivo, stage del pitch, votación de la clase
+- Animación de nivel-up cuando el alumno sube de nivel
+
+**Sprint 8: Portfolio de Evidencias**
+- Vista expandida de evidencias con galería visual
+- Exportación de portfolio en PDF con `/api/generate-lomloe-report` tipo "portfolio"
+
+**Sprint 9: Proyecto Generator**
+- Mejorar `TeacherProjects` con el generador IA ya existente en `/api/generate-projects`
+- Añadir preview de tareas generadas antes de confirmar
+
+**Sprint 10: Multi-alumno real**
+- Sistema de autenticación con NextAuth
+- Base de datos con Prisma + SQLite para datos persistentes
+- Dashboard adaptativo según el alumno logueado
+
+---
+
 ## 1. Project Overview
 
-- **Purpose**: Investor-facing MVP demo of qhumaOS, the operating system for QHUMA (Spain's first AI-centric school)
-- **Target audience**: Potential investors seeing a live demo
-- **Scope**: One interactive week (Week 3 of 12) of 1o ESO, built around the project "How to Manage an Airbnb in Malaga"
-- **Character**: Lucas Garcia, 1o ESO student
+- **Purpose**: Investor-facing MVP demo de qhumaOS, el sistema operativo para QHUMA (primera escuela con IA de España)
+- **Target audience**: Inversores potenciales en demo en vivo; y desarrollo continuo hacia producto real
+- **Scope**: Una semana interactiva (Semana 3 de 12) de 1º ESO, proyecto "Gestiona tu Airbnb en Málaga"
+- **Character**: Lucas García, 1º ESO
 - **Location**: `/Users/father/Desktop/qhuma-dashboard/`
 - **Reference docs**: `/Users/father/Documents/Colegio/` (QHUMA Master Document, Plataforma Educativa)
 
