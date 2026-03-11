@@ -11,12 +11,29 @@ import {
   Lock,
   Swords,
   Timer,
+  Brain,
+  Music,
+  Globe,
+  Activity,
+  Leaf,
+  MessageSquare,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { taskEvidence } from "@/data/evidence";
 import { playerLevel, currentTribe, achievements } from "@/data/gamification";
 import EvidencePreviewSwitch from "@/components/EvidencePreview";
+
+const inteligencias = [
+  { clave: "linguistica",    nombre: "Lingüística",          nivel: 78, descripcion: "Expresión escrita, argumentación, narrativa propia en el proyecto",     icon: MessageSquare },
+  { clave: "logica",         nombre: "Lógico-Matemática",    nivel: 85, descripcion: "Análisis de datos, resolución de problemas, patrones financieros",       icon: Activity },
+  { clave: "espacial",       nombre: "Espacial",             nivel: 62, descripcion: "Diseño visual, mapas de conceptos, maquetación de landing page",         icon: Globe },
+  { clave: "musical",        nombre: "Musical",              nivel: 45, descripcion: "Ritmo en la presentación, patrones sonoros, expresión auditiva",         icon: Music },
+  { clave: "corporal",       nombre: "Corporal-Cinestésica", nivel: 71, descripcion: "Aprendizaje práctico, maker studio, construcción de prototipos físicos",  icon: Zap },
+  { clave: "interpersonal",  nombre: "Interpersonal",        nivel: 90, descripcion: "Trabajo en equipo, empatía, liderazgo en el pitch final",                icon: Users },
+  { clave: "intrapersonal",  nombre: "Intrapersonal",        nivel: 68, descripcion: "Autoconocimiento, gestión emocional, reflexión crítica en error log",    icon: Brain },
+  { clave: "naturalista",    nombre: "Naturalista",          nivel: 53, descripcion: "Observación del entorno, sostenibilidad, patrones naturales del barrio",  icon: Leaf },
+];
 
 const achievementIconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Swords,
@@ -195,6 +212,43 @@ export default function StudentProfile() {
               <span className="text-[10px] text-text-muted mt-1 block">{comp.progress}%</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Perfil de Inteligencias — Gardner */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <Brain size={16} className="text-text-primary" />
+          <h2 className="text-[20px] font-semibold text-text-primary">Perfil de Inteligencias</h2>
+          <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[11px] font-semibold">Gardner</span>
+        </div>
+        <p className="text-[12px] text-text-muted mb-5 leading-relaxed">
+          Construido a través de 30 días de interacción activa, no de un test inicial. Cada dimensión refleja cómo aprendes y resuelves problemas en tu proyecto.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {inteligencias.map((intel) => {
+            const Icon = intel.icon;
+            return (
+              <div key={intel.clave} className="bg-background rounded-xl p-3.5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-accent-light flex items-center justify-center flex-shrink-0">
+                      <Icon size={13} className="text-accent-text" />
+                    </div>
+                    <span className="text-[12px] font-semibold text-text-primary">{intel.nombre}</span>
+                  </div>
+                  <span className="text-[12px] font-bold text-accent-text">{intel.nivel}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-white overflow-hidden mb-1.5">
+                  <div
+                    className="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-sidebar to-accent"
+                    style={{ width: `${intel.nivel}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-text-muted leading-snug">{intel.descripcion}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
