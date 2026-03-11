@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download, Lock, Shield } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download, Lock, Shield, Coins, TrendingDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -1953,6 +1953,105 @@ ${allEvts.map((e) => `
                   <><Download size={10} />{lbl("Exportar insignias", "Export badges")}</>
                 )}
               </button>
+            </div>
+          );
+        })()}
+
+        {/* ── C32: Balance financiero del proyecto ─────────────────────────── */}
+        {(() => {
+          const ingresos = [
+            { concepto: lbl("Alquiler (3 sem. × 7 noches × 85 €/noche)", "Rental (3 wk × 7 nights × €85/night)"), importe: 1785 },
+            { concepto: lbl("Extras (early check-in, parking, kit bienvenida)", "Extras (early check-in, parking, welcome kit)"), importe: 147 },
+          ];
+          const costes = [
+            { concepto: lbl("Comisión plataforma (15%)", "Platform fee (15%)"), importe: 290 },
+            { concepto: lbl("Limpieza (3 servicios)", "Cleaning (3 services)"), importe: 75 },
+            { concepto: lbl("Suministros y reposición", "Supplies and restocking"), importe: 48 },
+            { concepto: lbl("WiFi + streaming", "WiFi + streaming"), importe: 20 },
+            { concepto: lbl("Imprevistos (5%)", "Contingency (5%)"), importe: 97 },
+          ];
+          const totalIngresos = ingresos.reduce((s, r) => s + r.importe, 0);
+          const totalCostes = costes.reduce((s, r) => s + r.importe, 0);
+          const beneficio = totalIngresos - totalCostes;
+          const margen = Math.round((beneficio / totalIngresos) * 100);
+          const inversionInicial = 1200;
+          const roi = Math.round((beneficio / inversionInicial) * 100);
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Coins size={13} className="text-[#F59E0B]" />
+                <span className="text-[11px] font-bold text-text-primary">{lbl("Balance financiero — T1", "Financial balance — T1")}</span>
+                <span className="text-[9px] font-semibold text-success bg-success-light px-1.5 py-0.5 rounded-full ml-auto">
+                  {lbl("Beneficio", "Profit")} +{beneficio.toLocaleString("es-ES")} €
+                </span>
+              </div>
+
+              {/* KPI strip */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {[
+                  { label: lbl("Ingresos", "Revenue"),     value: `${totalIngresos.toLocaleString("es-ES")} €`, color: "text-success",   bg: "bg-success-light"  },
+                  { label: lbl("Costes", "Costs"),          value: `${totalCostes.toLocaleString("es-ES")} €`,  color: "text-urgent",    bg: "bg-urgent-light"   },
+                  { label: lbl("Margen neto", "Net margin"), value: `${margen}%`,                               color: "text-[#4F8EF7]", bg: "bg-[#eff6ff]"     },
+                ].map((k) => (
+                  <div key={k.label} className={`rounded-xl p-2.5 ${k.bg} text-center`}>
+                    <p className={`text-[13px] font-black ${k.color} leading-none`}>{k.value}</p>
+                    <p className={`text-[9px] font-medium mt-0.5 ${k.color} opacity-80`}>{k.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Income rows */}
+              <div className="mb-2">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <TrendingUp size={10} className="text-success" />
+                  <span className="text-[9px] font-bold text-success uppercase tracking-wide">{lbl("Ingresos", "Revenue")}</span>
+                </div>
+                {ingresos.map((r) => (
+                  <div key={r.concepto} className="flex items-center justify-between py-0.5">
+                    <span className="text-[9px] text-text-secondary truncate flex-1 pr-2">{r.concepto}</span>
+                    <span className="text-[9px] font-semibold text-text-primary flex-shrink-0">{r.importe.toLocaleString("es-ES")} €</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-card-border mb-2" />
+
+              {/* Cost rows */}
+              <div className="mb-2">
+                <div className="flex items-center gap-1 mb-1.5">
+                  <TrendingDown size={10} className="text-urgent" />
+                  <span className="text-[9px] font-bold text-urgent uppercase tracking-wide">{lbl("Costes", "Costs")}</span>
+                </div>
+                {costes.map((r) => (
+                  <div key={r.concepto} className="flex items-center justify-between py-0.5">
+                    <span className="text-[9px] text-text-secondary truncate flex-1 pr-2">{r.concepto}</span>
+                    <span className="text-[9px] font-semibold text-text-primary flex-shrink-0">{r.importe.toLocaleString("es-ES")} €</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-card-border mb-2" />
+
+              {/* Net profit + ROI */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] text-text-muted">{lbl("Beneficio neto", "Net profit")}</p>
+                  <p className="text-[14px] font-black text-success">+{beneficio.toLocaleString("es-ES")} €</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] text-text-muted">ROI</p>
+                  <p className="text-[14px] font-black text-[#4F8EF7]">{roi}%</p>
+                </div>
+              </div>
+
+              <div className="mt-3 rounded-xl bg-accent-light border border-accent/20 px-3 py-2">
+                <p className="text-[9px] text-accent-text font-medium leading-snug">
+                  {lbl(
+                    `Inversión inicial estimada: ${inversionInicial.toLocaleString("es-ES")} € · Por cada euro invertido recuperas ${(roi / 100 + 1).toFixed(2)} €`,
+                    `Estimated initial investment: €${inversionInicial.toLocaleString("en-GB")} · For every €1 invested you recover €${(roi / 100 + 1).toFixed(2)}`
+                  )}
+                </p>
+              </div>
             </div>
           );
         })()}
