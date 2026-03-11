@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -162,6 +162,29 @@ export default function StudentPortfolio() {
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  // C9 — ErrorLog IA reflexión
+  const [iaReflexiones, setIaReflexiones] = useState<Record<string, string>>({});
+  const [loadingReflexion, setLoadingReflexion] = useState<string | null>(null);
+
+  const handleAnalizarError = async (entry: ErrorEntry) => {
+    if (loadingReflexion) return;
+    setLoadingReflexion(entry.id);
+    try {
+      const prompt = `Error registrado por Lucas García:\nTítulo: ${entry.title}\nFase: ${entry.phase}\nCompetencia: ${entry.competency}\n¿Qué asumí?: ${entry.asumí}\n¿Dónde falló?: ${entry.falló}\n¿Qué cambiaría?: ${entry.cambiaría}`;
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "errorlog", message: prompt, history: [] }),
+      });
+      const data = await res.json();
+      setIaReflexiones(prev => ({ ...prev, [entry.id]: data.reply ?? "" }));
+    } catch {
+      setIaReflexiones(prev => ({ ...prev, [entry.id]: "Error al conectar con la IA. Inténtalo de nuevo." }));
+    } finally {
+      setLoadingReflexion(null);
+    }
   };
 
   return (
@@ -339,6 +362,39 @@ export default function StudentPortfolio() {
                           <p className="text-[11px] text-text-secondary leading-relaxed">{item.value}</p>
                         </div>
                       ))}
+                      {/* C9 — IA reflexión */}
+                      {iaReflexiones[entry.id] ? (
+                        <div className="bg-sidebar/5 rounded-xl border border-sidebar/10 p-3">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <Sparkles size={11} className="text-accent-text" />
+                            <span className="text-[9px] font-bold uppercase tracking-wide text-accent-text">Preguntas de reflexión IA</span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {iaReflexiones[entry.id].split("\n").filter(Boolean).map((linea, i) => (
+                              <p key={i} className="text-[11px] text-text-secondary leading-relaxed">{linea}</p>
+                            ))}
+                          </div>
+                          <button
+                            onClick={() => handleAnalizarError(entry)}
+                            disabled={loadingReflexion !== null}
+                            className="mt-2 text-[10px] text-accent-text font-semibold hover:underline cursor-pointer disabled:opacity-50"
+                          >
+                            Regenerar preguntas
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleAnalizarError(entry)}
+                          disabled={loadingReflexion !== null}
+                          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-dashed border-accent/30 text-accent-text text-[11px] font-semibold hover:bg-accent-light transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loadingReflexion === entry.id ? (
+                            <><RefreshCw size={11} className="animate-spin" />Analizando con IA…</>
+                          ) : (
+                            <><Sparkles size={11} />Analizar con IA · 3 preguntas de reflexión</>
+                          )}
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

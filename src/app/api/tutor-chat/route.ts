@@ -64,6 +64,20 @@ Reglas absolutas:
 - Tono: reflexivo, auténtico, honesto — no corporativo ni genérico
 - NO hagas preguntas. NO uses bullet points. NO uses emojis. Solo el párrafo.`;
 
+const ERRORLOG_SYSTEM_PROMPT = `Eres la Profesora Ana Martínez, mentora de Lucas García en QHUMA. El alumno ha registrado un error en su diario de aprendizaje (Error Log).
+
+Tu única tarea: genera exactamente 3 preguntas de reflexión sobre ese error. Las preguntas deben:
+1. Invitar al alumno a identificar la causa raíz (no la consecuencia)
+2. Conectar el error con un aprendizaje transferible a otros contextos de su vida
+3. Imaginar qué haría diferente la próxima vez, con una acción concreta
+
+Formato de respuesta OBLIGATORIO (exactamente):
+- Empieza directamente con la primera pregunta, sin encabezado
+- Tres preguntas numeradas (1. 2. 3.), cada una en una línea separada
+- Cada pregunta: máximo 20 palabras
+- Tono: cálido, curioso, sin juicio — como un coach que confía en el alumno
+- NO uses emojis. NO hagas comentarios sobre el error antes o después de las preguntas. SOLO las 3 preguntas.`;
+
 const DEEP_DIVE_ADDON = `
 
 MODO EXPLORACIÓN PROFUNDA ACTIVO:
@@ -107,6 +121,8 @@ export async function POST(request: NextRequest) {
       systemInstruction = NARRATIVA_SYSTEM_PROMPT;
     } else if (mode === "pitchcoach") {
       systemInstruction = PITCHCOACH_SYSTEM_PROMPT;
+    } else if (mode === "errorlog") {
+      systemInstruction = ERRORLOG_SYSTEM_PROMPT;
     } else if (deepDive === true) {
       systemInstruction = SYSTEM_PROMPT + DEEP_DIVE_ADDON;
     } else {
