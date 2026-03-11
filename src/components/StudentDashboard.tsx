@@ -1026,10 +1026,10 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           {/* 4 KPIs financieros */}
           <div className="grid grid-cols-4 gap-3 mb-4">
             {[
-              { label: "Ingresos este mes", valor: "1.240€", meta: "1.850€", pct: 67, bg: "bg-success-light", barColor: "bg-success", icon: Coins, info: "vs. objetivo mensual" },
-              { label: "Gastos fijos", valor: "310€", meta: "350€ máx.", pct: 89, bg: "bg-warning-light", barColor: "bg-warning", icon: Receipt, info: "limpieza + suministros" },
-              { label: "Beneficio neto", valor: "930€", meta: "Punto equilibrio: 750€", pct: 100, bg: "bg-accent-light", barColor: "bg-accent-text", icon: TrendingUp, info: "superado ✓" },
-              { label: "ROI del proyecto", valor: "18%", meta: "Objetivo: 15%", pct: 100, bg: "bg-background", barColor: "bg-sidebar", icon: Activity, info: "por encima del objetivo" },
+              { label: lbl("Ingresos este mes", "Monthly revenue"), valor: "1.240€", meta: "1.850€", pct: 67, bg: "bg-success-light", barColor: "bg-success", icon: Coins, info: lbl("vs. objetivo mensual", "vs. monthly target") },
+              { label: lbl("Gastos fijos", "Fixed costs"), valor: "310€", meta: "350€ máx.", pct: 89, bg: "bg-warning-light", barColor: "bg-warning", icon: Receipt, info: lbl("limpieza + suministros", "cleaning + supplies") },
+              { label: lbl("Beneficio neto", "Net profit"), valor: "930€", meta: lbl("Punto equilibrio: 750€", "Break even: €750"), pct: 100, bg: "bg-accent-light", barColor: "bg-accent-text", icon: TrendingUp, info: lbl("superado ✓", "exceeded ✓") },
+              { label: lbl("ROI del proyecto", "Project ROI"), valor: "18%", meta: lbl("Objetivo: 15%", "Target: 15%"), pct: 100, bg: "bg-background", barColor: "bg-sidebar", icon: Activity, info: lbl("por encima del objetivo", "above target") },
             ].map((kpi) => (
               <div key={kpi.label} className={`rounded-xl p-3 ${kpi.bg}`}>
                 <div className="flex items-center gap-1.5 mb-1.5">
@@ -1049,7 +1049,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           <div className="bg-background rounded-xl p-4">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[12px] font-semibold text-text-primary">{lbl("Desglose de ingresos — marzo 2026", "Revenue breakdown — March 2026")}</span>
-              <span className="text-[10px] text-text-muted bg-card px-2 py-0.5 rounded-full border border-card-border">4 reservas activas</span>
+              <span className="text-[10px] text-text-muted bg-card px-2 py-0.5 rounded-full border border-card-border">{lbl("4 reservas activas", "4 active bookings")}</span>
             </div>
             <div className="space-y-2">
               {[
@@ -1070,7 +1070,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 </div>
               ))}
               <div className="flex items-center gap-3 pt-2 border-t border-card-border mt-1">
-                <span className="text-[11px] font-bold text-text-primary flex-1">Beneficio neto del mes</span>
+                <span className="text-[11px] font-bold text-text-primary flex-1">{lbl("Beneficio neto del mes", "Net profit for the month")}</span>
                 <span className="text-[14px] font-bold text-success tabular-nums">+930€</span>
               </div>
             </div>
@@ -1216,6 +1216,11 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             Avanzado: { bg: "bg-urgent-light",   text: "text-urgent"       },
           } as const;
           const difCfg = dificultadCfg[ejercicio.dificultad];
+          const difLabel: Record<"Básico" | "Medio" | "Avanzado", string> = {
+            Básico:   lbl("Básico",   "Basic"),
+            Medio:    lbl("Medio",    "Medium"),
+            Avanzado: lbl("Avanzado", "Advanced"),
+          };
           return (
             <div className="mt-8">
               <div className="flex items-center gap-3 mb-3">
@@ -1261,7 +1266,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <p className="text-[13px] font-semibold text-text-primary leading-snug">{ejercicio.titulo}</p>
                     <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${difCfg.bg} ${difCfg.text}`}>{ejercicio.dificultad}</span>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${difCfg.bg} ${difCfg.text}`}>{difLabel[ejercicio.dificultad]}</span>
                       <span className="text-[9px] font-bold bg-sidebar text-white px-2 py-0.5 rounded-full">{ejercicio.tiempo}</span>
                     </div>
                   </div>
@@ -1424,7 +1429,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mercado en Tiempo Real", "Live Market Data")}</h2>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-background text-text-muted text-[10px] font-medium border border-card-border">
-              Actualizado hoy, 11 mar 2026
+              {lbl("Actualizado hoy, 11 mar 2026", "Updated today, 11 Mar 2026")}
             </span>
           </div>
 
@@ -1434,7 +1439,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
                 <span className="text-accent text-[8px] font-bold">IA</span>
               </div>
-              <span className="text-[11px] font-semibold text-accent-text">Conectado a: Gestiona tu Airbnb en Málaga</span>
+              <span className="text-[11px] font-semibold text-accent-text">{lbl("Conectado a: Gestiona tu Airbnb en Málaga", "Connected to: Manage your Airbnb in Málaga")}</span>
             </div>
             <p className="text-[12px] text-text-primary leading-relaxed">
               El sector turístico digital en España creció un <strong>18% en 2025</strong>. Las habilidades que estás trabajando esta semana — plataformas digitales, comunicación y análisis financiero — están entre las más demandadas. Tu proyecto no es un ejercicio: es un portfolio real.

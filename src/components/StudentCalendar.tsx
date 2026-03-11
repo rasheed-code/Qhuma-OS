@@ -106,7 +106,7 @@ export default function StudentCalendar() {
               )}
             </div>
             <p className="text-[14px] text-text-secondary mt-1">
-              Lanza tu Airbnb · Semana 3
+              {lbl("Lanza tu Airbnb · Semana 3", "Launch your Airbnb · Week 3")}
             </p>
             <div className="flex items-center gap-4 mt-3">
               <span className="text-[12px] text-text-muted">
