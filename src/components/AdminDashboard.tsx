@@ -356,6 +356,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const trimestreLabel: Record<string, string> = { "1": "1er Trimestre 2025-26", "2": "2º Trimestre 2025-26", "3": "3er Trimestre 2025-26" };
   const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección", familia: "Informe Familia" };
 
+  // A34 — Presupuesto pedagógico T2
+  const [presupuestosAprobados, setPresupuestosAprobados] = useState<Set<string>>(new Set());
+  const [aprobandoPresupuesto, setAprobandoPresupuesto] = useState<string | null>(null);
+
   // A25 — Proyectos en segunda ronda
   const [expedienteExpandido, setExpedienteExpandido] = useState<string | null>(null);
   const [reunionSolicitada, setReunionSolicitada] = useState<Set<string>>(new Set());
@@ -2498,6 +2502,122 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     );
                   })}
                 </div>
+              </div>
+            );
+          })()}
+
+          {/* ─── A34: Presupuesto pedagógico T2 ──────────────────────────────── */}
+          {(() => {
+            const clasesBudget = [
+              { id: "1a", nombre: "1º ESO A", alumnos: 6,  qcoinsAsignados: 3600, qcoinsGastados: 420, proyecto: "Food Truck", inicio: "17 mar" },
+              { id: "1b", nombre: "1º ESO B", alumnos: 6,  qcoinsAsignados: 3600, qcoinsGastados: 0,   proyecto: "Food Truck", inicio: "17 mar" },
+              { id: "2a", nombre: "2º ESO A", alumnos: 5,  qcoinsAsignados: 3000, qcoinsGastados: 150, proyecto: "Ecomercado",  inicio: "18 mar" },
+              { id: "2b", nombre: "2º ESO B", alumnos: 5,  qcoinsAsignados: 3000, qcoinsGastados: 0,   proyecto: "App Turismo", inicio: "20 mar" },
+            ];
+
+            const totalAsignado = clasesBudget.reduce((s, c) => s + c.qcoinsAsignados, 0);
+            const totalGastado  = clasesBudget.reduce((s, c) => s + c.qcoinsGastados,  0);
+            const totalAlumnos  = clasesBudget.reduce((s, c) => s + c.alumnos, 0);
+
+            const handleAprobar = (id: string) => {
+              setAprobandoPresupuesto(id);
+              setTimeout(() => {
+                setPresupuestosAprobados(prev => new Set([...prev, id]));
+                setAprobandoPresupuesto(null);
+              }, 900);
+            };
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                      <span className="text-[16px]">📊</span>
+                    </div>
+                    <div>
+                      <h3 className="text-[15px] font-bold text-text-primary leading-tight">
+                        {lbl("Presupuesto pedagógico T2", "T2 Educational Budget")}
+                      </h3>
+                      <p className="text-[10px] text-text-muted">{lbl("Q-Coins asignados por clase · Proyectos T2", "Q-Coins allocated per class · T2 Projects")}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* KPIs resumen */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {[
+                    { label: lbl("Total asignados", "Total allocated"), valor: totalAsignado.toLocaleString(), sub: lbl(`${totalAlumnos} alumnos`, `${totalAlumnos} students`), bg: "bg-sidebar", textVal: "text-accent", textSub: "text-white/60" },
+                    { label: lbl("Distribuidos", "Distributed"),       valor: totalGastado.toLocaleString(),  sub: lbl(`${Math.round((totalGastado/totalAsignado)*100)}% del presupuesto`, `${Math.round((totalGastado/totalAsignado)*100)}% of budget`), bg: "bg-success-light", textVal: "text-success", textSub: "text-text-muted" },
+                    { label: lbl("Pendientes", "Pending"),             valor: (totalAsignado - totalGastado).toLocaleString(), sub: lbl("por aprobar", "to approve"), bg: "bg-warning-light", textVal: "text-warning", textSub: "text-text-muted" },
+                  ].map((kpi) => (
+                    <div key={kpi.label} className={`rounded-xl p-3 ${kpi.bg}`}>
+                      <p className={`text-[9px] font-semibold mb-1 ${kpi.textSub}`}>{kpi.label}</p>
+                      <p className={`text-[18px] font-bold ${kpi.textVal}`}>{kpi.valor}</p>
+                      <p className={`text-[9px] ${kpi.textSub}`}>{kpi.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tabla por clase */}
+                <div className="flex flex-col gap-2">
+                  {clasesBudget.map((clase) => {
+                    const aprobado = presupuestosAprobados.has(clase.id);
+                    const cargando = aprobandoPresupuesto === clase.id;
+                    const pctGastado = Math.round((clase.qcoinsGastados / clase.qcoinsAsignados) * 100);
+                    return (
+                      <div
+                        key={clase.id}
+                        className={`rounded-xl border p-3 ${aprobado ? "border-success/20 bg-success-light" : "border-card-border bg-background"}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[12px] font-bold text-text-primary">{clase.nombre}</span>
+                            <span className="text-[9px] text-text-muted">·</span>
+                            <span className="text-[10px] text-text-secondary">{clase.proyecto}</span>
+                            <span className="text-[9px] font-semibold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full">{lbl(`Inicio ${clase.inicio}`, `Start ${clase.inicio}`)}</span>
+                          </div>
+                          {aprobado ? (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-success">
+                              <CheckCircle2 size={11} />
+                              {lbl("Aprobado", "Approved")}
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleAprobar(clase.id)}
+                              disabled={cargando}
+                              className="text-[10px] font-semibold bg-sidebar text-white px-2.5 py-1 rounded-lg hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-60"
+                            >
+                              {cargando ? lbl("Aprobando...", "Approving...") : lbl("Aprobar presupuesto", "Approve budget")}
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <div className="flex justify-between text-[9px] text-text-muted mb-1">
+                              <span>{clase.qcoinsGastados.toLocaleString()} {lbl("gastados", "spent")}</span>
+                              <span>{clase.qcoinsAsignados.toLocaleString()} {lbl("asignados", "assigned")}</span>
+                            </div>
+                            <div className="bg-border rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${pctGastado > 60 ? "bg-warning" : "bg-success"}`}
+                                style={{ width: `${Math.max(2, pctGastado)}%` }}
+                              />
+                            </div>
+                          </div>
+                          <span className="text-[9px] font-bold text-text-secondary flex-shrink-0">{pctGastado}%</span>
+                          <span className="text-[9px] text-text-muted flex-shrink-0">{clase.alumnos} {lbl("alumnos", "students")}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-text-muted mt-3 leading-snug">
+                  {lbl(
+                    "Los Q-Coins asignados se liberan al alumno cuando completa cada hito semanal. El presupuesto no consumido al final del trimestre revierte al fondo central QHUMA Capital.",
+                    "Allocated Q-Coins are released to students upon completing each weekly milestone. Unspent budget at term end reverts to the central QHUMA Capital fund."
+                  )}
+                </p>
               </div>
             );
           })()}
