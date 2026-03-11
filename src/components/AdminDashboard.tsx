@@ -445,6 +445,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     { id: "p2", label: "Invitación Demo Day", asunto: "Estáis invitados al Demo Day de 1º ESO — ¡Este viernes!", cuerpo: "Hola,\n\nTenemos el placer de invitaros al Demo Day de los proyectos de 1º ESO, donde nuestros alumnos presentarán sus proyectos ante inversores.\n\nFecha: viernes 13 de marzo · 16:00\nLugar: Sala de usos múltiples QHUMA Málaga\n\n¡Os esperamos!\nEquipo QHUMA Málaga" },
     { id: "p3", label: "Aviso incidencia", asunto: "Comunicado de servicio: incidencia técnica resuelta", cuerpo: "Hola,\n\nOs informamos de que la incidencia técnica detectada esta mañana en la plataforma QHUMA OS ha sido resuelta satisfactoriamente. Todos los servicios funcionan con normalidad.\n\nDisculpad las molestias.\nEquipo técnico QHUMA" },
   ];
+  // A29 — Mapa de riesgo de abandono
+  const [riesgoInformeGenerado, setRiesgoInformeGenerado] = useState(false);
+  const [generandoRiesgoInforme, setGenerandoRiesgoInforme] = useState(false);
+
   // A26 — Rendimiento docente
   const [docenteExpandido, setDocenteExpandido] = useState<string | null>(null);
   const [docenteReconocido, setDocenteReconocido] = useState<Set<string>>(new Set());
@@ -4298,6 +4302,189 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                         })}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* A29 — Mapa de riesgo de abandono */}
+            {(() => {
+              const alumnos = [
+                { nombre: "Lucas García",    iniciales: "LG", engagement: "alto",  progreso: "alto",  riesgo: "bajo"    },
+                { nombre: "Sofía Torres",    iniciales: "ST", engagement: "alto",  progreso: "medio", riesgo: "bajo"    },
+                { nombre: "Pablo Ruiz",      iniciales: "PR", engagement: "bajo",  progreso: "bajo",  riesgo: "critico" },
+                { nombre: "María Santos",    iniciales: "MS", engagement: "alto",  progreso: "alto",  riesgo: "bajo"    },
+                { nombre: "Diego López",     iniciales: "DL", engagement: "medio", progreso: "bajo",  riesgo: "warning" },
+                { nombre: "Ana Martín",      iniciales: "AM", engagement: "alto",  progreso: "alto",  riesgo: "bajo"    },
+                { nombre: "Carlos Rivera",   iniciales: "CR", engagement: "medio", progreso: "medio", riesgo: "warning" },
+                { nombre: "Laura Sanz",      iniciales: "LS", engagement: "alto",  progreso: "medio", riesgo: "bajo"    },
+                { nombre: "Tomás Herrera",   iniciales: "TH", engagement: "bajo",  progreso: "medio", riesgo: "warning" },
+                { nombre: "Carla Vega",      iniciales: "CV", engagement: "medio", progreso: "alto",  riesgo: "bajo"    },
+                { nombre: "Alejandro Pérez", iniciales: "AP", engagement: "bajo",  progreso: "bajo",  riesgo: "critico" },
+                { nombre: "Valentina Cruz",  iniciales: "VC", engagement: "alto",  progreso: "alto",  riesgo: "bajo"    },
+              ];
+
+              // Grid 3×3: engaj (bajo/medio/alto) × progreso (alto/medio/bajo)
+              const celdas: { eng: string; prog: string; label: string; tipo: string }[] = [
+                { eng: "bajo",  prog: "alto",  label: "Bajo / Alto",   tipo: "warning" },
+                { eng: "medio", prog: "alto",  label: "Medio / Alto",  tipo: "success" },
+                { eng: "alto",  prog: "alto",  label: "Alto / Alto",   tipo: "success" },
+                { eng: "bajo",  prog: "medio", label: "Bajo / Medio",  tipo: "warning" },
+                { eng: "medio", prog: "medio", label: "Medio / Medio", tipo: "neutral" },
+                { eng: "alto",  prog: "medio", label: "Alto / Medio",  tipo: "success" },
+                { eng: "bajo",  prog: "bajo",  label: "Bajo / Bajo",   tipo: "critico" },
+                { eng: "medio", prog: "bajo",  label: "Medio / Bajo",  tipo: "warning" },
+                { eng: "alto",  prog: "bajo",  label: "Alto / Bajo",   tipo: "warning" },
+              ];
+
+              const tipoBg: Record<string, string> = {
+                critico: "bg-urgent-light border border-urgent/40",
+                warning: "bg-warning-light border border-warning/20",
+                success: "bg-success-light border border-success/20",
+                neutral: "bg-background border border-card-border",
+              };
+              const chipColor: Record<string, string> = {
+                critico: "bg-urgent text-white",
+                warning: "bg-warning text-white",
+                success: "bg-success text-white",
+                bajo: "bg-urgent text-white",
+              };
+
+              const criticos = alumnos.filter((a) => a.riesgo === "critico");
+              const enWarning = alumnos.filter((a) => a.riesgo === "warning");
+
+              const handleGenerarInforme = () => {
+                setGenerandoRiesgoInforme(true);
+                setTimeout(() => {
+                  const filas = alumnos.map((a) => `<tr><td style="padding:6px 12px;border:1px solid #eee">${a.nombre}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center">${a.engagement}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center">${a.progreso}</td><td style="padding:6px 12px;border:1px solid #eee;text-align:center;font-weight:700;color:${a.riesgo === "critico" ? "#ef4444" : a.riesgo === "warning" ? "#f59e0b" : "#22c55e"}">${a.riesgo === "critico" ? "Crítico" : a.riesgo === "warning" ? "Atención" : "OK"}</td></tr>`).join("");
+                  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe de Riesgo de Abandono — QHUMA OS</title><style>body{font-family:Inter,sans-serif;padding:32px;max-width:800px;margin:0 auto}h1{color:#141414}table{width:100%;border-collapse:collapse;margin-top:16px}th{background:#1f514c;color:white;padding:8px 12px;text-align:left}td{padding:6px 12px;border:1px solid #eee}</style></head><body><h1>Informe de riesgo de abandono escolar</h1><p style="color:#666">Generado: ${new Date().toLocaleDateString("es-ES")} · QHUMA Málaga · 1º ESO</p><h2>Zona crítica: ${criticos.length} alumno(s)</h2><p>${criticos.map((a) => a.nombre).join(", ")}</p><h2 style="margin-top:24px">Tabla completa</h2><table><thead><tr><th>Alumno</th><th>Engagement</th><th>Progreso</th><th>Riesgo</th></tr></thead><tbody>${filas}</tbody></table></body></html>`;
+                  const blob = new Blob([html], { type: "text/html" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `informe_riesgo_abandono_${new Date().toISOString().slice(0,10)}.pdf`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setGenerandoRiesgoInforme(false);
+                  setRiesgoInformeGenerado(true);
+                  setTimeout(() => setRiesgoInformeGenerado(false), 4000);
+                }, 1300);
+              };
+
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle size={14} className="text-urgent" />
+                      <h3 className="text-[14px] font-semibold text-text-primary">Mapa de riesgo de abandono</h3>
+                    </div>
+                    <button
+                      onClick={handleGenerarInforme}
+                      disabled={generandoRiesgoInforme}
+                      className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                    >
+                      {generandoRiesgoInforme ? <RefreshCw size={10} className="animate-spin" /> : <Download size={10} />}
+                      {generandoRiesgoInforme ? "Generando…" : "Generar informe de riesgo"}
+                    </button>
+                  </div>
+
+                  {riesgoInformeGenerado && (
+                    <div className="flex items-center gap-2 bg-success-light border border-success/20 rounded-xl px-3 py-2 mb-4">
+                      <CheckCircle2 size={12} className="text-success" />
+                      <span className="text-[11px] font-semibold text-success">Informe de riesgo exportado correctamente</span>
+                    </div>
+                  )}
+
+                  {/* Ejes del mapa */}
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1 bg-background rounded-xl p-2 text-center">
+                      <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide">→ Eje X: Engagement (bajo / medio / alto)</span>
+                    </div>
+                    <div className="bg-background rounded-xl p-2 text-center px-3">
+                      <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide">↑ Eje Y: Progreso académico</span>
+                    </div>
+                  </div>
+
+                  {/* Grid 3×3 */}
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    {/* Fila alto (progreso) */}
+                    {celdas.filter((c) => c.prog === "alto").map((celda) => {
+                      const enCelda = alumnos.filter((a) => a.engagement === celda.eng && a.progreso === celda.prog);
+                      return (
+                        <div key={`${celda.eng}-${celda.prog}`} className={`rounded-xl p-2.5 min-h-[80px] ${tipoBg[celda.tipo]}`}>
+                          <span className="text-[8px] text-text-muted block mb-1.5">{celda.label}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {enCelda.map((a) => (
+                              <span key={a.iniciales} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${celda.tipo === "success" ? "bg-success text-white" : celda.tipo === "warning" ? "bg-warning text-white" : "bg-urgent text-white"}`} title={a.nombre}>
+                                {a.iniciales}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {/* Fila medio (progreso) */}
+                    {celdas.filter((c) => c.prog === "medio").map((celda) => {
+                      const enCelda = alumnos.filter((a) => a.engagement === celda.eng && a.progreso === celda.prog);
+                      return (
+                        <div key={`${celda.eng}-${celda.prog}`} className={`rounded-xl p-2.5 min-h-[80px] ${tipoBg[celda.tipo]}`}>
+                          <span className="text-[8px] text-text-muted block mb-1.5">{celda.label}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {enCelda.map((a) => (
+                              <span key={a.iniciales} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${celda.tipo === "success" ? "bg-success text-white" : celda.tipo === "neutral" ? "bg-accent-text/20 text-accent-text" : "bg-warning text-white"}`} title={a.nombre}>
+                                {a.iniciales}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {/* Fila bajo (progreso) — zona crítica */}
+                    {celdas.filter((c) => c.prog === "bajo").map((celda) => {
+                      const enCelda = alumnos.filter((a) => a.engagement === celda.eng && a.progreso === celda.prog);
+                      const isCritico = celda.tipo === "critico";
+                      return (
+                        <div key={`${celda.eng}-${celda.prog}`} className={`rounded-xl p-2.5 min-h-[80px] ${tipoBg[celda.tipo]} ${isCritico ? "animate-pulse" : ""}`}>
+                          <span className="text-[8px] text-text-muted block mb-1.5">{celda.label}</span>
+                          {isCritico && <span className="text-[7px] font-bold text-urgent uppercase tracking-wide block mb-1">⚠ Zona crítica</span>}
+                          <div className="flex flex-wrap gap-1">
+                            {enCelda.map((a) => (
+                              <span key={a.iniciales} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${chipColor[celda.tipo] ?? "bg-warning text-white"}`} title={a.nombre}>
+                                {a.iniciales}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Resumen */}
+                  <div className="bg-urgent-light rounded-xl p-4 border border-urgent/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle size={12} className="text-urgent" />
+                      <span className="text-[11px] font-bold text-urgent">{criticos.length} alumno(s) en zona crítica: {criticos.map((a) => a.nombre).join(", ")}</span>
+                    </div>
+                    <p className="text-[10px] font-semibold text-text-secondary mb-2">Acciones recomendadas:</p>
+                    <ul className="space-y-1">
+                      {["Contactar a familias de alumnos en zona crítica antes del viernes.", "Revisar carga de trabajo semanal y ajustar número de tareas activas.", "Programar sesión 1:1 de 15 min con cada alumno de zona crítica esta semana."].map((acc, i) => (
+                        <li key={i} className="flex items-start gap-2 text-[10px] text-text-secondary">
+                          <span className="w-3.5 h-3.5 rounded-full bg-urgent text-white text-[7px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
+                          {acc}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Leyenda */}
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    <span className="text-[9px] text-text-muted">{enWarning.length} alumnos necesitan atención · {alumnos.length - criticos.length - enWarning.length} en zona segura</span>
+                    {[{ color: "bg-urgent", label: "Crítico" }, { color: "bg-warning", label: "Atención" }, { color: "bg-success", label: "OK" }].map((l) => (
+                      <div key={l.label} className="flex items-center gap-1">
+                        <span className={`w-3 h-3 rounded-full ${l.color} inline-block`} />
+                        <span className="text-[9px] text-text-muted">{l.label}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               );
