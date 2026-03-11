@@ -1,31 +1,14 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy, Eye, X } from "lucide-react";
+import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy, Eye, X, Target, CalendarClock } from "lucide-react";
 import { classStudents } from "@/data/students";
+import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
 
-const compNombre: Record<CompKey, string> = {
-  CLC:   "Comunicación Lingüística",
-  CPL:   "Plurilingüe",
-  STEM:  "STEM",
-  CD:    "Digital",
-  CPSAA: "Personal y Social",
-  CC:    "Ciudadana",
-  CE:    "Emprendedora",
-  CCEC:  "Expresión Cultural",
-};
-
 type Nivel = 1 | 2 | 3 | 4;
-
-const nivelConfig: Record<Nivel, { bg: string; text: string; label: string; bar: string }> = {
-  1: { bg: "bg-urgent-light",   text: "text-urgent",      label: "Iniciado",    bar: "bg-urgent" },
-  2: { bg: "bg-warning-light",  text: "text-text-primary", label: "En proceso",  bar: "bg-warning" },
-  3: { bg: "bg-accent-light",   text: "text-accent-text",  label: "Adquirido",   bar: "bg-accent-text" },
-  4: { bg: "bg-success-light",  text: "text-success",      label: "Avanzado",    bar: "bg-success" },
-};
 
 // Notas iniciales basadas en progreso real de los alumnos
 const initialGrades: Record<string, Record<CompKey, Nivel>> = {
@@ -83,7 +66,44 @@ interface HistorialCambio {
   timestamp: string;
 }
 
+// T20 — Objetivos de mejora por alumno
+interface ObjetivoMejora {
+  id: string;
+  alumnoId: string;
+  competencia: CompKey;
+  descripcion: string;
+  fechaLimite: string;
+  conseguido: boolean;
+}
+
+const objetivosIniciales: ObjetivoMejora[] = [
+  { id: "obj1", alumnoId: "3", competencia: "STEM", descripcion: "Completar el módulo de análisis de datos del proyecto y entregar hoja de cálculo corregida.", fechaLimite: "20 mar 2026", conseguido: false },
+  { id: "obj2", alumnoId: "3", competencia: "CE", descripcion: "Redactar el plan de negocio básico con punto de equilibrio. Tutoría los martes 15:00.", fechaLimite: "25 mar 2026", conseguido: false },
+  { id: "obj3", alumnoId: "7", competencia: "CPL", descripcion: "Traducir el listing de su proyecto al inglés con apoyo del profesor de idiomas.", fechaLimite: "18 mar 2026", conseguido: false },
+];
+
 export default function TeacherGradeBook() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const compNombre: Record<CompKey, string> = {
+    CLC:   lbl("Comunicación Lingüística", "Linguistic Communication"),
+    CPL:   lbl("Plurilingüe", "Multilingual"),
+    STEM:  "STEM",
+    CD:    lbl("Digital", "Digital"),
+    CPSAA: lbl("Personal y Social", "Personal & Social"),
+    CC:    lbl("Ciudadana", "Civic"),
+    CE:    lbl("Emprendedora", "Entrepreneurial"),
+    CCEC:  lbl("Expresión Cultural", "Cultural Expression"),
+  };
+
+  const nivelConfig: Record<Nivel, { bg: string; text: string; label: string; bar: string }> = {
+    1: { bg: "bg-urgent-light",   text: "text-urgent",      label: lbl("Iniciado", "Beginner"),      bar: "bg-urgent" },
+    2: { bg: "bg-warning-light",  text: "text-text-primary", label: lbl("En proceso", "In Progress"), bar: "bg-warning" },
+    3: { bg: "bg-accent-light",   text: "text-accent-text",  label: lbl("Adquirido", "Acquired"),     bar: "bg-accent-text" },
+    4: { bg: "bg-success-light",  text: "text-success",      label: lbl("Avanzado", "Advanced"),      bar: "bg-success" },
+  };
+
   const [grades, setGrades] = useState<Record<string, Record<CompKey, Nivel>>>(initialGrades);
   const [editing, setEditing] = useState<string | null>(null); // "studentId-comp"
   const [editVal, setEditVal] = useState("");
@@ -97,6 +117,14 @@ export default function TeacherGradeBook() {
 
   // T19 — Vista resumen por alumno (modal)
   const [alumnoResumenId, setAlumnoResumenId] = useState<string | null>(null);
+
+  // T20 — Objetivos de mejora
+  const [objetivos, setObjetivos] = useState<ObjetivoMejora[]>(objetivosIniciales);
+  const [showObjetivos, setShowObjetivos] = useState(false);
+  const [nuevoObjetivoAlumnoId, setNuevoObjetivoAlumnoId] = useState<string | null>(null);
+  const [nuevoObjetivoComp, setNuevoObjetivoComp] = useState<CompKey>("CLC");
+  const [nuevoObjetivoDesc, setNuevoObjetivoDesc] = useState("");
+  const [nuevoObjetivoFecha, setNuevoObjetivoFecha] = useState("");
 
   // T18 — Feedback textual por alumno
   const [expandedAlumno, setExpandedAlumno] = useState<string | null>(null);
@@ -271,10 +299,10 @@ export default function TeacherGradeBook() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <FileSpreadsheet size={18} className="text-accent-text" />
-            <h1 className="text-[22px] font-bold text-text-primary">Cuaderno de notas</h1>
+            <h1 className="text-[22px] font-bold text-text-primary">{lbl("Cuaderno de notas", "Grade Book")}</h1>
           </div>
           <p className="text-[13px] text-text-secondary">
-            Competencias LOMLOE · 1º ESO · Semana 3 · Proyecto Airbnb Málaga
+            {lbl("Competencias LOMLOE · 1º ESO · Semana 3 · Proyecto Airbnb Málaga", "LOMLOE Competencies · Year 1 · Week 3 · Airbnb Málaga Project")}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -301,7 +329,7 @@ export default function TeacherGradeBook() {
               className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all disabled:opacity-60"
             >
               {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
-              {isExporting ? "Exportando..." : `Exportar ${trimestre} CSV`}
+              {isExporting ? lbl("Exportando...", "Exporting...") : `${lbl("Exportar", "Export")} ${trimestre} CSV`}
             </button>
             <button
               onClick={handleExportPDF}
@@ -309,12 +337,12 @@ export default function TeacherGradeBook() {
               className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
             >
               {isExportingPDF ? <RefreshCw size={13} className="animate-spin" /> : <FileText size={13} />}
-              {isExportingPDF ? "Generando..." : `Informe ${trimestre} PDF`}
+              {isExportingPDF ? lbl("Generando...", "Generating...") : `${lbl("Informe", "Report")} ${trimestre} PDF`}
             </button>
           </div>
           {!editingEnabled && (
             <span className="text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
-              {trimestre} — solo lectura
+              {trimestre} — {lbl("solo lectura", "read only")}
             </span>
           )}
           {exportFilename && (
@@ -355,13 +383,13 @@ export default function TeacherGradeBook() {
             >
               <ArrowUp size={10} className={compareModo ? "text-accent" : "text-text-muted"} />
               <ArrowDown size={10} className={compareModo ? "text-white/60" : "text-text-muted"} />
-              Comparar {trimestre === "T2" ? "T1" : "T2"}
+              {lbl("Comparar", "Compare")} {trimestre === "T2" ? "T1" : "T2"}
             </button>
           )}
           <div className="flex items-center gap-1.5">
             <Info size={11} className="text-text-muted" />
             <span className="text-[10px] text-text-muted">
-              {editingEnabled ? "Haz clic en cualquier celda para editar" : `${trimestre} — datos de solo lectura`}
+              {editingEnabled ? lbl("Haz clic en cualquier celda para editar", "Click any cell to edit") : `${trimestre} — ${lbl("datos de solo lectura", "read-only data")}`}
             </span>
           </div>
         </div>
@@ -373,14 +401,14 @@ export default function TeacherGradeBook() {
           <AlertTriangle size={15} className="text-urgent flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[12px] font-semibold text-text-primary">
-              Alerta trimestral — {alertasTrimestral.length} alumno{alertasTrimestral.length > 1 ? "s" : ""} con nivel 1 en 3 o más competencias
+              {lbl("Alerta trimestral", "Term alert")} — {alertasTrimestral.length} {lbl("alumno", "student")}{alertasTrimestral.length > 1 ? lbl("s", "s") : ""} {lbl("con nivel 1 en 3 o más competencias", "with level 1 in 3 or more competencies")}
             </p>
             <p className="text-[10px] text-text-muted mt-0.5">
-              {alertasTrimestral.map((s) => s.name.split(" ")[0]).join(", ")} · Requieren plan de apoyo urgente
+              {alertasTrimestral.map((s) => s.name.split(" ")[0]).join(", ")} · {lbl("Requieren plan de apoyo urgente", "Require urgent support plan")}
             </p>
           </div>
           <span className="text-[9px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">
-            Urgente
+            {lbl("Urgente", "Urgent")}
           </span>
         </div>
       )}
@@ -392,7 +420,7 @@ export default function TeacherGradeBook() {
             <thead>
               <tr className="bg-background border-b border-card-border">
                 <th className="text-left text-[11px] font-semibold text-text-secondary px-4 py-3 w-36 sticky left-0 bg-background z-10">
-                  Alumno
+                  {lbl("Alumno", "Student")}
                 </th>
                 {COMPS.map((c) => (
                   <th
@@ -410,7 +438,7 @@ export default function TeacherGradeBook() {
                   </th>
                 ))}
                 <th className="text-center px-3 py-3 w-16">
-                  <span className="text-[10px] font-bold text-text-secondary">Media</span>
+                  <span className="text-[10px] font-bold text-text-secondary">{lbl("Media", "Avg")}</span>
                 </th>
               </tr>
             </thead>
@@ -435,13 +463,13 @@ export default function TeacherGradeBook() {
                           {alumno.name.split(" ")[0]}
                         </span>
                         {alertasTrimestral.some((a) => a.id === alumno.id) && (
-                          <span title="Alerta trimestral: nivel 1 en ≥3 competencias">
+                          <span title={lbl("Alerta trimestral: nivel 1 en ≥3 competencias", "Term alert: level 1 in ≥3 competencies")}>
                             <AlertTriangle size={10} className="text-urgent flex-shrink-0" />
                           </span>
                         )}
                         <button
                           onClick={() => setExpandedAlumno(isExpanded ? null : alumno.id)}
-                          title="Comentario y feedback IA"
+                          title={lbl("Comentario y feedback IA", "Comment & AI feedback")}
                           className={`ml-auto flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-lg border transition-all cursor-pointer ${
                             isExpanded
                               ? "bg-accent-light text-accent-text border-accent-text/30"
@@ -454,7 +482,7 @@ export default function TeacherGradeBook() {
                         {/* T19 — Ver resumen */}
                         <button
                           onClick={() => setAlumnoResumenId(alumno.id)}
-                          title="Ver resumen del alumno"
+                          title={lbl("Ver resumen del alumno", "View student summary")}
                           className="flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-lg border bg-background text-text-muted border-card-border hover:border-accent-text/30 hover:text-accent-text transition-all cursor-pointer"
                         >
                           <Eye size={8} />
@@ -491,7 +519,7 @@ export default function TeacherGradeBook() {
                             <div className="flex flex-col items-center gap-0.5">
                               <button
                                 onClick={() => { if (!editingEnabled) return; setEditing(cellId); setEditVal(String(nivel)); }}
-                                title={editingEnabled ? `${cfg.label} — clic para editar` : cfg.label}
+                                title={editingEnabled ? `${cfg.label} — ${lbl("clic para editar", "click to edit")}` : cfg.label}
                                 className={`w-10 h-7 text-[11px] font-bold rounded-lg transition-all ${cfg.bg} ${cfg.text} ${editingEnabled ? "cursor-pointer hover:brightness-90 hover:scale-105" : "cursor-default"}`}
                               >
                                 {nivel}
@@ -536,14 +564,14 @@ export default function TeacherGradeBook() {
                           {/* Textarea comentario docente */}
                           <div className="flex-1">
                             <label className="text-[10px] font-semibold text-text-secondary block mb-1">
-                              Comentario trimestral del docente
+                              {lbl("Comentario trimestral del docente", "Teacher's term comment")}
                             </label>
                             <textarea
                               value={comentariosTrimestral[alumno.id] ?? ""}
                               onChange={(e) =>
                                 setComentariosTrimestral((prev) => ({ ...prev, [alumno.id]: e.target.value }))
                               }
-                              placeholder={`Observaciones sobre ${alumno.name.split(" ")[0]} para ${trimestre}...`}
+                              placeholder={lbl(`Observaciones sobre ${alumno.name.split(" ")[0]} para ${trimestre}...`, `Notes about ${alumno.name.split(" ")[0]} for ${trimestre}...`)}
                               className="w-full text-[11px] text-text-primary bg-card border border-card-border rounded-xl px-3 py-2 resize-none outline-none focus:border-accent-text/40 h-[68px] placeholder:text-text-muted"
                             />
                           </div>
@@ -551,7 +579,7 @@ export default function TeacherGradeBook() {
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
                               <label className="text-[10px] font-semibold text-text-secondary">
-                                Borrador IA
+                                {lbl("Borrador IA", "AI Draft")}
                               </label>
                               {feedbackGenerado[alumno.id] && (
                                 <button
@@ -559,8 +587,8 @@ export default function TeacherGradeBook() {
                                   className="flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-lg border border-card-border bg-card text-text-secondary hover:border-accent-text/30 transition-all cursor-pointer"
                                 >
                                   {copiadoFeedback === alumno.id
-                                    ? <><CheckCircle2 size={9} className="text-success" /> Copiado</>
-                                    : <><Copy size={9} /> Copiar</>
+                                    ? <><CheckCircle2 size={9} className="text-success" /> {lbl("Copiado", "Copied")}</>
+                                    : <><Copy size={9} /> {lbl("Copiar", "Copy")}</>
                                   }
                                 </button>
                               )}
@@ -576,8 +604,8 @@ export default function TeacherGradeBook() {
                                 className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-xl bg-sidebar text-white cursor-pointer hover:brightness-110 transition-all disabled:opacity-60 mt-1"
                               >
                                 {generandoFeedback === alumno.id
-                                  ? <><RefreshCw size={11} className="animate-spin" /> Generando...</>
-                                  : <><MessageSquare size={11} /> Generar borrador IA</>
+                                  ? <><RefreshCw size={11} className="animate-spin" /> {lbl("Generando...", "Generating...")}</>
+                                  : <><MessageSquare size={11} /> {lbl("Generar borrador IA", "Generate AI draft")}</>
                                 }
                               </button>
                             )}
@@ -595,7 +623,7 @@ export default function TeacherGradeBook() {
                 <td className="px-4 py-3 sticky left-0 bg-accent-light z-10">
                   <div className="flex items-center gap-1.5">
                     <TrendingUp size={12} className="text-accent-text" />
-                    <span className="text-[11px] font-bold text-accent-text">Media clase</span>
+                    <span className="text-[11px] font-bold text-accent-text">{lbl("Media clase", "Class avg")}</span>
                   </div>
                 </td>
                 {COMPS.map((comp) => {
@@ -669,7 +697,7 @@ export default function TeacherGradeBook() {
             className="w-full flex items-center gap-2 px-5 py-3 hover:bg-background transition-colors cursor-pointer"
           >
             <History size={14} className="text-text-secondary flex-shrink-0" />
-            <span className="text-[12px] font-semibold text-text-primary flex-1 text-left">Últimos cambios</span>
+            <span className="text-[12px] font-semibold text-text-primary flex-1 text-left">{lbl("Últimos cambios", "Recent changes")}</span>
             <span className="text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full mr-1">
               {Math.min(historialCambios.length, 5)} de {historialCambios.length}
             </span>
@@ -723,9 +751,9 @@ export default function TeacherGradeBook() {
       <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 size={14} className="text-accent-text" />
-          <span className="text-[13px] font-semibold text-text-primary">Distribución por competencia</span>
+          <span className="text-[13px] font-semibold text-text-primary">{lbl("Distribución por competencia", "Distribution by competency")}</span>
           <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
-            {classStudents.length} alumnos · niveles 1–4
+            {classStudents.length} {lbl("alumnos · niveles 1–4", "students · levels 1–4")}
           </span>
         </div>
         <div className="space-y-2.5">
@@ -739,7 +767,7 @@ export default function TeacherGradeBook() {
               <div key={comp} className="flex items-center gap-3">
                 <div className="w-14 flex-shrink-0">
                   <span className="text-[10px] font-bold text-text-secondary">{comp}</span>
-                  <span className={`block text-[9px] font-semibold ${avgColor(avg)}`}>{avg.toFixed(1)} media</span>
+                  <span className={`block text-[9px] font-semibold ${avgColor(avg)}`}>{avg.toFixed(1)} {lbl("media", "avg")}</span>
                 </div>
                 <div className="flex-1 flex h-6 rounded-lg overflow-hidden gap-px bg-background">
                   {([1, 2, 3, 4] as Nivel[]).map((n, ni) => {
@@ -800,11 +828,200 @@ export default function TeacherGradeBook() {
               <div className="h-1.5 bg-white/40 rounded-full overflow-hidden">
                 <div className={`h-full ${cfg.bar} rounded-full`} style={{ width: `${pct}%` }} />
               </div>
-              <p className="text-[9px] text-text-muted mt-1">{count} de {total} evaluaciones</p>
+              <p className="text-[9px] text-text-muted mt-1">{count} {lbl("de", "of")} {total} {lbl("evaluaciones", "assessments")}</p>
             </div>
           );
         })}
       </div>
+
+      {/* T20 — Objetivos de mejora por alumno */}
+      {(() => {
+        const alumnosEnRiesgo = classStudents.filter((s) =>
+          COMPS.some((c) => (activeGrades[s.id]?.[c] ?? 3) === 1)
+        );
+        const objsPendientes = objetivos.filter((o) => !o.conseguido).length;
+        return (
+          <div className="mt-5 bg-card rounded-2xl border border-card-border overflow-hidden">
+            <button
+              onClick={() => setShowObjetivos(!showObjetivos)}
+              className="w-full flex items-center gap-2 px-5 py-3 hover:bg-background transition-colors cursor-pointer"
+            >
+              <Target size={14} className="text-accent-text flex-shrink-0" />
+              <span className="text-[13px] font-semibold text-text-primary flex-1 text-left">
+                {lbl("Objetivos de mejora", "Improvement goals")}
+              </span>
+              <span className="text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full mr-1">
+                {objsPendientes} {lbl("pendiente", "pending")}{objsPendientes !== 1 ? "s" : ""}
+              </span>
+              {showObjetivos
+                ? <ChevronUp size={13} className="text-text-muted flex-shrink-0" />
+                : <ChevronDown size={13} className="text-text-muted flex-shrink-0" />
+              }
+            </button>
+
+            {showObjetivos && (
+              <div className="border-t border-card-border p-5 space-y-5">
+                {/* Alumnos con nivel 1 en alguna competencia */}
+                {alumnosEnRiesgo.length === 0 ? (
+                  <p className="text-[12px] text-text-muted italic text-center py-4">
+                    {lbl("Ningún alumno tiene nivel 1 en competencias activas.", "No student has level 1 in active competencies.")}
+                  </p>
+                ) : (
+                  alumnosEnRiesgo.map((alumno) => {
+                    const compsNivel1 = COMPS.filter((c) => (activeGrades[alumno.id]?.[c] ?? 3) === 1);
+                    const objsAlumno = objetivos.filter((o) => o.alumnoId === alumno.id);
+                    const isAddingHere = nuevoObjetivoAlumnoId === alumno.id;
+                    return (
+                      <div key={alumno.id} className="bg-background rounded-xl p-4">
+                        {/* Header alumno */}
+                        <div className="flex items-center gap-2.5 mb-3">
+                          <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                            {alumno.avatar}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-[13px] font-semibold text-text-primary">{alumno.name.split(" ")[0]}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              {compsNivel1.map((c) => (
+                                <span key={c} className="text-[9px] font-bold bg-urgent-light text-urgent px-1.5 py-0.5 rounded-full">
+                                  {c} · Nivel 1
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (isAddingHere) { setNuevoObjetivoAlumnoId(null); setNuevoObjetivoDesc(""); setNuevoObjetivoFecha(""); }
+                              else { setNuevoObjetivoAlumnoId(alumno.id); setNuevoObjetivoComp(compsNivel1[0] ?? "CLC"); }
+                            }}
+                            className={`flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1.5 rounded-xl border cursor-pointer transition-all ${
+                              isAddingHere
+                                ? "bg-background border-card-border text-text-muted"
+                                : "bg-sidebar text-white border-sidebar hover:brightness-110"
+                            }`}
+                          >
+                            {isAddingHere ? lbl("Cancelar", "Cancel") : lbl("+ Añadir objetivo", "+ Add goal")}
+                          </button>
+                        </div>
+
+                        {/* Objetivos existentes */}
+                        {objsAlumno.length > 0 && (
+                          <div className="space-y-2 mb-3">
+                            {objsAlumno.map((obj) => (
+                              <div
+                                key={obj.id}
+                                className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all ${
+                                  obj.conseguido
+                                    ? "bg-success-light border-success/20"
+                                    : "bg-card border-card-border"
+                                }`}
+                              >
+                                <button
+                                  onClick={() => setObjetivos((prev) =>
+                                    prev.map((o) => o.id === obj.id ? { ...o, conseguido: !o.conseguido } : o)
+                                  )}
+                                  className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 border cursor-pointer transition-all mt-0.5 ${
+                                    obj.conseguido
+                                      ? "bg-success border-success"
+                                      : "bg-card border-card-border hover:border-success"
+                                  }`}
+                                >
+                                  {obj.conseguido && <CheckCircle2 size={10} className="text-white" />}
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 mb-0.5">
+                                    <span className="text-[10px] font-bold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full">
+                                      {obj.competencia}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-[9px] text-text-muted">
+                                      <CalendarClock size={9} />
+                                      {obj.fechaLimite}
+                                    </span>
+                                    {obj.conseguido && (
+                                      <span className="text-[9px] font-bold text-success">{lbl("Conseguido", "Achieved")} ✓</span>
+                                    )}
+                                  </div>
+                                  <p className={`text-[11px] leading-relaxed ${obj.conseguido ? "text-text-muted line-through" : "text-text-primary"}`}>
+                                    {obj.descripcion}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Formulario nuevo objetivo */}
+                        {isAddingHere && (
+                          <div className="bg-card border border-card-border rounded-xl p-3 space-y-2">
+                            <div className="flex gap-2">
+                              <select
+                                value={nuevoObjetivoComp}
+                                onChange={(e) => setNuevoObjetivoComp(e.target.value as CompKey)}
+                                className="text-[10px] font-bold bg-background border border-card-border rounded-lg px-2 py-1.5 text-accent-text outline-none cursor-pointer"
+                              >
+                                {compsNivel1.map((c) => <option key={c} value={c}>{c}</option>)}
+                                {COMPS.filter((c) => !compsNivel1.includes(c)).map((c) => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                placeholder={lbl("Fecha límite (ej: 25 mar 2026)", "Deadline (e.g., Mar 25 2026)")}
+                                value={nuevoObjetivoFecha}
+                                onChange={(e) => setNuevoObjetivoFecha(e.target.value)}
+                                className="flex-1 text-[10px] bg-background border border-card-border rounded-lg px-2 py-1.5 text-text-primary outline-none focus:border-accent-text/40 placeholder:text-text-muted"
+                              />
+                            </div>
+                            <textarea
+                              placeholder={lbl("Describe el objetivo SMART para este alumno...", "Describe the SMART goal for this student...")}
+                              value={nuevoObjetivoDesc}
+                              onChange={(e) => setNuevoObjetivoDesc(e.target.value)}
+                              className="w-full text-[11px] bg-background border border-card-border rounded-xl px-3 py-2 resize-none outline-none focus:border-accent-text/40 h-[56px] placeholder:text-text-muted text-text-primary"
+                            />
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => { setNuevoObjetivoAlumnoId(null); setNuevoObjetivoDesc(""); setNuevoObjetivoFecha(""); }}
+                                className="text-[10px] font-medium px-3 py-1.5 rounded-lg border border-card-border text-text-muted hover:text-text-primary cursor-pointer transition-all"
+                              >
+                                {lbl("Cancelar", "Cancel")}
+                              </button>
+                              <button
+                                disabled={!nuevoObjetivoDesc.trim() || !nuevoObjetivoFecha.trim()}
+                                onClick={() => {
+                                  if (!nuevoObjetivoDesc.trim() || !nuevoObjetivoFecha.trim()) return;
+                                  setObjetivos((prev) => [...prev, {
+                                    id: `obj${Date.now()}`,
+                                    alumnoId: alumno.id,
+                                    competencia: nuevoObjetivoComp,
+                                    descripcion: nuevoObjetivoDesc.trim(),
+                                    fechaLimite: nuevoObjetivoFecha.trim(),
+                                    conseguido: false,
+                                  }]);
+                                  setNuevoObjetivoAlumnoId(null);
+                                  setNuevoObjetivoDesc("");
+                                  setNuevoObjetivoFecha("");
+                                }}
+                                className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-sidebar text-white cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {lbl("Guardar objetivo", "Save goal")}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {objsAlumno.length === 0 && !isAddingHere && (
+                          <p className="text-[10px] text-text-muted italic">
+                            {lbl("Sin objetivos definidos todavía.", "No goals defined yet.")}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* T19 — Modal vista resumen por alumno */}
       {alumnoResumenId && (() => {
@@ -845,11 +1062,11 @@ export default function TeacherGradeBook() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-bold text-text-primary">{alumno.name}</p>
-                  <p className="text-[11px] text-text-muted">1º ESO A · Proyecto Airbnb Málaga · Media global {avg.toFixed(1)}/4</p>
+                  <p className="text-[11px] text-text-muted">1º ESO A · {lbl("Proyecto Airbnb Málaga", "Airbnb Málaga Project")} · {lbl("Media global", "Global avg")} {avg.toFixed(1)}/4</p>
                 </div>
                 {alertasTrimestral.some((a) => a.id === alumnoResumenId) && (
                   <span className="flex items-center gap-1 text-[9px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">
-                    <AlertTriangle size={9} /> Alerta
+                    <AlertTriangle size={9} /> {lbl("Alerta", "Alert")}
                   </span>
                 )}
                 <button onClick={() => setAlumnoResumenId(null)} className="text-text-muted hover:text-text-primary cursor-pointer flex-shrink-0">
@@ -860,7 +1077,7 @@ export default function TeacherGradeBook() {
               <div className="p-6 grid grid-cols-5 gap-5">
                 {/* Columna izquierda — Radar SVG */}
                 <div className="col-span-2">
-                  <p className="text-[11px] font-semibold text-text-secondary mb-3">Radar de competencias (T2)</p>
+                  <p className="text-[11px] font-semibold text-text-secondary mb-3">{lbl("Radar de competencias (T2)", "Competency radar (T2)")}</p>
                   <svg width="160" height="160" viewBox="0 0 160 160" className="mx-auto">
                     {/* Grid rings */}
                     {([1, 2, 3, 4] as Nivel[]).map((lvl) => (
@@ -900,7 +1117,7 @@ export default function TeacherGradeBook() {
 
                 {/* Columna central — Comparativa T1/T2/T3 */}
                 <div className="col-span-2">
-                  <p className="text-[11px] font-semibold text-text-secondary mb-3">Comparativa trimestral</p>
+                  <p className="text-[11px] font-semibold text-text-secondary mb-3">{lbl("Comparativa trimestral", "Term comparison")}</p>
                   <div className="space-y-2">
                     {COMPS.map((c) => {
                       const v1 = (t1g[c] ?? 3) as Nivel;
@@ -936,9 +1153,9 @@ export default function TeacherGradeBook() {
                 <div className="col-span-1 flex flex-col gap-3">
                   {/* Historial filtrado */}
                   <div>
-                    <p className="text-[11px] font-semibold text-text-secondary mb-2">Cambios recientes</p>
+                    <p className="text-[11px] font-semibold text-text-secondary mb-2">{lbl("Cambios recientes", "Recent changes")}</p>
                     {histFiltered.length === 0 ? (
-                      <p className="text-[10px] text-text-muted italic">Sin cambios registrados</p>
+                      <p className="text-[10px] text-text-muted italic">{lbl("Sin cambios registrados", "No changes recorded")}</p>
                     ) : (
                       <div className="space-y-1.5">
                         {histFiltered.slice(0, 4).map((h, i) => (
@@ -958,16 +1175,16 @@ export default function TeacherGradeBook() {
                   {/* Feedback T18 */}
                   {(comentariosTrimestral[alumnoResumenId] || feedbackGenerado[alumnoResumenId]) && (
                     <div>
-                      <p className="text-[11px] font-semibold text-text-secondary mb-2">Feedback docente</p>
+                      <p className="text-[11px] font-semibold text-text-secondary mb-2">{lbl("Feedback docente", "Teacher feedback")}</p>
                       {comentariosTrimestral[alumnoResumenId] && (
                         <div className="bg-background rounded-lg px-2 py-2 mb-2">
-                          <p className="text-[9px] font-bold text-text-muted mb-0.5">Comentario</p>
+                          <p className="text-[9px] font-bold text-text-muted mb-0.5">{lbl("Comentario", "Comment")}</p>
                           <p className="text-[9px] text-text-primary leading-relaxed">{comentariosTrimestral[alumnoResumenId]}</p>
                         </div>
                       )}
                       {feedbackGenerado[alumnoResumenId] && (
                         <div className="bg-accent-light rounded-lg px-2 py-2">
-                          <p className="text-[9px] font-bold text-accent-text mb-0.5">Borrador IA</p>
+                          <p className="text-[9px] font-bold text-accent-text mb-0.5">{lbl("Borrador IA", "AI Draft")}</p>
                           <p className="text-[9px] text-text-primary leading-relaxed line-clamp-4">{feedbackGenerado[alumnoResumenId]}</p>
                         </div>
                       )}

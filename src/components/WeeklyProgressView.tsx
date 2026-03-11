@@ -4,6 +4,7 @@ import { CheckCircle2, Lock, Circle, Clock, Zap, ChevronRight } from "lucide-rea
 import { weekSchedule } from "@/data/tasks";
 import { competencies } from "@/data/competencies";
 import { TaskStatus, CompetencyKey } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 const statusConfig = {
   completed: {
@@ -12,7 +13,6 @@ const statusConfig = {
     bg: "bg-success-light",
     border: "border-success/20",
     icon: CheckCircle2,
-    label: "Completada",
   },
   in_progress: {
     dot: "bg-accent-dark",
@@ -20,7 +20,6 @@ const statusConfig = {
     bg: "bg-accent-light",
     border: "border-accent/30",
     icon: Clock,
-    label: "En progreso",
   },
   upcoming: {
     dot: "bg-text-muted",
@@ -28,7 +27,6 @@ const statusConfig = {
     bg: "bg-background",
     border: "border-card-border",
     icon: Circle,
-    label: "Próxima",
   },
   locked: {
     dot: "bg-text-muted/40",
@@ -36,7 +34,6 @@ const statusConfig = {
     bg: "bg-background",
     border: "border-card-border",
     icon: Lock,
-    label: "Bloqueada",
   },
 };
 
@@ -56,6 +53,9 @@ interface WeeklyProgressViewProps {
 }
 
 export default function WeeklyProgressView({ onOpenTask }: WeeklyProgressViewProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const totalTasks = weekSchedule.flatMap((d) => d.tasks).length;
   const completedTasks = weekSchedule
     .flatMap((d) => d.tasks)
@@ -77,7 +77,7 @@ export default function WeeklyProgressView({ onOpenTask }: WeeklyProgressViewPro
       {/* Week header stats */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         <div className="bg-background rounded-2xl p-4">
-          <span className="text-[11px] text-text-muted font-medium block mb-1">Progreso semana</span>
+          <span className="text-[11px] text-text-muted font-medium block mb-1">{lbl("Progreso semana", "Week progress")}</span>
           <div className="flex items-baseline gap-1 mb-2">
             <span className="text-[24px] font-bold text-text-primary">{weekProgress}%</span>
           </div>
@@ -89,19 +89,19 @@ export default function WeeklyProgressView({ onOpenTask }: WeeklyProgressViewPro
           </div>
         </div>
         <div className="bg-background rounded-2xl p-4">
-          <span className="text-[11px] text-text-muted font-medium block mb-1">Completadas</span>
+          <span className="text-[11px] text-text-muted font-medium block mb-1">{lbl("Completadas", "Completed")}</span>
           <span className="text-[24px] font-bold text-success">{completedTasks}</span>
           <span className="text-[13px] text-text-muted">/{totalTasks}</span>
         </div>
         <div className="bg-background rounded-2xl p-4">
-          <span className="text-[11px] text-text-muted font-medium block mb-1">En progreso</span>
+          <span className="text-[11px] text-text-muted font-medium block mb-1">{lbl("En progreso", "In progress")}</span>
           <span className="text-[24px] font-bold text-accent-text">{inProgressTasks}</span>
-          <span className="text-[13px] text-text-muted"> tarea{inProgressTasks !== 1 ? "s" : ""}</span>
+          <span className="text-[13px] text-text-muted"> {lbl(`tarea${inProgressTasks !== 1 ? "s" : ""}`, `task${inProgressTasks !== 1 ? "s" : ""}`)}</span>
         </div>
         <div className="bg-background rounded-2xl p-4">
           <div className="flex items-center gap-1 mb-1">
             <Zap size={11} className="text-accent-text" />
-            <span className="text-[11px] text-text-muted font-medium">XP ganados</span>
+            <span className="text-[11px] text-text-muted font-medium">{lbl("XP ganados", "XP earned")}</span>
           </div>
           <span className="text-[24px] font-bold text-text-primary">{xpEarned}</span>
         </div>
@@ -231,7 +231,7 @@ export default function WeeklyProgressView({ onOpenTask }: WeeklyProgressViewPro
       {/* Competency coverage this week */}
       <div className="mt-6 bg-background rounded-2xl p-4">
         <h3 className="text-[13px] font-semibold text-text-primary mb-3">
-          Competencias trabajadas esta semana
+          {lbl("Competencias trabajadas esta semana", "Competencies worked this week")}
         </h3>
         <div className="grid grid-cols-4 gap-2">
           {competencies.map((comp) => {

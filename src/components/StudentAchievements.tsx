@@ -6,6 +6,7 @@ import {
   TrendingUp, FileText, Shield, Target, Sparkles, Lock,
   Award, Search, Copy, CheckCircle2, MapPin,
 } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 type Rarity = "Común" | "Raro" | "Legendario";
 
@@ -134,6 +135,9 @@ const misionesCompletadas = [
 type FilterRarity = "todas" | Rarity;
 
 export default function StudentAchievements() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [filter, setFilter] = useState<FilterRarity>("todas");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
@@ -149,6 +153,13 @@ export default function StudentAchievements() {
 
   const countByRarity = (r: Rarity) => unlocked.filter((a) => a.rarity === r).length;
 
+  // Labels for rarity display
+  const rarityLabel = (r: Rarity): string => {
+    if (r === "Común") return lbl("Común", "Common");
+    if (r === "Raro") return lbl("Raro", "Rare");
+    return lbl("Legendario", "Legendary");
+  };
+
   return (
     <div className="flex gap-5">
       {/* Main */}
@@ -158,11 +169,11 @@ export default function StudentAchievements() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Trophy size={18} className="text-accent-text" />
-              <h1 className="text-[22px] font-bold text-text-primary">Mis Logros</h1>
+              <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mis Logros", "My Achievements")}</h1>
             </div>
             <p className="text-[13px] text-text-secondary">
-              <span className="font-medium text-accent-text">{unlocked.length}</span> logros conseguidos ·{" "}
-              <span className="font-medium text-text-primary">{totalXP} XP</span> acumulados
+              <span className="font-medium text-accent-text">{unlocked.length}</span> {lbl("logros conseguidos ·", "achievements earned ·")}{" "}
+              <span className="font-medium text-text-primary">{totalXP} XP</span> {lbl("acumulados", "accumulated")}
             </p>
           </div>
         </div>
@@ -174,7 +185,7 @@ export default function StudentAchievements() {
             return (
               <div key={r} className={`rounded-xl p-3 border ${cfg.bg} ${cfg.border} text-center`}>
                 <span className={`text-[22px] font-bold block ${cfg.text}`}>{countByRarity(r)}</span>
-                <span className="text-[10px] text-text-muted">{r}</span>
+                <span className="text-[10px] text-text-muted">{rarityLabel(r)}</span>
               </div>
             );
           })}
@@ -184,7 +195,7 @@ export default function StudentAchievements() {
         <div className="bg-card border border-card-border rounded-2xl p-4 mb-5">
           <div className="flex items-center gap-2 mb-3">
             <MapPin size={13} className="text-accent-text" />
-            <h2 className="text-[13px] font-semibold text-text-primary">Misiones completadas</h2>
+            <h2 className="text-[13px] font-semibold text-text-primary">{lbl("Misiones completadas", "Completed missions")}</h2>
             <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
               Proyecto Airbnb Málaga
             </span>
@@ -226,7 +237,9 @@ export default function StudentAchievements() {
                   : "text-text-muted hover:text-text-secondary"
               }`}
             >
-              {f === "todas" ? `Todas (${unlocked.length})` : f}
+              {f === "todas"
+                ? `${lbl("Todas", "All")} (${unlocked.length})`
+                : rarityLabel(f as Rarity)}
             </button>
           ))}
         </div>
@@ -255,7 +268,7 @@ export default function StudentAchievements() {
                         {a.title}
                       </h3>
                       <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${cfg.badge} ${cfg.badgeText}`}>
-                        {a.rarity}
+                        {rarityLabel(a.rarity)}
                       </span>
                     </div>
                     <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{a.description}</p>
@@ -269,12 +282,12 @@ export default function StudentAchievements() {
                         <button
                           onClick={(e) => { e.stopPropagation(); handleShare(a.id, a.title); }}
                           className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-white/60 text-text-muted hover:text-accent-text transition-colors cursor-pointer"
-                          title="Compartir logro"
+                          title={lbl("Compartir logro", "Share achievement")}
                         >
                           {sharedId === a.id ? (
-                            <><CheckCircle2 size={9} className="text-success" /><span className="text-success">Copiado</span></>
+                            <><CheckCircle2 size={9} className="text-success" /><span className="text-success">{lbl("Copiado", "Copied")}</span></>
                           ) : (
-                            <><Copy size={9} /><span>Compartir</span></>
+                            <><Copy size={9} /><span>{lbl("Compartir", "Share")}</span></>
                           )}
                         </button>
                       </div>
@@ -290,8 +303,8 @@ export default function StudentAchievements() {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Lock size={14} className="text-text-muted" />
-            <h2 className="text-[14px] font-semibold text-text-primary">Próximos logros</h2>
-            <span className="text-[11px] text-text-muted">({locked.length} bloqueados)</span>
+            <h2 className="text-[14px] font-semibold text-text-primary">{lbl("Próximos logros", "Upcoming achievements")}</h2>
+            <span className="text-[11px] text-text-muted">({locked.length} {lbl("bloqueados", "locked")})</span>
           </div>
 
           <div className="space-y-2.5">
@@ -314,7 +327,7 @@ export default function StudentAchievements() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <h3 className="text-[13px] font-semibold text-text-primary">{a.title}</h3>
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.badge} ${cfg.badgeText}`}>
-                          {a.rarity}
+                          {rarityLabel(a.rarity)}
                         </span>
                         <span className="text-[10px] font-bold text-text-muted ml-auto">+{a.xp} XP</span>
                       </div>
@@ -347,21 +360,20 @@ export default function StudentAchievements() {
         <div className="bg-sidebar rounded-2xl p-5 text-center">
           <Trophy size={22} className="text-accent mx-auto mb-2" />
           <span className="text-[28px] font-bold text-white block">{totalXP}</span>
-          <span className="text-[11px] text-white/50">XP total de logros</span>
+          <span className="text-[11px] text-white/50">{lbl("XP total de logros", "Total achievement XP")}</span>
         </div>
 
         {/* Rarity breakdown */}
         <div className="bg-card border border-card-border rounded-2xl p-5">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-4">Por rareza</h3>
+          <h3 className="text-[13px] font-semibold text-text-primary mb-4">{lbl("Por rareza", "By rarity")}</h3>
           <div className="space-y-3">
             {(["Legendario", "Raro", "Común"] as Rarity[]).map((r) => {
               const cfg = rarityConfig[r];
               const count = countByRarity(r);
-              const total = unlocked.filter((a) => a.rarity === r || true).length;
               return (
                 <div key={r}>
                   <div className="flex justify-between items-center mb-1">
-                    <span className={`text-[11px] font-semibold ${cfg.text}`}>{r}</span>
+                    <span className={`text-[11px] font-semibold ${cfg.text}`}>{rarityLabel(r)}</span>
                     <span className="text-[11px] font-bold text-text-primary">{count}</span>
                   </div>
                   <div className="h-1.5 bg-background rounded-full overflow-hidden">
@@ -380,7 +392,7 @@ export default function StudentAchievements() {
         <div className="bg-card border border-card-border rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <Target size={13} className="text-accent-text" />
-            <span className="text-[12px] font-semibold text-text-primary">Próximos desbloqueos</span>
+            <span className="text-[12px] font-semibold text-text-primary">{lbl("Próximos desbloqueos", "Upcoming unlocks")}</span>
           </div>
           <div className="space-y-3">
             {locked.filter((a) => a.progress).map((a) => {
@@ -413,7 +425,7 @@ export default function StudentAchievements() {
 
         {/* Recent unlocks */}
         <div className="bg-card border border-card-border rounded-2xl p-5">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-3">Recientes</h3>
+          <h3 className="text-[13px] font-semibold text-text-primary mb-3">{lbl("Recientes", "Recent")}</h3>
           <div className="space-y-2.5">
             {unlocked.slice(-4).reverse().map((a) => {
               const Icon = a.icon;

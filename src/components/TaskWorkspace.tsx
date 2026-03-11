@@ -22,6 +22,7 @@ import { weekSchedule } from "@/data/tasks";
 import { taskWorkspaces } from "@/data/taskWorkspaces";
 import { competencies } from "@/data/competencies";
 import { Task, TaskStep, StepStatus } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 // ---- Resource type icons ----
 const resourceIcons: Record<string, typeof ExternalLink> = {
@@ -33,27 +34,29 @@ const resourceIcons: Record<string, typeof ExternalLink> = {
 
 // ---- Brief Section ----
 function BriefSection({ brief }: { brief: { whyItMatters: string; whatYouLearn: string; realWorldConnection: string } }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   return (
     <div className="bg-background rounded-2xl p-6 mb-6">
       <div className="grid grid-cols-3 gap-6">
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <Sparkles size={14} className="text-accent-text" />
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Why it matters</span>
+            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{lbl("Por qué importa", "Why it matters")}</span>
           </div>
           <p className="text-[13px] text-text-secondary leading-relaxed">{brief.whyItMatters}</p>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <BookOpen size={14} className="text-accent-text" />
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">What you&apos;ll learn</span>
+            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{lbl("Qué aprenderás", "What you'll learn")}</span>
           </div>
           <p className="text-[13px] text-text-secondary leading-relaxed">{brief.whatYouLearn}</p>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-2">
             <Target size={14} className="text-accent-text" />
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Real world</span>
+            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">{lbl("Mundo real", "Real world")}</span>
           </div>
           <p className="text-[13px] text-text-secondary leading-relaxed">{brief.realWorldConnection}</p>
         </div>
@@ -64,6 +67,8 @@ function BriefSection({ brief }: { brief: { whyItMatters: string; whatYouLearn: 
 
 // ---- Progress Bar ----
 function ProgressBar({ steps, statuses }: { steps: TaskStep[]; statuses: Record<string, StepStatus> }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const doneCount = steps.filter((s) => statuses[s.id] === "done").length;
   const workingCount = steps.filter((s) => statuses[s.id] === "working").length;
 
@@ -71,11 +76,11 @@ function ProgressBar({ steps, statuses }: { steps: TaskStep[]; statuses: Record<
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[13px] font-semibold text-text-primary">
-          {doneCount} of {steps.length} steps completed
+          {lbl(`${doneCount} de ${steps.length} pasos completados`, `${doneCount} of ${steps.length} steps completed`)}
         </span>
         {workingCount > 0 && (
           <span className="text-[11px] font-medium text-accent-text bg-accent-light px-2.5 py-0.5 rounded-full">
-            {workingCount} in progress
+            {lbl(`${workingCount} en progreso`, `${workingCount} in progress`)}
           </span>
         )}
       </div>
@@ -132,6 +137,9 @@ function StepCard({
   onToggle: () => void;
   onStatusChange: (newStatus: StepStatus) => void;
 }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const nextStatus: Record<StepStatus, StepStatus> = {
     not_started: "working",
     working: "done",
@@ -200,7 +208,7 @@ function StepCard({
             <div className="bg-warning-light rounded-xl p-3.5 mb-3 ml-11">
               <div className="flex items-center gap-1.5 mb-2">
                 <Lightbulb size={13} className="text-warning" />
-                <span className="text-[11px] font-semibold text-warning">Tips</span>
+                <span className="text-[11px] font-semibold text-warning">{lbl("Consejos", "Tips")}</span>
               </div>
               <ul className="space-y-1.5">
                 {step.tips.map((tip, i) => (
@@ -259,9 +267,9 @@ function StepCard({
                   : "bg-card text-text-secondary hover:bg-accent-light hover:text-accent-text"
               }`}
             >
-              {status === "done" && <><CheckCircle2 size={14} /> Completed — click to undo</>}
-              {status === "working" && <><Clock size={14} /> Mark as done</>}
-              {status === "not_started" && <><Circle size={14} /> Start this step</>}
+              {status === "done" && <><CheckCircle2 size={14} /> {lbl("Completado — clic para deshacer", "Completed — click to undo")}</>}
+              {status === "working" && <><Clock size={14} /> {lbl("Marcar como hecho", "Mark as done")}</>}
+              {status === "not_started" && <><Circle size={14} /> {lbl("Empezar este paso", "Start this step")}</>}
             </button>
           </div>
         </div>
@@ -280,6 +288,8 @@ function CriteriaSection({
   met: Record<string, boolean>;
   onToggle: (id: string) => void;
 }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const metCount = Object.values(met).filter(Boolean).length;
 
   return (
@@ -287,10 +297,10 @@ function CriteriaSection({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Target size={16} className="text-text-primary" />
-          <h3 className="text-[16px] font-semibold text-text-primary">What does &quot;good&quot; look like?</h3>
+          <h3 className="text-[16px] font-semibold text-text-primary">{lbl("¿Cómo se ve un buen trabajo?", "What does \"good\" look like?")}</h3>
         </div>
         <span className="text-[11px] font-medium text-text-muted">
-          {metCount}/{criteria.length} met
+          {metCount}/{criteria.length} {lbl("cumplidos", "met")}
         </span>
       </div>
       <div className="space-y-2">
@@ -327,17 +337,19 @@ function EvidenceSection({
   submission: { description: string; format: string };
   task: Task;
 }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   return (
     <div className="bg-sidebar rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-3">
         <Upload size={16} className="text-accent" />
-        <h3 className="text-[16px] font-semibold text-white">Submit Your Evidence</h3>
+        <h3 className="text-[16px] font-semibold text-white">{lbl("Entregar tu evidencia", "Submit Your Evidence")}</h3>
       </div>
       <p className="text-[13px] text-white/70 leading-relaxed mb-3">
         {submission.description}
       </p>
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-[11px] font-medium text-white/50">Format:</span>
+        <span className="text-[11px] font-medium text-white/50">{lbl("Formato:", "Format:")}</span>
         <span className="text-[11px] font-semibold text-white bg-white/10 px-2.5 py-0.5 rounded-lg">
           {submission.format}
         </span>
@@ -345,12 +357,12 @@ function EvidenceSection({
       <div className="flex items-center gap-3">
         <button className="flex-1 py-3 bg-accent text-sidebar text-[13px] font-bold rounded-xl hover:bg-accent/90 transition-colors cursor-pointer flex items-center justify-center gap-2">
           <Upload size={15} />
-          Submit Evidence
+          {lbl("Entregar evidencia", "Submit Evidence")}
         </button>
         {task.status === "completed" && (
           <span className="text-[12px] font-semibold text-success flex items-center gap-1.5">
             <CheckCircle2 size={14} />
-            Submitted
+            {lbl("Entregada", "Submitted")}
           </span>
         )}
       </div>
@@ -365,6 +377,9 @@ interface TaskWorkspaceProps {
 }
 
 export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   // Find task from schedule
   const task = weekSchedule
     .flatMap((d) => d.tasks)
@@ -420,9 +435,9 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
   if (!task) {
     return (
       <div className="text-center py-20">
-        <p className="text-text-muted">Task not found</p>
+        <p className="text-text-muted">{lbl("Tarea no encontrada", "Task not found")}</p>
         <button onClick={onBack} className="text-accent-text text-[13px] font-medium mt-2 cursor-pointer">
-          Back to Dashboard
+          {lbl("Volver al Dashboard", "Back to Dashboard")}
         </button>
       </div>
     );
@@ -436,11 +451,11 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
           className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors cursor-pointer mb-6"
         >
           <ArrowLeft size={16} />
-          Back to Dashboard
+          {lbl("Volver al Dashboard", "Back to Dashboard")}
         </button>
         <div className="bg-background rounded-2xl p-8 text-center">
           <h2 className="text-[18px] font-semibold text-text-primary mb-2">{task.title}</h2>
-          <p className="text-[13px] text-text-muted">Detailed workspace coming soon for this task.</p>
+          <p className="text-[13px] text-text-muted">{lbl("Espacio de trabajo detallado próximamente.", "Detailed workspace coming soon for this task.")}</p>
         </div>
       </div>
     );
@@ -463,7 +478,7 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
         className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors cursor-pointer mb-6"
       >
         <ArrowLeft size={16} />
-        Volver al Dashboard
+        {lbl("Volver al Dashboard", "Back to Dashboard")}
       </button>
 
       {/* Task header */}
@@ -482,10 +497,10 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
                 }`}
               >
                 {task.status === "completed"
-                  ? "Completed"
+                  ? lbl("Completada", "Completed")
                   : task.status === "in_progress"
-                  ? "In Progress"
-                  : "Upcoming"}
+                  ? lbl("En progreso", "In Progress")
+                  : lbl("Próxima", "Upcoming")}
               </div>
             </div>
             <h1 className="text-[28px] font-semibold text-text-primary leading-tight">
@@ -571,6 +586,8 @@ interface MentorSidebarProps {
 }
 
 function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const currentStep = workspace.steps.find(s => s.id === currentStepId);
   const [question, setQuestion] = useSt("");
   const [answer, setAnswer] = useSt<string | null>(null);
@@ -624,10 +641,10 @@ function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
               <Brain size={13} className="text-accent" />
             </div>
             <div>
-              <span className="text-[12px] font-semibold text-white block leading-tight">Mentor IA</span>
+              <span className="text-[12px] font-semibold text-white block leading-tight">{lbl("Mentor IA", "AI Mentor")}</span>
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                <span className="text-[9px] text-white/60">Contextual · Siempre disponible</span>
+                <span className="text-[9px] text-white/60">{lbl("Contextual · Siempre disponible", "Contextual · Always available")}</span>
               </div>
             </div>
           </div>
@@ -637,7 +654,7 @@ function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
         {currentStep && (
           <div className="px-4 py-3 bg-accent-light border-b border-accent/20">
             <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-0.5">
-              Paso actual
+              {lbl("Paso actual", "Current step")}
             </span>
             <span className="text-[11px] font-semibold text-accent-text leading-tight">
               {currentStep.title}
@@ -650,7 +667,7 @@ function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
           <div className="px-4 py-3 border-b border-border">
             <div className="flex items-center gap-1.5 mb-2">
               <Sp size={11} className="text-accent-text" />
-              <span className="text-[10px] font-semibold text-accent-text">Respuesta</span>
+              <span className="text-[10px] font-semibold text-accent-text">{lbl("Respuesta", "Answer")}</span>
             </div>
             <p className="text-[11px] text-text-secondary leading-relaxed whitespace-pre-wrap">
               {answer}
@@ -661,14 +678,14 @@ function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
         {loading && (
           <div className="px-4 py-4 flex items-center gap-2 border-b border-border">
             <Loader size={13} className="text-accent-text animate-spin" />
-            <span className="text-[11px] text-text-muted">Pensando...</span>
+            <span className="text-[11px] text-text-muted">{lbl("Pensando...", "Thinking...")}</span>
           </div>
         )}
 
         {/* Quick hints */}
         <div className="px-4 py-3 border-b border-border">
           <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-2">
-            Preguntas rápidas
+            {lbl("Preguntas rápidas", "Quick questions")}
           </span>
           <div className="flex flex-col gap-1.5">
             {quickHints.map((hint) => (
@@ -701,7 +718,7 @@ function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
                   setQuestion("");
                 }
               }}
-              placeholder="Pregunta algo..."
+              placeholder={lbl("Pregunta algo...", "Ask something...")}
               className="flex-1 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
               disabled={loading}
             />

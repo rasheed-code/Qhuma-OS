@@ -9,6 +9,7 @@ import {
 import { currentStudent } from "@/data/students";
 import { playerLevel, coinTransactions, shopItems, achievements } from "@/data/gamification";
 import { competencies } from "@/data/competencies";
+import { useLang } from "@/lib/i18n";
 
 // ─── Mercado de canjes ───────────────────────────────────────────────
 type Categoria = "Todo" | "Talleres" | "Maker" | "Excursiones" | "Passion";
@@ -68,6 +69,9 @@ const catColors: Record<Categoria, string> = {
 };
 
 export default function StudentQCoins() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const levelPercent = Math.round((playerLevel.xpCurrent / playerLevel.xpRequired) * 100);
 
   // Mercado state
@@ -101,6 +105,14 @@ export default function StudentQCoins() {
     setIaVersion((v) => v + 1);
   };
 
+  const catLabels: Record<Categoria, string> = {
+    Todo: lbl("Todo", "All"),
+    Talleres: lbl("Talleres", "Workshops"),
+    Maker: "Maker",
+    Excursiones: lbl("Excursiones", "Trips"),
+    Passion: "Passion",
+  };
+
   const itemsFiltrados = catActiva === "Todo" ? mercadoItems : mercadoItems.filter((i) => i.categoria === catActiva);
   const totalCarrito = carrito.reduce((s, i) => s + i.precio, 0);
   const saldoDisponible = currentStudent.qcoins;
@@ -116,6 +128,9 @@ export default function StudentQCoins() {
     setTimeout(() => { setCarrito([]); setCanjeConfirmado(false); }, 3000);
   };
 
+  // suppress unused warning
+  void iaVersion;
+
   return (
     <div className="flex gap-6">
       {/* Columna principal */}
@@ -128,7 +143,7 @@ export default function StudentQCoins() {
           <div className="relative">
             <div className="flex items-center gap-2 mb-3">
               <Coins size={16} className="text-accent" />
-              <span className="text-[12px] font-bold text-accent uppercase tracking-wider">Saldo Q-Coins</span>
+              <span className="text-[12px] font-bold text-accent uppercase tracking-wider">{lbl("Saldo Q-Coins", "Q-Coins Balance")}</span>
             </div>
             <div className="text-[48px] font-bold text-white leading-none mb-4">{saldoDisponible}</div>
             <div className="flex items-center gap-6">
@@ -153,13 +168,13 @@ export default function StudentQCoins() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[20px] font-semibold text-text-primary">Mercado de Canjes</h2>
-              <p className="text-[11px] text-text-muted mt-0.5">Talleres · Maker Studio · Excursiones · Passion Workshop</p>
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mercado de Canjes", "Rewards Market")}</h2>
+              <p className="text-[11px] text-text-muted mt-0.5">{lbl("Talleres · Maker Studio · Excursiones · Passion Workshop", "Workshops · Maker Studio · Trips · Passion Workshop")}</p>
             </div>
             {carrito.length > 0 && (
               <div className="flex items-center gap-1.5 bg-accent-light border border-accent/30 px-3 py-1.5 rounded-full">
                 <ShoppingCart size={12} className="text-accent-text" />
-                <span className="text-[11px] font-bold text-accent-text">{carrito.length} en carrito · {totalCarrito} QC</span>
+                <span className="text-[11px] font-bold text-accent-text">{carrito.length} {lbl("en carrito", "in cart")} · {totalCarrito} QC</span>
               </div>
             )}
           </div>
@@ -179,8 +194,8 @@ export default function StudentQCoins() {
                 </div>
                 <div className="flex-1 min-w-0 pr-4">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-bold text-accent uppercase tracking-wide">Prof. Ana recomienda</span>
-                    <span className="text-[9px] text-white/40">Tu competencia más baja: {weakestComp?.shortName} ({weakestComp?.progress}%)</span>
+                    <span className="text-[11px] font-bold text-accent uppercase tracking-wide">{lbl("Prof. Ana recomienda", "Prof. Ana recommends")}</span>
+                    <span className="text-[9px] text-white/40">{lbl("Tu competencia más baja", "Your lowest competency")}: {weakestComp?.shortName} ({weakestComp?.progress}%)</span>
                   </div>
                   <p className="text-[13px] font-semibold text-white mb-1">{iaItemRec.nombre}</p>
                   <p className="text-[11px] text-white/60 leading-relaxed mb-3">{iaRec?.razon}</p>
@@ -189,7 +204,7 @@ export default function StudentQCoins() {
                       onClick={() => { setCatActiva(iaRec?.categoria ?? "Todo"); }}
                       className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl hover:brightness-110 transition-all cursor-pointer"
                     >
-                      Ver en mercado →
+                      {lbl("Ver en mercado →", "View in market →")}
                     </button>
                     <button
                       onClick={handleRefreshIa}
@@ -197,9 +212,9 @@ export default function StudentQCoins() {
                       className="flex items-center gap-1.5 bg-white/10 text-white text-[11px] font-medium px-3 py-1.5 rounded-xl hover:bg-white/20 transition-all cursor-pointer disabled:opacity-50"
                     >
                       {isRefreshingIa ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                      {isRefreshingIa ? "Analizando…" : "Renovar consejo"}
+                      {isRefreshingIa ? lbl("Analizando…", "Analyzing…") : lbl("Renovar consejo", "Refresh advice")}
                     </button>
-                    <span className="text-[10px] text-white/40 ml-1">{iaItemRec.precio} QC · {iaItemRec.stock} plazas</span>
+                    <span className="text-[10px] text-white/40 ml-1">{iaItemRec.precio} QC · {iaItemRec.stock} {lbl("plazas", "spots")}</span>
                   </div>
                 </div>
               </div>
@@ -218,7 +233,7 @@ export default function StudentQCoins() {
                     : "bg-card text-text-muted border-card-border hover:text-text-secondary"
                 }`}
               >
-                {cat}
+                {catLabels[cat]}
                 {cat !== "Todo" && (
                   <span className="ml-1 opacity-60">({mercadoItems.filter((i) => i.categoria === cat).length})</span>
                 )}
@@ -255,7 +270,7 @@ export default function StudentQCoins() {
                     <div className="flex items-center gap-1">
                       <Coins size={11} className="text-accent-text" />
                       <span className="text-[13px] font-bold text-accent-text">{item.precio}</span>
-                      <span className="text-[9px] text-text-muted">· {item.stock} disponibles</span>
+                      <span className="text-[9px] text-text-muted">· {item.stock} {lbl("disponibles", "available")}</span>
                     </div>
                     {enCarrito ? (
                       <button
@@ -263,7 +278,7 @@ export default function StudentQCoins() {
                         className="flex items-center gap-1 text-[10px] font-bold text-urgent bg-urgent-light border border-urgent/20 px-2.5 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all"
                       >
                         <X size={10} />
-                        Quitar
+                        {lbl("Quitar", "Remove")}
                       </button>
                     ) : (
                       <button
@@ -276,7 +291,7 @@ export default function StudentQCoins() {
                         }`}
                       >
                         {puedePermitirse ? <ShoppingCart size={10} /> : <Lock size={10} />}
-                        {puedePermitirse ? "Añadir" : "Sin saldo"}
+                        {puedePermitirse ? lbl("Añadir", "Add") : lbl("Sin saldo", "No funds")}
                       </button>
                     )}
                   </div>
@@ -288,7 +303,7 @@ export default function StudentQCoins() {
 
         {/* ─── Historial de canjes ─── */}
         <div className="mb-8">
-          <h2 className="text-[20px] font-semibold text-text-primary mb-4">Historial de canjes</h2>
+          <h2 className="text-[20px] font-semibold text-text-primary mb-4">{lbl("Historial de canjes", "Redemption history")}</h2>
           <div className="space-y-2.5">
             {historiales.map((h) => (
               <div key={h.id} className="flex items-center gap-3 bg-card rounded-xl border border-card-border p-4">
@@ -303,7 +318,7 @@ export default function StudentQCoins() {
                     <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
                       h.estado === "realizado" ? "bg-success-light text-success" : "bg-accent-light text-accent-text"
                     }`}>
-                      {h.estado === "realizado" ? "Realizado" : "Confirmado"}
+                      {h.estado === "realizado" ? lbl("Realizado", "Completed") : lbl("Confirmado", "Confirmed")}
                     </span>
                     <span className="text-[10px] text-text-muted">{h.fecha}</span>
                   </div>
@@ -339,7 +354,7 @@ export default function StudentQCoins() {
                   <span className="text-[13px] font-semibold text-text-primary mb-0.5">{item.name}</span>
                   <span className="text-[11px] text-text-muted mb-3 leading-snug">{item.description}</span>
                   {item.owned ? (
-                    <span className="px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-success-light text-success">Activado</span>
+                    <span className="px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-success-light text-success">{lbl("Activado", "Active")}</span>
                   ) : (
                     <button
                       className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors ${
@@ -362,7 +377,7 @@ export default function StudentQCoins() {
 
         {/* ─── Logros ─── */}
         <div>
-          <h2 className="text-[20px] font-semibold text-text-primary mb-4">Logros</h2>
+          <h2 className="text-[20px] font-semibold text-text-primary mb-4">{lbl("Logros", "Achievements")}</h2>
           <div className="grid grid-cols-3 gap-3">
             {achievements.map((ach) => {
               const Icon = achievementIconMap[ach.icon] || Trophy;
@@ -394,7 +409,7 @@ export default function StudentQCoins() {
         <div className="bg-card rounded-2xl border border-card-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <ShoppingCart size={14} className="text-accent-text" />
-            <h3 className="text-[13px] font-bold text-text-primary">Carrito</h3>
+            <h3 className="text-[13px] font-bold text-text-primary">{lbl("Carrito", "Cart")}</h3>
             {carrito.length > 0 && (
               <span className="ml-auto text-[9px] font-bold bg-accent text-sidebar px-1.5 py-0.5 rounded-full">{carrito.length}</span>
             )}
@@ -403,13 +418,13 @@ export default function StudentQCoins() {
           {carrito.length === 0 ? (
             <div className="text-center py-6">
               <ShoppingCart size={28} className="text-text-muted mx-auto mb-2 opacity-30" />
-              <p className="text-[11px] text-text-muted">Tu carrito está vacío</p>
+              <p className="text-[11px] text-text-muted">{lbl("Tu carrito está vacío", "Your cart is empty")}</p>
             </div>
           ) : canjeConfirmado ? (
             <div className="text-center py-6">
               <CheckCircle2 size={32} className="text-success mx-auto mb-2" />
-              <p className="text-[12px] font-bold text-success">¡Canje confirmado!</p>
-              <p className="text-[10px] text-text-muted mt-1">Recibirás confirmación por correo</p>
+              <p className="text-[12px] font-bold text-success">{lbl("¡Canje confirmado!", "Redemption confirmed!")}</p>
+              <p className="text-[10px] text-text-muted mt-1">{lbl("Recibirás confirmación por correo", "You will receive a confirmation email")}</p>
             </div>
           ) : (
             <>
@@ -435,11 +450,11 @@ export default function StudentQCoins() {
 
               <div className="border-t border-card-border pt-3 mb-3">
                 <div className="flex justify-between text-[11px] mb-1">
-                  <span className="text-text-muted">Total</span>
+                  <span className="text-text-muted">{lbl("Total", "Total")}</span>
                   <span className="font-bold text-text-primary">{totalCarrito} QC</span>
                 </div>
                 <div className="flex justify-between text-[11px]">
-                  <span className="text-text-muted">Saldo restante</span>
+                  <span className="text-text-muted">{lbl("Saldo restante", "Remaining balance")}</span>
                   <span className={`font-bold ${puedeComprar ? "text-success" : "text-urgent"}`}>
                     {saldoDisponible - totalCarrito} QC
                   </span>
@@ -455,7 +470,7 @@ export default function StudentQCoins() {
                     : "bg-background text-text-muted cursor-not-allowed"
                 }`}
               >
-                {puedeComprar ? "Confirmar canje" : "Saldo insuficiente"}
+                {puedeComprar ? lbl("Confirmar canje", "Confirm redemption") : lbl("Saldo insuficiente", "Insufficient balance")}
               </button>
             </>
           )}
@@ -463,7 +478,7 @@ export default function StudentQCoins() {
 
         {/* Historial de transacciones */}
         <div className="bg-card rounded-2xl p-4 border border-card-border">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-3">Movimientos</h3>
+          <h3 className="text-[13px] font-semibold text-text-primary mb-3">{lbl("Movimientos", "Transactions")}</h3>
           <div className="flex flex-col gap-1 max-h-[400px] overflow-y-auto">
             {coinTransactions.map((tx, i) => {
               const prevDate = i > 0 ? coinTransactions[i - 1].date.split(" ")[0] : "";

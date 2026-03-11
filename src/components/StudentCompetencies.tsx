@@ -13,6 +13,7 @@ import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
 import { taskEvidence } from "@/data/evidence";
 import { Competency, CompetencyKey } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 type Trimestre = "T1" | "T2" | "T3";
 
@@ -132,11 +133,13 @@ function CompetencyCard({
   mediaValue,
   isExpanded,
   onToggle,
+  lbl,
 }: {
   comp: Competency;
   mediaValue: number;
   isExpanded: boolean;
   onToggle: () => void;
+  lbl: (es: string, en: string) => string;
 }) {
   const delta = comp.progress - comp.previousProgress;
   const tasks = getTasksForCompetency(comp.key);
@@ -180,7 +183,7 @@ function CompetencyCard({
             </div>
             <span className="text-[9px] text-text-muted flex-shrink-0">
               <Users size={9} className="inline mr-0.5" />
-              Media: {mediaValue}%
+              {lbl("Media", "Avg")}: {mediaValue}%
             </span>
             {encimaDeLaMedia ? (
               <TrendingUp size={10} className="text-success flex-shrink-0" />
@@ -209,14 +212,20 @@ function CompetencyCard({
             }
             <p className={`text-[11px] font-medium ${encimaDeLaMedia ? "text-success" : "text-warning"}`}>
               {encimaDeLaMedia
-                ? `+${comp.progress - mediaValue} pts por encima de la media de clase (${mediaValue}%)`
-                : `${mediaValue - comp.progress} pts por debajo de la media — área de mejora prioritaria`
+                ? lbl(
+                    `+${comp.progress - mediaValue} pts por encima de la media de clase (${mediaValue}%)`,
+                    `+${comp.progress - mediaValue} pts above class average (${mediaValue}%)`
+                  )
+                : lbl(
+                    `${mediaValue - comp.progress} pts por debajo de la media — área de mejora prioritaria`,
+                    `${mediaValue - comp.progress} pts below average — priority improvement area`
+                  )
               }
             </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium text-text-muted">Tareas relacionadas</span>
+            <span className="text-[11px] font-medium text-text-muted">{lbl("Tareas relacionadas", "Related tasks")}</span>
             {tasks.slice(0, 5).map((task, i) => (
               <div key={i} className="flex items-center gap-2 text-[11px]">
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
@@ -234,6 +243,9 @@ function CompetencyCard({
 }
 
 export default function StudentCompetencies() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [trimestreActivo, setTrimestreActivo] = useState<Trimestre>("T2");
 
@@ -254,9 +266,9 @@ export default function StudentCompetencies() {
   const recentEvidence = taskEvidence.slice(-3);
 
   const trimestreLabels: Record<Trimestre, string> = {
-    T1: "1er Trimestre",
-    T2: "2º Trimestre",
-    T3: "3er Trimestre (proyección)",
+    T1: lbl("1er Trimestre", "1st Term"),
+    T2: lbl("2º Trimestre", "2nd Term"),
+    T3: lbl("3er Trimestre (proyección)", "3rd Term (projection)"),
   };
 
   return (
@@ -267,11 +279,15 @@ export default function StudentCompetencies() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-[32px] font-semibold text-text-primary leading-tight">Mis Competencias</h1>
-              <p className="text-[14px] text-text-secondary mt-1">Marco LOMLOE · 8 competencias clave · {trimestreLabels[trimestreActivo]}</p>
+              <h1 className="text-[32px] font-semibold text-text-primary leading-tight">
+                {lbl("Mis Competencias", "My Competencies")}
+              </h1>
+              <p className="text-[14px] text-text-secondary mt-1">
+                {lbl("Marco LOMLOE · 8 competencias clave", "LOMLOE Framework · 8 key competencies")} · {trimestreLabels[trimestreActivo]}
+              </p>
             </div>
             <div className="flex flex-col items-end">
-              <span className="text-[11px] text-text-muted">Media personal</span>
+              <span className="text-[11px] text-text-muted">{lbl("Media personal", "Personal average")}</span>
               <span className="text-[28px] font-bold text-accent-text">
                 {Math.round(displayCompetencies.reduce((s, c) => s + c.progress, 0) / displayCompetencies.length)}%
               </span>
@@ -303,7 +319,7 @@ export default function StudentCompetencies() {
               <TrendingUp size={16} className="text-success" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">Tu fuerte</span>
+              <span className="text-[10px] text-text-muted font-medium block">{lbl("Tu fuerte", "Your strength")}</span>
               <span className="text-[13px] font-bold text-success">{strongest.shortName} · {strongest.progress}%</span>
             </div>
           </div>
@@ -312,7 +328,7 @@ export default function StudentCompetencies() {
               <TrendingUp size={16} className="text-accent-text" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">Mayor crecimiento</span>
+              <span className="text-[10px] text-text-muted font-medium block">{lbl("Mayor crecimiento", "Most growth")}</span>
               <span className="text-[13px] font-bold text-accent-text">{mostGrowth.shortName} · +{mostGrowth.progress - mostGrowth.previousProgress}%</span>
             </div>
           </div>
@@ -321,7 +337,7 @@ export default function StudentCompetencies() {
               <AlertTriangle size={16} className="text-warning" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">A trabajar</span>
+              <span className="text-[10px] text-text-muted font-medium block">{lbl("A trabajar", "To work on")}</span>
               <span className="text-[13px] font-bold text-warning">{weakest.shortName} · {weakest.progress}%</span>
             </div>
           </div>
@@ -330,7 +346,9 @@ export default function StudentCompetencies() {
         {/* Radar chart */}
         <div className="bg-card rounded-2xl p-5 border border-card-border mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[16px] font-semibold text-text-primary">Mapa de Competencias</h2>
+            <h2 className="text-[16px] font-semibold text-text-primary">
+              {lbl("Mapa de Competencias", "Competency Map")}
+            </h2>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-0.5 bg-accent-text rounded-full" />
@@ -338,7 +356,7 @@ export default function StudentCompetencies() {
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-0.5 bg-text-muted/50 rounded-full" style={{ borderBottom: "1px dashed" }} />
-                <span className="text-[10px] text-text-muted">Media clase</span>
+                <span className="text-[10px] text-text-muted">{lbl("Media clase", "Class average")}</span>
               </div>
               <span className="text-[10px] text-text-muted bg-background px-2.5 py-1 rounded-full">
                 {trimestreLabels[trimestreActivo].split(" (")[0]}
@@ -357,6 +375,7 @@ export default function StudentCompetencies() {
               mediaValue={mediaClase[comp.key]}
               isExpanded={expandedKey === comp.key}
               onToggle={() => setExpandedKey(expandedKey === comp.key ? null : comp.key)}
+              lbl={lbl}
             />
           ))}
         </div>
@@ -366,7 +385,9 @@ export default function StudentCompetencies() {
       <div className="w-[300px] flex-shrink-0 flex flex-col gap-4">
         {/* Evolución histórica */}
         <div className="bg-card rounded-2xl p-5 border border-card-border">
-          <h3 className="text-[14px] font-semibold text-text-primary mb-1">Evolución histórica</h3>
+          <h3 className="text-[14px] font-semibold text-text-primary mb-1">
+            {lbl("Evolución histórica", "Historical progress")}
+          </h3>
           <p className="text-[11px] text-text-muted mb-4">T1 → T2 → T3 (proyección)</p>
           <div className="flex flex-col gap-3">
             {competencies.map((comp) => {
@@ -413,8 +434,12 @@ export default function StudentCompetencies() {
         <div className="bg-card rounded-2xl p-5 border border-card-border">
           <div className="flex items-center gap-2 mb-4">
             <Users size={14} className="text-text-muted" />
-            <h3 className="text-[14px] font-semibold text-text-primary">vs. Media de clase</h3>
-            <span className="ml-auto text-[9px] bg-background text-text-muted px-2 py-0.5 rounded-full">Anónima</span>
+            <h3 className="text-[14px] font-semibold text-text-primary">
+              {lbl("vs. Media de clase", "vs. Class average")}
+            </h3>
+            <span className="ml-auto text-[9px] bg-background text-text-muted px-2 py-0.5 rounded-full">
+              {lbl("Anónima", "Anonymous")}
+            </span>
           </div>
           <div className="flex flex-col gap-2.5">
             {displayCompetencies.map((comp) => {
@@ -437,13 +462,18 @@ export default function StudentCompetencies() {
             })}
           </div>
           <p className="text-[10px] text-text-muted mt-3 pt-3 border-t border-card-border leading-relaxed">
-            Positivo = por encima de la media. Los datos de los compañeros son anonimizados y no identificables.
+            {lbl(
+              "Positivo = por encima de la media. Los datos de los compañeros son anonimizados y no identificables.",
+              "Positive = above average. Classmates' data is anonymized and non-identifiable."
+            )}
           </p>
         </div>
 
         {/* Evidencias relacionadas */}
         <div className="bg-card rounded-2xl p-5 border border-card-border">
-          <h3 className="text-[14px] font-semibold text-text-primary mb-4">Evidencias recientes</h3>
+          <h3 className="text-[14px] font-semibold text-text-primary mb-4">
+            {lbl("Evidencias recientes", "Recent evidences")}
+          </h3>
           <div className="flex flex-col gap-3">
             {recentEvidence.map((ev) => (
               <div key={ev.taskId} className="flex items-start gap-2.5 pb-3 border-b border-card-border last:border-0 last:pb-0">

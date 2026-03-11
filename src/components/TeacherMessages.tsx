@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MessageSquare, Send, Search, Star, Clock, CheckCheck, ChevronRight, Sparkles } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 interface Conversation {
   id: string;
@@ -85,6 +86,8 @@ const statusColor = (s: Conversation["status"]) => {
 };
 
 export default function TeacherMessages() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState("1");
   const [draft, setDraft] = useState("");
@@ -111,12 +114,12 @@ export default function TeacherMessages() {
       <div className="flex items-center gap-2 mb-5">
         <MessageSquare size={18} className="text-accent-text" />
         <div>
-          <h1 className="text-[22px] font-bold text-text-primary">Mensajes</h1>
-          <p className="text-[13px] text-text-secondary">Comunicación directa con alumnos · 1º ESO</p>
+          <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mensajes", "Messages")}</h1>
+          <p className="text-[13px] text-text-secondary">{lbl("Comunicación directa con alumnos · 1º ESO", "Direct communication with students · Year 7")}</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="text-[11px] bg-urgent text-white font-bold px-2 py-0.5 rounded-full">
-            {conversations.reduce((s, c) => s + c.unread, 0)} sin leer
+            {conversations.reduce((s, c) => s + c.unread, 0)} {lbl("sin leer", "unread")}
           </span>
         </div>
       </div>
@@ -130,7 +133,7 @@ export default function TeacherMessages() {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar alumno…"
+                placeholder={lbl("Buscar alumno…", "Search student…")}
                 className="flex-1 text-[11px] bg-transparent outline-none text-text-primary placeholder:text-text-muted"
               />
             </div>
@@ -179,11 +182,11 @@ export default function TeacherMessages() {
             <div>
               <p className="text-[12px] font-bold text-text-primary">{active.student}</p>
               <p className="text-[10px] text-text-muted capitalize">
-                {active.status === "excelling" ? "✨ Destacado" : active.status === "needs_attention" ? "⚠️ Necesita apoyo" : "✓ En curso"}
+                {active.status === "excelling" ? lbl("✨ Destacado", "✨ Excelling") : active.status === "needs_attention" ? lbl("⚠️ Necesita apoyo", "⚠️ Needs support") : lbl("✓ En curso", "✓ On track")}
               </p>
             </div>
             <button className="ml-auto text-[10px] text-text-secondary border border-card-border rounded-xl px-2.5 py-1 flex items-center gap-1.5 hover:border-accent-text/30 transition-all cursor-pointer">
-              Ver perfil <ChevronRight size={10} />
+              {lbl("Ver perfil", "View profile")} <ChevronRight size={10} />
             </button>
           </div>
 
@@ -210,7 +213,7 @@ export default function TeacherMessages() {
           <div className="px-4 py-2 border-t border-card-border/50">
             <div className="flex items-center gap-1.5 mb-2">
               <Sparkles size={10} className="text-accent-text" />
-              <span className="text-[9px] text-text-muted font-medium uppercase tracking-wide">Respuestas rápidas</span>
+              <span className="text-[9px] text-text-muted font-medium uppercase tracking-wide">{lbl("Respuestas rápidas", "Quick replies")}</span>
             </div>
             <div className="flex gap-1.5 flex-wrap">
               {quickReplies.slice(0, 4).map((qr, i) => (
@@ -232,7 +235,7 @@ export default function TeacherMessages() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                placeholder="Escribe un mensaje…"
+                placeholder={lbl("Escribe un mensaje…", "Write a message…")}
                 rows={2}
                 className="flex-1 text-[12px] text-text-primary bg-background rounded-xl border border-card-border px-3 py-2 outline-none focus:border-accent-text/40 resize-none placeholder:text-text-muted"
               />
@@ -252,7 +255,7 @@ export default function TeacherMessages() {
           <div className="bg-card rounded-2xl border border-card-border p-3 flex-1">
             <div className="flex items-center gap-1.5 mb-3">
               <Star size={11} className="text-accent-text" />
-              <span className="text-[10px] font-bold text-text-primary">Plantillas</span>
+              <span className="text-[10px] font-bold text-text-primary">{lbl("Plantillas", "Templates")}</span>
             </div>
             <div className="space-y-1.5">
               {quickReplies.map((qr, i) => (
@@ -271,10 +274,10 @@ export default function TeacherMessages() {
           <div className="bg-accent-light rounded-2xl border border-accent-text/20 p-3">
             <div className="flex items-center gap-1.5 mb-1.5">
               <Clock size={10} className="text-accent-text" />
-              <span className="text-[10px] font-bold text-accent-text">Próximo check-in</span>
+              <span className="text-[10px] font-bold text-accent-text">{lbl("Próximo check-in", "Next check-in")}</span>
             </div>
             <p className="text-[11px] text-accent-text font-semibold">Alejandro J.</p>
-            <p className="text-[10px] text-text-secondary mt-0.5">Hoy 15:00 · Requiere plan de recuperación</p>
+            <p className="text-[10px] text-text-secondary mt-0.5">{lbl("Hoy 15:00 · Requiere plan de recuperación", "Today 15:00 · Requires recovery plan")}</p>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, Star, Zap, Trophy, ChevronRight } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -38,6 +39,8 @@ export default function LevelUpModal({
   xpGained,
   unlockedFeature,
 }: LevelUpModalProps) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const [visible, setVisible] = useState(false);
   const [burst, setBurst] = useState(false);
 
@@ -85,11 +88,11 @@ export default function LevelUpModal({
           </div>
 
           <div className="text-sidebar text-[11px] font-bold uppercase tracking-widest mb-1 opacity-60">
-            ¡Subiste de nivel!
+            {lbl("¡Subiste de nivel!", "Level up!")}
           </div>
           <h2 className="text-sidebar font-black text-[26px] leading-tight mb-1">{newTitle}</h2>
           <p className="text-sidebar/60 text-[12px]">
-            Antes: Nivel {prevLevel} · Ahora: Nivel {newLevel}
+            {lbl(`Antes: Nivel ${prevLevel} · Ahora: Nivel ${newLevel}`, `Before: Level ${prevLevel} · Now: Level ${newLevel}`)}
           </p>
         </div>
 
@@ -99,7 +102,7 @@ export default function LevelUpModal({
           <div className="flex items-center justify-center gap-2 mb-5">
             <div className="flex items-center gap-1.5 bg-accent-light rounded-full px-4 py-1.5">
               <Zap size={13} className="text-accent-text" />
-              <span className="text-[13px] font-bold text-accent-text">+{xpGained} XP ganados</span>
+              <span className="text-[13px] font-bold text-accent-text">+{xpGained} {lbl("XP ganados", "XP earned")}</span>
             </div>
           </div>
 
@@ -107,7 +110,7 @@ export default function LevelUpModal({
           <div className="mb-5">
             <div className="flex items-center gap-2 mb-3">
               <Trophy size={13} className="text-accent-text" />
-              <span className="text-[12px] font-bold text-text-primary">Desbloqueado en este nivel</span>
+              <span className="text-[12px] font-bold text-text-primary">{lbl("Desbloqueado en este nivel", "Unlocked at this level")}</span>
             </div>
             <div className="space-y-2">
               {perks.map((perk, i) => (
@@ -130,7 +133,7 @@ export default function LevelUpModal({
             onClick={onClose}
             className="w-full bg-sidebar text-accent text-[12px] font-bold py-3 rounded-2xl hover:brightness-110 transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            ¡A por el siguiente nivel!
+            {lbl("¡A por el siguiente nivel!", "Go for the next level!")}
             <ChevronRight size={14} />
           </button>
         </div>

@@ -23,6 +23,7 @@ import { competencies } from "@/data/competencies";
 import { taskEvidence } from "@/data/evidence";
 import { playerLevel, currentTribe, achievements } from "@/data/gamification";
 import EvidencePreviewSwitch from "@/components/EvidencePreview";
+import { useLang } from "@/lib/i18n";
 
 const inteligencias = [
   { clave: "linguistica",    nombre: "Lingüística",          nivel: 78, descripcion: "Expresión escrita, argumentación, narrativa propia en el proyecto",     icon: MessageSquare },
@@ -48,6 +49,8 @@ export default function StudentProfile() {
   const levelPercent = Math.round(
     (playerLevel.xpCurrent / playerLevel.xpRequired) * 100
   );
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
 
   return (
     <div>
@@ -71,7 +74,7 @@ export default function StudentProfile() {
             <div className="inline-flex items-center gap-1.5 bg-warning-light px-3 py-1 rounded-full">
               <Flame size={12} className="text-warning" />
               <span className="text-[11px] font-semibold text-warning">
-                {currentStudent.streak}-day streak
+                {currentStudent.streak}{lbl(" días de racha", "-day streak")}
               </span>
             </div>
             <div className="inline-flex items-center gap-1.5 bg-accent-light px-3 py-1 rounded-full">
@@ -83,7 +86,7 @@ export default function StudentProfile() {
           </div>
           <div className="max-w-md">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-text-muted">Next: {playerLevel.nextTitle}</span>
+              <span className="text-[11px] text-text-muted">{lbl("Siguiente:", "Next:")} {playerLevel.nextTitle}</span>
               <span className="text-[11px] text-text-muted">{playerLevel.xpCurrent}/{playerLevel.xpRequired} XP</span>
             </div>
             <div className="h-2 rounded-full overflow-hidden bg-background">
@@ -115,7 +118,7 @@ export default function StudentProfile() {
         <div className="bg-background rounded-2xl p-4 flex flex-col justify-between min-h-[100px]">
           <div className="flex items-center gap-1.5">
             <FileText size={13} className="text-accent-text" />
-            <span className="text-[11px] text-text-muted font-medium">Evidences</span>
+            <span className="text-[11px] text-text-muted font-medium">{lbl("Evidencias", "Evidences")}</span>
           </div>
           <div className="flex items-baseline gap-1">
             <span className="text-[28px] font-bold text-text-primary leading-none">{currentStudent.evidencesSubmitted}</span>
@@ -125,11 +128,11 @@ export default function StudentProfile() {
         <div className="bg-sidebar rounded-2xl p-4 flex flex-col justify-between min-h-[100px]">
           <div className="flex items-center gap-1.5">
             <Flame size={13} className="text-warning" />
-            <span className="text-[11px] text-white/50 font-medium">Streak</span>
+            <span className="text-[11px] text-white/50 font-medium">{lbl("Racha", "Streak")}</span>
           </div>
           <div>
             <span className="text-[28px] font-bold text-white leading-none">{currentStudent.streak}</span>
-            <span className="text-[11px] text-white/40 ml-1">days</span>
+            <span className="text-[11px] text-white/40 ml-1">{lbl("días", "days")}</span>
           </div>
         </div>
       </div>
@@ -138,7 +141,7 @@ export default function StudentProfile() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Users size={16} className="text-text-primary" />
-          <h2 className="text-[20px] font-semibold text-text-primary">My Tribe</h2>
+          <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mi Tribu", "My Tribe")}</h2>
           <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[11px] font-semibold">
             {currentTribe.name}
           </span>
@@ -175,7 +178,7 @@ export default function StudentProfile() {
 
       {/* Evidence Portfolio */}
       <div className="mb-8">
-        <h2 className="text-[20px] font-semibold text-text-primary mb-4">Evidence Portfolio</h2>
+        <h2 className="text-[20px] font-semibold text-text-primary mb-4">{lbl("Portafolio de evidencias", "Evidence Portfolio")}</h2>
         <div className="grid grid-cols-3 gap-4">
           {taskEvidence.map((ev) => (
             <div key={ev.taskId} className="bg-card rounded-2xl p-4 border border-card-border">
@@ -195,7 +198,7 @@ export default function StudentProfile() {
 
       {/* Competency Overview */}
       <div className="mb-8">
-        <h2 className="text-[20px] font-semibold text-text-primary mb-4">Competencies</h2>
+        <h2 className="text-[20px] font-semibold text-text-primary mb-4">{lbl("Competencias", "Competencies")}</h2>
         <div className="grid grid-cols-4 gap-3">
           {competencies.map((comp) => (
             <div key={comp.key} className="bg-background rounded-xl p-3">
@@ -254,7 +257,7 @@ export default function StudentProfile() {
 
       {/* Achievements */}
       <div>
-        <h2 className="text-[20px] font-semibold text-text-primary mb-4">Achievements</h2>
+        <h2 className="text-[20px] font-semibold text-text-primary mb-4">{lbl("Logros", "Achievements")}</h2>
         <div className="flex items-center gap-4 overflow-x-auto pb-2">
           {achievements.map((ach) => {
             const Icon = achievementIconMap[ach.icon] || Trophy;

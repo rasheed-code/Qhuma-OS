@@ -125,7 +125,7 @@ export default function Sidebar({
   const info = roleInfo[role];
 
   const navLabel = (item: { labelEs: string; labelEn: string }) =>
-    lang === "es" || role !== "parent" ? item.labelEs : item.labelEn;
+    lang === "es" ? item.labelEs : item.labelEn;
 
   return (
     <aside className="fixed left-4 top-4 bottom-4 w-[220px] bg-sidebar rounded-3xl flex flex-col py-6 px-4 z-50">

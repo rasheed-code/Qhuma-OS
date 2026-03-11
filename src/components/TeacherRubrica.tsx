@@ -3,15 +3,9 @@
 import { useState } from "react";
 import { ClipboardCheck, ChevronDown, ChevronUp, Eye, EyeOff, Save, CheckCircle2 } from "lucide-react";
 import { classStudents } from "@/data/students";
+import { useLang } from "@/lib/i18n";
 
 type Nivel = 1 | 2 | 3 | 4;
-
-const nivelConfig: Record<Nivel, { label: string; bg: string; text: string; border: string }> = {
-  1: { label: "Inicio",              bg: "bg-urgent-light",  text: "text-urgent",      border: "border-urgent/30" },
-  2: { label: "En proceso",          bg: "bg-warning-light", text: "text-warning",     border: "border-warning/30" },
-  3: { label: "Logro esperado",      bg: "bg-accent-light",  text: "text-accent-text", border: "border-accent/30" },
-  4: { label: "Logro sobresaliente", bg: "bg-success-light", text: "text-success",     border: "border-success/30" },
-};
 
 interface CriterioComp {
   key: string;
@@ -152,6 +146,16 @@ function initScores(): Record<string, Record<string, Record<string, Nivel>>> {
 }
 
 export default function TeacherRubrica() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const nivelConfig: Record<Nivel, { label: string; bg: string; text: string; border: string }> = {
+    1: { label: lbl("Inicio", "Beginning"),              bg: "bg-urgent-light",  text: "text-urgent",      border: "border-urgent/30" },
+    2: { label: lbl("En proceso", "In progress"),        bg: "bg-warning-light", text: "text-warning",     border: "border-warning/30" },
+    3: { label: lbl("Logro esperado", "Achieved"),       bg: "bg-accent-light",  text: "text-accent-text", border: "border-accent/30" },
+    4: { label: lbl("Logro sobresaliente", "Advanced"),  bg: "bg-success-light", text: "text-success",     border: "border-success/30" },
+  };
+
   const [activeRubrica, setActiveRubrica] = useState<string>(rubricasMock[0].id);
   const [scores, setScores] = useState(initScores);
   const [vistaAlumno, setVistaAlumno] = useState(false);
@@ -193,10 +197,10 @@ export default function TeacherRubrica() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <ClipboardCheck size={18} className="text-accent-text" />
-            <h1 className="text-[22px] font-bold text-text-primary">Rúbricas de Evaluación</h1>
+            <h1 className="text-[22px] font-bold text-text-primary">{lbl("Rúbricas de Evaluación", "Assessment Rubrics")}</h1>
           </div>
           <p className="text-[13px] text-text-secondary">
-            Criterios LOMLOE 1-4 · Proyecto Airbnb Málaga · 1º ESO
+            {lbl("Criterios LOMLOE 1-4 · Proyecto Airbnb Málaga · 1º ESO", "LOMLOE criteria 1-4 · Airbnb Málaga Project · Year 7")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -205,14 +209,14 @@ export default function TeacherRubrica() {
             className="flex items-center gap-1.5 text-[11px] font-semibold text-text-secondary bg-background border border-card-border px-3 py-2 rounded-xl hover:border-accent-text/30 transition-all cursor-pointer"
           >
             {vistaAlumno ? <EyeOff size={13} /> : <Eye size={13} />}
-            {vistaAlumno ? "Vista docente" : "Vista alumno"}
+            {vistaAlumno ? lbl("Vista docente", "Teacher view") : lbl("Vista alumno", "Student view")}
           </button>
           <button
             onClick={handleGuardar}
             className="flex items-center gap-1.5 text-[11px] font-bold bg-sidebar text-white px-3 py-2 rounded-xl hover:bg-accent-dark transition-all cursor-pointer"
           >
             {savedRubrica === rubrica.id ? <CheckCircle2 size={13} className="text-accent" /> : <Save size={13} />}
-            {savedRubrica === rubrica.id ? "Guardada" : "Guardar rúbrica"}
+            {savedRubrica === rubrica.id ? lbl("Guardada", "Saved") : lbl("Guardar rúbrica", "Save rubric")}
           </button>
         </div>
       </div>
@@ -220,7 +224,7 @@ export default function TeacherRubrica() {
       <div className="grid grid-cols-4 gap-5">
         {/* Panel izquierdo — lista de rúbricas */}
         <div className="col-span-1 space-y-2.5">
-          <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">Tareas del proyecto</p>
+          <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">{lbl("Tareas del proyecto", "Project tasks")}</p>
           {rubricasMock.map((r) => (
             <button
               key={r.id}
@@ -262,7 +266,7 @@ export default function TeacherRubrica() {
 
           {/* Leyenda niveles */}
           <div className="bg-card rounded-2xl border border-card-border p-4 mt-4">
-            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2.5">Escala LOMLOE</p>
+            <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2.5">{lbl("Escala LOMLOE", "LOMLOE scale")}</p>
             {(Object.entries(nivelConfig) as [string, typeof nivelConfig[Nivel]][]).map(([n, cfg]) => (
               <div key={n} className="flex items-center gap-2 mb-1.5">
                 <div className={`w-5 h-5 rounded-md ${cfg.bg} border ${cfg.border} flex items-center justify-center flex-shrink-0`}>
@@ -288,11 +292,11 @@ export default function TeacherRubrica() {
               <div className="p-5">
                 {/* Cabecera de columnas */}
                 <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `200px repeat(${rubrica.criterios.length}, 1fr) 80px` }}>
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">Alumno</div>
+                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide">{lbl("Alumno", "Student")}</div>
                   {rubrica.criterios.map((c) => (
                     <div key={c.key} className="text-[10px] font-bold text-text-muted uppercase tracking-wide text-center">{c.key}</div>
                   ))}
-                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide text-center">Media</div>
+                  <div className="text-[10px] font-bold text-text-muted uppercase tracking-wide text-center">{lbl("Media", "Average")}</div>
                 </div>
 
                 {/* Filas por alumno */}
@@ -327,7 +331,7 @@ export default function TeacherRubrica() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); cycleNivel(rubrica.id, student.id, c.key); }}
                                   className={`w-9 h-9 rounded-xl border ${cfg.bg} ${cfg.border} flex items-center justify-center cursor-pointer hover:brightness-95 transition-all`}
-                                  title={`${cfg.label} — clic para cambiar`}
+                                  title={`${cfg.label} — ${lbl("clic para cambiar", "click to change")}`}
                                 >
                                   <span className={`text-[13px] font-black ${cfg.text}`}>{nivel}</span>
                                 </button>
@@ -371,8 +375,8 @@ export default function TeacherRubrica() {
               /* Vista alumno — rúbrica de criterios sin scores personales */
               <div className="p-5">
                 <div className="bg-accent-light rounded-xl px-4 py-3 mb-4 border border-accent/20">
-                  <p className="text-[12px] font-bold text-accent-text mb-0.5">Vista del alumno — lo que verá Lucas antes de entregar</p>
-                  <p className="text-[11px] text-text-secondary">Esta rúbrica describe exactamente qué se evalúa y qué diferencia cada nivel. Úsala para auto-evaluar tu trabajo antes de enviarlo.</p>
+                  <p className="text-[12px] font-bold text-accent-text mb-0.5">{lbl("Vista del alumno — lo que verá Lucas antes de entregar", "Student view — what Lucas sees before submitting")}</p>
+                  <p className="text-[11px] text-text-secondary">{lbl("Esta rúbrica describe exactamente qué se evalúa y qué diferencia cada nivel. Úsala para auto-evaluar tu trabajo antes de enviarlo.", "This rubric describes exactly what is assessed and what distinguishes each level. Use it to self-assess your work before submitting.")}</p>
                 </div>
 
                 {rubrica.criterios.map((c) => (

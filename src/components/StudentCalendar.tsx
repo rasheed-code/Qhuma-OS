@@ -16,6 +16,7 @@ import {
 import { weekSchedule } from "@/data/tasks";
 import { competencies } from "@/data/competencies";
 import { currentStudent } from "@/data/students";
+import { useLang } from "@/lib/i18n";
 
 // ── Eventos personales del alumno ──────────────────────────────────────────
 type EventType = "entrega" | "pitch" | "demoday" | "hito";
@@ -44,7 +45,6 @@ const tipoConfig: Record<EventType, { bg: string; text: string; icon: typeof Fla
 // ── Constantes de marzo 2026 ───────────────────────────────────────────────
 const TODAY_DAY = 11; // 11 de marzo 2026 (miércoles)
 const MONTH_NAME = "Marzo 2026";
-const DIAS_SEMANA = ["L", "M", "X", "J", "V", "S", "D"];
 // 1 de marzo 2026 = domingo → offset 6 en rejilla lunes-primero
 const MARCH_START_OFFSET = 6;
 const MARCH_DAYS = 31;
@@ -56,13 +56,22 @@ function buildMonthGrid() {
   return cells;
 }
 
-// Mapeo de label inglés → español para tareas del weekSchedule
-const dayLabel: Record<string, string> = {
-  Monday: "Lunes", Tuesday: "Martes", Wednesday: "Miércoles",
-  Thursday: "Jueves", Friday: "Viernes", Saturday: "Sábado", Sunday: "Domingo",
-};
-
 export default function StudentCalendar() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // Moved inside component so lbl is available
+  const DIAS_SEMANA = lbl("L,M,X,J,V,S,D", "M,T,W,T,F,S,S").split(",");
+  const dayLabel: Record<string, string> = {
+    Monday: lbl("Lunes", "Monday"),
+    Tuesday: lbl("Martes", "Tuesday"),
+    Wednesday: lbl("Miércoles", "Wednesday"),
+    Thursday: lbl("Jueves", "Thursday"),
+    Friday: lbl("Viernes", "Friday"),
+    Saturday: lbl("Sábado", "Saturday"),
+    Sunday: lbl("Domingo", "Sunday"),
+  };
+
   const [vista, setVista] = useState<"mes" | "semana">("semana");
 
   // ── Estadísticas generales ──────────────────────────────────────────────
@@ -85,11 +94,14 @@ export default function StudentCalendar() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-[32px] font-semibold text-text-primary leading-tight">
-                Calendario
+                {lbl("Calendario", "Calendar")}
               </h1>
               {badgeHoy > 0 && (
                 <span className="mt-1 px-3 py-1 rounded-full bg-accent text-sidebar text-[11px] font-bold flex-shrink-0">
-                  Hoy tienes {badgeHoy} evento{badgeHoy > 1 ? "s" : ""}
+                  {lbl(
+                    `Hoy tienes ${badgeHoy} evento${badgeHoy > 1 ? "s" : ""}`,
+                    `You have ${badgeHoy} event${badgeHoy > 1 ? "s" : ""} today`
+                  )}
                 </span>
               )}
             </div>
@@ -98,10 +110,10 @@ export default function StudentCalendar() {
             </p>
             <div className="flex items-center gap-4 mt-3">
               <span className="text-[12px] text-text-muted">
-                <span className="font-semibold text-text-primary">{completedTasks}</span>/{totalTasks} tareas completadas
+                <span className="font-semibold text-text-primary">{completedTasks}</span>/{totalTasks} {lbl("tareas completadas", "tasks completed")}
               </span>
               <span className="text-[12px] text-text-muted">
-                <span className="font-semibold text-text-primary">{currentStudent.evidencesSubmitted}</span>/{currentStudent.evidencesTotal} evidencias
+                <span className="font-semibold text-text-primary">{currentStudent.evidencesSubmitted}</span>/{currentStudent.evidencesTotal} {lbl("evidencias", "evidences")}
               </span>
             </div>
           </div>
@@ -117,7 +129,7 @@ export default function StudentCalendar() {
               }`}
             >
               <CalendarDays size={13} />
-              Semana
+              {lbl("Semana", "Week")}
             </button>
             <button
               onClick={() => setVista("mes")}
@@ -128,7 +140,7 @@ export default function StudentCalendar() {
               }`}
             >
               <LayoutGrid size={13} />
-              Mes
+              {lbl("Mes", "Month")}
             </button>
           </div>
         </div>
@@ -180,7 +192,7 @@ export default function StudentCalendar() {
                         {day.phase.split(": ")[1] || day.phase}
                       </div>
                       <div className="text-[11px] text-text-muted mt-2">
-                        {dayCompleted}/{day.tasks.length} tareas
+                        {dayCompleted}/{day.tasks.length} {lbl("tareas", "tasks")}
                       </div>
                     </div>
 
@@ -272,26 +284,30 @@ export default function StudentCalendar() {
             <div className="flex items-center gap-5 flex-wrap">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-success" />
-                <span className="text-[11px] text-text-secondary">Completada ({completedTasks})</span>
+                <span className="text-[11px] text-text-secondary">{lbl("Completada", "Completed")} ({completedTasks})</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-accent-dark" />
-                <span className="text-[11px] text-text-secondary">En progreso</span>
+                <span className="text-[11px] text-text-secondary">{lbl("En progreso", "In progress")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-background border border-card-border" />
-                <span className="text-[11px] text-text-secondary">Pendiente</span>
+                <span className="text-[11px] text-text-secondary">{lbl("Pendiente", "Pending")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Lock size={12} className="text-text-muted" />
-                <span className="text-[11px] text-text-secondary">Bloqueada</span>
+                <span className="text-[11px] text-text-secondary">{lbl("Bloqueada", "Locked")}</span>
               </div>
             </div>
             <div className="flex items-center gap-4">
               {(["entrega", "pitch", "demoday"] as EventType[]).map((t) => {
                 const cfg = tipoConfig[t];
                 const Icon = cfg.icon;
-                const nombres: Record<string, string> = { entrega: "Entrega", pitch: "Pitch", demoday: "Demo Day" };
+                const nombres: Record<string, string> = {
+                  entrega: lbl("Entrega", "Submission"),
+                  pitch: "Pitch",
+                  demoday: "Demo Day",
+                };
                 return (
                   <div key={t} className="flex items-center gap-1.5">
                     <Icon size={11} className={cfg.text} />
@@ -311,14 +327,14 @@ export default function StudentCalendar() {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-[18px] font-semibold text-text-primary">{MONTH_NAME}</h2>
             <span className="text-[11px] text-text-muted bg-background px-3 py-1 rounded-full">
-              {eventosPersonales.length} eventos este mes
+              {eventosPersonales.length} {lbl("eventos este mes", "events this month")}
             </span>
           </div>
 
           {/* Cabeceras días */}
           <div className="grid grid-cols-7 mb-2">
-            {DIAS_SEMANA.map((d) => (
-              <div key={d} className="text-center text-[11px] font-bold text-text-muted py-1">{d}</div>
+            {DIAS_SEMANA.map((d, idx) => (
+              <div key={`${d}-${idx}`} className="text-center text-[11px] font-bold text-text-muted py-1">{d}</div>
             ))}
           </div>
 
@@ -356,7 +372,7 @@ export default function StudentCalendar() {
                           title={ev.titulo}
                         >
                           <span className={`text-[8px] font-bold ${cfg.text} leading-none block truncate`}>
-                            {ev.tipo === "demoday" ? "Demo Day" : ev.tipo === "pitch" ? "Pitch" : "Entrega"}
+                            {ev.tipo === "demoday" ? "Demo Day" : ev.tipo === "pitch" ? "Pitch" : lbl("Entrega", "Submission")}
                           </span>
                         </div>
                       );
@@ -370,7 +386,7 @@ export default function StudentCalendar() {
           {/* Lista de eventos del mes */}
           <div className="mt-5 pt-5 border-t border-card-border">
             <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-wide mb-3">
-              Eventos del mes
+              {lbl("Eventos del mes", "Events this month")}
             </h3>
             <div className="flex flex-col gap-2">
               {eventosPersonales.map((ev) => {
@@ -388,7 +404,7 @@ export default function StudentCalendar() {
                     </div>
                     {isToday && (
                       <span className="text-[9px] font-bold bg-accent text-sidebar px-2 py-0.5 rounded-full flex-shrink-0">
-                        Hoy
+                        {lbl("Hoy", "Today")}
                       </span>
                     )}
                   </div>

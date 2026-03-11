@@ -3,17 +3,17 @@
 import { CheckCircle2, Clock, Circle, Lock } from "lucide-react";
 import { DaySchedule, Task, TaskStatus } from "@/types";
 import TaskCard from "./TaskCard";
+import { useLang } from "@/lib/i18n";
 
-const columns: {
+const columnDefs: {
   key: TaskStatus;
-  label: string;
   icon: typeof CheckCircle2;
   color: string;
 }[] = [
-  { key: "completed", label: "Completed", icon: CheckCircle2, color: "text-success" },
-  { key: "in_progress", label: "In Progress", icon: Clock, color: "text-accent" },
-  { key: "upcoming", label: "Up Next", icon: Circle, color: "text-text-muted" },
-  { key: "locked", label: "Locked", icon: Lock, color: "text-text-muted" },
+  { key: "completed", icon: CheckCircle2, color: "text-success" },
+  { key: "in_progress", icon: Clock, color: "text-accent" },
+  { key: "upcoming", icon: Circle, color: "text-text-muted" },
+  { key: "locked", icon: Lock, color: "text-text-muted" },
 ];
 
 export default function KanbanView({
@@ -21,6 +21,18 @@ export default function KanbanView({
 }: {
   schedule: DaySchedule[];
 }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const columnLabels: Record<TaskStatus, string> = {
+    completed: lbl("Completadas", "Completed"),
+    in_progress: lbl("En progreso", "In Progress"),
+    upcoming: lbl("Próximas", "Up Next"),
+    locked: lbl("Bloqueadas", "Locked"),
+  };
+
+  const columns = columnDefs.map((def) => ({ ...def, label: columnLabels[def.key] }));
+
   const allTasks = schedule.flatMap((d) =>
     d.tasks.map((t) => ({ ...t, dayLabel: `${d.dayShort} ${d.date}` }))
   );

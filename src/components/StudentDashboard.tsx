@@ -49,6 +49,7 @@ import {
   projectImpact,
 } from "@/data/gamification";
 import { Task } from "@/types";
+import { useLang } from "@/lib/i18n";
 import WeeklyProgressView from "./WeeklyProgressView";
 import TeacherChat from "./TeacherChat";
 import LevelUpModal from "./LevelUpModal";
@@ -106,6 +107,8 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [timerSeconds, setTimerSeconds] = useState(600);
   const [timerRunning, setTimerRunning] = useState(false);
   const [showPreguntaInvitado, setShowPreguntaInvitado] = useState(false);
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   // C10 — CuerpoIA
   const [iaConsejoDescanso, setIaConsejoDescanso] = useState<string | null>(null);
   const [loadingConsejo, setLoadingConsejo] = useState(false);
@@ -175,7 +178,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="inline-flex items-center gap-1.5 bg-warning-light px-3 py-1 rounded-full">
                 <Flame size={12} className="text-warning" />
                 <span className="text-[11px] font-semibold text-warning">
-                  {currentStudent.streak}-day streak
+                  {currentStudent.streak}{lbl(" días de racha", "-day streak")}
                 </span>
               </div>
             </div>
@@ -199,7 +202,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 }`}
               >
                 <LayoutGrid size={11} />
-                Hoy
+                {lbl("Hoy", "Today")}
               </button>
               <button
                 onClick={() => setViewMode("week")}
@@ -210,13 +213,13 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 }`}
               >
                 <CalendarDays size={11} />
-                Semana
+                {lbl("Semana", "Week")}
               </button>
             </div>
           </div>
 
           <h1 className="text-[42px] font-semibold text-text-primary leading-[1.15]">
-            {viewMode === "today" ? "Misión de Hoy" : "Tu Semana"}
+            {viewMode === "today" ? lbl("Misión de Hoy", "Today's Mission") : lbl("Tu Semana", "Your Week")}
           </h1>
           <div className="flex items-center gap-3 mt-1">
             <span className="text-[16px] text-text-secondary">
@@ -227,7 +230,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 onClick={onOpenProject}
                 className="flex items-center gap-1 text-[12px] font-medium text-accent-text hover:text-sidebar transition-colors cursor-pointer"
               >
-                Ver Proyecto
+                {lbl("Ver Proyecto", "View Project")}
                 <ChevronRight size={14} />
               </button>
             )}
@@ -246,7 +249,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         <div className="mb-6">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[11px] text-text-muted font-medium">
-              Next: {playerLevel.nextTitle}
+              {lbl("Siguiente:", "Next:")} {playerLevel.nextTitle}
             </span>
             <span className="text-[11px] text-text-muted font-medium">
               {playerLevel.xpCurrent}/{playerLevel.xpRequired} XP
@@ -263,7 +266,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               onClick={() => setShowLevelUp(true)}
               className="text-[10px] text-accent-text font-semibold underline underline-offset-2 cursor-pointer hover:opacity-70 transition-opacity"
             >
-              ¡Simulador de subida de nivel!
+              {lbl("¡Simulador de subida de nivel!", "Level-up simulator!")}
             </button>
           </div>
         </div>
@@ -282,7 +285,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         <div className="bg-background rounded-2xl p-5 mb-6 flex items-center gap-4">
           <div className="flex-1">
             <p className="text-[14px] font-medium text-text-primary mb-1">
-              You&apos;re {progressPercent}% through today
+                {lbl(`Llevas el ${progressPercent}% del día de hoy`, `You're ${progressPercent}% through today`)}
             </p>
             <div className="flex items-center gap-3">
               <div className="flex-1 h-2.5 bg-white rounded-full overflow-hidden">
@@ -312,7 +315,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <span className="text-[12px] font-bold text-accent uppercase tracking-wider">Cuerpo como Herramienta</span>
               <div className="ml-auto flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full">
                 <Clock size={10} className="text-white/50" />
-                <span className="text-[10px] text-white/50 font-medium">Llevas 90 min en pantalla</span>
+                <span className="text-[10px] text-white/50 font-medium">{lbl("Llevas 90 min en pantalla", "You've been on screen 90 min")}</span>
               </div>
             </div>
             <p className="text-[13px] text-white/85 leading-relaxed mb-1 pr-10">
@@ -334,14 +337,14 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                     className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold rounded-xl transition-all cursor-pointer"
                   >
                     {timerRunning ? <Pause size={14} /> : <Play size={14} />}
-                    {timerRunning ? "Pausar" : "Iniciar"}
+                    {timerRunning ? lbl("Pausar", "Pause") : lbl("Iniciar", "Start")}
                   </button>
                 </div>
                 <button
                   onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); setIaConsejoDescanso(null); }}
                   className="px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                 >
-                  ✓ Volver al trabajo
+                  {lbl("✓ Volver al trabajo", "✓ Back to work")}
                 </button>
               </div>
             ) : (
@@ -349,7 +352,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="space-y-3">
                 <div className="flex items-center gap-1.5 bg-white/10 rounded-xl px-3 py-2">
                   <Sparkles size={13} className="text-accent flex-shrink-0" />
-                  <span className="text-[11px] font-bold text-accent uppercase tracking-wider">¡10 minutos completados!</span>
+                  <span className="text-[11px] font-bold text-accent uppercase tracking-wider">{lbl("¡10 minutos completados!", "10 minutes done!")}</span>
                 </div>
                 {loadingConsejo ? (
                   <div className="flex items-center gap-2 py-2">
@@ -371,7 +374,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                   onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); setIaConsejoDescanso(null); }}
                   className="w-full px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
                 >
-                  ✓ Volver al trabajo
+                  {lbl("✓ Volver al trabajo", "✓ Back to work")}
                 </button>
               </div>
             )}
@@ -390,7 +393,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="flex items-center gap-2 mb-2">
                 <Swords size={16} className="text-accent" />
                 <span className="text-[12px] font-bold text-accent uppercase tracking-wider">
-                  Flash Mission
+                  {lbl("Misión Flash", "Flash Mission")}
                 </span>
                 <div className="flex items-center gap-1 ml-auto bg-white/10 px-2 py-0.5 rounded-full">
                   <Timer size={11} className="text-white/70" />
@@ -410,7 +413,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                   onClick={() => setMissionAccepted(true)}
                   className="px-4 py-2 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:bg-accent/90 transition-colors cursor-pointer"
                 >
-                  Accept Mission
+                  {lbl("Aceptar misión", "Accept Mission")}
                 </button>
               </div>
             </>
@@ -422,7 +425,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 </div>
                 <div>
                   <span className="text-[12px] font-bold text-accent uppercase tracking-wider">
-                    Mission Active
+                    {lbl("Misión activa", "Mission Active")}
                   </span>
                   <p className="text-[13px] text-white/80 mt-0.5">
                     {flashMission.title}
@@ -521,10 +524,10 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                     }`}
                   >
                     {selectedTask.status === "completed"
-                      ? "Completed"
+                      ? lbl("Completada", "Completed")
                       : selectedTask.status === "in_progress"
-                      ? "In Progress"
-                      : "Up Next"}
+                      ? lbl("En progreso", "In Progress")
+                      : lbl("Siguiente", "Up Next")}
                   </div>
                 </div>
                 <h3 className="text-[18px] font-semibold text-text-primary leading-snug">
@@ -567,7 +570,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 onClick={() => onOpenTask(selectedTask.id)}
                 className="w-full mb-4 py-3 bg-sidebar text-white text-[13px] font-semibold rounded-xl hover:bg-accent-dark transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
-                Open Task Workspace
+                {lbl("Abrir espacio de trabajo", "Open Task Workspace")}
                 <ChevronRight size={16} />
               </button>
             )}
@@ -576,7 +579,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             {selectedTask.status === "in_progress" && (
               <div className="border-t border-card-border pt-4">
                 <span className="text-[11px] font-medium text-text-muted block mb-2.5">
-                  Choose your tool
+                  {lbl("Elige tu herramienta", "Choose your tool")}
                 </span>
                 <div className="flex items-center gap-2">
                   {toolOptions.map((tool) => {
@@ -608,7 +611,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="border-t border-card-border pt-3 flex items-center gap-2 text-text-muted">
                 <Lock size={12} />
                 <span className="text-[11px]">
-                  Unlocks after current task
+                  {lbl("Se desbloquea al completar la tarea actual", "Unlocks after current task")}
                 </span>
               </div>
             )}
@@ -618,17 +621,17 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         {/* Summary section */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[20px] font-semibold text-text-primary">
-            Summary
+            {lbl("Resumen", "Summary")}
           </h2>
           <div className="flex items-center gap-1 bg-background rounded-xl p-1">
             <span className="px-3 py-1.5 rounded-lg text-[11px] text-text-muted font-medium">
-              Daily
+              {lbl("Diario", "Daily")}
             </span>
             <span className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-text-primary bg-white shadow-sm">
-              Weekly
+              {lbl("Semanal", "Weekly")}
             </span>
             <span className="px-3 py-1.5 rounded-lg text-[11px] text-text-muted font-medium">
-              Monthly
+              {lbl("Mensual", "Monthly")}
             </span>
           </div>
         </div>
@@ -647,7 +650,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 {currentStudent.qcoins}
               </span>
               <span className="text-[10px] text-text-muted mt-1 block">
-                Your currency, your choices
+                {lbl("Tu moneda, tus decisiones", "Your currency, your choices")}
               </span>
             </div>
           </div>
@@ -657,7 +660,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             <div className="flex items-center gap-1.5">
               <Zap size={13} className="text-accent-text" />
               <span className="text-[11px] text-text-muted font-medium">
-                XP Earned
+                {lbl("XP ganado", "XP Earned")}
               </span>
             </div>
             <div className="flex items-baseline gap-1">
@@ -675,7 +678,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             <div className="flex items-center gap-1.5">
               <Flame size={13} className="text-warning" />
               <span className="text-[11px] text-text-muted font-medium">
-                Streak
+                {lbl("Racha", "Streak")}
               </span>
             </div>
             <div>
@@ -683,7 +686,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 {currentStudent.streak}
               </span>
               <span className="text-[10px] text-warning font-medium mt-1 block">
-                Keep it alive!
+                {lbl("¡No la rompas!", "Keep it alive!")}
               </span>
             </div>
           </div>
@@ -693,7 +696,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             <div className="flex items-center gap-1.5">
               <FileText size={13} className="text-accent" />
               <span className="text-[11px] text-white/50 font-medium">
-                Evidences
+                {lbl("Evidencias", "Evidences")}
               </span>
             </div>
             <div className="flex items-baseline gap-1">
@@ -713,7 +716,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             <div className="flex items-center gap-1.5">
               <Users size={16} className="text-text-primary" />
               <h2 className="text-[20px] font-semibold text-text-primary">
-                Your Tribe
+                {lbl("Tu Tribu", "Your Tribe")}
               </h2>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[11px] font-semibold">
@@ -760,7 +763,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           <div className="flex items-center gap-3 mb-3">
             <div className="flex items-center gap-2">
               <UserCheck size={16} className="text-text-primary" />
-              <h2 className="text-[20px] font-semibold text-text-primary">Profesional Invitado</h2>
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Profesional Invitado", "Guest Professional")}</h2>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[10px] font-semibold border border-accent/20">
               {profesionalInvitado.sector}
@@ -777,7 +780,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-bold text-text-primary leading-tight">{profesionalInvitado.nombre}</p>
                   <p className="text-[12px] text-text-secondary">{profesionalInvitado.cargo}</p>
-                  <p className="text-[11px] text-text-muted">{profesionalInvitado.empresa} · {profesionalInvitado.años} años de experiencia</p>
+                  <p className="text-[11px] text-text-muted">{profesionalInvitado.empresa} · {profesionalInvitado.años} {lbl("años de experiencia", "years of experience")}</p>
                 </div>
                 {/* Simulated video thumbnail */}
                 <div className="w-20 h-14 rounded-xl bg-sidebar/80 flex items-center justify-center flex-shrink-0 relative overflow-hidden cursor-pointer group">
@@ -793,7 +796,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               <div className="bg-accent-light rounded-xl px-3 py-2.5 mb-4 border border-accent/20">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Briefcase size={11} className="text-accent-text" />
-                  <span className="text-[10px] font-bold text-accent-text uppercase tracking-wide">Conectado a tu proyecto</span>
+                  <span className="text-[10px] font-bold text-accent-text uppercase tracking-wide">{lbl("Conectado a tu proyecto", "Connected to your project")}</span>
                 </div>
                 <p className="text-[12px] text-text-secondary leading-relaxed">{profesionalInvitado.conexion}</p>
               </div>
@@ -805,10 +808,10 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               >
                 <div className="flex items-center gap-2">
                   <MessageSquare size={14} className="text-accent-text flex-shrink-0" />
-                  <span className="text-[12px] font-semibold text-text-primary">Pregunta de reflexión de Marta</span>
+                  <span className="text-[12px] font-semibold text-text-primary">{lbl("Pregunta de reflexión de Marta", "Marta's reflection question")}</span>
                 </div>
                 <span className="text-[10px] text-accent-text font-bold group-hover:underline">
-                  {showPreguntaInvitado ? "Ocultar" : "Ver pregunta"}
+                  {showPreguntaInvitado ? lbl("Ocultar", "Hide") : lbl("Ver pregunta", "View question")}
                 </span>
               </button>
 
@@ -818,7 +821,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                     &ldquo;{profesionalInvitado.pregunta}&rdquo;
                   </p>
                   <p className="text-[10px] text-text-muted mt-2">
-                    Comparte tu respuesta con la Profa. Ana en el chat →
+                    {lbl("Comparte tu respuesta con la Profa. Ana en el chat →", "Share your answer with Prof. Ana in the chat →")}
                   </p>
                 </div>
               )}
@@ -831,7 +834,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           <div className="flex items-center gap-3 mb-3">
             <div className="flex items-center gap-2">
               <Briefcase size={16} className="text-text-primary" />
-              <h2 className="text-[20px] font-semibold text-text-primary">Mercado en Tiempo Real</h2>
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Mercado en Tiempo Real", "Live Market Data")}</h2>
             </div>
             <span className="px-2.5 py-0.5 rounded-full bg-background text-text-muted text-[10px] font-medium border border-card-border">
               Actualizado hoy, 11 mar 2026
@@ -866,7 +869,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                     <p className="text-[12px] font-medium text-text-primary leading-snug truncate">{t.skill}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className={`text-[10px] font-bold ${colorClass}`}>{t.cambio}</span>
-                      <span className="text-[10px] text-text-muted">· {t.salario}/año · Competencia</span>
+                      <span className="text-[10px] text-text-muted">· {t.salario}/año · {lbl("Competencia", "Competency")}</span>
                       <span className="text-[9px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">{t.comp}</span>
                     </div>
                   </div>

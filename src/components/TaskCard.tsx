@@ -3,40 +3,47 @@
 import { CheckCircle2, Clock, Lock, Circle, FileText } from "lucide-react";
 import { Task } from "@/types";
 import { competencies } from "@/data/competencies";
+import { useLang } from "@/lib/i18n";
 
-const statusConfig = {
+const statusStyles = {
   completed: {
     icon: CheckCircle2,
     color: "text-success",
     bg: "bg-success-light",
-    label: "Completed",
     border: "border-success/20",
   },
   in_progress: {
     icon: Clock,
     color: "text-accent-text",
     bg: "bg-accent-light",
-    label: "In Progress",
     border: "border-accent-text/20",
   },
   upcoming: {
     icon: Circle,
     color: "text-text-muted",
     bg: "bg-gray-50",
-    label: "Up Next",
     border: "border-border",
   },
   locked: {
     icon: Lock,
     color: "text-text-muted",
     bg: "bg-gray-50",
-    label: "Locked",
     border: "border-border",
   },
 };
 
 export default function TaskCard({ task }: { task: Task }) {
-  const config = statusConfig[task.status];
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const statusLabels = {
+    completed: lbl("Completada", "Completed"),
+    in_progress: lbl("En progreso", "In Progress"),
+    upcoming: lbl("Próxima", "Up Next"),
+    locked: lbl("Bloqueada", "Locked"),
+  };
+
+  const config = { ...statusStyles[task.status], label: statusLabels[task.status] };
   const StatusIcon = config.icon;
   const isInteractive = task.status !== "locked";
 

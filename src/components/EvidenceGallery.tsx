@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLang } from "@/lib/i18n";
 import {
   GalleryHorizontalEnd,
   CheckCircle2,
@@ -198,34 +199,60 @@ const subjectConfig: Record<EvidenceSubject, { bg: string; text: string }> = {
   Arte:             { bg: "bg-urgent-light",     text: "text-text-primary" },
 };
 
-const typeConfig: Record<EvidenceType, { icon: typeof FileText; previewBg: string; label: string }> = {
-  spreadsheet:  { icon: FileSpreadsheet, previewBg: "bg-success-light",  label: "Hoja de cálculo" },
-  document:     { icon: FileText,        previewBg: "bg-background",     label: "Documento" },
-  infographic:  { icon: Image,           previewBg: "bg-accent-light",   label: "Infografía" },
-  floor_plan:   { icon: LayoutTemplate,  previewBg: "bg-warning-light",  label: "Plano" },
-  brand_board:  { icon: Star,            previewBg: "bg-urgent-light",   label: "Brand board" },
-  diagram:      { icon: GitBranch,       previewBg: "bg-accent-light",   label: "Diagrama" },
-  landing_page: { icon: Globe,           previewBg: "bg-sidebar",        label: "Web" },
+const typeStyles: Record<EvidenceType, { icon: typeof FileText; previewBg: string }> = {
+  spreadsheet:  { icon: FileSpreadsheet, previewBg: "bg-success-light" },
+  document:     { icon: FileText,        previewBg: "bg-background" },
+  infographic:  { icon: Image,           previewBg: "bg-accent-light" },
+  floor_plan:   { icon: LayoutTemplate,  previewBg: "bg-warning-light" },
+  brand_board:  { icon: Star,            previewBg: "bg-urgent-light" },
+  diagram:      { icon: GitBranch,       previewBg: "bg-accent-light" },
+  landing_page: { icon: Globe,           previewBg: "bg-sidebar" },
 };
 
-const statusConfig = {
-  aprobada:  { label: "Aprobada",   icon: CheckCircle2, bg: "bg-success-light",  text: "text-success",      border: "border-success/20" },
-  entregada: { label: "Entregada",  icon: Upload,       bg: "bg-accent-light",   text: "text-accent-text",  border: "border-accent-text/20" },
-  pendiente: { label: "Pendiente",  icon: Clock,        bg: "bg-warning-light",  text: "text-text-primary", border: "border-warning/20" },
+const statusStyles = {
+  aprobada:  { icon: CheckCircle2, bg: "bg-success-light",  text: "text-success",      border: "border-success/20" },
+  entregada: { icon: Upload,       bg: "bg-accent-light",   text: "text-accent-text",  border: "border-accent-text/20" },
+  pendiente: { icon: Clock,        bg: "bg-warning-light",  text: "text-text-primary", border: "border-warning/20" },
 };
 
-const gradeLabels: Record<number, { label: string; color: string }> = {
-  1: { label: "Iniciado",    color: "text-urgent" },
-  2: { label: "En proceso",  color: "text-warning" },
-  3: { label: "Adquirido",   color: "text-accent-text" },
-  4: { label: "Avanzado",    color: "text-success" },
+const gradeColors: Record<number, string> = {
+  1: "text-urgent",
+  2: "text-warning",
+  3: "text-accent-text",
+  4: "text-success",
 };
 
 type FilterTab = "todas" | "aprobada" | "entregada" | "pendiente";
 
 export default function EvidenceGallery() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [activeFilter, setActiveFilter] = useState<FilterTab>("todas");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const typeConfig: Record<EvidenceType, { icon: typeof FileText; previewBg: string; label: string }> = {
+    spreadsheet:  { ...typeStyles.spreadsheet,  label: lbl("Hoja de cálculo", "Spreadsheet") },
+    document:     { ...typeStyles.document,     label: lbl("Documento", "Document") },
+    infographic:  { ...typeStyles.infographic,  label: lbl("Infografía", "Infographic") },
+    floor_plan:   { ...typeStyles.floor_plan,   label: lbl("Plano", "Floor plan") },
+    brand_board:  { ...typeStyles.brand_board,  label: lbl("Brand board", "Brand board") },
+    diagram:      { ...typeStyles.diagram,      label: lbl("Diagrama", "Diagram") },
+    landing_page: { ...typeStyles.landing_page, label: lbl("Web", "Web") },
+  };
+
+  const statusConfig = {
+    aprobada:  { ...statusStyles.aprobada,  label: lbl("Aprobada", "Approved") },
+    entregada: { ...statusStyles.entregada, label: lbl("Entregada", "Submitted") },
+    pendiente: { ...statusStyles.pendiente, label: lbl("Pendiente", "Pending") },
+  };
+
+  const gradeLabels: Record<number, { label: string; color: string }> = {
+    1: { label: lbl("Iniciado", "Beginning"),   color: gradeColors[1] },
+    2: { label: lbl("En proceso", "Developing"), color: gradeColors[2] },
+    3: { label: lbl("Adquirido", "Achieved"),    color: gradeColors[3] },
+    4: { label: lbl("Avanzado", "Advanced"),     color: gradeColors[4] },
+  };
 
   const filtered = activeFilter === "todas"
     ? evidences
@@ -241,10 +268,10 @@ export default function EvidenceGallery() {
   const totalXP = evidences.reduce((acc, e) => acc + e.xpEarned, 0);
 
   const tabs: { key: FilterTab; label: string }[] = [
-    { key: "todas",     label: `Todas (${counts.todas})` },
-    { key: "aprobada",  label: `Aprobadas (${counts.aprobada})` },
-    { key: "entregada", label: `Entregadas (${counts.entregada})` },
-    { key: "pendiente", label: `Pendientes (${counts.pendiente})` },
+    { key: "todas",     label: lbl(`Todas (${counts.todas})`, `All (${counts.todas})`) },
+    { key: "aprobada",  label: lbl(`Aprobadas (${counts.aprobada})`, `Approved (${counts.aprobada})`) },
+    { key: "entregada", label: lbl(`Entregadas (${counts.entregada})`, `Submitted (${counts.entregada})`) },
+    { key: "pendiente", label: lbl(`Pendientes (${counts.pendiente})`, `Pending (${counts.pendiente})`) },
   ];
 
   return (
@@ -256,7 +283,7 @@ export default function EvidenceGallery() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <GalleryHorizontalEnd size={18} className="text-accent-text" />
-              <h1 className="text-[22px] font-bold text-text-primary">Mis Evidencias</h1>
+              <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mis Evidencias", "My Evidence")}</h1>
             </div>
             <p className="text-[13px] text-text-secondary">
               Proyecto: <span className="font-medium text-accent-text">Gestiona tu Airbnb en Málaga</span> · Semana 3 de 12
@@ -264,7 +291,7 @@ export default function EvidenceGallery() {
           </div>
           <button className="flex items-center gap-2 bg-accent text-sidebar text-[12px] font-bold px-4 py-2.5 rounded-xl hover:brightness-110 transition-all cursor-pointer">
             <Plus size={14} />
-            Añadir evidencia
+            {lbl("Añadir evidencia", "Add evidence")}
           </button>
         </div>
 
@@ -272,19 +299,19 @@ export default function EvidenceGallery() {
         <div className="grid grid-cols-4 gap-3 mb-5">
           <div className="bg-background rounded-xl p-3 text-center">
             <span className="text-[22px] font-bold text-text-primary block">{counts.todas}</span>
-            <span className="text-[10px] text-text-muted">Total evidencias</span>
+            <span className="text-[10px] text-text-muted">{lbl("Total evidencias", "Total evidence")}</span>
           </div>
           <div className="bg-success-light rounded-xl p-3 text-center">
             <span className="text-[22px] font-bold text-success block">{counts.aprobada}</span>
-            <span className="text-[10px] text-text-muted">Aprobadas</span>
+            <span className="text-[10px] text-text-muted">{lbl("Aprobadas", "Approved")}</span>
           </div>
           <div className="bg-warning-light rounded-xl p-3 text-center">
             <span className="text-[22px] font-bold text-text-primary block">{counts.entregada}</span>
-            <span className="text-[10px] text-text-muted">En revisión</span>
+            <span className="text-[10px] text-text-muted">{lbl("En revisión", "Under review")}</span>
           </div>
           <div className="bg-accent-light rounded-xl p-3 text-center">
             <span className="text-[22px] font-bold text-accent-text block">{totalXP}</span>
-            <span className="text-[10px] text-text-muted">XP ganado</span>
+            <span className="text-[10px] text-text-muted">{lbl("XP ganado", "XP earned")}</span>
           </div>
         </div>
 
@@ -399,7 +426,7 @@ export default function EvidenceGallery() {
                         <span className="text-[11px] font-bold text-accent-text">+{ev.xpEarned} XP</span>
                       </div>
                     ) : (
-                      <span className="text-[10px] text-text-muted">XP pendiente</span>
+                      <span className="text-[10px] text-text-muted">{lbl("XP pendiente", "XP pending")}</span>
                     )}
                   </div>
 
@@ -423,11 +450,11 @@ export default function EvidenceGallery() {
                       className="flex items-center gap-1.5 text-[11px] font-medium text-accent-text hover:text-sidebar transition-colors cursor-pointer"
                     >
                       <Eye size={12} />
-                      {isExpanded ? "Ocultar" : "Ver detalle"}
+                      {isExpanded ? lbl("Ocultar", "Hide") : lbl("Ver detalle", "View detail")}
                     </button>
                     <button className="flex items-center gap-1.5 text-[11px] font-medium text-text-muted hover:text-text-secondary transition-colors cursor-pointer ml-auto">
                       <Download size={12} />
-                      Descargar
+                      {lbl("Descargar", "Download")}
                     </button>
                   </div>
                 </div>
@@ -442,8 +469,8 @@ export default function EvidenceGallery() {
             <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center mb-3">
               <GalleryHorizontalEnd size={22} className="text-text-muted" />
             </div>
-            <p className="text-[14px] font-semibold text-text-primary mb-1">Sin evidencias aquí</p>
-            <p className="text-[12px] text-text-secondary">Cambia el filtro o añade una nueva evidencia.</p>
+            <p className="text-[14px] font-semibold text-text-primary mb-1">{lbl("Sin evidencias aquí", "No evidence here")}</p>
+            <p className="text-[12px] text-text-secondary">{lbl("Cambia el filtro o añade una nueva evidencia.", "Change the filter or add new evidence.")}</p>
           </div>
         )}
       </div>
@@ -454,7 +481,7 @@ export default function EvidenceGallery() {
         <div className="bg-card border border-card-border rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={14} className="text-text-primary" />
-            <h3 className="text-[13px] font-semibold text-text-primary">Progreso del proyecto</h3>
+            <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Progreso del proyecto", "Project progress")}</h3>
           </div>
 
           {/* Circular progress */}
@@ -477,15 +504,15 @@ export default function EvidenceGallery() {
 
           <div className="space-y-2">
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-secondary">Evidencias entregadas</span>
+              <span className="text-text-secondary">{lbl("Evidencias entregadas", "Evidence submitted")}</span>
               <span className="font-semibold text-text-primary">9 / 12</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-secondary">Aprobadas</span>
+              <span className="text-text-secondary">{lbl("Aprobadas", "Approved")}</span>
               <span className="font-semibold text-success">{counts.aprobada}</span>
             </div>
             <div className="flex justify-between text-[11px]">
-              <span className="text-text-secondary">XP total acumulado</span>
+              <span className="text-text-secondary">{lbl("XP total acumulado", "Total XP earned")}</span>
               <span className="font-semibold text-accent-text">{totalXP} XP</span>
             </div>
           </div>
@@ -495,7 +522,7 @@ export default function EvidenceGallery() {
         <div className="bg-card border border-card-border rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <Filter size={14} className="text-text-primary" />
-            <h3 className="text-[13px] font-semibold text-text-primary">Por asignatura</h3>
+            <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Por asignatura", "By subject")}</h3>
           </div>
           <div className="space-y-2.5">
             {(
@@ -534,14 +561,14 @@ export default function EvidenceGallery() {
         <div className="bg-warning-light border border-warning/20 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Clock size={13} className="text-text-primary" />
-            <span className="text-[12px] font-semibold text-text-primary">Próxima entrega</span>
+            <span className="text-[12px] font-semibold text-text-primary">{lbl("Próxima entrega", "Next deadline")}</span>
           </div>
           <p className="text-[12px] text-text-primary font-medium mb-0.5">Landing page completa</p>
           <p className="text-[11px] text-text-secondary mb-3">Miércoles 5 mar · 16:00</p>
           <div className="h-1.5 bg-warning/20 rounded-full overflow-hidden">
             <div className="h-full bg-warning rounded-full" style={{ width: "40%" }} />
           </div>
-          <p className="text-[9px] text-text-muted mt-1.5">40% completado</p>
+          <p className="text-[9px] text-text-muted mt-1.5">{lbl("40% completado", "40% complete")}</p>
         </div>
       </div>
     </div>

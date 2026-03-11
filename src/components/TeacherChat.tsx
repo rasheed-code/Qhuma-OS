@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Sparkles, Loader2, Brain, Telescope } from "lucide-react";
 import { chatMessages as initialMessages } from "@/data/students";
 import { Role, ChatMessage } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 interface Message {
   id: string;
@@ -19,6 +20,8 @@ function formatTime() {
 }
 
 export default function TeacherChat({ role }: { role: Role }) {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const [messages, setMessages] = useState<Message[]>(() =>
     initialMessages.map((m: ChatMessage) => ({
       id: m.id,
@@ -140,9 +143,9 @@ export default function TeacherChat({ role }: { role: Role }) {
   };
 
   const quickSuggestions = [
-    "¿Cómo empiezo?",
-    "Estoy bloqueado",
-    "¿Qué entrego?",
+    lbl("¿Cómo empiezo?", "How do I start?"),
+    lbl("Estoy bloqueado", "I'm stuck"),
+    lbl("¿Qué entrego?", "What do I submit?"),
   ];
 
   return (
@@ -253,10 +256,10 @@ export default function TeacherChat({ role }: { role: Role }) {
           <button
             onClick={() => setDeepDiveMode(true)}
             className="flex items-center gap-1.5 text-[10px] text-text-muted hover:text-accent-text transition-colors cursor-pointer"
-            title="Simula haber mantenido una conversación larga"
+            title={lbl("Simula haber mantenido una conversación larga", "Simulate a long conversation")}
           >
             <Telescope size={10} />
-            Demo: activar Exploración Profunda
+            {lbl("Demo: activar Exploración Profunda", "Demo: activate Deep Exploration")}
           </button>
         </div>
       )}
@@ -265,7 +268,7 @@ export default function TeacherChat({ role }: { role: Role }) {
           <div className="flex items-center gap-1.5 bg-warning-light rounded-xl px-3 py-2 border border-warning/20">
             <Telescope size={12} className="text-warning flex-shrink-0" />
             <p className="text-[10px] text-text-secondary leading-tight">
-              <strong className="text-warning">Exploración Profunda activa</strong> — La IA irá más a fondo en cada respuesta y conectará con el mercado laboral real.
+              <strong className="text-warning">{lbl("Exploración Profunda activa", "Deep Exploration active")}</strong> — {lbl("La IA irá más a fondo en cada respuesta y conectará con el mercado laboral real.", "The AI will go deeper in each response and connect with the real job market.")}
             </p>
           </div>
         </div>
@@ -280,7 +283,7 @@ export default function TeacherChat({ role }: { role: Role }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Pregunta a la Profa. Ana..."
+            placeholder={lbl("Pregunta a la Profa. Ana...", "Ask Prof. Ana...")}
             className="flex-1 bg-transparent text-[12px] text-text-primary placeholder:text-text-muted outline-none"
             disabled={isLoading}
           />

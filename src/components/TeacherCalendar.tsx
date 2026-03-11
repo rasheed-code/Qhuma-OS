@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { TaskStatus } from "@/types";
+import { useLang } from "@/lib/i18n";
 
 type VistaCalendario = "semana" | "mes";
 type TipoEvento = "demo" | "entrega" | "pitch" | "recordatorio";
@@ -41,7 +42,6 @@ const MARCH_START_OFFSET = 6;
 const MARCH_DAYS = 31;
 const HOY_DIA = 11;
 
-const diasSemanaGrid = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const diasSemanaCortos = ["Lun", "Mar", "Mié", "Jue", "Vie"];
 
 const statusIcons: Record<TaskStatus, typeof CheckCircle2> = {
@@ -59,6 +59,11 @@ const statusColors: Record<TaskStatus, string> = {
 };
 
 export default function TeacherCalendar() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const diasSemanaGrid = lbl("Lun,Mar,Mié,Jue,Vie,Sáb,Dom", "Mon,Tue,Wed,Thu,Fri,Sat,Sun").split(",");
+
   const [vista, setVista] = useState<VistaCalendario>("semana");
   const [eventos, setEventos] = useState<Evento[]>(eventosIniciales);
   const [showModal, setShowModal] = useState(false);
@@ -106,8 +111,8 @@ export default function TeacherCalendar() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[22px] font-bold text-text-primary mb-1">Calendario Docente</h1>
-          <p className="text-[13px] text-text-secondary">Proyecto Airbnb Málaga · Semana 1 de 3 · Marzo 2026</p>
+          <h1 className="text-[22px] font-bold text-text-primary mb-1">{lbl("Calendario Docente", "Teacher Calendar")}</h1>
+          <p className="text-[13px] text-text-secondary">{lbl("Proyecto Airbnb Málaga · Semana 1 de 3 · Marzo 2026", "Airbnb Málaga Project · Week 1 of 3 · March 2026")}</p>
         </div>
         <div className="flex items-center gap-2">
           {/* Vista toggle */}
@@ -119,7 +124,7 @@ export default function TeacherCalendar() {
               }`}
             >
               <Layers size={13} />
-              Semana
+              {lbl("Semana", "Week")}
             </button>
             <button
               onClick={() => setVista("mes")}
@@ -128,7 +133,7 @@ export default function TeacherCalendar() {
               }`}
             >
               <Calendar size={13} />
-              Mes
+              {lbl("Mes", "Month")}
             </button>
           </div>
           <button
@@ -136,7 +141,7 @@ export default function TeacherCalendar() {
             className="flex items-center gap-1.5 bg-sidebar text-white px-3 py-2 rounded-xl text-[12px] font-medium hover:brightness-110 transition-all cursor-pointer"
           >
             <Plus size={14} />
-            Añadir evento
+            {lbl("Añadir evento", "Add event")}
           </button>
         </div>
       </div>
@@ -165,7 +170,7 @@ export default function TeacherCalendar() {
                       className={`ml-1 p-1.5 rounded-lg transition-all cursor-pointer flex-shrink-0 ${
                         isRec ? "bg-success/20 text-success" : "hover:bg-black/5 text-text-muted"
                       }`}
-                      title="Enviar recordatorio a alumnos"
+                      title={lbl("Enviar recordatorio a alumnos", "Send reminder to students")}
                     >
                       {isRec ? <CheckCircle2 size={13} /> : <Bell size={13} />}
                     </button>
@@ -199,7 +204,7 @@ export default function TeacherCalendar() {
                       day.status === "completed" ? "bg-success-light text-success" :
                       "bg-background text-text-muted"
                     }`}>
-                      {day.status === "current" ? "Hoy" : day.status === "completed" ? "Listo" : "Próximo"}
+                      {day.status === "current" ? lbl("Hoy", "Today") : day.status === "completed" ? lbl("Listo", "Done") : lbl("Próximo", "Upcoming")}
                     </span>
                   </div>
 
@@ -209,7 +214,7 @@ export default function TeacherCalendar() {
                       style={{ width: `${day.tasks.length ? (completedCount / day.tasks.length) * 100 : 0}%` }}
                     />
                   </div>
-                  <p className="text-[10px] text-text-muted mb-3">{completedCount}/{day.tasks.length} tareas</p>
+                  <p className="text-[10px] text-text-muted mb-3">{completedCount}/{day.tasks.length} {lbl("tareas", "tasks")}</p>
 
                   {/* Day events */}
                   {dayEventos.length > 0 && (
@@ -266,12 +271,12 @@ export default function TeacherCalendar() {
               <button className="p-1 hover:bg-background rounded-lg cursor-pointer transition-colors">
                 <ChevronLeft size={16} className="text-text-muted" />
               </button>
-              <span className="text-[15px] font-bold text-text-primary">Marzo 2026</span>
+              <span className="text-[15px] font-bold text-text-primary">{lbl("Marzo 2026", "March 2026")}</span>
               <button className="p-1 hover:bg-background rounded-lg cursor-pointer transition-colors">
                 <ChevronRight size={16} className="text-text-muted" />
               </button>
             </div>
-            <span className="text-[11px] text-text-muted bg-background px-2.5 py-1 rounded-full">{eventos.length} eventos</span>
+            <span className="text-[11px] text-text-muted bg-background px-2.5 py-1 rounded-full">{eventos.length} {lbl("eventos", "events")}</span>
           </div>
 
           {/* Day labels */}
@@ -332,7 +337,7 @@ export default function TeacherCalendar() {
 
       {/* Todos los eventos */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
-        <h3 className="text-[14px] font-semibold text-text-primary mb-4">Todos los eventos del proyecto</h3>
+        <h3 className="text-[14px] font-semibold text-text-primary mb-4">{lbl("Todos los eventos del proyecto", "All project events")}</h3>
         <div className="flex flex-col gap-2">
           {eventosOrdenados.map((evento) => {
             const cfg = tipoConfig[evento.tipo];
@@ -345,7 +350,7 @@ export default function TeacherCalendar() {
                 <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
                 <div className="flex-1 min-w-0">
                   <p className={`text-[12px] font-semibold ${cfg.text}`}>{evento.titulo}</p>
-                  <p className="text-[11px] text-text-muted">Mar {evento.dia} · {evento.hora} · {evento.alumnos} alumnos</p>
+                  <p className="text-[11px] text-text-muted">Mar {evento.dia} · {evento.hora} · {evento.alumnos} {lbl("alumnos", "students")}</p>
                 </div>
                 <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/60 ${cfg.text}`}>
                   {cfg.label}
@@ -359,7 +364,7 @@ export default function TeacherCalendar() {
                   }`}
                 >
                   {isRec ? <CheckCircle2 size={12} /> : <Bell size={12} />}
-                  {isRec ? "¡Enviado!" : "Recordatorio"}
+                  {isRec ? lbl("¡Enviado!", "Sent!") : lbl("Recordatorio", "Reminder")}
                 </button>
               </div>
             );
@@ -372,37 +377,37 @@ export default function TeacherCalendar() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-card rounded-3xl p-6 w-[400px]">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[16px] font-bold text-text-primary">Nuevo evento</h2>
+              <h2 className="text-[16px] font-bold text-text-primary">{lbl("Nuevo evento", "New event")}</h2>
               <button onClick={() => setShowModal(false)} className="text-text-muted hover:text-text-primary cursor-pointer">
                 <X size={18} />
               </button>
             </div>
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-[11px] font-semibold text-text-muted block mb-1">Título del evento</label>
+                <label className="text-[11px] font-semibold text-text-muted block mb-1">{lbl("Título del evento", "Event title")}</label>
                 <input
                   value={nuevoTitulo}
                   onChange={(e) => setNuevoTitulo(e.target.value)}
-                  placeholder="Ej: Entrega práctica de comunicación"
+                  placeholder={lbl("Ej: Entrega práctica de comunicación", "E.g. Communication assignment deadline")}
                   className="w-full border border-card-border rounded-xl px-3 py-2 text-[13px] text-text-primary bg-background outline-none focus:border-accent-dark"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-text-muted block mb-1">Tipo</label>
+                  <label className="text-[11px] font-semibold text-text-muted block mb-1">{lbl("Tipo", "Type")}</label>
                   <select
                     value={nuevoTipo}
                     onChange={(e) => setNuevoTipo(e.target.value as TipoEvento)}
                     className="w-full border border-card-border rounded-xl px-3 py-2 text-[13px] text-text-primary bg-background outline-none cursor-pointer"
                   >
                     <option value="demo">Demo Day</option>
-                    <option value="entrega">Entrega</option>
+                    <option value="entrega">{lbl("Entrega", "Submission")}</option>
                     <option value="pitch">Pitch</option>
-                    <option value="recordatorio">Recordatorio</option>
+                    <option value="recordatorio">{lbl("Recordatorio", "Reminder")}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-text-muted block mb-1">Día (marzo)</label>
+                  <label className="text-[11px] font-semibold text-text-muted block mb-1">{lbl("Día (marzo)", "Day (March)")}</label>
                   <input
                     type="number"
                     min={1}
@@ -415,7 +420,7 @@ export default function TeacherCalendar() {
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-text-muted block mb-1">Hora</label>
+                <label className="text-[11px] font-semibold text-text-muted block mb-1">{lbl("Hora", "Time")}</label>
                 <input
                   type="time"
                   value={nuevaHora}
@@ -429,14 +434,14 @@ export default function TeacherCalendar() {
                 onClick={() => setShowModal(false)}
                 className="flex-1 border border-card-border rounded-xl px-4 py-2.5 text-[13px] font-medium text-text-secondary hover:bg-background transition-all cursor-pointer"
               >
-                Cancelar
+                {lbl("Cancelar", "Cancel")}
               </button>
               <button
                 onClick={handleAddEvento}
                 disabled={!nuevoTitulo.trim() || !nuevoDia}
                 className="flex-1 bg-sidebar text-white rounded-xl px-4 py-2.5 text-[13px] font-medium hover:brightness-110 transition-all disabled:opacity-40 cursor-pointer"
               >
-                Crear evento
+                {lbl("Crear evento", "Create event")}
               </button>
             </div>
           </div>

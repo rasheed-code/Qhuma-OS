@@ -1,6 +1,7 @@
 "use client";
 
 import { Flame, TrendingUp, Calendar, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 interface Dia {
   fecha: string;       // "10 feb"
@@ -104,6 +105,8 @@ const esHoyOAntes = (fecha: string): boolean => {
 };
 
 export default function StreakCalendar() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   const diasPlanos = semanas.flat();
   const diasActivos = diasPlanos.filter((d) => !d.esFinde && d.pct > 0 && esHoyOAntes(d.fecha));
   const totalDias = diasPlanos.filter((d) => !d.esFinde && esHoyOAntes(d.fecha)).length;
@@ -118,10 +121,10 @@ export default function StreakCalendar() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Flame size={18} className="text-accent-text" />
-              <h1 className="text-[22px] font-bold text-text-primary">Mi Racha</h1>
+              <h1 className="text-[22px] font-bold text-text-primary">{lbl("Mi Racha", "My Streak")}</h1>
             </div>
             <p className="text-[13px] text-text-secondary">
-              Actividad de los últimos 30 días · Proyecto Airbnb Málaga
+              {lbl("Actividad de los últimos 30 días · Proyecto Airbnb Málaga", "Activity over the last 30 days · Airbnb Málaga project")}
             </p>
           </div>
           {/* Racha actual badge */}
@@ -129,7 +132,7 @@ export default function StreakCalendar() {
             <Flame size={18} className="text-text-primary" />
             <div>
               <span className="text-[22px] font-bold text-text-primary block leading-none">12</span>
-              <span className="text-[10px] text-text-muted">días de racha</span>
+              <span className="text-[10px] text-text-muted">{lbl("días de racha", "day streak")}</span>
             </div>
           </div>
         </div>
@@ -139,7 +142,10 @@ export default function StreakCalendar() {
           {/* Cabecera días de semana */}
           <div className="grid grid-cols-7 gap-1.5 mb-2" style={{ gridTemplateColumns: "80px repeat(6, 1fr)" }}>
             <div />
-            {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((d) => (
+            {(lang === "es"
+              ? ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+              : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+            ).map((d) => (
               <div key={d} className="text-[9px] font-bold text-text-muted text-center">{d}</div>
             ))}
           </div>
@@ -158,7 +164,7 @@ export default function StreakCalendar() {
                 <div className="flex items-center gap-1.5">
                   {esMejor && <Star size={10} className="text-accent-text flex-shrink-0" />}
                   <span className="text-[9px] text-text-muted whitespace-nowrap">
-                    {esMejor ? "⭐ Mejor" : `Sem ${si + 1}`}
+                    {esMejor ? lbl("⭐ Mejor", "⭐ Best") : lbl(`Sem ${si + 1}`, `Wk ${si + 1}`)}
                   </span>
                   {avg > 0 && (
                     <span className="text-[8px] font-bold text-text-muted ml-auto">{avg}%</span>
@@ -200,8 +206,8 @@ export default function StreakCalendar() {
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                         <div className="bg-sidebar text-white text-[9px] font-medium px-2 py-1 rounded-lg whitespace-nowrap">
                           {dia.fecha}
-                          {!futuro && <span className="ml-1 text-accent">{dia.pct > 0 ? `${dia.pct}%` : "Sin actividad"}</span>}
-                          {futuro && <span className="ml-1 text-white/40">Próximamente</span>}
+                          {!futuro && <span className="ml-1 text-accent">{dia.pct > 0 ? `${dia.pct}%` : lbl("Sin actividad", "No activity")}</span>}
+                          {futuro && <span className="ml-1 text-white/40">{lbl("Próximamente", "Upcoming")}</span>}
                         </div>
                       </div>
                     </div>
@@ -213,7 +219,7 @@ export default function StreakCalendar() {
 
           {/* Leyenda intensidad */}
           <div className="flex items-center gap-2 mt-3 justify-end">
-            <span className="text-[9px] text-text-muted">Menos</span>
+            <span className="text-[9px] text-text-muted">{lbl("Menos", "Less")}</span>
             {[0.15, 0.35, 0.6, 0.85, 1].map((op) => (
               <div
                 key={op}
@@ -221,7 +227,7 @@ export default function StreakCalendar() {
                 style={{ backgroundColor: `rgba(195, 244, 153, ${op})` }}
               />
             ))}
-            <span className="text-[9px] text-text-muted">Más</span>
+            <span className="text-[9px] text-text-muted">{lbl("Más", "More")}</span>
           </div>
         </div>
 
@@ -239,7 +245,7 @@ export default function StreakCalendar() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-semibold text-text-primary">
-                    {esMejor ? "⭐ Semana " + (si + 1) : `Semana ${si + 1}`}
+                    {esMejor ? lbl("⭐ Semana " + (si + 1), "⭐ Week " + (si + 1)) : lbl(`Semana ${si + 1}`, `Week ${si + 1}`)}
                   </span>
                   {avg > 0 && (
                     <span className={`text-[13px] font-bold ${esMejor ? "text-accent-text" : "text-text-primary"}`}>
@@ -258,11 +264,11 @@ export default function StreakCalendar() {
                         style={{ width: `${avg}%` }}
                       />
                     </div>
-                    <p className="text-[9px] text-text-muted mt-1">{completados}/{diasLab.length} días activos</p>
+                    <p className="text-[9px] text-text-muted mt-1">{completados}/{diasLab.length} {lbl("días activos", "active days")}</p>
                   </>
                 )}
                 {avg === 0 && (
-                  <p className="text-[10px] text-text-muted italic">Semana futura</p>
+                  <p className="text-[10px] text-text-muted italic">{lbl("Semana futura", "Future week")}</p>
                 )}
               </div>
             );
@@ -276,21 +282,21 @@ export default function StreakCalendar() {
         <div className="bg-sidebar rounded-2xl p-5 text-center">
           <Flame size={24} className="text-accent mx-auto mb-2" />
           <span className="text-[32px] font-bold text-white block">12</span>
-          <span className="text-[11px] text-white/50 block mb-3">días de racha actual</span>
-          <div className="text-[9px] text-accent font-bold">¡Sigue así!</div>
+          <span className="text-[11px] text-white/50 block mb-3">{lbl("días de racha actual", "day streak")}</span>
+          <div className="text-[9px] text-accent font-bold">{lbl("¡Sigue así!", "Keep it up!")}</div>
         </div>
 
         {/* Stats */}
         <div className="bg-card border border-card-border rounded-2xl p-5 space-y-3">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={13} className="text-text-primary" />
-            <h3 className="text-[12px] font-semibold text-text-primary">Estadísticas</h3>
+            <h3 className="text-[12px] font-semibold text-text-primary">{lbl("Estadísticas", "Statistics")}</h3>
           </div>
           {[
-            { label: "Mejor racha", valor: "12 días", sub: "Semana 4-5" },
-            { label: "Días activos", valor: `${diasActivos.length}/${totalDias}`, sub: "Últimos 30 días" },
-            { label: "Promedio diario", valor: `${promGlobal}%`, sub: "Tareas completadas" },
-            { label: "Mejor semana",  valor: "Sem. 4", sub: "Promedio 92%" },
+            { label: lbl("Mejor racha", "Best streak"), valor: lbl("12 días", "12 days"), sub: lbl("Semana 4-5", "Week 4-5") },
+            { label: lbl("Días activos", "Active days"), valor: `${diasActivos.length}/${totalDias}`, sub: lbl("Últimos 30 días", "Last 30 days") },
+            { label: lbl("Promedio diario", "Daily average"), valor: `${promGlobal}%`, sub: lbl("Tareas completadas", "Tasks completed") },
+            { label: lbl("Mejor semana", "Best week"),  valor: lbl("Sem. 4", "Wk. 4"), sub: lbl("Promedio 92%", "Avg. 92%") },
           ].map((s) => (
             <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-card-border/50 last:border-0">
               <div>
@@ -306,14 +312,14 @@ export default function StreakCalendar() {
         <div className="bg-accent-light border border-accent-text/10 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Star size={13} className="text-accent-text" />
-            <span className="text-[11px] font-semibold text-accent-text">Próximo hito</span>
+            <span className="text-[11px] font-semibold text-accent-text">{lbl("Próximo hito", "Next milestone")}</span>
           </div>
-          <p className="text-[12px] font-semibold text-text-primary mb-0.5">Racha maestra</p>
-          <p className="text-[11px] text-text-secondary mb-2">30 días consecutivos</p>
+          <p className="text-[12px] font-semibold text-text-primary mb-0.5">{lbl("Racha maestra", "Master streak")}</p>
+          <p className="text-[11px] text-text-secondary mb-2">{lbl("30 días consecutivos", "30 consecutive days")}</p>
           <div className="h-1.5 bg-white/50 rounded-full overflow-hidden">
             <div className="h-full bg-accent-text rounded-full" style={{ width: "40%" }} />
           </div>
-          <p className="text-[9px] text-accent-text mt-1 font-medium">12 / 30 días (40%)</p>
+          <p className="text-[9px] text-accent-text mt-1 font-medium">{lbl("12 / 30 días (40%)", "12 / 30 days (40%)")}</p>
         </div>
 
         {/* Calendario de navegación */}
@@ -324,15 +330,18 @@ export default function StreakCalendar() {
             </button>
             <div className="flex items-center gap-1.5">
               <Calendar size={12} className="text-accent-text" />
-              <span className="text-[11px] font-semibold text-text-primary">Marzo 2026</span>
+              <span className="text-[11px] font-semibold text-text-primary">{lbl("Marzo 2026", "March 2026")}</span>
             </div>
             <button className="text-text-muted hover:text-text-primary transition-colors cursor-pointer">
               <ChevronRight size={14} />
             </button>
           </div>
           <div className="grid grid-cols-7 gap-0.5 text-center">
-            {["L","M","X","J","V","S","D"].map((d) => (
-              <div key={d} className="text-[8px] font-bold text-text-muted pb-1">{d}</div>
+            {(lang === "es"
+              ? ["L","M","X","J","V","S","D"]
+              : ["M","T","W","T","F","S","S"]
+            ).map((d, i) => (
+              <div key={i} className="text-[8px] font-bold text-text-muted pb-1">{d}</div>
             ))}
             {/* Días marzo */}
             {[null, null, null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((d, i) => (

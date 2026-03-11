@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
+import { useLang } from "@/lib/i18n";
 
 // Genera nivel LOMLOE 1-4 con semilla estable por alumno × competencia
 function seededLevel(si: number, ci: number): 1 | 2 | 3 | 4 {
@@ -49,6 +50,9 @@ const tiempoAsignatura = [
 ];
 
 export default function TeacherAnalytics() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [contactados, setContactados] = useState<Set<string>>(new Set());
 
   const progMedio = Math.round(classStudents.reduce((s, a) => s + a.progress, 0) / classStudents.length);
@@ -64,22 +68,22 @@ export default function TeacherAnalytics() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[22px] font-bold text-text-primary">Análisis de clase</h1>
-          <p className="text-[13px] text-text-secondary mt-0.5">Semana 3 · Proyecto Airbnb Málaga · 1º ESO</p>
+          <h1 className="text-[22px] font-bold text-text-primary">{lbl("Análisis de clase", "Class analytics")}</h1>
+          <p className="text-[13px] text-text-secondary mt-0.5">{lbl("Semana 3 · Proyecto Airbnb Málaga · 1º ESO", "Week 3 · Airbnb Málaga Project · 1º ESO")}</p>
         </div>
         <div className="flex items-center gap-2 bg-success-light px-3 py-1.5 rounded-full border border-success/20">
           <div className="w-1.5 h-1.5 rounded-full bg-success" />
-          <span className="text-[11px] font-semibold text-success">Clase activa</span>
+          <span className="text-[11px] font-semibold text-success">{lbl("Clase activa", "Class active")}</span>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: "Progreso medio", valor: `${progMedio}%`, icon: TrendingUp, bg: "bg-accent-light", text: "text-accent-text" },
-          { label: "Alumnos",        valor: classStudents.length, icon: Users, bg: "bg-background", text: "text-text-primary" },
-          { label: "Entregas totales", valor: totalEntregas, icon: FileCheck, bg: "bg-success-light", text: "text-success" },
-          { label: "Racha de clase", valor: "8 días", icon: Flame, bg: "bg-warning-light", text: "text-text-primary" },
+          { label: lbl("Progreso medio", "Average progress"), valor: `${progMedio}%`, icon: TrendingUp, bg: "bg-accent-light", text: "text-accent-text" },
+          { label: lbl("Alumnos", "Students"),                valor: classStudents.length, icon: Users, bg: "bg-background", text: "text-text-primary" },
+          { label: lbl("Entregas totales", "Total submissions"), valor: totalEntregas, icon: FileCheck, bg: "bg-success-light", text: "text-success" },
+          { label: lbl("Racha de clase", "Class streak"),     valor: lbl("8 días", "8 days"), icon: Flame, bg: "bg-warning-light", text: "text-text-primary" },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl p-4 border border-card-border ${s.bg}`}>
             <div className="flex items-center justify-between mb-2">
@@ -99,7 +103,7 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <BarChart3 size={14} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Mapa de competencias LOMLOE</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Mapa de competencias LOMLOE", "LOMLOE competency map")}</h3>
             </div>
             {/* Leyenda */}
             <div className="flex gap-3 mb-3">
@@ -114,13 +118,13 @@ export default function TeacherAnalytics() {
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="text-[10px] text-text-muted font-medium text-left pb-2 pr-3 w-24">Alumno</th>
+                    <th className="text-[10px] text-text-muted font-medium text-left pb-2 pr-3 w-24">{lbl("Alumno", "Student")}</th>
                     {competencies.map((c) => (
                       <th key={c.key} className="text-[9px] font-bold text-text-secondary pb-2 px-0.5 text-center w-9">
                         {c.key}
                       </th>
                     ))}
-                    <th className="text-[9px] font-bold text-text-muted pb-2 px-1 text-center w-10">Media</th>
+                    <th className="text-[9px] font-bold text-text-muted pb-2 px-1 text-center w-10">{lbl("Media", "Avg")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -157,8 +161,8 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <FileCheck size={14} className="text-text-primary" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Entregas por semana</h3>
-              <span className="text-[11px] text-text-muted ml-auto">Meta: 90 entregas</span>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Entregas por semana", "Submissions per week")}</h3>
+              <span className="text-[11px] text-text-muted ml-auto">{lbl("Meta: 90 entregas", "Target: 90 submissions")}</span>
             </div>
             <div className="space-y-3">
               {semanas.map((s) => (
@@ -167,7 +171,7 @@ export default function TeacherAnalytics() {
                     <span className="text-[11px] font-medium text-text-secondary">{s.label}</span>
                     <div className="flex items-center gap-2">
                       {s.actual && (
-                        <span className="text-[9px] font-bold bg-accent text-sidebar px-1.5 py-0.5 rounded-full">En curso</span>
+                        <span className="text-[9px] font-bold bg-accent text-sidebar px-1.5 py-0.5 rounded-full">{lbl("En curso", "In progress")}</span>
                       )}
                       <span className={`text-[11px] font-bold ${s.entregas >= s.meta ? "text-success" : "text-text-primary"}`}>
                         {s.entregas}
@@ -182,7 +186,7 @@ export default function TeacherAnalytics() {
                   </div>
                   <div className="mt-0.5 flex justify-between">
                     <span className="text-[9px] text-text-muted">0</span>
-                    <span className="text-[9px] text-text-muted">Meta: {s.meta}</span>
+                    <span className="text-[9px] text-text-muted">{lbl("Meta:", "Target:")} {s.meta}</span>
                   </div>
                 </div>
               ))}
@@ -193,9 +197,9 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <ZapOff size={14} className="text-urgent" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Sin actividad hoy</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Sin actividad hoy", "No activity today")}</h3>
               <span className="ml-auto text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
-                {sinActividadHoy.length} alumnos
+                {sinActividadHoy.length} {lbl("alumnos", "students")}
               </span>
             </div>
             <div className="space-y-2">
@@ -208,7 +212,7 @@ export default function TeacherAnalytics() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-semibold text-text-primary">{a.nombre}</p>
-                      <p className="text-[10px] text-text-muted">Última actividad: {a.ultimaAct} · Pendiente: {a.tarea}</p>
+                      <p className="text-[10px] text-text-muted">{lbl("Última actividad:", "Last activity:")} {a.ultimaAct} · {lbl("Pendiente:", "Pending:")} {a.tarea}</p>
                     </div>
                     <button
                       onClick={() => setContactados((prev) => new Set([...prev, a.id]))}
@@ -219,7 +223,7 @@ export default function TeacherAnalytics() {
                       }`}
                     >
                       {yaContactado ? <CheckCircle2 size={11} /> : <MessageSquare size={11} />}
-                      {yaContactado ? "Contactado" : "Contactar"}
+                      {yaContactado ? lbl("Contactado", "Contacted") : lbl("Contactar", "Contact")}
                     </button>
                   </div>
                 );
@@ -231,13 +235,15 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle size={14} className="text-warning" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Alumnos en seguimiento</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Alumnos en seguimiento", "Students in review")}</h3>
             </div>
             <div className="space-y-2">
               {enRiesgo.map((a) => {
-                const nivel = a.riesgo >= 50 ? { label: "Alto", bg: "bg-urgent-light", text: "text-urgent", bar: "bg-urgent" }
-                  : a.riesgo >= 35 ? { label: "Medio", bg: "bg-warning-light", text: "text-text-primary", bar: "bg-warning" }
-                  : { label: "Bajo", bg: "bg-accent-light", text: "text-accent-text", bar: "bg-accent-text" };
+                const nivel = a.riesgo >= 50
+                  ? { label: lbl("Alto", "High"),   bg: "bg-urgent-light", text: "text-urgent",      bar: "bg-urgent" }
+                  : a.riesgo >= 35
+                  ? { label: lbl("Medio", "Medium"), bg: "bg-warning-light", text: "text-text-primary", bar: "bg-warning" }
+                  : { label: lbl("Bajo", "Low"),     bg: "bg-accent-light",  text: "text-accent-text",  bar: "bg-accent-text" };
                 return (
                   <div key={a.id} className={`flex items-center gap-3 p-3 rounded-xl border border-card-border ${nivel.bg}`}>
                     <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
@@ -255,7 +261,7 @@ export default function TeacherAnalytics() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <span className={`text-[15px] font-bold ${nivel.text}`}>{a.riesgo}</span>
-                      <span className="text-[9px] text-text-muted block">riesgo</span>
+                      <span className="text-[9px] text-text-muted block">{lbl("riesgo", "risk")}</span>
                     </div>
                   </div>
                 );
@@ -271,7 +277,7 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={14} className="text-text-primary" />
-              <h3 className="text-[13px] font-semibold text-text-primary">Competencias clase</h3>
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Competencias clase", "Class competencies")}</h3>
             </div>
             <div className="space-y-2.5">
               {competencies.map((c) => (
@@ -292,7 +298,7 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={14} className="text-text-primary" />
-              <h3 className="text-[13px] font-semibold text-text-primary">Tiempo por asignatura</h3>
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Tiempo por asignatura", "Time per subject")}</h3>
             </div>
             <div className="space-y-2.5">
               {tiempoAsignatura.map((a) => (
@@ -313,7 +319,7 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-3">
               <BarChart3 size={14} className="text-text-primary" />
-              <h3 className="text-[13px] font-semibold text-text-primary">Distribución LOMLOE</h3>
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Distribución LOMLOE", "LOMLOE Distribution")}</h3>
             </div>
             <div className="flex gap-2 mb-3">
               {([1, 2, 3, 4] as const).map((n) => (
@@ -340,7 +346,7 @@ export default function TeacherAnalytics() {
                             key={i}
                             className={bgClasses[i]}
                             style={{ width: `${pct}%` }}
-                            title={`Nivel ${i + 1}: ${c} alumnos`}
+                            title={`${lbl("Nivel", "Level")} ${i + 1}: ${c} ${lbl("alumnos", "students")}`}
                           />
                         ) : null;
                       })}
@@ -355,7 +361,7 @@ export default function TeacherAnalytics() {
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-3">
               <CheckCircle2 size={14} className="text-success" />
-              <h3 className="text-[13px] font-semibold text-text-primary">Destacados</h3>
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Destacados", "Top students")}</h3>
             </div>
             <div className="space-y-2.5">
               {[...classStudents].sort((a, b) => b.progress - a.progress).slice(0, 3).map((a, i) => (
@@ -365,7 +371,7 @@ export default function TeacherAnalytics() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-semibold text-text-primary truncate">{a.name.split(" ")[0]}</p>
-                    <p className="text-[9px] text-text-muted">{a.evidencesSubmitted} evidencias</p>
+                    <p className="text-[9px] text-text-muted">{a.evidencesSubmitted} {lbl("evidencias", "evidences")}</p>
                   </div>
                   <span className="text-[13px] font-bold text-success">{a.progress}%</span>
                   <span className="text-[9px] text-text-muted">#{i + 1}</span>
@@ -380,8 +386,8 @@ export default function TeacherAnalytics() {
       <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={14} className="text-text-primary" />
-          <h3 className="text-[14px] font-semibold text-text-primary">Progreso semanal por alumno</h3>
-          <span className="ml-auto text-[10px] text-text-muted">Semanas 1 → 4 del proyecto</span>
+          <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Progreso semanal por alumno", "Weekly progress per student")}</h3>
+          <span className="ml-auto text-[10px] text-text-muted">{lbl("Semanas 1 → 4 del proyecto", "Weeks 1 → 4 of project")}</span>
         </div>
         <div className="grid grid-cols-6 gap-3">
           {classStudents.map((alumno, si) => {

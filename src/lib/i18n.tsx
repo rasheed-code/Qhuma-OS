@@ -118,6 +118,15 @@ export const t: Record<string, Record<Lang, string>> = {
   "settings.notifications":{ es: "Notificaciones",en: "Notifications" },
   "settings.privacy":     { es: "Privacidad",    en: "Privacy" },
   "settings.account":     { es: "Cuenta",        en: "Account" },
+  "settings.appearance":  { es: "Apariencia",    en: "Appearance" },
+  "settings.theme":       { es: "Tema",          en: "Theme" },
+  "settings.light":       { es: "Claro",         en: "Light" },
+  "settings.dark":        { es: "Oscuro",        en: "Dark" },
+  "settings.fontSize":    { es: "Tamaño de letra",en: "Font size" },
+  "settings.about":       { es: "Acerca de",     en: "About" },
+  "settings.version":     { es: "Versión de la app", en: "App version" },
+  "settings.school":      { es: "Centro educativo", en: "School" },
+  "settings.help":        { es: "Ayuda y soporte",  en: "Help & Support" },
 
   // ── Common ──
   "common.today":         { es: "Hoy",           en: "Today" },

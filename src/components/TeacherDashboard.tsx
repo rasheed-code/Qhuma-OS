@@ -26,28 +26,26 @@ import {
 import { classStudents, teacherAlerts } from "@/data/students";
 import TeacherChat from "./TeacherChat";
 import CompetencyProgress from "./CompetencyProgress";
+import { useLang } from "@/lib/i18n";
 
-const alertConfig = {
+const alertConfigBase = {
   success: {
     icon: CheckCircle2,
     color: "text-success",
     bg: "bg-success-light",
     border: "border-success/20",
-    label: "Éxito",
   },
   warning: {
     icon: AlertTriangle,
     color: "text-warning",
     bg: "bg-warning-light",
     border: "border-warning/20",
-    label: "Atención",
   },
   urgent: {
     icon: AlertCircle,
     color: "text-urgent",
     bg: "bg-urgent-light",
     border: "border-urgent/20",
-    label: "Urgente",
   },
 };
 
@@ -66,17 +64,6 @@ function getRiskScore(student: (typeof classStudents)[0]): number {
   return Math.min(100, Math.max(0, Math.round((progressScore + evidenceRate) / 2 + statusBonus)));
 }
 
-function getRiskLabel(score: number): {
-  label: string;
-  color: string;
-  bg: string;
-} {
-  if (score >= 80) return { label: "Excelente", color: "text-[#4F8EF7]", bg: "bg-[#eff6ff]" };
-  if (score >= 60) return { label: "En ruta", color: "text-success", bg: "bg-success-light" };
-  if (score >= 40) return { label: "Riesgo medio", color: "text-warning", bg: "bg-warning-light" };
-  return { label: "Riesgo alto", color: "text-urgent", bg: "bg-urgent-light" };
-}
-
 // ── T10: Datos de urgencias ────────────────────────────────────────────────
 type CompKeyTeacher = "STEM" | "CLC" | "CE" | "CD" | "CPSAA" | "CC" | "CPL" | "CCEC";
 
@@ -92,9 +79,25 @@ const alumnosSinLogin: { id: string; nombre: string; avatar: string; diasSinLogi
 ];
 
 export default function TeacherDashboard() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeAlerts, setActiveAlerts] = useState(new Set(teacherAlerts.map((a) => a.id)));
   const [prorrogadas, setProrrogadas] = useState<Set<string>>(new Set());
+
+  const alertConfig = {
+    success: { ...alertConfigBase.success, label: lbl("Éxito", "Success") },
+    warning: { ...alertConfigBase.warning, label: lbl("Atención", "Warning") },
+    urgent:  { ...alertConfigBase.urgent,  label: lbl("Urgente", "Urgent") },
+  };
+
+  function getRiskLabel(score: number): { label: string; color: string; bg: string } {
+    if (score >= 80) return { label: lbl("Excelente", "Excellent"), color: "text-[#4F8EF7]", bg: "bg-[#eff6ff]" };
+    if (score >= 60) return { label: lbl("En ruta", "On track"),    color: "text-success",   bg: "bg-success-light" };
+    if (score >= 40) return { label: lbl("Riesgo medio", "Medium risk"), color: "text-warning", bg: "bg-warning-light" };
+    return { label: lbl("Riesgo alto", "High risk"), color: "text-urgent", bg: "bg-urgent-light" };
+  }
 
   const excelling = classStudents.filter((s) => s.status === "excelling").length;
   const onTrack = classStudents.filter((s) => s.status === "on_track").length;
@@ -128,11 +131,11 @@ export default function TeacherDashboard() {
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
                 <span className="text-[11px] text-white/60 font-medium uppercase tracking-wider">
-                  Miércoles, 15 enero · Semana 3 de 12
+                  {lbl("Miércoles, 15 enero · Semana 3 de 12", "Wednesday, Jan 15 · Week 3 of 12")}
                 </span>
               </div>
               <h1 className="text-[28px] font-bold text-white leading-tight mb-1">
-                Buenos días, Ana ✨
+                {lbl("Buenos días, Ana ✨", "Good morning, Ana ✨")}
               </h1>
               <p className="text-[14px] text-white/70">
                 1º ESO ·{" "}
@@ -169,25 +172,25 @@ export default function TeacherDashboard() {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-[18px] font-bold text-white leading-none">{healthPct}%</span>
-                      <span className="text-[8px] text-white/50 mt-0.5">salud</span>
+                      <span className="text-[8px] text-white/50 mt-0.5">{lbl("salud", "health")}</span>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                      <span className="text-[11px] text-white/80 font-medium">{excelling} brillando</span>
+                      <span className="text-[11px] text-white/80 font-medium">{excelling} {lbl("brillando", "excelling")}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-success flex-shrink-0" />
-                      <span className="text-[11px] text-white/80 font-medium">{onTrack} en ruta</span>
+                      <span className="text-[11px] text-white/80 font-medium">{onTrack} {lbl("en ruta", "on track")}</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
-                      <span className="text-[11px] text-white/80 font-medium">{needsAttention} necesitan ayuda</span>
+                      <span className="text-[11px] text-white/80 font-medium">{needsAttention} {lbl("necesitan ayuda", "need help")}</span>
                     </div>
                     <div className="flex items-center gap-1 mt-1">
                       <TrendingUp size={10} className="text-accent" />
-                      <span className="text-[10px] text-accent font-semibold">+4% vs semana pasada</span>
+                      <span className="text-[10px] text-accent font-semibold">{lbl("+4% vs semana pasada", "+4% vs last week")}</span>
                     </div>
                   </div>
                 </div>
@@ -198,9 +201,9 @@ export default function TeacherDashboard() {
           {/* Avatar groups + quick action */}
           <div className="mt-4 relative z-10 flex items-center gap-4">
             {[
-              { label: "Brillando", students: classStudents.filter(s => s.status === "excelling"), color: "bg-accent", ring: "ring-accent/40" },
-              { label: "En ruta", students: classStudents.filter(s => s.status === "on_track"), color: "bg-success", ring: "ring-success/40" },
-              { label: "Apoyo", students: classStudents.filter(s => s.status === "needs_attention"), color: "bg-warning", ring: "ring-warning/40" },
+              { label: lbl("Brillando", "Excelling"), students: classStudents.filter(s => s.status === "excelling"), color: "bg-accent", ring: "ring-accent/40" },
+              { label: lbl("En ruta", "On track"),    students: classStudents.filter(s => s.status === "on_track"),   color: "bg-success", ring: "ring-success/40" },
+              { label: lbl("Apoyo", "Support"),        students: classStudents.filter(s => s.status === "needs_attention"), color: "bg-warning", ring: "ring-warning/40" },
             ].map((group) => (
               <div key={group.label} className="flex items-center gap-2">
                 <div className="flex -space-x-1.5">
@@ -224,7 +227,7 @@ export default function TeacherDashboard() {
             <div className="ml-auto">
               <button className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-all text-white text-[10px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer border border-white/10">
                 <MessageSquare size={11} />
-                Contactar alumnos en riesgo
+                {lbl("Contactar alumnos en riesgo", "Contact at-risk students")}
               </button>
             </div>
           </div>
@@ -239,18 +242,18 @@ export default function TeacherDashboard() {
               <div className="flex items-center gap-2">
                 <Activity size={15} className="text-accent-text" />
                 <h3 className="text-[14px] font-semibold text-text-primary">
-                  Alertas de intervención
+                  {lbl("Alertas de intervención", "Intervention alerts")}
                 </h3>
               </div>
               <div className="flex items-center gap-1.5">
                 {visibleAlerts.filter((a) => a.type === "urgent").length > 0 && (
                   <span className="text-[10px] bg-urgent-light text-urgent rounded-full px-2 py-0.5 font-bold">
-                    {visibleAlerts.filter((a) => a.type === "urgent").length} urgente
+                    {visibleAlerts.filter((a) => a.type === "urgent").length} {lbl("urgente", "urgent")}
                   </span>
                 )}
                 {visibleAlerts.filter((a) => a.type === "warning").length > 0 && (
                   <span className="text-[10px] bg-warning-light text-warning rounded-full px-2 py-0.5 font-bold">
-                    {visibleAlerts.filter((a) => a.type === "warning").length} atención
+                    {visibleAlerts.filter((a) => a.type === "warning").length} {lbl("atención", "warning")}
                   </span>
                 )}
               </div>
@@ -259,8 +262,8 @@ export default function TeacherDashboard() {
             {visibleAlerts.length === 0 ? (
               <div className="flex flex-col items-center py-6 text-center">
                 <CheckCircle2 size={28} className="text-success mb-2" />
-                <p className="text-[13px] font-semibold text-text-primary">Todo en orden</p>
-                <p className="text-[11px] text-text-muted">No hay alertas pendientes</p>
+                <p className="text-[13px] font-semibold text-text-primary">{lbl("Todo en orden", "All clear")}</p>
+                <p className="text-[11px] text-text-muted">{lbl("No hay alertas pendientes", "No pending alerts")}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-2.5">
@@ -292,7 +295,7 @@ export default function TeacherDashboard() {
                           className="text-[10px] font-semibold text-accent-text bg-white hover:bg-accent-light transition-colors px-2.5 py-1 rounded-lg cursor-pointer border border-accent/20"
                         >
                           <MessageSquare size={11} className="inline mr-1" />
-                          Mensaje
+                          {lbl("Mensaje", "Message")}
                         </button>
                         <button
                           onClick={() =>
@@ -316,33 +319,33 @@ export default function TeacherDashboard() {
 
           {/* Quick Actions — 1/3 width */}
           <div className="flex flex-col gap-3">
-            <h3 className="text-[13px] font-semibold text-text-primary">Acciones rápidas</h3>
+            <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Acciones rápidas", "Quick actions")}</h3>
             {[
               {
                 icon: FileText,
-                label: "Informe LOMLOE",
-                desc: "Genera el informe trimestral",
+                label: lbl("Informe LOMLOE", "LOMLOE Report"),
+                desc: lbl("Genera el informe trimestral", "Generate quarterly report"),
                 color: "text-accent-text",
                 bg: "bg-accent-light",
               },
               {
                 icon: Brain,
-                label: "Análisis IA",
-                desc: "Detección de brechas por competencia",
+                label: lbl("Análisis IA", "AI Analysis"),
+                desc: lbl("Detección de brechas por competencia", "Gap detection by competency"),
                 color: "text-[#4F8EF7]",
                 bg: "bg-[#eff6ff]",
               },
               {
                 icon: Zap,
-                label: "Misión Flash",
-                desc: "Asignar a toda la clase",
+                label: lbl("Misión Flash", "Flash Mission"),
+                desc: lbl("Asignar a toda la clase", "Assign to whole class"),
                 color: "text-warning",
                 bg: "bg-warning-light",
               },
               {
                 icon: Shield,
-                label: "Plan de apoyo",
-                desc: "Para alumnos en riesgo",
+                label: lbl("Plan de apoyo", "Support plan"),
+                desc: lbl("Para alumnos en riesgo", "For at-risk students"),
                 color: "text-urgent",
                 bg: "bg-urgent-light",
               },
@@ -375,15 +378,15 @@ export default function TeacherDashboard() {
           <div className="bg-card rounded-2xl p-5 border border-card-border">
             <div className="flex items-center gap-2 mb-4">
               <CalendarClock size={14} className="text-urgent" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Tareas vencidas hoy</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Tareas vencidas hoy", "Tasks due today")}</h3>
               <span className="ml-auto text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
-                {tareasVencidas.filter(t => !prorrogadas.has(t.id)).length} pendientes
+                {tareasVencidas.filter(t => !prorrogadas.has(t.id)).length} {lbl("pendientes", "pending")}
               </span>
             </div>
             {tareasVencidas.length === 0 ? (
               <div className="flex items-center gap-2 py-3 text-center justify-center">
                 <CheckCircle2 size={16} className="text-success" />
-                <span className="text-[12px] text-text-muted">Sin entregas vencidas</span>
+                <span className="text-[12px] text-text-muted">{lbl("Sin entregas vencidas", "No overdue submissions")}</span>
               </div>
             ) : (
               <div className="space-y-2">
@@ -398,7 +401,7 @@ export default function TeacherDashboard() {
                           {av}
                         </div>
                         <span className="text-[12px] font-semibold text-text-primary">{alumno}</span>
-                        <span className="ml-auto text-[9px] text-text-muted">{tareas.length} tarea{tareas.length > 1 ? "s" : ""}</span>
+                        <span className="ml-auto text-[9px] text-text-muted">{tareas.length} {lbl("tarea", "task")}{tareas.length > 1 ? lbl("s", "s") : ""}</span>
                       </div>
                       <div className="space-y-1.5">
                         {tareas.map((t) => (
@@ -436,9 +439,9 @@ export default function TeacherDashboard() {
           <div className="bg-card rounded-2xl p-5 border border-card-border">
             <div className="flex items-center gap-2 mb-4">
               <WifiOff size={14} className="text-warning" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Sin acceso a plataforma</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Sin acceso a plataforma", "No platform access")}</h3>
               <span className="ml-auto text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
-                {alumnosSinLogin.length} alumnos
+                {alumnosSinLogin.length} {lbl("alumnos", "students")}
               </span>
             </div>
             <div className="space-y-2.5 mb-4">
@@ -449,13 +452,13 @@ export default function TeacherDashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-semibold text-text-primary">{a.nombre}</p>
-                    <p className="text-[10px] text-text-muted">Última actividad: {a.ultimaActividad}</p>
+                    <p className="text-[10px] text-text-muted">{lbl("Última actividad:", "Last activity:")} {a.ultimaActividad}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <span className="text-[11px] font-bold text-warning">{a.diasSinLogin} días</span>
+                    <span className="text-[11px] font-bold text-warning">{a.diasSinLogin} {lbl("días", "days")}</span>
                     <button className="flex items-center gap-1 text-[9px] font-bold text-accent-text bg-white px-2 py-0.5 rounded-lg hover:bg-accent-light border border-accent/20 cursor-pointer transition-colors">
                       <MessageSquare size={9} />
-                      Contactar
+                      {lbl("Contactar", "Contact")}
                     </button>
                   </div>
                 </div>
@@ -475,15 +478,15 @@ export default function TeacherDashboard() {
             <div className="flex items-center gap-2">
               <Users size={15} className="text-text-primary" />
               <h3 className="text-[14px] font-semibold text-text-primary">
-                Seguimiento individual
+                {lbl("Seguimiento individual", "Individual tracking")}
               </h3>
             </div>
             <div className="flex items-center gap-3">
               {[
-                { color: "bg-[#4F8EF7]", label: "Brillando" },
-                { color: "bg-success", label: "En ruta" },
-                { color: "bg-warning", label: "Riesgo" },
-                { color: "bg-urgent", label: "Urgente" },
+                { color: "bg-[#4F8EF7]", label: lbl("Brillando", "Excelling") },
+                { color: "bg-success",   label: lbl("En ruta", "On track") },
+                { color: "bg-warning",   label: lbl("Riesgo", "Risk") },
+                { color: "bg-urgent",    label: lbl("Urgente", "Urgent") },
               ].map(({ color, label }) => (
                 <div key={label} className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${color}`} />
@@ -578,7 +581,7 @@ export default function TeacherDashboard() {
                     <div className="mt-2.5 pt-2.5 border-t border-accent/20">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[9px] text-text-muted">Puntuación IA</span>
+                          <span className="text-[9px] text-text-muted">{lbl("Puntuación IA", "AI score")}</span>
                           <span className="text-[10px] font-bold text-accent-text">{riskScore}/100</span>
                         </div>
                         <div className="flex gap-1.5">
@@ -588,7 +591,7 @@ export default function TeacherDashboard() {
                           </button>
                           <button className="flex-1 text-[9px] font-semibold text-white bg-sidebar rounded-lg py-1.5 hover:bg-accent-dark transition-colors cursor-pointer">
                             <Star size={9} className="inline mr-1" />
-                            Perfil
+                            {lbl("Perfil", "Profile")}
                           </button>
                         </div>
                       </div>
@@ -606,14 +609,14 @@ export default function TeacherDashboard() {
           <div className="bg-card rounded-2xl p-5 border border-card-border">
             <div className="flex items-center gap-2 mb-4">
               <Clock size={14} className="text-accent-text" />
-              <h3 className="text-[14px] font-semibold text-text-primary">Próximos hitos</h3>
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Próximos hitos", "Upcoming milestones")}</h3>
             </div>
             <div className="flex flex-col gap-3">
               {[
-                { day: "Hoy", task: "Revisión: Página de aterrizaje", type: "review", urgent: true },
-                { day: "Mañana", task: "Entrega: Presupuesto financiero", type: "delivery", urgent: false },
-                { day: "Viernes", task: "Demo Day: Presentación clase", type: "event", urgent: false },
-                { day: "Sem. 4", task: "Inicio: Diseña tu Food Truck", type: "new", urgent: false },
+                { day: lbl("Hoy", "Today"),     task: lbl("Revisión: Página de aterrizaje", "Review: Landing page"),       type: "review",   urgent: true },
+                { day: lbl("Mañana", "Tomorrow"), task: lbl("Entrega: Presupuesto financiero", "Submit: Financial budget"), type: "delivery", urgent: false },
+                { day: lbl("Viernes", "Friday"),  task: lbl("Demo Day: Presentación clase", "Demo Day: Class presentation"),type: "event",    urgent: false },
+                { day: lbl("Sem. 4", "Wk. 4"),   task: lbl("Inicio: Diseña tu Food Truck", "Start: Design your Food Truck"),type: "new",     urgent: false },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${

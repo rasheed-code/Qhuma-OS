@@ -2,15 +2,18 @@
 
 import { TrendingUp } from "lucide-react";
 import { competencies } from "@/data/competencies";
+import { useLang } from "@/lib/i18n";
 
 export default function CompetencyProgress() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
   return (
     <div className="bg-card rounded-2xl p-5 border border-card-border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[14px] font-semibold text-text-primary">
-          LOMLOE Competencies
+          {lbl("Competencias LOMLOE", "LOMLOE Competencies")}
         </h3>
-        <span className="text-[10px] text-text-muted">This trimester</span>
+        <span className="text-[10px] text-text-muted">{lbl("Este trimestre", "This trimester")}</span>
       </div>
 
       <div className="flex flex-col gap-3">

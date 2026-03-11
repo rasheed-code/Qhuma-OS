@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangl
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
+import { useLang } from "@/lib/i18n";
 
 type Filter = "all" | "excelling" | "needs_attention";
 
@@ -51,45 +52,6 @@ interface Comentario {
   fecha: string;
 }
 
-const catConfig = {
-  logro:    {
-    label: "¡Buen trabajo!",
-    Icon: CheckCircle2,
-    iconColor: "text-success",
-    textColor: "text-success",
-    border: "border-success/20",
-    bg: "bg-success-light",
-    activeBg: "bg-success-light text-success border border-success/30",
-    inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
-  },
-  atencion: {
-    label: "Requiere atención",
-    Icon: AlertTriangle,
-    iconColor: "text-warning",
-    textColor: "text-warning",
-    border: "border-warning/20",
-    bg: "bg-warning-light",
-    activeBg: "bg-warning-light text-warning border border-warning/30",
-    inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
-  },
-  entrega:  {
-    label: "Entrega pendiente",
-    Icon: Clock,
-    iconColor: "text-urgent",
-    textColor: "text-urgent",
-    border: "border-urgent/20",
-    bg: "bg-urgent-light",
-    activeBg: "bg-urgent-light text-urgent border border-urgent/30",
-    inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
-  },
-};
-
-const statusLabels: Record<string, string> = {
-  on_track: "Al día",
-  excelling: "Destacado",
-  needs_attention: "Necesita atención",
-};
-
 const statusDotColors: Record<string, string> = {
   on_track: "bg-green-400",
   excelling: "bg-[#4F8EF7]",
@@ -130,6 +92,54 @@ function initComentarios(): Record<string, Comentario[]> {
 }
 
 export default function TeacherStudents() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  const catConfig = {
+    logro: {
+      label: lbl("¡Buen trabajo!", "Good job!"),
+      Icon: CheckCircle2,
+      iconColor: "text-success",
+      textColor: "text-success",
+      border: "border-success/20",
+      bg: "bg-success-light",
+      activeBg: "bg-success-light text-success border border-success/30",
+      inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
+    },
+    atencion: {
+      label: lbl("Requiere atención", "Needs attention"),
+      Icon: AlertTriangle,
+      iconColor: "text-warning",
+      textColor: "text-warning",
+      border: "border-warning/20",
+      bg: "bg-warning-light",
+      activeBg: "bg-warning-light text-warning border border-warning/30",
+      inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
+    },
+    entrega: {
+      label: lbl("Entrega pendiente", "Pending submission"),
+      Icon: Clock,
+      iconColor: "text-urgent",
+      textColor: "text-urgent",
+      border: "border-urgent/20",
+      bg: "bg-urgent-light",
+      activeBg: "bg-urgent-light text-urgent border border-urgent/30",
+      inactiveBg: "bg-background text-text-muted hover:text-text-secondary",
+    },
+  };
+
+  const statusLabels: Record<string, string> = {
+    on_track: lbl("Al día", "On track"),
+    excelling: lbl("Destacado", "Excelling"),
+    needs_attention: lbl("Necesita atención", "Needs attention"),
+  };
+
+  const tipoCfg = {
+    comentario: { label: lbl("Comentario", "Comment"),          color: "text-accent-text", bg: "bg-accent-light",  Icon: MessageSquare },
+    prorroga:   { label: lbl("Prórroga", "Extension"),           color: "text-warning",     bg: "bg-warning-light", Icon: Clock },
+    contacto:   { label: lbl("Contacto familiar", "Family contact"), color: "text-success", bg: "bg-success-light", Icon: Phone },
+  };
+
   const [filter, setFilter] = useState<Filter>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [comentarios, setComentarios] = useState<Record<string, Comentario[]>>(initComentarios);
@@ -166,15 +176,15 @@ export default function TeacherStudents() {
       {/* Cabecera */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="text-[22px] font-bold text-text-primary">Alumnos</h1>
+          <h1 className="text-[22px] font-bold text-text-primary">{lbl("Alumnos", "Students")}</h1>
           <span className="text-[11px] font-medium bg-background text-text-secondary px-2.5 py-1 rounded-full">
             {classStudents.length} total
           </span>
           <span className="text-[11px] font-medium bg-[#4F8EF7]/10 text-[#4F8EF7] px-2.5 py-1 rounded-full">
-            {counts.excelling} destacados
+            {counts.excelling} {lbl("destacados", "excelling")}
           </span>
           <span className="text-[11px] font-medium bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
-            {counts.needs_attention} necesitan atención
+            {counts.needs_attention} {lbl("necesitan atención", "need attention")}
           </span>
         </div>
       </div>
@@ -182,9 +192,9 @@ export default function TeacherStudents() {
       {/* Filtros */}
       <div className="flex gap-1 bg-background rounded-xl p-1 mb-6 w-fit">
         {([
-          { key: "all" as Filter, label: "Todos" },
-          { key: "excelling" as Filter, label: "Brillando" },
-          { key: "needs_attention" as Filter, label: "En riesgo" },
+          { key: "all" as Filter,              label: lbl("Todos", "All") },
+          { key: "excelling" as Filter,         label: lbl("Brillando", "Excelling") },
+          { key: "needs_attention" as Filter,   label: lbl("En riesgo", "At risk") },
         ]).map((f) => (
           <button
             key={f.key}
@@ -239,7 +249,7 @@ export default function TeacherStudents() {
 
                 {/* Progreso */}
                 <div className="flex items-center justify-between text-[11px] mb-1.5">
-                  <span className="text-text-secondary">Progreso</span>
+                  <span className="text-text-secondary">{lbl("Progreso", "Progress")}</span>
                   <span className="font-semibold text-text-primary">{student.progress}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-background rounded-full overflow-hidden mb-3">
@@ -250,10 +260,10 @@ export default function TeacherStudents() {
                 </div>
 
                 <p className="text-[11px] text-text-muted mb-2 truncate">
-                  Tarea: <span className="text-text-secondary">{student.currentTask}</span>
+                  {lbl("Tarea:", "Task:")} <span className="text-text-secondary">{student.currentTask}</span>
                 </p>
                 <p className="text-[11px] text-text-muted mb-3">
-                  Evidencias: <span className="font-medium text-text-secondary">{student.evidencesSubmitted}/16</span>
+                  {lbl("Evidencias:", "Evidences:")} <span className="font-medium text-text-secondary">{student.evidencesSubmitted}/16</span>
                 </p>
 
                 {/* Puntos competencias */}
@@ -278,7 +288,7 @@ export default function TeacherStudents() {
                   onClick={() => setExpandedId(isExpanded ? null : student.id)}
                   className="flex items-center gap-1.5 text-[12px] text-accent font-medium hover:brightness-110 transition-all cursor-pointer"
                 >
-                  {isExpanded ? "Ocultar detalles" : "Ver detalles"}
+                  {isExpanded ? lbl("Ocultar detalles", "Hide details") : lbl("Ver detalles", "View details")}
                   {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
               </div>
@@ -288,7 +298,7 @@ export default function TeacherStudents() {
                 <div className="border-t border-card-border bg-background p-5">
                   {/* Barras de competencias */}
                   <h4 className="text-[12px] font-semibold text-text-primary mb-3">
-                    Competencias LOMLOE
+                    {lbl("Competencias LOMLOE", "LOMLOE Competencies")}
                   </h4>
                   <div className="space-y-2 mb-5">
                     {competencies.map((comp, ci) => {
@@ -309,7 +319,7 @@ export default function TeacherStudents() {
 
                   {/* Tareas recientes */}
                   <h4 className="text-[12px] font-semibold text-text-primary mb-2">
-                    Tareas completadas
+                    {lbl("Tareas completadas", "Completed tasks")}
                   </h4>
                   <div className="space-y-1.5 mb-5">
                     {recentTasks.map((task) => (
@@ -324,18 +334,13 @@ export default function TeacherStudents() {
                   {/* ─── T11: Historial de intervenciones ─── */}
                   {(() => {
                     const historial = historialPorAlumno[student.id] ?? [];
-                    const tipoCfg = {
-                      comentario: { label: "Comentario", color: "text-accent-text", bg: "bg-accent-light", Icon: MessageSquare },
-                      prorroga:   { label: "Prórroga",   color: "text-warning",     bg: "bg-warning-light", Icon: Clock },
-                      contacto:   { label: "Contacto familiar", color: "text-success", bg: "bg-success-light", Icon: Phone },
-                    };
                     return (
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Clock size={12} className="text-text-muted" />
-                          <h4 className="text-[12px] font-semibold text-text-primary">Historial de intervenciones</h4>
+                          <h4 className="text-[12px] font-semibold text-text-primary">{lbl("Historial de intervenciones", "Intervention history")}</h4>
                           <span className="ml-auto text-[9px] font-bold bg-card text-text-muted border border-card-border px-1.5 py-0.5 rounded-full">
-                            {historial.length} registradas
+                            {historial.length} {lbl("registradas", "recorded")}
                           </span>
                         </div>
                         {historial.length > 0 ? (
@@ -358,7 +363,7 @@ export default function TeacherStudents() {
                             })}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-text-muted italic">Sin intervenciones registradas aún.</p>
+                          <p className="text-[11px] text-text-muted italic">{lbl("Sin intervenciones registradas aún.", "No interventions recorded yet.")}</p>
                         )}
                       </div>
                     );
@@ -368,10 +373,10 @@ export default function TeacherStudents() {
                   <div className="border-t border-card-border pt-4">
                     <div className="flex items-center gap-2 mb-3">
                       <MessageSquare size={13} className="text-accent-text" />
-                      <h4 className="text-[12px] font-semibold text-text-primary">Comentarios de seguimiento</h4>
+                      <h4 className="text-[12px] font-semibold text-text-primary">{lbl("Comentarios de seguimiento", "Follow-up comments")}</h4>
                       {studentComentarios.length > 0 && (
                         <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">
-                          {studentComentarios.length} nota{studentComentarios.length !== 1 ? "s" : ""}
+                          {studentComentarios.length} {lbl("nota", "note")}{studentComentarios.length !== 1 ? lbl("s", "s") : ""}
                         </span>
                       )}
                     </div>
@@ -420,7 +425,7 @@ export default function TeacherStudents() {
                         value={inputVal}
                         onChange={(e) => setInputs((prev) => ({ ...prev, [student.id]: e.target.value }))}
                         onKeyDown={(e) => { if (e.key === "Enter") handleAddComentario(student.id); }}
-                        placeholder="Añadir comentario de seguimiento..."
+                        placeholder={lbl("Añadir comentario de seguimiento...", "Add a follow-up comment...")}
                         className="flex-1 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
                       />
                       <button
