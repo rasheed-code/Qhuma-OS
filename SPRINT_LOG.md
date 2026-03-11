@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 9 ✅ (push: `34b9b37`)
+- **Último ciclo completo**: Ciclo 11 ✅ (push: `d9e7c46`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 10
+- **Próximo ciclo**: Ciclo 12
 
 ---
 
@@ -325,12 +325,96 @@
 
 ---
 
-## Sprints pendientes — Ciclo 10
+## Ciclo 10 ✅ completado
 
-- [ ] [T9] TeacherAnalytics mejorado — añadir comparativa semanal de progreso por alumno (sparklines CSS), distribución de competencias de la clase (barras horizontales apiladas), y tabla de "alumnos sin actividad hoy" con acción directa de contacto
-- [ ] [S11] StudentCalendario mejorado — vista mes/semana para el alumno, eventos personales (Demo Day, entregas), integración con el streak calendar existente, badge de "hoy tienes X eventos"
-- [ ] [A9] AdminCapitalDeep — dentro del tab Capital, añadir: panel de votación en tiempo real (simula votos del claustro), historial de pitches anteriores (T1), generador de carta de aprobación de inversión (descarga simulada)
-- [ ] [C9] ErrorLogIA — cuando el alumno añade un error al Error Log del portfolio, la IA (modo socrático inverso) propone 3 preguntas de reflexión sobre ese error específico para sacar el máximo aprendizaje
+### [SPRINT-TEACHER][T9] TeacherAnalytics mejorado ✅
+- Commit: `2225b98`
+- Archivo modificado: `src/components/TeacherAnalytics.tsx`
+- "Sin actividad hoy": card bg-urgent-light con Pablo Ruiz (3d) y Tomás Herrera (2d); botón "Contactar" con estado Set<string> contactados; CheckCircle2 al contactar
+- "Distribución LOMLOE": barras horizontales apiladas (8 competencias × 4 niveles) usando seededLevel(si,ci); segmentos urgent/warning/accent/success proporcionales
+- "Comparativa progreso semanal": grid 6 cols, sparklines CSS 4 semanas por alumno; semana actual bg-accent-text oscuro; semanas anteriores bg-accent-light; delta en texto
+- `sparklineWeek(si, weekIdx, progress)` función determinista: base converge a progress real + noise 7%
+- Imports añadidos: useState (ya existía), ZapOff, MessageSquare, CheckCircle2
+
+### [SPRINT-STUDENT][S11] StudentCalendario mejorado ✅
+- Commit: `d8b97e8`
+- Archivo modificado: `src/components/StudentCalendar.tsx` (reescritura completa)
+- Toggle mes/semana: pills bg-background con shadow-sm en activo
+- Vista semana: columnas lun-vie, eventos personales por día sobre tareas, texto en español
+- Vista mes: grid 7 cols con offset=6 (mar 2026 empieza domingo), celdas con colored dots por tipo
+- `eventosPersonales`: 4 eventos — Entrega (mar 9), Pitch Lab (mar 11 = hoy), Demo Day (mar 13), Entrega (mar 17)
+- Badge dinámico en header: "Hoy tienes 1 evento" cuando hay eventos el día 11
+- `tipoConfig`: entrega (warning), pitch (accent), demoday (urgent), hito (success)
+- Lista de eventos en vista mes con chip "Hoy" en el evento actual
+
+### [SPRINT-ADMIN][A9] AdminCapitalDeep ✅
+- Commit: `8eef31d`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Nuevos estados: votosEnVivo (starts 7), votandoId, cartaProyectoId, generandoCarta, cartaGenerada
+- Votación en tiempo real: barra animada + puntitos individuales 12-12, indicador quórum (9/12), botón "Emitir voto" con delay 800ms
+- Historial T1: 5 pitches (financiado/aprobado/votación/pendiente/rechazado) con nota del claustro
+- Generador de carta: select de proyectos aprobado/financiado, preview carta oficial con fecha, importe, firmante, botón "Descargar PDF"
+- Imports añadidos: ninguno nuevo (ClipboardCheck ya existía)
+
+### [SPRINT-CULTURE][C9] ErrorLogIA ✅
+- Commit: `fc491af`
+- Archivos modificados: `src/app/api/tutor-chat/route.ts` + `src/components/StudentPortfolio.tsx`
+- `ERRORLOG_SYSTEM_PROMPT`: 3 preguntas numeradas, máximo 20 palabras cada una; causa raíz / transferencia / acción concreta; sin emojis, sin comentarios extra
+- API: `mode === "errorlog"` usa ERRORLOG_SYSTEM_PROMPT; no afecta otros modos
+- Portfolio: `iaReflexiones: Record<string, string>` + `loadingReflexion: string | null` por error
+- Botón "Analizar con IA · 3 preguntas de reflexión" (dashed border, Sparkles icon) en cada error expandido
+- Estado post-IA: card bg-sidebar/5 con preguntas parseadas por línea; botón "Regenerar preguntas"
+- Imports añadidos: Sparkles
+
+---
+
+## Ciclo 11 ✅ completado
+
+### [SPRINT-TEACHER][T10] TeacherDashboard Urgencias ✅
+- Commit: `4958529`
+- Archivo modificado: `src/components/TeacherDashboard.tsx`
+- Panel "Tareas vencidas hoy": tareasVencidas mock agrupadas por alumno; cada tarea tiene badge días retraso, competencia, botón "Prorrogar 48h" (Set<string> prorrogadas); feedback visual "+48h ✓" al prorrogar
+- Panel "Sin acceso a plataforma": alumnosSinLogin mock (2 alumnos); fecha última actividad, badge días sin login, botón Contactar; cuadro protocolo QHUMA
+- Grid 2 columnas entre Alertas y Seguimiento individual
+- Imports añadidos: WifiOff, CalendarClock, RefreshCw
+- Tipo local CompKeyTeacher para evitar importar del archivo global
+
+### [SPRINT-STUDENT][S12] StudentProjectKanban mejorado ✅
+- Commit: `614f36a`
+- Archivo modificado: `src/components/ProjectDetail.tsx`
+- Toggle Lista / Kanban en header (junto a botón Volver)
+- 4 columnas: Por hacer (upcoming/locked), En curso (in_progress), En revisión (override mon-3/mon-5/tue-1), Completado (completed)
+- Drag-and-drop nativo HTML5: onDragStart/onDragOver/onDrop/onDragEnd; estado dragId + dragOverCol
+- `kanban` local: Record<taskId, KanbanCol> inicializado de task.status + reviewOverride Set
+- Cada tarjeta: GripVertical handle, título, badge tiempo estimado (estimadoMin mock), competencias top-2
+- Columna vacía: placeholder dashed border "Arrastra aquí"
+- Imports añadidos: useRef, LayoutList, Columns, Clock, GripVertical
+
+### [SPRINT-ADMIN][A10] AdminDashboardOverview mejorado ✅
+- Commit: `0e79e86`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Gráfico barras CSS evolución mensual: 6 meses (Oct25–Mar26), barra actual bg-accent-text oscuro, badge "+29% en 6 meses"
+- Top 3 proyectos: ranking por progreso (Carmen 94%, Sofía 88%, Lucas 72%), barra CSS proporcional, avatar alumno
+- Heatmap hora del día: grid 5 días × 13 horas, opacidad interpolada rgba(sidebar, 0.12–0.87), leyenda gradiente
+- Imports añadidos: Trophy, BarChart3
+
+### [SPRINT-CULTURE][C10] CuerpoIA ✅
+- Commit: `d9e7c46`
+- Archivos modificados: `src/components/StudentDashboard.tsx`, `src/app/api/tutor-chat/route.ts`
+- `CUERPO_SYSTEM_PROMPT`: 3 frases de reincorporación — reconoce pausa, consejo específico sobre tarea en progreso, mención BDNF; empieza con "Lucas, ..."
+- API: mode="cuerpo" usa CUERPO_SYSTEM_PROMPT; no interfiere con otros modos
+- StudentDashboard: `iaConsejoDescanso` + `loadingConsejo` state; `fetchConsejoIA(tareaActual)` async
+- `fetchConsejoIA` se dispara en el useEffect cuando `s <= 1` (timer a cero), capturando `today.tasks.find(in_progress)?.title`
+- Widget post-timer: spinner de carga, card bg-white/8 con consejo de Prof. Ana (IA badge + texto), botón Volver
+
+---
+
+## Sprints pendientes — Ciclo 12
+
+- [ ] [T11] TeacherStudents mejorado — en la vista Alumnos, añadir panel de "Historial de intervenciones" por alumno (últimas 5 acciones del docente: comentarios, prórrogas, contactos), filtro rápido por estado de riesgo (Todos / En riesgo / Brillando)
+- [ ] [S13] StudentAchievements mejorado — añadir sistema de "Misiones completadas" (5 misiones mock del proyecto Airbnb), sección "Próximos desbloqueos" con barra de progreso hacia el siguiente logro, compartir logro (simula copiar URL)
+- [ ] [A11] AdminReports mejorado — en el tab Informes, añadir plantillas de informe predefinidas (LOMLOE completo, Inspección, Familia), vista previa con datos reales de los alumnos mock, descarga simulada con nombre de archivo dinámico
+- [ ] [C11] PitchLabScoring mejorado — en PitchLab modo "Simular audiencia", añadir panel de "Inversores simulados" (3 perfiles: conservador/moderado/arriesgado), cada uno vota ✓/✗ con una razón breve generada por IA (mode="pitchcoach" adaptado), resultado final con "capital conseguido"
 
 ---
 
@@ -341,7 +425,9 @@
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
 - **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection" | "metrics" (metrics añadido en Ciclo 9)
 - **TeacherStudents**: C7 modificado (TeacherComentarios). Leer antes de editar en ciclos futuros.
-- **API tutor-chat**: soporta mode="narrativa" (NARRATIVA_SYSTEM_PROMPT sin Socrático), deepDive=true (DEEP_DIVE_ADDON), y modo por defecto (SYSTEM_PROMPT socrático).
+- **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
+- **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
+- **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
 - **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado.
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
