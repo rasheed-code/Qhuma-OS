@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer, CheckCircle2, Trophy, Download, Lock, Shield } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -521,6 +521,11 @@ export default function StudentPortfolio() {
   // C9 — ErrorLog IA reflexión
   const [iaReflexiones, setIaReflexiones] = useState<Record<string, string>>({});
   const [loadingReflexion, setLoadingReflexion] = useState<string | null>(null);
+
+  // C27 — Insignias de habilidad
+  const [badgeExpandida, setBadgeExpandida] = useState<string | null>(null);
+  const [exportandoBadges, setExportandoBadges] = useState(false);
+  const [badgesExportadas, setBadgesExportadas] = useState(false);
 
   const handleAnalizarError = async (entry: ErrorEntry) => {
     if (loadingReflexion) return;
@@ -1792,6 +1797,165 @@ ${allEvts.map((e) => `
           </p>
           <p className="text-[9px] text-text-muted mt-2 text-right">— Prof. Ana Martínez</p>
         </div>
+
+        {/* C27 — Insignias de habilidad */}
+        {(() => {
+          const insignias: {
+            id: string;
+            comp: CompKey;
+            nombre: string;
+            icono: string;
+            progreso: number;
+            evidenciaKey: string;
+            momento: string;
+          }[] = [
+            { id: "clc", comp: "CLC", nombre: lbl("Comunicador", "Communicator"), icono: "💬", progreso: 72, evidenciaKey: lbl("Guía de bienvenida Casa Limón", "Casa Limón welcome guide"), momento: lbl("Escribiste el primer documento oficial de tu proyecto con claridad y registro formal.", "You wrote the first official document of your project with clarity and formal register.") },
+            { id: "cpl", comp: "CPL", nombre: lbl("Plurilingüe", "Plurilingual"), icono: "🌍", progreso: 58, evidenciaKey: lbl("FAQ bilingüe inglés/español", "Bilingual FAQ English/Spanish"), momento: lbl("Redactaste el FAQ en dos idiomas sin traductor automático.", "You wrote the FAQ in two languages without an automatic translator.") },
+            { id: "stem", comp: "STEM", nombre: lbl("Analista", "Analyst"), icono: "📊", progreso: 85, evidenciaKey: lbl("Modelo financiero Casa Limón", "Casa Limón financial model"), momento: lbl("Calculaste el punto de equilibrio real con 3 escenarios de ocupación.", "You calculated the real break-even point with 3 occupancy scenarios.") },
+            { id: "cd", comp: "CD", nombre: lbl("Digital", "Digital"), icono: "💻", progreso: 88, evidenciaKey: lbl("Landing page del proyecto", "Project landing page"), momento: lbl("Publicaste la primera página web funcional de tu Airbnb.", "You published the first functional web page of your Airbnb.") },
+            { id: "cpsaa", comp: "CPSAA", nombre: lbl("Reflexivo", "Reflective"), icono: "🧠", progreso: 74, evidenciaKey: lbl("Error Log — cálculo de tarifas", "Error Log — rate calculation"), momento: lbl("Documentaste tu primer error como oportunidad de aprendizaje.", "You documented your first error as a learning opportunity.") },
+            { id: "cc", comp: "CC", nombre: lbl("Ciudadano", "Citizen"), icono: "⚖️", progreso: 68, evidenciaKey: lbl("Informe normativa municipal", "Municipal regulations report"), momento: lbl("Analizaste la normativa de alquiler vacacional de Málaga.", "You analyzed Málaga's vacation rental regulations.") },
+            { id: "ce", comp: "CE", nombre: lbl("Emprendedor", "Entrepreneur"), icono: "🚀", progreso: 90, evidenciaKey: lbl("Estrategia de precios temporada alta", "High season pricing strategy"), momento: lbl("Diseñaste la primera estrategia de precios dinámica con datos reales del sector.", "You designed the first dynamic pricing strategy with real industry data.") },
+            { id: "ccec", comp: "CCEC", nombre: lbl("Creativo", "Creative"), icono: "🎨", progreso: 55, evidenciaKey: lbl("Brand board Casa Limón", "Casa Limón brand board"), momento: lbl("Creaste la identidad visual completa de tu marca.", "You created the complete visual identity for your brand.") },
+          ];
+
+          const desbloqueadas = insignias.filter((b) => b.progreso >= 70);
+          const enProgreso = insignias.filter((b) => b.progreso >= 40 && b.progreso < 70);
+
+          const handleExportarBadges = () => {
+            setExportandoBadges(true);
+            setTimeout(() => {
+              const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Insignias de habilidad — Lucas García</title><style>body{font-family:Inter,sans-serif;background:#f4f0e9;padding:32px;max-width:700px;margin:auto}.title{font-size:22px;font-weight:700;color:#141414;margin-bottom:4px}.sub{font-size:13px;color:#666;margin-bottom:24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.badge{background:#fff;border-radius:16px;padding:12px;text-align:center;border:1px solid #ededed}.badge-icon{font-size:28px;margin-bottom:6px}.badge-name{font-size:11px;font-weight:700;color:#141414}.badge-comp{font-size:9px;color:#2f574d;background:#edffe3;padding:2px 6px;border-radius:20px;margin-top:4px;display:inline-block}.badge-date{font-size:9px;color:#9ca3af;margin-top:4px}.locked{opacity:0.4}</style></head><body><p class="title">Insignias de habilidad — Lucas García</p><p class="sub">Proyecto: Airbnb Málaga / Casa Limón · 1º ESO</p><div class="grid">${insignias.map((b) => `<div class="badge ${b.progreso < 70 ? 'locked' : ''}"><div class="badge-icon">${b.icono}</div><div class="badge-name">${b.nombre}</div><div class="badge-comp">${b.comp}</div>${b.progreso >= 70 ? '<div class="badge-date">Obtenida el 3 mar</div>' : `<div class="badge-date">${b.progreso}%</div>`}</div>`).join("")}</div></body></html>`;
+              const blob = new Blob([html], { type: "text/html" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "insignias_lucas_garcia.html";
+              a.click();
+              URL.revokeObjectURL(url);
+              setExportandoBadges(false);
+              setBadgesExportadas(true);
+              setTimeout(() => setBadgesExportadas(false), 3500);
+            }, 1200);
+          };
+
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield size={12} className="text-accent-text" />
+                <span className="text-[11px] font-bold text-text-primary">{lbl("Insignias de habilidad", "Skill badges")}</span>
+                <span className="ml-auto text-[9px] font-bold bg-success-light text-success px-1.5 py-0.5 rounded-full">{desbloqueadas.length}/8 {lbl("obtenidas", "earned")}</span>
+              </div>
+
+              {/* Desbloqueadas */}
+              {desbloqueadas.length > 0 && (
+                <div className="mb-3">
+                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("Obtenidas", "Earned")}</span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {desbloqueadas.map((b) => (
+                      <div key={b.id}>
+                        <button
+                          onClick={() => setBadgeExpandida(badgeExpandida === b.id ? null : b.id)}
+                          className="w-full flex items-center gap-2 bg-accent-light rounded-xl px-2.5 py-2 hover:bg-accent/20 transition-all cursor-pointer border border-accent/20 group"
+                        >
+                          <span className="text-[16px] flex-shrink-0">{b.icono}</span>
+                          <div className="flex-1 min-w-0 text-left">
+                            <p className="text-[9px] font-bold text-accent-text truncate">{b.nombre}</p>
+                            <p className="text-[8px] text-text-muted">{b.comp} · 3 mar</p>
+                          </div>
+                          <CheckCircle2 size={10} className="text-success flex-shrink-0" />
+                        </button>
+                        {badgeExpandida === b.id && (
+                          <div className="mt-1 bg-background rounded-xl p-2.5 border border-card-border">
+                            <p className="text-[9px] font-semibold text-text-primary mb-1">{b.evidenciaKey}</p>
+                            <p className="text-[9px] text-text-muted leading-relaxed mb-2">{b.momento}</p>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`¡He obtenido la insignia ${b.nombre} (${b.comp}) en QHUMA OS! Proyecto: Airbnb Málaga / Casa Limón. https://qhuma.es/portfolio/lucas-garcia`);
+                              }}
+                              className="flex items-center gap-1 text-[8px] font-bold text-accent-text hover:underline cursor-pointer"
+                            >
+                              <Share2 size={9} />
+                              {lbl("Compartir", "Share")}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* En progreso */}
+              {enProgreso.length > 0 && (
+                <div className="mb-3">
+                  <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("En progreso", "In progress")}</span>
+                  <div className="space-y-1.5">
+                    {enProgreso.map((b) => {
+                      const evFaltantes = Math.ceil((70 - b.progreso) / 8);
+                      return (
+                        <div key={b.id} className="flex items-center gap-2 bg-background rounded-xl px-2.5 py-2 border border-card-border">
+                          <span className="text-[14px] opacity-60 flex-shrink-0">{b.icono}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-[9px] font-semibold text-text-secondary">{b.nombre}</span>
+                              <span className="text-[8px] text-text-muted">{b.progreso}%</span>
+                            </div>
+                            <div className="h-1 bg-card-border rounded-full overflow-hidden">
+                              <div className="h-full bg-warning rounded-full" style={{ width: `${b.progreso}%` }} />
+                            </div>
+                            <p className="text-[8px] text-text-muted mt-0.5">{evFaltantes} {lbl("evidencias más", "more evidence")}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Bloqueadas */}
+              {((): React.ReactNode => {
+                const bloqueadas = insignias.filter((b) => b.progreso < 40);
+                if (bloqueadas.length === 0) return null;
+                return (
+                  <div className="mb-3">
+                    <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">{lbl("Bloqueadas", "Locked")}</span>
+                    <div className="grid grid-cols-4 gap-1">
+                      {bloqueadas.map((b) => (
+                        <div key={b.id} className="flex flex-col items-center gap-1 opacity-40">
+                          <div className="relative">
+                            <span className="text-[18px]">{b.icono}</span>
+                            <Lock size={8} className="absolute -bottom-0.5 -right-0.5 text-text-muted" />
+                          </div>
+                          <span className="text-[7px] text-text-muted text-center">{b.comp}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Exportar */}
+              <button
+                onClick={handleExportarBadges}
+                disabled={exportandoBadges}
+                className={`w-full flex items-center justify-center gap-2 text-[10px] font-bold py-2 rounded-xl transition-all cursor-pointer ${
+                  badgesExportadas
+                    ? "bg-success-light text-success"
+                    : "bg-sidebar text-accent hover:brightness-110"
+                } disabled:opacity-50`}
+              >
+                {exportandoBadges ? (
+                  <><RefreshCw size={10} className="animate-spin" />{lbl("Generando…", "Generating…")}</>
+                ) : badgesExportadas ? (
+                  <><CheckCircle2 size={10} />{lbl("Tarjeta exportada", "Card exported")}</>
+                ) : (
+                  <><Download size={10} />{lbl("Exportar insignias", "Export badges")}</>
+                )}
+              </button>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
