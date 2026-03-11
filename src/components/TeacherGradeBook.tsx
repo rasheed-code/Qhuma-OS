@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy, Eye, X, Target, CalendarClock } from "lucide-react";
+import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy, Eye, X, Target, CalendarClock, UserCheck } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { useLang } from "@/lib/i18n";
 
@@ -117,6 +117,46 @@ export default function TeacherGradeBook() {
 
   // T19 — Vista resumen por alumno (modal)
   const [alumnoResumenId, setAlumnoResumenId] = useState<string | null>(null);
+
+  // T21 — Informe de seguimiento individual exportable
+  const [exportandoInforme, setExportandoInforme] = useState<string | null>(null);
+  const [exportInformeFilename, setExportInformeFilename] = useState<string | null>(null);
+
+  const handleExportarInformeIndividual = (alumnoId: string) => {
+    if (exportandoInforme) return;
+    setExportandoInforme(alumnoId);
+    const alumno = classStudents.find((s) => s.id === alumnoId);
+    if (!alumno) { setExportandoInforme(null); return; }
+    const fecha = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "2-digit" });
+    const filename = `seguimiento_${alumno.name.split(" ")[0].toLowerCase()}_${trimestre}_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const t1g = gradesTrimAnterior[alumnoId] ?? {};
+    const t2g = initialGrades[alumnoId] ?? {};
+    const t3g = gradesT3[alumnoId] ?? {};
+    const avgT2 = (COMPS.map((c) => t2g[c] ?? 3).reduce((a, b) => a + b, 0) / COMPS.length).toFixed(2);
+    const avgT1 = (COMPS.map((c) => (t1g[c] as number) ?? 3).reduce((a, b) => a + b, 0) / COMPS.length).toFixed(2);
+    const objsAlumno = objetivos.filter((o) => o.alumnoId === alumnoId);
+    const feedbackDoc = feedbackGenerado[alumnoId] ?? comentariosTrimestral[alumnoId] ?? "";
+    const compsRows = COMPS.map((c) => {
+      const v1 = (t1g[c] as number) ?? 3;
+      const v2 = t2g[c] ?? 3;
+      const v3 = t3g[c] ?? 3;
+      const delta = v2 - v1;
+      const arrow = delta > 0 ? "↑" : delta < 0 ? "↓" : "=";
+      const color = delta > 0 ? "#22c55e" : delta < 0 ? "#ef4444" : "#9ca3af";
+      return `<tr><td style="font-weight:600">${c}</td><td style="text-align:center">${v1}</td><td style="text-align:center;font-weight:bold">${v2}</td><td style="text-align:center">${v3}</td><td style="text-align:center;color:${color};font-weight:bold">${arrow}${Math.abs(delta) > 0 ? Math.abs(delta) : ""}</td></tr>`;
+    }).join("");
+    const objsHtml = objsAlumno.length === 0
+      ? `<p style="color:#9ca3af;font-style:italic">Sin objetivos definidos para este trimestre.</p>`
+      : objsAlumno.map((o) => `<div style="background:${o.conseguido ? "#f0fdf4" : "#fffbeb"};border-radius:8px;padding:8px 12px;margin-bottom:6px"><span style="font-size:10px;font-weight:bold;color:${o.conseguido ? "#22c55e" : "#f59e0b"}">${o.competencia} · ${o.fechaLimite}${o.conseguido ? " · ✓ Conseguido" : ""}</span><p style="font-size:11px;margin:4px 0 0;color:#141414">${o.descripcion}</p></div>`).join("");
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe seguimiento — ${alumno.name}</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#141414;margin:36px;line-height:1.5}h1{font-size:20px;color:#1f514c;margin-bottom:2px}h2{font-size:13px;color:#1f514c;margin-top:22px;padding-bottom:4px;border-bottom:1.5px solid #ededed}p.meta{color:#9ca3af;font-size:10px;margin-bottom:18px}table{width:100%;border-collapse:collapse;margin-top:8px}th{background:#1f514c;color:#fff;padding:5px 8px;text-align:left;font-size:10px}td{border:1px solid #ededed;padding:5px 8px;font-size:10px}tr:nth-child(even){background:#f9fafb}.stat{display:inline-block;background:#f4f0e9;border-radius:8px;padding:6px 14px;margin:4px;text-align:center}.sv{display:block;font-size:18px;font-weight:bold;color:#1f514c}.sl{font-size:9px;color:#9ca3af}.feedback-box{background:#edffe3;border-radius:8px;padding:12px;margin-top:8px;border:1px solid #c3f499}.footer{margin-top:24px;font-size:9px;color:#9ca3af;border-top:1px solid #ededed;padding-top:10px}</style></head><body><h1>Informe de seguimiento individual</h1><p class="meta">Alumno/a: <strong>${alumno.name}</strong> · ${trimestre} · 1º ESO A · Proyecto: Airbnb Málaga · ${fecha}</p><div><div class="stat"><span class="sv">${avgT2}</span><span class="sl">Media ${trimestre}</span></div><div class="stat"><span class="sv">${avgT1}</span><span class="sl">Media T${trimestre === "T2" ? "1" : "2"} anterior</span></div><div class="stat"><span class="sv" style="color:${parseFloat(avgT2) >= parseFloat(avgT1) ? "#22c55e" : "#ef4444"}">${parseFloat(avgT2) >= parseFloat(avgT1) ? "▲" : "▼"} ${Math.abs(parseFloat(avgT2) - parseFloat(avgT1)).toFixed(2)}</span><span class="sl">Evolución</span></div><div class="stat"><span class="sv">${objsAlumno.filter((o) => o.conseguido).length}/${objsAlumno.length}</span><span class="sl">Objetivos conseguidos</span></div></div><h2>Competencias LOMLOE — evolución trimestral</h2><table><thead><tr><th>Competencia</th><th>T1</th><th>${trimestre} (activo)</th><th>T3</th><th>Evolución T1→${trimestre}</th></tr></thead><tbody>${compsRows}</tbody></table><h2>Objetivos de mejora personalizados</h2>${objsHtml}${feedbackDoc ? `<h2>Comentario docente y borrador IA</h2><div class="feedback-box"><p style="font-size:11px;color:#2f574d;line-height:1.6">${feedbackDoc}</p></div>` : ""}<h2>Recomendaciones para el próximo trimestre</h2><ul style="padding-left:16px;margin:8px 0"><li style="margin-bottom:4px">Continuar reforzando las competencias con nivel 1 o 2 mediante proyectos de aplicación directa</li><li style="margin-bottom:4px">Programar tutoría individual en las primeras dos semanas del siguiente trimestre</li><li style="margin-bottom:4px">Facilitar recursos de apoyo en las competencias más débiles identificadas este trimestre</li><li>Compartir este informe con la familia en la próxima reunión de tutoría</li></ul><p class="footer">Informe generado por QHUMA OS · Conforme al Real Decreto 217/2022 (LOMLOE) · 8 competencias clave evaluadas · Proyecto Airbnb Málaga</p></body></html>`;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    setExportInformeFilename(filename);
+    setTimeout(() => setExportandoInforme(null), 1400);
+  };
 
   // T20 — Objetivos de mejora
   const [objetivos, setObjetivos] = useState<ObjetivoMejora[]>(objetivosIniciales);
@@ -1069,10 +1109,29 @@ export default function TeacherGradeBook() {
                     <AlertTriangle size={9} /> {lbl("Alerta", "Alert")}
                   </span>
                 )}
+                {/* T21 — Exportar informe individual */}
+                <button
+                  onClick={() => handleExportarInformeIndividual(alumnoResumenId)}
+                  disabled={exportandoInforme === alumnoResumenId}
+                  className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60 flex-shrink-0"
+                >
+                  {exportandoInforme === alumnoResumenId
+                    ? <><RefreshCw size={10} className="animate-spin" />{lbl("Generando...", "Generating...")}</>
+                    : <><UserCheck size={10} />{lbl("Informe individual", "Individual report")}</>
+                  }
+                </button>
                 <button onClick={() => setAlumnoResumenId(null)} className="text-text-muted hover:text-text-primary cursor-pointer flex-shrink-0">
                   <X size={16} />
                 </button>
               </div>
+              {/* T21 — Filename feedback */}
+              {exportInformeFilename && exportandoInforme === null && (
+                <div className="flex items-center gap-2 px-6 py-2 bg-success-light border-b border-success/20">
+                  <CheckCircle2 size={12} className="text-success flex-shrink-0" />
+                  <span className="text-[10px] text-success font-medium">{lbl("Descargado:", "Downloaded:")} {exportInformeFilename}</span>
+                  <button onClick={() => setExportInformeFilename(null)} className="ml-auto text-text-muted hover:text-text-primary cursor-pointer"><X size={11} /></button>
+                </div>
+              )}
 
               <div className="p-6 grid grid-cols-5 gap-5">
                 {/* Columna izquierda — Radar SVG */}
