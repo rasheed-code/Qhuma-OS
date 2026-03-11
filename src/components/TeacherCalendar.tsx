@@ -3,13 +3,13 @@
 import { useState } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, X, Bell, CheckCircle2,
-  Clock, Lock, Loader2, Calendar, Layers,
+  Clock, Lock, Loader2, Calendar, Layers, Copy, RefreshCw,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { TaskStatus } from "@/types";
 import { useLang } from "@/lib/i18n";
 
-type VistaCalendario = "semana" | "mes";
+type VistaCalendario = "semana" | "mes" | "trimestre";
 type TipoEvento = "demo" | "entrega" | "pitch" | "recordatorio";
 
 interface Evento {
@@ -73,6 +73,51 @@ export default function TeacherCalendar() {
   const [nuevoDia, setNuevoDia] = useState("");
   const [nuevaHora, setNuevaHora] = useState("09:00");
 
+  // T28 — Vista trimestre + duplicar semana
+  const [semanaOrigen, setSemanaOrigen] = useState("S1");
+  const [semanaDestino, setSemanaDestino] = useState("S2");
+  const [semanasDuplicadas, setSemanasDuplicadas] = useState<Set<string>>(new Set());
+  const [duplicando, setDuplicando] = useState(false);
+
+  // T28 — Trimestre data: 12 semanas, días lun-vie mapeados a dias del mes
+  // Semana 1 = Mar 9-13, Semana 2 = Mar 16-20, Semana 3 = Mar 23-27, semanas 4-12 = hipotéticas (simuladas)
+  const semanasTrimestrales = Array.from({ length: 12 }, (_, i) => {
+    const semNum = i + 1;
+    // Días lun-vie para cada semana (base real en marzo, resto hipotético)
+    const baseDay = 9 + i * 7;
+    const dias = [0, 1, 2, 3, 4].map((d) => baseDay + d);
+    const esDemoDay = semNum === 12;
+    const esEntregaT2 = semNum === 8;
+    return { semNum, dias, esDemoDay, esEntregaT2 };
+  });
+
+  // Mapear evento a semana: semana 1 = dias 9-13, semana 2 = 16-20, ...
+  const getSemanaPorDia = (dia: number): number => {
+    if (dia <= 13) return 1;
+    if (dia <= 20) return 2;
+    if (dia <= 27) return 3;
+    return Math.ceil(dia / 7);
+  };
+
+  const handleDuplicarSemana = () => {
+    if (!semanaOrigen || !semanaDestino || semanaOrigen === semanaDestino || duplicando) return;
+    setDuplicando(true);
+    setTimeout(() => {
+      const origenNum = parseInt(semanaOrigen.replace("S", ""));
+      const destinoNum = parseInt(semanaDestino.replace("S", ""));
+      const eventosSemOrigen = eventos.filter((e) => getSemanaPorDia(e.dia) === origenNum);
+      const offset = (destinoNum - origenNum) * 7;
+      const copias: Evento[] = eventosSemOrigen.map((e) => ({
+        ...e,
+        id: `dup-${Date.now()}-${e.id}`,
+        dia: e.dia + offset,
+      }));
+      setEventos((prev) => [...prev, ...copias]);
+      setSemanasDuplicadas((prev) => new Set(prev).add(`${semanaOrigen}→${semanaDestino}`));
+      setDuplicando(false);
+    }, 900);
+  };
+
   // Month calendar grid
   const totalCells = Math.ceil((MARCH_START_OFFSET + MARCH_DAYS) / 7) * 7;
   const cells = Array.from({ length: totalCells }, (_, i) => {
@@ -134,6 +179,15 @@ export default function TeacherCalendar() {
             >
               <Calendar size={13} />
               {lbl("Mes", "Month")}
+            </button>
+            <button
+              onClick={() => setVista("trimestre")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all cursor-pointer ${
+                vista === "trimestre" ? "bg-sidebar text-white" : "text-text-secondary hover:text-text-primary"
+              }`}
+            >
+              <ChevronRight size={13} />
+              {lbl("Trimestre", "Quarter")}
             </button>
           </div>
           <button
@@ -331,6 +385,167 @@ export default function TeacherCalendar() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* ── VISTA TRIMESTRE ── */}
+      {vista === "trimestre" && (
+        <div className="space-y-4 mb-5">
+          {/* Duplicar semana panel */}
+          <div className="bg-card border border-card-border rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Copy size={13} className="text-accent-text" />
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Duplicar semana", "Duplicate week")}</h3>
+              {semanasDuplicadas.size > 0 && (
+                <span className="ml-auto text-[9px] font-bold bg-success-light text-success px-2 py-0.5 rounded-full">
+                  {semanasDuplicadas.size} {lbl("copias realizadas", "copies made")}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-[10px] font-semibold text-text-muted block mb-1">{lbl("Semana origen", "Source week")}</label>
+                <select
+                  value={semanaOrigen}
+                  onChange={(e) => setSemanaOrigen(e.target.value)}
+                  className="w-full border border-card-border rounded-xl px-3 py-2 text-[12px] text-text-primary bg-background outline-none cursor-pointer"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={`S${i + 1}`} value={`S${i + 1}`}>
+                      {lbl(`Semana ${i + 1}`, `Week ${i + 1}`)}
+                      {i + 1 === 8 ? " — Entrega T2" : i + 1 === 12 ? " — Demo Day" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-shrink-0 mt-4">
+                <ChevronRight size={16} className="text-text-muted" />
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] font-semibold text-text-muted block mb-1">{lbl("Semana destino", "Target week")}</label>
+                <select
+                  value={semanaDestino}
+                  onChange={(e) => setSemanaDestino(e.target.value)}
+                  className="w-full border border-card-border rounded-xl px-3 py-2 text-[12px] text-text-primary bg-background outline-none cursor-pointer"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={`S${i + 1}`} value={`S${i + 1}`}>
+                      {lbl(`Semana ${i + 1}`, `Week ${i + 1}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleDuplicarSemana}
+                disabled={!semanaOrigen || !semanaDestino || semanaOrigen === semanaDestino || duplicando}
+                className="mt-4 flex items-center gap-1.5 bg-sidebar text-white px-3 py-2 rounded-xl text-[11px] font-semibold hover:brightness-110 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+              >
+                {duplicando ? (
+                  <><RefreshCw size={11} className="animate-spin" />{lbl("Copiando...", "Copying...")}</>
+                ) : (
+                  <><Copy size={11} />{lbl("Duplicar", "Duplicate")}</>
+                )}
+              </button>
+            </div>
+            {semanasDuplicadas.size > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Array.from(semanasDuplicadas).map((dup) => (
+                  <span key={dup} className="text-[9px] font-bold bg-success-light text-success px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 size={8} />{dup}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Grid 12 semanas */}
+          <div className="bg-card border border-card-border rounded-2xl p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Planificación trimestral — T2 2025-26", "Term 2 Planning — 2025-26")}</h3>
+              <div className="flex gap-2">
+                <span className="text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">{lbl("Semana actual: S1", "Current: W1")}</span>
+                <span className="text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">{lbl("Entrega T2: S8", "T2 Deadline: W8")}</span>
+                <span className="text-[9px] font-bold bg-success-light text-success px-2 py-0.5 rounded-full">{lbl("Demo Day: S12", "Demo Day: W12")}</span>
+              </div>
+            </div>
+
+            {/* Header columns */}
+            <div className="grid grid-cols-6 gap-1 mb-2">
+              <div className="text-[10px] font-bold text-text-muted py-1 pl-2">{lbl("Semana", "Week")}</div>
+              {diasSemanaCortos.map((d) => (
+                <div key={d} className="text-[10px] font-bold text-text-muted text-center py-1">{d}</div>
+              ))}
+            </div>
+
+            {/* 12 rows */}
+            <div className="space-y-1">
+              {semanasTrimestrales.map(({ semNum, dias, esDemoDay, esEntregaT2 }) => {
+                const bgRow = esDemoDay
+                  ? "bg-success-light border border-success/20"
+                  : esEntregaT2
+                  ? "bg-warning-light border border-warning/20"
+                  : semNum === 1
+                  ? "bg-accent-light border border-accent-text/15"
+                  : "bg-background";
+                const labelFase = esDemoDay
+                  ? lbl("Demo Day", "Demo Day")
+                  : esEntregaT2
+                  ? lbl("Entrega T2", "T2 Deadline")
+                  : semNum <= 4
+                  ? lbl("Fase 1 — Investigación", "Phase 1 — Research")
+                  : semNum <= 8
+                  ? lbl("Fase 2 — Producción", "Phase 2 — Production")
+                  : lbl("Fase 3 — Presentación", "Phase 3 — Presentation");
+                return (
+                  <div key={semNum} className={`grid grid-cols-6 gap-1 rounded-xl ${bgRow} py-1.5`}>
+                    {/* Semana label */}
+                    <div className="flex flex-col justify-center pl-2">
+                      <span className={`text-[11px] font-bold ${esDemoDay ? "text-success" : esEntregaT2 ? "text-warning" : semNum === 1 ? "text-accent-text" : "text-text-primary"}`}>
+                        S{semNum}
+                      </span>
+                      <span className="text-[8px] text-text-muted leading-tight max-w-[70px]">{labelFase}</span>
+                    </div>
+                    {/* Lun–Vie cells */}
+                    {dias.map((dia, dIdx) => {
+                      const evs = eventos.filter((e) => e.dia === dia);
+                      const diaNombre = diasSemanaCortos[dIdx];
+                      return (
+                        <div key={dIdx} className="flex flex-col items-center gap-0.5 min-h-[36px] justify-center">
+                          {evs.length === 0 ? (
+                            <span className="text-[8px] text-text-muted/40">{diaNombre}</span>
+                          ) : (
+                            evs.slice(0, 2).map((ev) => {
+                              const cfg = tipoConfig[ev.tipo];
+                              return (
+                                <span
+                                  key={ev.id}
+                                  title={ev.titulo}
+                                  className={`w-3 h-3 rounded-full flex-shrink-0 ${cfg.dot}`}
+                                />
+                              );
+                            })
+                          )}
+                          {evs.length > 2 && (
+                            <span className="text-[7px] text-text-muted">+{evs.length - 2}</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Leyenda */}
+            <div className="flex gap-3 mt-4 flex-wrap">
+              {(Object.entries(tipoConfig) as [TipoEvento, typeof tipoConfig[TipoEvento]][]).map(([tipo, cfg]) => (
+                <div key={tipo} className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
+                  <span className="text-[9px] text-text-muted">{cfg.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
