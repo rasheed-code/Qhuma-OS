@@ -534,6 +534,11 @@ export default function PitchLab() {
   const [ensayoElapsed, setEnsayoElapsed] = useState(0);
   const [ensayoCompleted, setEnsayoCompleted] = useState(false);
 
+  // C18 — Preguntas intercaladas al cambiar de sección
+  const [ensayoPreguntaIntercalada, setEnsayoPreguntaIntercalada] = useState<typeof preguntasJurado[number] | null>(null);
+  const [ensayoRespuestaIntercalada, setEnsayoRespuestaIntercalada] = useState("");
+  const ensayoIntercaladasVisitadas = useRef<Set<number>>(new Set());
+
   useEffect(() => {
     if (!ensayoRunning || ensayoCompleted) return;
     const interval = setInterval(() => {
@@ -558,10 +563,39 @@ export default function PitchLab() {
   const ensayoMins = Math.floor(ensayoElapsed / 60);
   const ensayoSecs = ensayoElapsed % 60;
 
+  // C18 — Detectar cambio de sección durante ensayo y mostrar pregunta intercalada
+  useEffect(() => {
+    if (!ensayoRunning) return;
+    const idx = currentEnsayoSectionIdx < 0 ? pitchSections.length - 1 : currentEnsayoSectionIdx;
+    if (idx > 0 && !ensayoIntercaladasVisitadas.current.has(idx)) {
+      ensayoIntercaladasVisitadas.current.add(idx);
+      const sectionId = pitchSections[idx]?.id ?? "";
+      const tipoMap: Record<string, string> = { solucion: "competencia", mercado: "riesgo", financiero: "operacional", equipo: "inversión" };
+      const tipo = tipoMap[sectionId];
+      const candidatas = tipo ? preguntasJurado.filter((p) => p.tipo === tipo) : preguntasJurado;
+      const pregunta = candidatas[Math.floor(Math.random() * candidatas.length)];
+      if (pregunta) {
+        setEnsayoRunning(false);
+        setEnsayoPreguntaIntercalada(pregunta);
+        setEnsayoRespuestaIntercalada("");
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEnsayoSectionIdx, ensayoRunning]);
+
+  const handleContinuarTrasIntercalada = () => {
+    setEnsayoPreguntaIntercalada(null);
+    setEnsayoRespuestaIntercalada("");
+    setEnsayoRunning(true);
+  };
+
   const handleResetEnsayo = () => {
     setEnsayoElapsed(0);
     setEnsayoRunning(false);
     setEnsayoCompleted(false);
+    setEnsayoPreguntaIntercalada(null);
+    setEnsayoRespuestaIntercalada("");
+    ensayoIntercaladasVisitadas.current = new Set();
   };
 
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
@@ -703,6 +737,50 @@ export default function PitchLab() {
                   <RotateCcw size={13} />
                   Reiniciar
                 </button>
+              </div>
+            ) : ensayoPreguntaIntercalada ? (
+              /* C18: Pregunta intercalada del jurado */
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare size={14} className="text-accent flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wide">Pregunta del jurado</span>
+                  <span className={`ml-auto text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                    tipoColor[ensayoPreguntaIntercalada.tipo] ?? "bg-background text-text-muted"
+                  }`}>
+                    {ensayoPreguntaIntercalada.tipo}
+                  </span>
+                </div>
+                <div className="flex items-start gap-3 bg-white/8 rounded-xl p-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-accent-text text-white font-bold text-[11px] flex items-center justify-center flex-shrink-0">
+                    {ensayoPreguntaIntercalada.avatar}
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-white/50 mb-0.5">{ensayoPreguntaIntercalada.inversor}</p>
+                    <p className="text-[13px] font-semibold text-white leading-snug">{ensayoPreguntaIntercalada.pregunta}</p>
+                  </div>
+                </div>
+                <textarea
+                  value={ensayoRespuestaIntercalada}
+                  onChange={(e) => setEnsayoRespuestaIntercalada(e.target.value)}
+                  placeholder="Responde antes de continuar con el siguiente segmento del ensayo..."
+                  className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-[12px] text-white placeholder:text-white/30 resize-none outline-none focus:border-accent/40 h-20 mb-3"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleContinuarTrasIntercalada}
+                    disabled={!ensayoRespuestaIntercalada.trim()}
+                    className="flex items-center gap-1.5 bg-accent text-sidebar text-[12px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Play size={13} />
+                    Continuar ensayo
+                  </button>
+                  <button
+                    onClick={handleContinuarTrasIntercalada}
+                    className="flex items-center gap-1.5 bg-white/10 text-white/60 text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:bg-white/20 transition-all"
+                  >
+                    Omitir pregunta
+                  </button>
+                </div>
               </div>
             ) : (
               /* Running state */
