@@ -1011,6 +1011,126 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           );
         })()}
 
+        {/* S25: Habilidad de la semana */}
+        {(() => {
+          // Detectar competencia con menor score
+          const compScores: Record<string, number> = { CLC: 72, CPL: 58, STEM: 85, CD: 88, CPSAA: 74, CC: 68, CE: 90, CCEC: 55 };
+          const compNames: Record<string, string> = { CLC: "Comunicación Lingüística", CPL: "Plurilingüe", STEM: "STEM", CD: "Digital", CPSAA: "Personal y Social", CC: "Ciudadana", CE: "Emprendedora", CCEC: "Expresión Cultural" };
+          const lowestComp = Object.entries(compScores).reduce((min, cur) => cur[1] < min[1] ? cur : min);
+          const [compKey, compScore] = lowestComp;
+          const ejercicios: Record<string, { titulo: string; descripcion: string; tiempo: string; dificultad: "Básico" | "Medio" | "Avanzado"; evidencia: string }> = {
+            CLC: { titulo: "Redacta la guía de bienvenida de Casa Limón en español formal",                  descripcion: "Escribe un texto de 150 palabras explicando las normas de la casa, los puntos de interés cercanos y el protocolo de check-out. Usa registro formal y lenguaje claro para huéspedes adultos.",       tiempo: "30 min", dificultad: "Medio",    evidencia: "Documento Word" },
+            CPL: { titulo: "Traduce las normas de Casa Limón al inglés y al francés",                      descripcion: "Toma las 5 normas principales de tu Airbnb y tradúcelas a inglés y francés sin usar traductores automáticos. Compara el resultado con DeepL y anota las diferencias de matiz.",                  tiempo: "30 min", dificultad: "Avanzado", evidencia: "Documento bilingüe" },
+            STEM: { titulo: "Calcula el punto de equilibrio real de Casa Limón con 3 escenarios",          descripcion: "Crea una hoja de cálculo con los costes fijos mensuales, precio medio por noche y 3 escenarios de ocupación (40%, 65%, 85%). Determina en qué escenario cubres costes.",                          tiempo: "30 min", dificultad: "Avanzado", evidencia: "Hoja de cálculo" },
+            CD: { titulo: "Optimiza el listing de Casa Limón para el algoritmo de Airbnb",                descripcion: "Revisa las 10 mejores prácticas de SEO de Airbnb (título, palabras clave, fotos, respuesta rápida) y aplica al menos 5 a tu listing actual. Documenta cada cambio con antes/después.",            tiempo: "30 min", dificultad: "Medio",    evidencia: "Captura de pantalla" },
+            CPSAA: { titulo: "Reflexiona sobre tu error más costoso del proyecto y crea un plan de acción", descripcion: "Identifica el error que más impactó en tu proyecto Airbnb (financiero, de comunicación o de diseño). Responde: ¿qué supuse? ¿dónde falló? ¿qué cambiarías? Escribe un plan de 3 acciones.",   tiempo: "30 min", dificultad: "Medio",    evidencia: "Reflexión escrita" },
+            CC: { titulo: "Analiza la normativa municipal de alquiler vacacional en Málaga 2024",          descripcion: "Busca en el BOE y la web del Ayuntamiento de Málaga los requisitos legales para alquiler vacacional. Lista 5 obligaciones del propietario y evalúa si Casa Limón las cumple.",                    tiempo: "30 min", dificultad: "Avanzado", evidencia: "Informe legal" },
+            CE: { titulo: "Diseña una oferta de temporada para el verano de Casa Limón",                  descripcion: "Crea una estrategia de precios para julio-agosto: precio base, precio fin de semana, descuento para estancias de 7+ noches. Justifica cada decisión con datos de ocupación del sector.",          tiempo: "30 min", dificultad: "Medio",    evidencia: "Estrategia de precios" },
+            CCEC: { titulo: "Diseña el branding visual de Casa Limón en Canva",                            descripcion: "Crea una identidad visual coherente: logotipo, paleta de 3 colores, tipografía y una foto de portada del listing. Justifica cada decisión estética en función del público objetivo familiar.", tiempo: "30 min", dificultad: "Básico",   evidencia: "Brand board" },
+          };
+          const ejercicio = ejercicios[compKey] ?? ejercicios["CCEC"];
+          const dificultadCfg = {
+            Básico:   { bg: "bg-success-light",  text: "text-success"      },
+            Medio:    { bg: "bg-warning-light",  text: "text-text-primary" },
+            Avanzado: { bg: "bg-urgent-light",   text: "text-urgent"       },
+          } as const;
+          const difCfg = dificultadCfg[ejercicio.dificultad];
+          return (
+            <div className="mt-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-text-primary" />
+                  <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Habilidad de la semana", "Skill of the week")}</h2>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-warning-light text-text-primary text-[10px] font-bold border border-warning/20">
+                  {lbl("Tu punto de mejora", "Your improvement area")}
+                </span>
+              </div>
+
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                {/* Cabecera: competencia detectada */}
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[9px] font-bold bg-warning-light text-text-primary px-2 py-0.5 rounded-full border border-warning/20">
+                        {lbl("Competencia más baja detectada", "Lowest detected competency")}
+                      </span>
+                      <span className="text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">{compScore}%</span>
+                    </div>
+                    <p className="text-[16px] font-bold text-text-primary leading-tight">{compKey} — {compNames[compKey]}</p>
+                    <p className="text-[11px] text-text-muted mt-0.5">{lbl("Nivel actual en tu perfil de competencias LOMLOE", "Current level in your LOMLOE competency profile")}</p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 rounded-2xl bg-background flex flex-col items-center justify-center border border-card-border">
+                      <span className="text-[22px] font-black text-urgent leading-none">{compScore}</span>
+                      <span className="text-[8px] text-text-muted">/ 100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de progreso */}
+                <div className="mb-5">
+                  <div className="h-2 bg-background rounded-full overflow-hidden">
+                    <div className="h-full bg-warning rounded-full" style={{ width: `${compScore}%` }} />
+                  </div>
+                </div>
+
+                {/* Ejercicio contextualizado en Casa Limón */}
+                <div className="bg-accent-light rounded-xl p-4 border border-accent/20 mb-4">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <p className="text-[13px] font-semibold text-text-primary leading-snug">{ejercicio.titulo}</p>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${difCfg.bg} ${difCfg.text}`}>{ejercicio.dificultad}</span>
+                      <span className="text-[9px] font-bold bg-sidebar text-white px-2 py-0.5 rounded-full">{ejercicio.tiempo}</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-text-secondary leading-relaxed mb-3">{ejercicio.descripcion}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-accent-text">{lbl("Evidencia:", "Evidence:")} {ejercicio.evidencia}</span>
+                    <span className="text-[9px] text-text-muted">· Casa Limón · Airbnb Málaga</span>
+                  </div>
+                </div>
+
+                {/* Botones de acción */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      alert(lbl("¡Ejercicio marcado! +45 Q-Coins añadidos a tu saldo. Sigue así, Lucas.", "Exercise marked! +45 Q-Coins added to your balance. Keep it up, Lucas."));
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 bg-sidebar text-white text-[12px] font-bold py-2.5 rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 size={14} />
+                    {lbl("Marcar como practicado · +45 Q-Coins", "Mark as practiced · +45 Q-Coins")}
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/tutor-chat", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            mode: "narrativa",
+                            message: `Dame un ejercicio alternativo de ${compNames[compKey]} (competencia LOMLOE ${compKey}) para el proyecto Airbnb Málaga / Casa Limón. Solo el título del ejercicio y una descripción de 2 frases. Sin introducción.`,
+                            history: [],
+                          }),
+                        });
+                        const data = await res.json();
+                        alert(data.reply ?? lbl("Aquí tienes otro ejercicio de refuerzo para Casa Limón.", "Here's another reinforcement exercise for Casa Limón."));
+                      } catch {
+                        alert(lbl("Intenta más tarde. ¡Sigue practicando!", "Try again later. Keep practicing!"));
+                      }
+                    }}
+                    className="flex items-center gap-2 bg-background text-text-secondary text-[11px] font-medium py-2.5 px-4 rounded-xl hover:bg-card border border-card-border transition-all cursor-pointer"
+                  >
+                    <Sparkles size={12} />
+                    {lbl("Pedir otro ejercicio", "Request another exercise")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* S6: Mercado en Tiempo Real */}
         <div className="mt-8">
           <div className="flex items-center gap-3 mb-3">
