@@ -122,45 +122,92 @@ export default function TeacherDashboard() {
                 {" "}· Fase 2: Construcción Digital
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center">
-                <span className="text-[24px] font-bold text-white block">{classStudents.length}</span>
-                <span className="text-[10px] text-white/50">Alumnos</span>
-              </div>
-              <div className="w-px h-10 bg-white/20" />
-              <div className="text-center">
-                <span className="text-[24px] font-bold text-accent block">{avgProgress}%</span>
-                <span className="text-[10px] text-white/50">Media clase</span>
-              </div>
-              <div className="w-px h-10 bg-white/20" />
-              <div className="text-center">
-                <span className="text-[24px] font-bold text-white block">{totalEvidences}</span>
-                <span className="text-[10px] text-white/50">Evidencias</span>
-              </div>
-            </div>
+            {/* SVG Health Ring */}
+            {(() => {
+              const total = classStudents.length;
+              const r = 38;
+              const C = 2 * Math.PI * r;
+              const exArc = (excelling / total) * C;
+              const otArc = (onTrack / total) * C;
+              const naArc = (needsAttention / total) * C;
+              const healthPct = Math.round(((excelling + onTrack) / total) * 100);
+              return (
+                <div className="flex items-center gap-4">
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: "rotate(-90deg)" }}>
+                      <circle cx="48" cy="48" r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10" />
+                      {excelling > 0 && (
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#c3f499" strokeWidth="10"
+                          strokeDasharray={`${exArc} ${C}`} strokeDashoffset="0" strokeLinecap="butt" />
+                      )}
+                      {onTrack > 0 && (
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#22c55e" strokeWidth="10"
+                          strokeDasharray={`${otArc} ${C}`} strokeDashoffset={`${-exArc}`} strokeLinecap="butt" />
+                      )}
+                      {needsAttention > 0 && (
+                        <circle cx="48" cy="48" r={r} fill="none" stroke="#f59e0b" strokeWidth="10"
+                          strokeDasharray={`${naArc} ${C}`} strokeDashoffset={`${-(exArc + otArc)}`} strokeLinecap="butt" />
+                      )}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-[18px] font-bold text-white leading-none">{healthPct}%</span>
+                      <span className="text-[8px] text-white/50 mt-0.5">salud</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
+                      <span className="text-[11px] text-white/80 font-medium">{excelling} brillando</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-success flex-shrink-0" />
+                      <span className="text-[11px] text-white/80 font-medium">{onTrack} en ruta</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+                      <span className="text-[11px] text-white/80 font-medium">{needsAttention} necesitan ayuda</span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                      <TrendingUp size={10} className="text-accent" />
+                      <span className="text-[10px] text-accent font-semibold">+4% vs semana pasada</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
-          {/* Class health bar */}
-          <div className="mt-5 relative z-10">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] text-white/60 font-medium">Salud de la clase</span>
-              <span className="text-[11px] text-white/60">
-                {excelling} brillando · {onTrack} en ruta · {needsAttention} necesitan ayuda
-              </span>
-            </div>
-            <div className="h-2.5 rounded-full overflow-hidden bg-white/10 flex">
-              <div
-                className="h-full bg-[#4F8EF7] transition-all duration-700"
-                style={{ width: `${(excelling / classStudents.length) * 100}%` }}
-              />
-              <div
-                className="h-full bg-success transition-all duration-700"
-                style={{ width: `${(onTrack / classStudents.length) * 100}%` }}
-              />
-              <div
-                className="h-full bg-warning transition-all duration-700"
-                style={{ width: `${(needsAttention / classStudents.length) * 100}%` }}
-              />
+          {/* Avatar groups + quick action */}
+          <div className="mt-4 relative z-10 flex items-center gap-4">
+            {[
+              { label: "Brillando", students: classStudents.filter(s => s.status === "excelling"), color: "bg-accent", ring: "ring-accent/40" },
+              { label: "En ruta", students: classStudents.filter(s => s.status === "on_track"), color: "bg-success", ring: "ring-success/40" },
+              { label: "Apoyo", students: classStudents.filter(s => s.status === "needs_attention"), color: "bg-warning", ring: "ring-warning/40" },
+            ].map((group) => (
+              <div key={group.label} className="flex items-center gap-2">
+                <div className="flex -space-x-1.5">
+                  {group.students.slice(0, 4).map((s) => (
+                    <div key={s.id}
+                      className={`w-6 h-6 rounded-full ${group.color} text-white text-[8px] font-bold flex items-center justify-center ring-1 ${group.ring} flex-shrink-0`}
+                      title={s.name}
+                    >
+                      {s.avatar}
+                    </div>
+                  ))}
+                  {group.students.length > 4 && (
+                    <div className="w-6 h-6 rounded-full bg-white/20 text-white text-[8px] font-bold flex items-center justify-center ring-1 ring-white/20">
+                      +{group.students.length - 4}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[10px] text-white/60">{group.label}</span>
+              </div>
+            ))}
+            <div className="ml-auto">
+              <button className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 transition-all text-white text-[10px] font-semibold px-3 py-1.5 rounded-xl cursor-pointer border border-white/10">
+                <MessageSquare size={11} />
+                Contactar alumnos en riesgo
+              </button>
             </div>
           </div>
         </div>
