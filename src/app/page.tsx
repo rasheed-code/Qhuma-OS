@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Role, StudentView, TeacherView, ParentView } from "@/types";
+import { useLang } from "@/lib/i18n";
 import Sidebar from "@/components/Sidebar";
 import RoleSelector from "@/components/RoleSelector";
 import StudentDashboard from "@/components/StudentDashboard";
 import ParentDashboard from "@/components/ParentDashboard";
 import ParentProgress from "@/components/ParentProgress";
 import ParentCalendar from "@/components/ParentCalendar";
-import ParentTeachers from "@/components/ParentTeachers";
+import ParentMessages from "@/components/ParentMessages";
 import ParentProfile from "@/components/ParentProfile";
 import ParentSettings from "@/components/ParentSettings";
 import TeacherDashboard from "@/components/TeacherDashboard";
@@ -26,6 +27,7 @@ import StudentSettings from "@/components/StudentSettings";
 import TaskWorkspace from "@/components/TaskWorkspace";
 
 export default function Home() {
+  const { lang, tr } = useLang();
   const [role, setRole] = useState<Role>("student");
   const [activeView, setActiveView] = useState<StudentView>("dashboard");
   const [activeTeacherView, setActiveTeacherView] = useState<TeacherView>("dashboard");
@@ -70,7 +72,7 @@ export default function Home() {
                   {role === "student"
                     ? "1º ESO"
                     : role === "parent"
-                    ? "Parent of Lucas"
+                    ? (lang === "es" ? "Familia de Lucas" : "Parent of Lucas")
                     : "1º ESO Mentor"}
                 </span>
               </div>
@@ -113,7 +115,7 @@ export default function Home() {
           )}
           {role === "parent" && activeParentView === "progress" && <ParentProgress />}
           {role === "parent" && activeParentView === "calendar" && <ParentCalendar />}
-          {role === "parent" && activeParentView === "teachers" && <ParentTeachers />}
+          {role === "parent" && activeParentView === "teachers" && <ParentMessages />}
           {role === "parent" && activeParentView === "profile" && <ParentProfile />}
           {role === "parent" && activeParentView === "settings" && <ParentSettings />}
           {role === "teacher" && activeTeacherView === "dashboard" && <TeacherDashboard />}
