@@ -4,10 +4,11 @@ import { useState } from "react";
 import {
   Coins, Zap, Flame, Trophy, Sparkles, Timer, Users, Lightbulb,
   Palette, Swords, Star, Lock, TrendingUp, TrendingDown,
-  ShoppingCart, X, CheckCircle2, Camera, Cpu, MapPin, Mic,
+  ShoppingCart, X, CheckCircle2, Camera, Cpu, MapPin, Mic, Loader2,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { playerLevel, coinTransactions, shopItems, achievements } from "@/data/gamification";
+import { competencies } from "@/data/competencies";
 
 // ─── Mercado de canjes ───────────────────────────────────────────────
 type Categoria = "Todo" | "Talleres" | "Maker" | "Excursiones" | "Passion";
@@ -74,6 +75,32 @@ export default function StudentQCoins() {
   const [carrito, setCarrito] = useState<ItemMercado[]>([]);
   const [canjeConfirmado, setCanjeConfirmado] = useState(false);
 
+  // C8 — MercadoIntegrado IA
+  const [iaDismissed, setIaDismissed] = useState(false);
+  const [isRefreshingIa, setIsRefreshingIa] = useState(false);
+  const [iaVersion, setIaVersion] = useState(0);
+
+  // Compute weakest competency + map to mercado item
+  const weakestComp = [...competencies].sort((a, b) => a.progress - b.progress)[0];
+  const compToMercado: Partial<Record<string, { itemId: string; razon: string; categoria: Categoria }>> = {
+    CC:    { itemId: "e1", razon: "Conecta con el ecosistema emprendedor real de Málaga y desarrolla tu competencia ciudadana", categoria: "Excursiones" },
+    CPL:   { itemId: "m3", razon: "Practicar comunicación oral en el estudio de podcast refuerza tu competencia plurilingüe", categoria: "Maker" },
+    CPSAA: { itemId: "p2", razon: "Una sesión 1:1 con Prof. Ana te ayuda a reflexionar sobre tu aprendizaje y estrategia personal", categoria: "Passion" },
+    STEM:  { itemId: "t4", razon: "Revenue Management con datos reales impulsa directamente tu competencia STEM", categoria: "Talleres" },
+    CCEC:  { itemId: "t1", razon: "La fotografía profesional potencia tu expresión visual y creatividad digital", categoria: "Talleres" },
+    CLC:   { itemId: "t2", razon: "Entrenar tu pitch con un emprendedor mejora tu comunicación lingüística de forma directa", categoria: "Talleres" },
+    CD:    { itemId: "t3", razon: "Figma y diseño UI/UX refuerzan tu competencia digital con herramientas profesionales", categoria: "Talleres" },
+    CE:    { itemId: "e2", razon: "Vivir una Airbnb Experience real te da perspectiva emprendedora desde dentro del sector", categoria: "Excursiones" },
+  };
+  const iaRec = compToMercado[weakestComp?.key] ?? compToMercado["CC"]!;
+  const iaItemRec = mercadoItems.find((i) => i.id === iaRec?.itemId) ?? mercadoItems[0];
+
+  const handleRefreshIa = () => {
+    setIsRefreshingIa(true);
+    setTimeout(() => setIsRefreshingIa(false), 1500);
+    setIaVersion((v) => v + 1);
+  };
+
   const itemsFiltrados = catActiva === "Todo" ? mercadoItems : mercadoItems.filter((i) => i.categoria === catActiva);
   const totalCarrito = carrito.reduce((s, i) => s + i.precio, 0);
   const saldoDisponible = currentStudent.qcoins;
@@ -136,6 +163,48 @@ export default function StudentQCoins() {
               </div>
             )}
           </div>
+
+          {/* IA Recomendación — Prof. Ana detecta competencia más baja */}
+          {!iaDismissed && iaItemRec && (
+            <div className="bg-sidebar rounded-2xl p-4 mb-4 relative">
+              <button
+                onClick={() => setIaDismissed(true)}
+                className="absolute top-3 right-3 text-white/40 hover:text-white/80 cursor-pointer transition-colors"
+              >
+                <X size={14} />
+              </button>
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+                  <Sparkles size={16} className="text-sidebar" />
+                </div>
+                <div className="flex-1 min-w-0 pr-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-bold text-accent uppercase tracking-wide">Prof. Ana recomienda</span>
+                    <span className="text-[9px] text-white/40">Tu competencia más baja: {weakestComp?.shortName} ({weakestComp?.progress}%)</span>
+                  </div>
+                  <p className="text-[13px] font-semibold text-white mb-1">{iaItemRec.nombre}</p>
+                  <p className="text-[11px] text-white/60 leading-relaxed mb-3">{iaRec?.razon}</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setCatActiva(iaRec?.categoria ?? "Todo"); }}
+                      className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                    >
+                      Ver en mercado →
+                    </button>
+                    <button
+                      onClick={handleRefreshIa}
+                      disabled={isRefreshingIa}
+                      className="flex items-center gap-1.5 bg-white/10 text-white text-[11px] font-medium px-3 py-1.5 rounded-xl hover:bg-white/20 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isRefreshingIa ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                      {isRefreshingIa ? "Analizando…" : "Renovar consejo"}
+                    </button>
+                    <span className="text-[10px] text-white/40 ml-1">{iaItemRec.precio} QC · {iaItemRec.stock} plazas</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Filtros por categoría */}
           <div className="flex gap-1.5 mb-4 flex-wrap">
