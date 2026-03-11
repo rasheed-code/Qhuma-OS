@@ -158,6 +158,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [showColegioMenu, setShowColegioMenu] = useState(false);
   const colegio = colegios[colegioActivo];
 
+  // A12 — Salud sistema IA state
+  const [showIALogs, setShowIALogs] = useState(false);
+
   // A2 — Users management state
   const [userSearch, setUserSearch] = useState("");
   const [userFilterRol, setUserFilterRol] = useState("Todos");
@@ -383,6 +386,67 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 ))}
               </div>
             </div>
+
+            {/* A12: Widget Salud del sistema IA */}
+            {(() => {
+              const iaLogs = [
+                { timestamp: "11 mar, 14:23", tipo: "timeout", mensaje: "Request timeout — tutor-chat · alumno: Pablo Ruiz · 2.8s" },
+                { timestamp: "11 mar, 12:01", tipo: "error",   mensaje: "Gemini 429 — Rate limit reached · retried OK" },
+                { timestamp: "10 mar, 18:44", tipo: "timeout", mensaje: "Request timeout — generate-projects · 3.1s" },
+                { timestamp: "10 mar, 11:20", tipo: "warning", mensaje: "Respuesta tardía — tutor-chat · 1.9s (umbral: 1.5s)" },
+                { timestamp: "9 mar, 16:05",  tipo: "error",   mensaje: "API key inválida detectada — rotación automática OK" },
+              ];
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Bot size={14} className="text-accent-text" />
+                      <h3 className="text-[14px] font-semibold text-text-primary">Salud del sistema IA</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowIALogs(!showIALogs)}
+                      className="flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-accent-light px-2.5 py-1.5 rounded-xl cursor-pointer hover:bg-accent/30 transition-all"
+                    >
+                      <Eye size={11} />
+                      {showIALogs ? "Ocultar logs" : "Ver logs"}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {[
+                      { label: "Latencia media API", valor: "1.2s", color: "text-text-primary", bg: "bg-background" },
+                      { label: "Tasa de error",       valor: "0.3%", color: "text-success",      bg: "bg-background" },
+                      { label: "Tokens esta semana",  valor: "1.84M", color: "text-accent-text", bg: "bg-accent-light" },
+                    ].map((kpi) => (
+                      <div key={kpi.label} className={`${kpi.bg} rounded-xl p-3 text-center`}>
+                        <span className={`text-[18px] font-bold ${kpi.color} block`}>{kpi.valor}</span>
+                        <span className="text-[9px] text-text-muted">{kpi.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {showIALogs && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">Últimos 5 eventos del sistema</p>
+                      {iaLogs.map((log, i) => (
+                        <div key={i} className={`flex items-start gap-2 p-2.5 rounded-xl ${
+                          log.tipo === "error" ? "bg-urgent-light" : log.tipo === "timeout" ? "bg-warning-light" : "bg-background"
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${
+                            log.tipo === "error" ? "bg-urgent" : log.tipo === "timeout" ? "bg-warning" : "bg-text-muted"
+                          }`} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] text-text-primary leading-snug">{log.mensaje}</p>
+                            <span className="text-[9px] text-text-muted">{log.timestamp}</span>
+                          </div>
+                          <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 uppercase ${
+                            log.tipo === "error" ? "bg-urgent text-white" : log.tipo === "timeout" ? "bg-warning text-white" : "bg-background text-text-muted border border-card-border"
+                          }`}>{log.tipo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Acciones rápidas */}
             <div className="bg-card rounded-2xl border border-card-border p-5">
