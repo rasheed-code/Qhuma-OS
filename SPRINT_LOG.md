@@ -600,12 +600,55 @@
 
 ---
 
-## Sprints pendientes — Ciclo 16
+## Ciclo 16 ✅ completado
 
-- [ ] [T15] TeacherGradeBook — modo "Comparar con trimestre anterior": toggle que permite ver, junto a cada nota actual, la nota del trimestre anterior (mock); mostrar flecha de subida/bajada y delta numérico (ej. "+1" o "−1") en cada celda; la fila de medias también muestra la variación
-- [ ] [S17] StudentPortfolio — sección "Competencia del mes": destaca la competencia con mayor crecimiento en el proyecto activo (STEM o CE según datos de compProgress), muestra su gráfico de progreso semanal (4 semanas, barras CSS), y un reto personalizado para la semana siguiente relacionado con esa competencia
-- [ ] [A15] AdminDashboard Overview — añadir widget "Actividad docente hoy": lista de las 3 últimas acciones de docentes (ej. "Ana Martínez asignó tarea a Lucas García", "Carlos Pérez generó informe LOMLOE"), cada una con avatar, descripción, timestamp y tipo de acción (icono según tipo); toggle "Ver todas" que expande hasta 6 entradas
-- [ ] [C15] PitchLab mejorado — añadir panel "Preguntas del jurado": 5 preguntas simuladas que los inversores harían tras el pitch (específicas del proyecto Airbnb Málaga: sobre mercado, competencia, escalabilidad, riesgo, equipo); cada pregunta con campo de respuesta libre, y botón "Evaluar respuesta" que llama a /api/tutor-chat con mode="pitchcoach" para dar feedback de la respuesta
+### [SPRINT-TEACHER][T15] TeacherGradeBook — modo Comparar con trimestre anterior ✅
+- Commit: `d9d2272`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- `gradesTrimAnterior`: const módulo, mismo esquema 12×8 con notas ligeramente inferiores al T2
+- `compareModo: boolean` state; toggle en barra de leyenda (botón con ArrowUp/ArrowDown + label "Comparar T1")
+- Botón activo: `bg-sidebar text-white`; inactivo: `bg-card text-text-secondary border`
+- Cada celda no-editing: cuando `compareModo` muestra debajo ArrowUp (verde) / ArrowRight / ArrowDown (rojo) + `+N`/`=`/`−N`
+- Fila "Media clase": `colAvgT1()` helper; delta en decimales con threshold 0.05 para ArrowRight
+- Media global (celda esquina): IIFE para calcular `totalAvgT1` y mostrar delta
+
+### [SPRINT-STUDENT][S17] StudentPortfolio — sección Competencia del mes ✅
+- Commit: `86f62f7`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- `competenciaMesSemanal`: const módulo, Record<CompKey, number[]> — 4 semanas × 8 competencias
+- `retosPersonalizados`: const módulo, Record<CompKey, string> — reto específico por competencia
+- La card "Competencia del mes" en el sidebar (reemplaza "Mejor competencia") calcula dinámicamente el top-growth comp desde `compProgress` (CE: +38%)
+- Gráfico semanal CSS: 4 barras `bg-success` con altura proporcional al max, etiquetas S1–S4 y porcentaje encima
+- Reto personalizado en `bg-accent-light` con icono Lightbulb
+- Cálculo con IIFE dentro del JSX del sidebar
+
+### [SPRINT-ADMIN][A15] AdminDashboard Overview — widget Actividad docente hoy ✅
+- Commit: `d068c49`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- `actividadDocente`: const módulo, 6 entradas (avatar/nombre/accion/hora/icon/color)
+- `showTodasActividades: boolean` state + toggle "Ver todas (6)" / "Ver menos"
+- Widget en columna izquierda del overview (antes del cierre de `flex-1`); muestra 3 por defecto, 6 al expandir
+- Avatar circular bg-sidebar/text-white, icono de acción con color por tipo
+- Import añadido: `MessageSquare`
+
+### [SPRINT-CULTURE][C15] PitchLab — panel Preguntas del jurado ✅
+- Commit: `e3276c7`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- `preguntasJurado`: const módulo, 5 preguntas específicas Airbnb Málaga (tracción/competencia/riesgo/operacional/inversión)
+- `tipoColor`: Record<string, string> para badges de tipo
+- States: `respuestasJurado`, `evaluacionesJurado`, `evaluandoJurado`
+- `handleEvaluarRespuesta()`: llama /api/tutor-chat mode="pitchcoach" con contexto inversor+pregunta+respuesta del alumno
+- Panel col-span-3 en feedback mode: lista de 5 preguntas, cada una con avatar, tipo badge, pregunta itálica, textarea, botón "Evaluar respuesta" + display evaluación IA
+- Botón "Evaluar" deshabilitado si respuesta vacía o evaluando
+
+---
+
+## Sprints pendientes — Ciclo 17
+
+- [ ] [T16] TeacherGradeBook — selector de trimestre: añadir un selector en el header ("T1 / T2 / T3") que cambia el conjunto de notas visualizado; el "Comparar" siempre muestra el trimestre inmediatamente anterior; las notas de T1 y T3 son mock estáticas, solo T2 es editable
+- [ ] [S18] StudentPortfolio — panel "Reflexión semanal IA": sección en la columna izquierda con un botón "Generar reflexión de la semana" que llama a /api/tutor-chat con mode="narrativa" y construye 3 bullets de aprendizajes del alumno (semana, competencias trabajadas, logro más destacado); cada bullet es colapsable y el alumno puede añadir su propia nota
+- [ ] [A16] AdminDashboard — pestaña "Métricas" mejorada: añadir un tercer gráfico de barras "Top competencias por clase" mostrando la media de las 8 LOMLOE de todas las clases agrupadas; toggle por clase (1º ESO / 2º ESO) y barra de referencia horizontal en el nivel 3.0
+- [ ] [C16] PitchLab — modo "Inversores en vivo": simular una sesión de preguntas en tiempo real con un inversor aleatorio que hace 3 preguntas encadenadas (la segunda depende de la respuesta a la primera); flujo: pregunta → campo respuesta → enviar → pregunta 2 (generada por IA basada en la anterior) → ... → evaluación final con puntuación 1–10
 
 ---
 
@@ -618,10 +661,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 añade computeSectionScores() + sectionScores state + tabla puntuación por sección en feedback mode. Limpieza en "Volver a practicar".
-- **TeacherGradeBook**: T12 exportCSV. T13 distribución por competencia. T14 añade HistorialCambio interface + historialCambios state + showHistorial state + panel colapsable "Últimos cambios". saveEdit registra dentro de setGrades updater. Imports: ArrowUp/Down/Right/History/ChevronDown/Up.
-- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 añade evidenciasDestacadas (const módulo, 4 evidencias) + expandedEvidencia state + grid 2×2 con preview inline. FileImage/ExternalLink imports.
-- **AdminDashboard**: A13 metricsVista toggle. A14 añade agendaGenerada/generandoAgenda state + handleGenerarAgenda + KPI "Capital comprometido" (sidebar) + panel "Próxima reunión inversores". IIFE para capitalComprometido/agendaProyectos/agendaFilename.
+- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores state. C15 añade preguntasJurado (5 preguntas Airbnb Málaga) + tipoColor + respuestasJurado/evaluacionesJurado/evaluandoJurado states + handleEvaluarRespuesta() → pitchcoach. Panel en feedback mode antes de mentor message.
+- **TeacherGradeBook**: T12 exportCSV. T13 distribución por competencia. T14 HistorialCambio + historialCambios + showHistorial. T15 añade gradesTrimAnterior (const módulo, 12×8 mock T1) + compareModo state + colAvgT1() + toggle "Comparar T1" en leyenda + delta en celdas y fila media.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 añade competenciaMesSemanal (const módulo, 4 semanas × 8 comps) + retosPersonalizados (const módulo) + card "Competencia del mes" en sidebar con gráfico CSS y reto. Reemplaza card "Mejor competencia" simple.
+- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 añade actividadDocente (const módulo, 6 entradas) + showTodasActividades state + widget en overview columna izquierda con toggle Ver todas/menos. Import: MessageSquare.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
