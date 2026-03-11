@@ -7,7 +7,7 @@ import {
   Download, UserPlus, Bell, Send, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
   Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
-  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles,
+  Trophy, BarChart3, MessageSquare, Copy, Check, Coins, Sparkles, Target,
 } from "lucide-react";
 import { AdminView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -330,6 +330,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
   const trimestreLabel: Record<string, string> = { "1": "1er Trimestre 2025-26", "2": "2º Trimestre 2025-26", "3": "3er Trimestre 2025-26" };
   const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección", familia: "Informe Familia" };
+
+  // A25 — Proyectos en segunda ronda
+  const [expedienteExpandido, setExpedienteExpandido] = useState<string | null>(null);
+  const [reunionSolicitada, setReunionSolicitada] = useState<Set<string>>(new Set());
+  const [fechaReunion, setFechaReunion] = useState<Record<string, string>>({});
 
   // A9 — Capital deep state
   const [votosEnVivo, setVotosEnVivo] = useState(7); // proyecto "Airbnb de Lucas"
@@ -1877,6 +1882,243 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               );
             })()}
           </div>
+
+          {/* ─── A25: Proyectos en segunda ronda ─────────────────────────── */}
+          {(() => {
+            const proyectosSegundaRonda = [
+              {
+                id: "sr1",
+                nombre: "Casa Limón — Airbnb Málaga",
+                alumno: "Lucas García",
+                resumen: "Plataforma de alquiler vacacional en el centro histórico de Málaga con modelo de precios dinámicos basado en datos AirDNA. Ocupación proyectada 65% en escenario realista.",
+                lomloe: ["CE", "STEM", "CD", "CLC"],
+                inversion: 4500,
+                mentor: "Ana Martínez",
+                diasDesdeActualidad: 2,
+                comentarioMentor: "Modelo financiero sólido. Recomiendo reforzar el plan de contingencia para la estacionalidad.",
+                fases: [
+                  { nombre: "Revisión documental", completado: true },
+                  { nombre: "Pitch ante claustro", completado: true },
+                  { nombre: "Votación inversores", completado: false },
+                ],
+              },
+              {
+                id: "sr2",
+                nombre: "EcoMercado Escolar",
+                alumno: "Sofía Torres",
+                resumen: "Mercado de productos de temporada gestionado por alumnos con margen real y sistema de reparto de beneficios a través de Q-Coins. Primer trimestre con 3 ediciones piloto.",
+                lomloe: ["CE", "CC", "CPSAA", "CLC"],
+                inversion: 3000,
+                mentor: "Carlos Rueda",
+                diasDesdeActualidad: 5,
+                comentarioMentor: "Excelente impacto pedagógico. El modelo de Q-Coins añade una capa de innovación que justifica la inversión.",
+                fases: [
+                  { nombre: "Revisión documental", completado: true },
+                  { nombre: "Pitch ante claustro", completado: true },
+                  { nombre: "Votación inversores", completado: false },
+                ],
+              },
+              {
+                id: "sr3",
+                nombre: "App Guía Turística Digital",
+                alumno: "Pablo Ruiz",
+                resumen: "Aplicación web de itinerarios turísticos personalizados para Málaga con integración de contenidos culturales LOMLOE. Prototipo funcional en Figma con 3 rutas piloto.",
+                lomloe: ["CD", "CLC", "CCEC", "CE"],
+                inversion: 8500,
+                mentor: "Ana Martínez",
+                diasDesdeActualidad: 1,
+                comentarioMentor: "Prototipo técnico muy ambicioso. Recomiendo acotar el alcance al módulo de rutas culturales para la fase de financiación.",
+                fases: [
+                  { nombre: "Revisión documental", completado: true },
+                  { nombre: "Pitch ante claustro", completado: false },
+                  { nombre: "Votación inversores", completado: false },
+                ],
+              },
+            ];
+
+            const fechasDisponibles = [
+              "Lun 16 mar · 10:00",
+              "Mar 17 mar · 11:30",
+              "Mié 18 mar · 09:00",
+              "Jue 19 mar · 16:00",
+              "Vie 20 mar · 12:00",
+            ];
+
+            const compColors: Record<string, string> = {
+              CE: "bg-urgent-light text-urgent",
+              STEM: "bg-success-light text-success",
+              CD: "bg-accent-light text-accent-text",
+              CLC: "bg-accent-light text-accent-text",
+              CC: "bg-success-light text-success",
+              CPSAA: "bg-warning-light text-text-primary",
+              CCEC: "bg-warning-light text-text-primary",
+              CPL: "bg-background text-text-secondary",
+            };
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Target size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">Proyectos en segunda ronda</h3>
+                  <span className="ml-auto text-[10px] font-semibold bg-warning-light text-warning border border-warning/20 px-2.5 py-1 rounded-full">
+                    {proyectosSegundaRonda.length} en evaluación
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  {proyectosSegundaRonda.map((proyecto) => {
+                    const isExpandido = expedienteExpandido === proyecto.id;
+                    const yaReunion = reunionSolicitada.has(proyecto.id);
+                    const fechaSeleccionada = fechaReunion[proyecto.id] ?? fechasDisponibles[0];
+                    const fasesCompletadas = proyecto.fases.filter((f) => f.completado).length;
+
+                    return (
+                      <div key={proyecto.id} className="bg-background rounded-xl border border-card-border overflow-hidden">
+                        <div className="p-4">
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <h4 className="text-[13px] font-semibold text-text-primary">{proyecto.nombre}</h4>
+                                <span className="text-[10px] font-semibold bg-sidebar text-accent px-2 py-0.5 rounded-full flex-shrink-0">
+                                  €{proyecto.inversion.toLocaleString()}
+                                </span>
+                              </div>
+                              <span className="text-[10px] text-text-muted">
+                                {proyecto.alumno} · Mentor: {proyecto.mentor} · hace {proyecto.diasDesdeActualidad}d
+                              </span>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <span className="text-[10px] font-semibold text-text-muted">
+                                {fasesCompletadas}/3 fases
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Resumen */}
+                          <p className="text-[11px] text-text-secondary leading-relaxed mb-3">{proyecto.resumen}</p>
+
+                          {/* Competencias */}
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {proyecto.lomloe.map((comp) => (
+                              <span key={comp} className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${compColors[comp] ?? "bg-background text-text-muted"}`}>
+                                {comp}
+                              </span>
+                            ))}
+                          </div>
+
+                          {/* Stepper fases */}
+                          <div className="flex items-center gap-0 mb-3">
+                            {proyecto.fases.map((fase, fi) => (
+                              <div key={fi} className="flex items-center flex-1">
+                                <div className={`flex items-center gap-1.5 flex-1 px-2 py-1.5 rounded-lg text-[9px] font-medium ${
+                                  fase.completado ? "bg-success-light text-success border border-success/20" : "bg-card text-text-muted border border-card-border"
+                                }`}>
+                                  {fase.completado
+                                    ? <CheckCircle2 size={9} className="text-success flex-shrink-0" />
+                                    : <Clock size={9} className="text-warning flex-shrink-0" />
+                                  }
+                                  <span className="truncate">{fase.nombre}</span>
+                                  {fase.completado && <span className="ml-auto">✅</span>}
+                                  {!fase.completado && fi === fasesCompletadas && <span className="ml-auto text-warning">→</span>}
+                                </div>
+                                {fi < proyecto.fases.length - 1 && (
+                                  <div className={`w-3 h-0.5 flex-shrink-0 ${fase.completado ? "bg-success" : "bg-card-border"}`} />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Comentario mentor */}
+                          <div className="bg-accent-light rounded-xl p-3 border border-accent/20 mb-3">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <MessageSquare size={10} className="text-accent-text flex-shrink-0" />
+                              <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">
+                                Mentor · {proyecto.mentor}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-text-secondary leading-relaxed italic">"{proyecto.comentarioMentor}"</p>
+                          </div>
+
+                          {/* Acciones */}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setExpedienteExpandido(isExpandido ? null : proyecto.id)}
+                              className="flex items-center gap-1.5 text-[10px] font-semibold bg-sidebar text-accent px-3 py-2 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer"
+                            >
+                              <FileText size={11} />
+                              {isExpandido ? "Cerrar expediente" : "Ver expediente completo"}
+                            </button>
+                            {!yaReunion ? (
+                              <div className="flex items-center gap-1.5 flex-1">
+                                <select
+                                  value={fechaSeleccionada}
+                                  onChange={(e) => setFechaReunion((prev) => ({ ...prev, [proyecto.id]: e.target.value }))}
+                                  className="flex-1 bg-background border border-card-border rounded-xl px-2 py-2 text-[10px] text-text-secondary focus:outline-none focus:border-accent-text/30 cursor-pointer"
+                                >
+                                  {fechasDisponibles.map((f) => (
+                                    <option key={f} value={f}>{f}</option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => {
+                                    setReunionSolicitada((prev) => new Set(prev).add(proyecto.id));
+                                  }}
+                                  className="flex items-center gap-1.5 text-[10px] font-semibold bg-background border border-card-border text-text-secondary px-3 py-2 rounded-xl hover:bg-accent-light hover:text-accent-text hover:border-accent/30 transition-colors cursor-pointer flex-shrink-0"
+                                >
+                                  <Calendar size={10} />
+                                  Solicitar reunión
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 bg-success-light border border-success/20 px-3 py-2 rounded-xl flex-1">
+                                <CheckCircle2 size={11} className="text-success" />
+                                <span className="text-[10px] font-semibold text-success">
+                                  Reunión confirmada — {fechaSeleccionada}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expediente expandido */}
+                        {isExpandido && (
+                          <div className="border-t border-card-border bg-card p-4">
+                            <h5 className="text-[12px] font-semibold text-text-primary mb-3">Expediente completo — {proyecto.nombre}</h5>
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div className="bg-background rounded-xl p-3">
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Alumno</span>
+                                <span className="text-[12px] font-semibold text-text-primary">{proyecto.alumno}</span>
+                              </div>
+                              <div className="bg-background rounded-xl p-3">
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Inversión solicitada</span>
+                                <span className="text-[12px] font-semibold text-text-primary">€{proyecto.inversion.toLocaleString()}</span>
+                              </div>
+                              <div className="bg-background rounded-xl p-3">
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Mentor asignado</span>
+                                <span className="text-[12px] font-semibold text-text-primary">{proyecto.mentor}</span>
+                              </div>
+                              <div className="bg-background rounded-xl p-3">
+                                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1">Progreso evaluación</span>
+                                <span className="text-[12px] font-semibold text-text-primary">{fasesCompletadas}/3 fases completadas</span>
+                              </div>
+                            </div>
+                            <div className="bg-warning-light rounded-xl p-3 border border-warning/20">
+                              <p className="text-[11px] text-text-secondary leading-relaxed">
+                                <strong>Próxima acción:</strong> {
+                                  proyecto.fases[fasesCompletadas]?.nombre ?? "Evaluación completada"
+                                } — pendiente de decisión del claustro inversor.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
