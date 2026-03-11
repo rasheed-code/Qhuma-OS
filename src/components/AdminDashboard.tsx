@@ -175,27 +175,59 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     direccion: "Calle Larios 12, 29005 Málaga",
   });
 
-  // A6 — Reports generator state
+  // A6/A11 — Reports generator state
   const reportAlumnos = usuariosMock.filter((u) => u.rol === "Alumno");
   const [reportAlumno, setReportAlumno] = useState(reportAlumnos[0]?.nombre ?? "");
   const [reportTrimestre, setReportTrimestre] = useState<"1" | "2" | "3">("2");
-  const [reportTipo, setReportTipo] = useState<"individual" | "grupo" | "lomloe" | "inspeccion">("individual");
+  const [reportTipo, setReportTipo] = useState<"individual" | "grupo" | "lomloe" | "inspeccion" | "familia">("individual");
   const [reportPreview, setReportPreview] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadedFilename, setDownloadedFilename] = useState<string | null>(null);
+
+  const plantillasPredefinidas = [
+    {
+      id: "lomloe",
+      label: "LOMLOE Completo",
+      descripcion: "8 competencias clave + escala de progreso + evidencias",
+      tipo: "lomloe" as const,
+      icon: "📋",
+    },
+    {
+      id: "inspeccion",
+      label: "Inspección",
+      descripcion: "Checklist normativo RD 217/2022 + indicadores de cumplimiento",
+      tipo: "inspeccion" as const,
+      icon: "🔍",
+    },
+    {
+      id: "familia",
+      label: "Informe Familia",
+      descripcion: "Resumen de progreso en lenguaje cercano para tutores legales",
+      tipo: "familia" as const,
+      icon: "👨‍👩‍👦",
+    },
+  ];
 
   const handleGenerarInforme = () => {
     setIsGenerating(true);
     setReportPreview(false);
+    setDownloadedFilename(null);
     setTimeout(() => { setIsGenerating(false); setReportPreview(true); }, 1400);
   };
   const handleDescargar = () => {
     setIsDownloading(true);
+    const alumnoSlug = reportAlumno.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const fechaStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const filename = `informe_${alumnoSlug}_T${reportTrimestre}_${reportTipo}_${fechaStr}.pdf`;
+    setDownloadedFilename(filename);
     setTimeout(() => setIsDownloading(false), 1200);
   };
 
   const trimestreLabel: Record<string, string> = { "1": "1er Trimestre 2025-26", "2": "2º Trimestre 2025-26", "3": "3er Trimestre 2025-26" };
-  const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección" };
+  const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección", familia: "Informe Familia" };
 
   // A9 — Capital deep state
   const [votosEnVivo, setVotosEnVivo] = useState(7); // proyecto "Airbnb de Lucas"
@@ -1237,7 +1269,32 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               <h3 className="text-[14px] font-semibold text-text-primary">Generador de informes LOMLOE</h3>
             </div>
 
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            {/* A11: Plantillas predefinidas */}
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {plantillasPredefinidas.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { setReportTipo(p.tipo); setReportPreview(false); setDownloadedFilename(null); }}
+                className={`text-left p-3 rounded-xl border transition-all cursor-pointer ${
+                  reportTipo === p.tipo
+                    ? "bg-sidebar border-sidebar"
+                    : "bg-background border-card-border hover:border-accent-text/30"
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[16px]">{p.icon}</span>
+                  <span className={`text-[12px] font-bold ${reportTipo === p.tipo ? "text-accent" : "text-text-primary"}`}>
+                    {p.label}
+                  </span>
+                </div>
+                <p className={`text-[10px] leading-relaxed ${reportTipo === p.tipo ? "text-white/60" : "text-text-muted"}`}>
+                  {p.descripcion}
+                </p>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-4">
               {/* Selector alumno */}
               <div>
                 <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Alumno</label>
@@ -1278,6 +1335,7 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                   <option value="grupo">Grupo / Clase</option>
                   <option value="lomloe">LOMLOE Completo</option>
                   <option value="inspeccion">Para Inspección</option>
+                  <option value="familia">Informe Familia</option>
                 </select>
               </div>
             </div>
@@ -1296,68 +1354,123 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           </div>
 
           {/* Preview del informe */}
-          {reportPreview && (
-            <div className="bg-card rounded-2xl border border-accent-text/20 p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
-                    <FileText size={14} className="text-accent-text" />
+          {reportPreview && (() => {
+            const alumnoData = reportAlumnos.find((a) => a.nombre === reportAlumno);
+            const alumnoSlug = reportAlumno.toLowerCase()
+              .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+              .replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+            const fechaStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+            const previewFilename = `informe_${alumnoSlug}_T${reportTrimestre}_${reportTipo}_${fechaStr}.pdf`;
+
+            const seccionesPorTipo: Record<string, { n: string; titulo: string }[]> = {
+              lomloe: [
+                { n: "1", titulo: `Alumno/a: ${reportAlumno} · Curso: ${alumnoData?.curso ?? "1º ESO"} · ${trimestreLabel[reportTrimestre]}` },
+                { n: "2", titulo: "Proyecto activo: Gestiona tu Airbnb en Málaga (Semana 3/12)" },
+                { n: "3", titulo: "Evaluación competencial LOMLOE — 8 áreas (CLC, CPL, STEM, CD, CPSAA, CC, CE, CCEC)" },
+                { n: "4", titulo: "Evidencias entregadas: 9/16 · Calidad general: Logro esperado" },
+                { n: "5", titulo: "Historial de errores documentados y reflexiones del alumno" },
+                { n: "6", titulo: "Observaciones del docente mentor — Prof. Ana Martínez" },
+                { n: "7", titulo: "Escala LOMLOE: Logro sobresaliente en CE · Logro esperado en STEM y CLC" },
+                { n: "8", titulo: "Recomendaciones para el 3er Trimestre 2025-26" },
+              ],
+              inspeccion: [
+                { n: "1", titulo: `Centro: QHUMA Málaga · Grupo: 1º ESO · ${trimestreLabel[reportTrimestre]}` },
+                { n: "2", titulo: "Programación curricular — Real Decreto 217/2022 (ESO)" },
+                { n: "3", titulo: `Ratio docente-alumno: 1:12 · Alumnos activos: ${reportAlumnos.length}` },
+                { n: "4", titulo: "Evaluación por competencias LOMLOE — criterios definidos y rúbricas de 4 niveles" },
+                { n: "5", titulo: "Control de evidencias digitales por alumno y proyecto" },
+                { n: "6", titulo: "Atención a la diversidad — seguimiento activo de 3 alumnos en riesgo" },
+                { n: "7", titulo: "Coordinación familias: 100% con acceso al panel parental" },
+                { n: "8", titulo: "Estado normativo: 8/10 puntos de checklist OK · 2 pendientes" },
+              ],
+              familia: [
+                { n: "1", titulo: `Progreso general de ${reportAlumno.split(" ")[0]}: 72% completado este trimestre` },
+                { n: "2", titulo: "Proyecto: Gestiona tu Airbnb en Málaga — aprendizaje real, resultados reales" },
+                { n: "3", titulo: "Tareas completadas: 9 de 16 entregas · Racha activa: 12 días consecutivos" },
+                { n: "4", titulo: "Puntos fuertes: Emprendimiento, Comunicación Digital, Análisis Financiero" },
+                { n: "5", titulo: "Área de mejora: Gestión del tiempo en entregas de Fase 3" },
+                { n: "6", titulo: "Próximos hitos: Demo Day (viernes) · Análisis de rentabilidad (Semana 4)" },
+              ],
+              individual: [
+                { n: "1", titulo: `Alumno/a: ${reportAlumno} · Curso: ${alumnoData?.curso ?? "1º ESO"} · ${trimestreLabel[reportTrimestre]}` },
+                { n: "2", titulo: "Proyecto activo: Gestiona tu Airbnb en Málaga" },
+                { n: "3", titulo: "Evaluación de las 8 competencias LOMLOE" },
+                { n: "4", titulo: "Evidencias entregadas: 9/16 · Calidad: Logro esperado" },
+                { n: "5", titulo: "Historial de errores documentados y superados" },
+                { n: "6", titulo: "Observaciones del docente mentor" },
+                { n: "7", titulo: "Escala LOMLOE: Logro sobresaliente en CE (90%)" },
+                { n: "8", titulo: "Recomendaciones para el siguiente trimestre" },
+              ],
+              grupo: [
+                { n: "1", titulo: `Grupo: 1º ESO · ${reportAlumnos.length} alumnos · ${trimestreLabel[reportTrimestre]}` },
+                { n: "2", titulo: "Proyecto activo: Gestiona tu Airbnb en Málaga (Semana 3/12)" },
+                { n: "3", titulo: "Media competencial del grupo — 8 competencias LOMLOE" },
+                { n: "4", titulo: `Evidencias entregadas (media): 9/16 · Alumnos en riesgo: 3` },
+                { n: "5", titulo: "Alumnos destacados: 4 con Logro sobresaliente en CE" },
+                { n: "6", titulo: "Distribución por niveles LOMLOE: 1/12 Inicio · 3/12 En proceso · 6/12 Logro · 2/12 Sobresaliente" },
+              ],
+            };
+            const secciones = seccionesPorTipo[reportTipo] ?? seccionesPorTipo.individual;
+
+            return (
+              <div className="bg-card rounded-2xl border border-accent-text/20 p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
+                      <FileText size={14} className="text-accent-text" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-bold text-text-primary">
+                        Informe {tipoLabel[reportTipo]} — {reportAlumno}
+                      </p>
+                      <p className="text-[10px] text-text-muted font-mono">{previewFilename}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[13px] font-bold text-text-primary">
-                      Informe {tipoLabel[reportTipo]} — {reportAlumno}
-                    </p>
-                    <p className="text-[10px] text-text-muted">{trimestreLabel[reportTrimestre]} · Generado ahora</p>
+                  <div className="text-right">
+                    <button
+                      onClick={handleDescargar}
+                      disabled={isDownloading}
+                      className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                    >
+                      {isDownloading ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
+                      {isDownloading ? "Preparando..." : "Descargar PDF"}
+                    </button>
+                    {downloadedFilename && (
+                      <p className="text-[9px] text-success mt-1 font-mono truncate max-w-[220px]">{downloadedFilename}</p>
+                    )}
                   </div>
                 </div>
-                <button
-                  onClick={handleDescargar}
-                  disabled={isDownloading}
-                  className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
-                >
-                  {isDownloading ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
-                  {isDownloading ? "Preparando..." : "Descargar PDF"}
-                </button>
-              </div>
 
-              {/* Estructura del informe preview */}
-              <div className="bg-background rounded-xl p-4 font-mono text-[11px] space-y-2">
-                <p className="text-text-primary font-bold text-[12px]">
-                  INFORME {tipoLabel[reportTipo].toUpperCase()} — LOMLOE 2022 — QHUMA MÁLAGA
-                </p>
-                <p className="text-text-muted">Alumno/a: {reportAlumno} · Curso: 1º ESO · {trimestreLabel[reportTrimestre]}</p>
-                <div className="border-t border-card-border my-2" />
-                {[
-                  { n: "1", titulo: "Datos del alumno y contexto educativo" },
-                  { n: "2", titulo: "Proyecto activo: Gestiona tu Airbnb en Málaga" },
-                  { n: "3", titulo: "Evaluación de las 8 competencias LOMLOE" },
-                  { n: "4", titulo: "Evidencias entregadas: 9/16 · Calidad general: Logro esperado" },
-                  { n: "5", titulo: "Historial de errores documentados y superados" },
-                  { n: "6", titulo: "Observaciones del docente mentor" },
-                  { n: "7", titulo: "Escala LOMLOE: Logro sobresaliente en CE (90%)" },
-                  { n: "8", titulo: "Recomendaciones para el siguiente trimestre" },
-                ].map((s) => (
-                  <p key={s.n} className="text-text-secondary">
-                    <span className="text-accent-text font-bold">{s.n}.</span> {s.titulo}
+                {/* Estructura del informe preview */}
+                <div className="bg-background rounded-xl p-4 font-mono text-[11px] space-y-2">
+                  <p className="text-text-primary font-bold text-[12px]">
+                    INFORME {tipoLabel[reportTipo].toUpperCase()} — LOMLOE 2022 — QHUMA MÁLAGA
                   </p>
-                ))}
-                <div className="border-t border-card-border my-2" />
-                <p className="text-text-muted text-[10px]">
-                  Generado por QHUMA OS · Normativa Real Decreto 217/2022 · {new Date().toLocaleDateString("es-ES")}
-                </p>
-              </div>
+                  <p className="text-text-muted">Generado: {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+                  <div className="border-t border-card-border my-2" />
+                  {secciones.map((s) => (
+                    <p key={s.n} className="text-text-secondary">
+                      <span className="text-accent-text font-bold">{s.n}.</span> {s.titulo}
+                    </p>
+                  ))}
+                  <div className="border-t border-card-border my-2" />
+                  <p className="text-text-muted text-[10px]">
+                    Generado por QHUMA OS · Normativa Real Decreto 217/2022 · {new Date().toLocaleDateString("es-ES")}
+                  </p>
+                </div>
 
-              {/* Escala LOMLOE resumen */}
-              <div className="grid grid-cols-4 gap-2 mt-4">
-                {escalasLOMLOE.map((e) => (
-                  <div key={e.nivel} className={`rounded-xl p-3 ${e.bg}`}>
-                    <p className={`text-[10px] font-bold ${e.text} mb-0.5`}>Nivel {e.nivel}</p>
-                    <p className={`text-[9px] font-semibold ${e.text}`}>{e.etiqueta}</p>
-                  </div>
-                ))}
+                {/* Escala LOMLOE resumen */}
+                <div className="grid grid-cols-4 gap-2 mt-4">
+                  {escalasLOMLOE.map((e) => (
+                    <div key={e.nivel} className={`rounded-xl p-3 ${e.bg}`}>
+                      <p className={`text-[10px] font-bold ${e.text} mb-0.5`}>Nivel {e.nivel}</p>
+                      <p className={`text-[9px] font-semibold ${e.text}`}>{e.etiqueta}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Informes recientes */}
           <div className="bg-card rounded-2xl border border-card-border p-5">
