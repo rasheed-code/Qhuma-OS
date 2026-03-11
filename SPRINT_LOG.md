@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 7 ✅ (push: `f07a5b4`)
+- **Último ciclo completo**: Ciclo 9 ✅ (push: `34b9b37`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 8
+- **Próximo ciclo**: Ciclo 10
 
 ---
 
@@ -234,21 +234,112 @@
 
 ---
 
-## Sprints pendientes — Ciclo 8
+## Ciclo 8 ✅ completado
 
-- [ ] [T7] TeacherRubrica — sistema de rúbricas de evaluación por competencia: el docente define criterios por tarea, el alumno ve la rúbrica antes de entregar
-- [ ] [S9] QCoinsMarket — vista de canje de Q-Coins: catálogo de recompensas (talleres, equipamiento maker, excursiones), carrito y historial de canjes
-- [ ] [A7] AdminInspection — panel de inspección educativa: vista resumida lista para exportar con datos reales de todos los alumnos, cumplimiento LOMLOE, métricas de proyecto
-- [ ] [C7] PitchCoach — mejora de PitchLab: feedback IA por sección (llama a /api/tutor-chat con contexto de cada sección del pitch), sugerencias específicas en vez de solo puntuación
+### [SPRINT-TEACHER][T7] TeacherRubrica ✅
+- Commit: `c2b1553`
+- Archivo creado: `src/components/TeacherRubrica.tsx`
+- 3 rúbricas del Proyecto Airbnb Málaga: Plantillas comunicación / Simulación rentabilidad / Landing page
+- Escala LOMLOE 1-4 con colores design system: urgent/warning/accent/success
+- Grid interactivo: click en celda cicla nivel (1→2→3→4) por alumno × criterio LOMLOE
+- Panel expandible por alumno: muestra descriptor exacto del nivel asignado
+- Vista alumno: muestra criterios sin scores para auto-evaluación previa a entrega
+- Botón "Guardar rúbrica" con CheckCircle2 como feedback visual
+- "rubrica" añadido a TeacherView type + Sidebar (icono ClipboardCheck)
+
+### [SPRINT-STUDENT][S9] QCoinsMarket ✅
+- Commit: `29e7757`
+- Archivo modificado: `src/components/StudentQCoins.tsx`
+- 13 items en 4 categorías: Talleres / Maker Studio / Excursiones / Passion Workshop
+- Filtros de categoría con colores design system por tipo; grid 3 columnas
+- Carrito en panel derecho: añadir/quitar, total, saldo restante, confirmar canje
+- Estado "¡Canje confirmado!" con CheckCircle2 + vaciado automático
+- Historial de canjes: 2 canjes mock (realizado/confirmado) con colores de estado
+- Q-Store digital conservada, Logros y Movimientos en panel derecho
+- Icons añadidos: ShoppingCart, X, CheckCircle2, Camera, Cpu, MapPin
+
+### [SPRINT-ADMIN][A7] AdminInspection ✅
+- Commit: `330656c`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Nuevo tab "Inspección" (AdminView ampliado con "inspection" + Sidebar icono Search)
+- 4 KPIs: alumnos activos, cumplimiento LOMLOE %, evidencias entregadas, proyectos en curso
+- Tabla de todos los alumnos: proyecto, progreso barra CSS, evidencias, nivel LOMLOE 1-4, estado
+- Checklist normativo: 10 requisitos del Real Decreto 217/2022 con estado ok/pendiente
+- 6 documentos disponibles para descarga con estado listo/pendiente
+- Botón "Exportar para inspección" en cabecera de tabla
+
+### [SPRINT-CULTURE][C7] PitchCoach ✅
+- Commit: `8016c67`
+- Archivos modificados: `src/components/PitchLab.tsx`, `src/app/api/tutor-chat/route.ts`
+- Botón "Pedir consejo" por sección en modo escritura; llama a API con mode="pitchcoach"
+- PITCHCOACH_SYSTEM_PROMPT: sin Socrático — feedback directo en 3 pasos (punto fuerte / mejora / ejemplo)
+- Respuesta Prof. Ana en card bg-sidebar por sección; botón ✕ para cerrar
+- Estado de carga: Loader2 girando + "Analizando..." durante espera
+- En modo feedback: panel "Feedback IA por sección" agrupa todos los consejos recopilados
+- Imports añadidos: Sparkles, Loader2
+
+---
+
+## Ciclo 9 ✅ completado
+
+### [SPRINT-TEACHER][T8] TeacherCalendario mejorado ✅
+- Commit: `adb10bb`
+- Archivo modificado: `src/components/TeacherCalendar.tsx` (reescritura completa)
+- Toggle vista Semana/Mes con estado
+- Vista mes: grid calendario marzo 2026 con offset lunes-primero, celdas coloreadas por tipo de evento
+- Vista semana: columnas lun-vie con eventos del día, tareas con iconos de estado en español
+- 6 eventos mock (Demo Day, Entregas, Pitches, Recordatorio) con colores por tipo (success/warning/urgent/accent)
+- Botón "Enviar recordatorio" por evento: CheckCircle2 + feedback "¡Enviado!" 3s
+- Modal "Añadir evento": título, tipo, día (número), hora — añade al estado local
+- Todo el texto en español
+
+### [SPRINT-STUDENT][S10] StudentCompetencias mejoradas ✅
+- Commit: `6993335`
+- Archivo modificado: `src/components/StudentCompetencies.tsx`
+- Selector de trimestre T1/T2/T3 (pill tabs sobre sidebar)
+- `historicoPorTrimestre` con 24 valores mock (8 competencias × 3 trims) coherentes
+- Radar chart extendido: segundo polígono SVG punteado para media de clase anonimizada
+- Panel lateral "Evolución histórica": barras mini T1/T2/T3 por competencia con resaltado del trimestre activo
+- Panel "vs. Media de clase": barras comparativas + delta con color success/urgent
+- En cada CompetencyCard: barra de media de clase + indicador encima/debajo
+
+### [SPRINT-ADMIN][A8] AdminMetricas ✅
+- Commit: `15ede05`
+- Archivos modificados: `src/types/index.ts`, `src/components/Sidebar.tsx`, `src/components/AdminDashboard.tsx`
+- `AdminView` ampliado con "metrics", Sidebar adminNav añade { icon: BarChart3, "Métricas" }
+- Tab metrics con IIFE pattern: 4 KPIs, comparativa colegios, histograma engagement, tabla riesgo
+- Comparativa Málaga vs Madrid: 4 métricas (retención/engagement/evidencias/LOMLOE) con barras CSS opacidad diferenciada
+- Tabla riesgo de abandono: 3 alumnos mock, score = racha×3 + evidencias×4, niveles Alto/Medio/Bajo
+- Metodología de scoring explicada en el pie de tabla
+
+### [SPRINT-CULTURE][C8] MercadoIntegrado ✅
+- Commit: `34b9b37`
+- Archivo modificado: `src/components/StudentQCoins.tsx`
+- Import `competencies` de @/data/competencies
+- `compToMercado`: mapping CompetencyKey → { itemId, razon, categoria } — 8 entradas
+- Banner bg-sidebar con avatar Sparkles, competencia más baja detectada, ítem recomendado, razonamiento pedagógico
+- "Ver en mercado" → setCatActiva automático a la categoría del ítem recomendado
+- "Renovar consejo" → 1.5s loading simulado + iaVersion counter
+- Botón ✕ → setIaDismissed(true) oculta el banner
+- Principio culture.md Bloque 5: plataforma propone siempre el siguiente nivel contextualizado
+
+---
+
+## Sprints pendientes — Ciclo 10
+
+- [ ] [T9] TeacherAnalytics mejorado — añadir comparativa semanal de progreso por alumno (sparklines CSS), distribución de competencias de la clase (barras horizontales apiladas), y tabla de "alumnos sin actividad hoy" con acción directa de contacto
+- [ ] [S11] StudentCalendario mejorado — vista mes/semana para el alumno, eventos personales (Demo Day, entregas), integración con el streak calendar existente, badge de "hoy tienes X eventos"
+- [ ] [A9] AdminCapitalDeep — dentro del tab Capital, añadir: panel de votación en tiempo real (simula votos del claustro), historial de pitches anteriores (T1), generador de carta de aprobación de inversión (descarga simulada)
+- [ ] [C9] ErrorLogIA — cuando el alumno añade un error al Error Log del portfolio, la IA (modo socrático inverso) propone 3 preguntas de reflexión sobre ese error específico para sacar el máximo aprendizaje
 
 ---
 
 ## Notas técnicas (leer antes de cada ciclo)
 
 - **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 7)
-- **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages"
+- **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages" | "rubrica" (sin cambios en Ciclo 9)
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
-- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (sin cambios en Ciclo 7)
+- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" | "inspection" | "metrics" (metrics añadido en Ciclo 9)
 - **TeacherStudents**: C7 modificado (TeacherComentarios). Leer antes de editar en ciclos futuros.
 - **API tutor-chat**: soporta mode="narrativa" (NARRATIVA_SYSTEM_PROMPT sin Socrático), deepDive=true (DEEP_DIVE_ADDON), y modo por defecto (SYSTEM_PROMPT socrático).
 - **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado.
