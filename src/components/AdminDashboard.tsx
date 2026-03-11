@@ -234,6 +234,12 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   // A12 — Salud sistema IA state
   const [showIALogs, setShowIALogs] = useState(false);
 
+  // A24 — Integridad académica
+  const [alertasRevisadas, setAlertasRevisadas] = useState<Set<string>>(new Set());
+  const [alertasIgnoradas, setAlertasIgnoradas] = useState<Set<string>>(new Set());
+  const [solicitandoClarificacion, setSolicitandoClarificacion] = useState<string | null>(null);
+  const [clarificacionEnviada, setClarificacionEnviada] = useState<Set<string>>(new Set());
+
   // A13 — Metrics vista toggle
   const [metricsVista, setMetricsVista] = useState<"semana" | "mes">("semana");
 
@@ -2567,6 +2573,189 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 ))}
               </div>
             </div>
+
+            {/* A24 — Panel Integridad académica */}
+            {(() => {
+              const integridadAlertas = [
+                {
+                  id: "ia1",
+                  alumno1: "Lucas García", alumno2: "Pablo Ruiz",
+                  tarea: "Análisis de precios Airbnb Málaga",
+                  similitud: 91,
+                  competencia: "STEM",
+                  fecha: "Hoy 09:42",
+                },
+                {
+                  id: "ia2",
+                  alumno1: "Sofía Torres", alumno2: "Ana Martín",
+                  tarea: "Redacción del listing en inglés",
+                  similitud: 83,
+                  competencia: "CLC",
+                  fecha: "Hoy 11:15",
+                },
+                {
+                  id: "ia3",
+                  alumno1: "Diego López", alumno2: "Carlos Rivera",
+                  tarea: "Modelo financiero — punto de equilibrio",
+                  similitud: 78,
+                  competencia: "STEM",
+                  fecha: "Ayer 16:30",
+                },
+                {
+                  id: "ia4",
+                  alumno1: "María Santos", alumno2: "Laura Sanz",
+                  tarea: "Brand board de identidad visual",
+                  similitud: 75,
+                  competencia: "CCEC",
+                  fecha: "Ayer 14:05",
+                },
+                {
+                  id: "ia5",
+                  alumno1: "Tomás Herrera", alumno2: "Valentina Cruz",
+                  tarea: "Plantillas de comunicación con huéspedes",
+                  similitud: 88,
+                  competencia: "CE",
+                  fecha: "8 mar",
+                },
+              ];
+
+              const alertasVisibles = integridadAlertas.filter(
+                (a) => !alertasIgnoradas.has(a.id)
+              );
+              const totalEsta = integridadAlertas.length;
+              const revisadas = alertasRevisadas.size;
+              const pendientes = alertasVisibles.filter((a) => !alertasRevisadas.has(a.id)).length;
+
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Shield size={15} className="text-urgent" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Integridad académica", "Academic integrity")}</h3>
+                    <span className="ml-auto text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
+                      {pendientes} {lbl("pendientes", "pending")}
+                    </span>
+                  </div>
+
+                  {/* KPIs resumen */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {[
+                      { label: lbl("Alertas esta semana", "Alerts this week"), valor: totalEsta, bg: "bg-background", textV: "text-text-primary" },
+                      { label: lbl("Revisadas", "Reviewed"), valor: revisadas, bg: "bg-success-light", textV: "text-success" },
+                      { label: lbl("Pendientes", "Pending"), valor: pendientes, bg: "bg-urgent-light", textV: "text-urgent" },
+                    ].map((k) => (
+                      <div key={k.label} className={`${k.bg} rounded-xl p-3 text-center border border-card-border`}>
+                        <span className={`text-[22px] font-bold ${k.textV} block`}>{k.valor}</span>
+                        <span className="text-[9px] text-text-muted">{k.label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Lista de alertas */}
+                  <div className="space-y-3">
+                    {alertasVisibles.map((alerta) => {
+                      const isRevisada = alertasRevisadas.has(alerta.id);
+                      const isClarificando = solicitandoClarificacion === alerta.id;
+                      const isClarificada = clarificacionEnviada.has(alerta.id);
+                      const esUrgente = alerta.similitud > 85;
+
+                      return (
+                        <div
+                          key={alerta.id}
+                          className={`rounded-xl p-3.5 border transition-all ${
+                            isRevisada ? "bg-success-light border-success/20 opacity-70" :
+                            esUrgente ? "bg-urgent-light border-urgent/20" :
+                            "bg-warning-light border-warning/20"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Avatares */}
+                            <div className="flex items-center flex-shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center">
+                                {alerta.alumno1.split(" ").map(n => n[0]).join("").slice(0,2)}
+                              </div>
+                              <div className="w-7 h-7 rounded-full bg-accent-text text-white text-[9px] font-bold flex items-center justify-center -ml-2">
+                                {alerta.alumno2.split(" ").map(n => n[0]).join("").slice(0,2)}
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <p className="text-[12px] font-semibold text-text-primary truncate">
+                                  {alerta.alumno1} · {alerta.alumno2}
+                                </p>
+                                <span className={`flex-shrink-0 text-[8px] font-bold px-1.5 py-0.5 rounded-full ${esUrgente ? "bg-urgent text-white" : "bg-warning text-white"}`}>
+                                  {esUrgente ? lbl("Urgente", "Urgent") : lbl("Aviso", "Warning")}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-text-secondary mb-1 truncate">{alerta.tarea}</p>
+                              <div className="flex items-center gap-2 mb-2">
+                                {/* Barra de similitud */}
+                                <div className="flex-1 h-1.5 bg-card rounded-full overflow-hidden max-w-[100px]">
+                                  <div
+                                    className={`h-full rounded-full ${esUrgente ? "bg-urgent" : "bg-warning"}`}
+                                    style={{ width: `${alerta.similitud}%` }}
+                                  />
+                                </div>
+                                <span className={`text-[10px] font-bold ${esUrgente ? "text-urgent" : "text-warning"}`}>
+                                  {alerta.similitud}% {lbl("similitud", "similarity")}
+                                </span>
+                                <span className="text-[8px] font-bold bg-sidebar/10 text-accent-text px-1.5 py-0.5 rounded-full">{alerta.competencia}</span>
+                                <span className="text-[9px] text-text-muted ml-auto">{alerta.fecha}</span>
+                              </div>
+                              {/* Acciones */}
+                              {!isRevisada && (
+                                <div className="flex gap-1.5 flex-wrap">
+                                  <button
+                                    onClick={() => setAlertasRevisadas((prev) => new Set(prev).add(alerta.id))}
+                                    className="text-[9px] font-semibold bg-success-light text-success border border-success/20 px-2 py-1 rounded-lg hover:bg-success/10 transition-all cursor-pointer"
+                                  >
+                                    {lbl("Marcar revisada", "Mark reviewed")}
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (isClarificando) return;
+                                      setSolicitandoClarificacion(alerta.id);
+                                      setTimeout(() => {
+                                        setClarificacionEnviada((prev) => new Set(prev).add(alerta.id));
+                                        setSolicitandoClarificacion(null);
+                                      }, 900);
+                                    }}
+                                    className={`text-[9px] font-semibold border px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                                      isClarificada
+                                        ? "bg-success-light text-success border-success/20"
+                                        : "bg-card text-text-secondary border-card-border hover:border-accent-text/30"
+                                    }`}
+                                  >
+                                    {isClarificando ? lbl("Enviando...", "Sending...") : isClarificada ? lbl("Notificación enviada", "Notification sent") : lbl("Solicitar aclaración", "Request clarification")}
+                                  </button>
+                                  <button
+                                    onClick={() => setAlertasIgnoradas((prev) => new Set(prev).add(alerta.id))}
+                                    className="text-[9px] font-semibold text-text-muted hover:text-urgent transition-colors cursor-pointer px-2 py-1"
+                                  >
+                                    {lbl("Ignorar", "Ignore")}
+                                  </button>
+                                </div>
+                              )}
+                              {isRevisada && (
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle2 size={11} className="text-success" />
+                                  <span className="text-[10px] text-success font-semibold">{lbl("Revisada", "Reviewed")}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {alertasVisibles.length === 0 && (
+                      <div className="text-center py-6">
+                        <CheckCircle2 size={24} className="text-success mx-auto mb-2" />
+                        <p className="text-[12px] text-text-secondary">{lbl("Todas las alertas han sido gestionadas", "All alerts have been handled")}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}
