@@ -174,6 +174,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   // A13 — Metrics vista toggle
   const [metricsVista, setMetricsVista] = useState<"semana" | "mes">("semana");
 
+  // A16 — Top competencias por clase
+  const [compClaseVista, setCompClaseVista] = useState<"1eso" | "2eso">("1eso");
+
   // A2 — Users management state
   const [userSearch, setUserSearch] = useState("");
   const [userFilterRol, setUserFilterRol] = useState("Todos");
@@ -2140,6 +2143,86 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </p>
               </div>
             </div>
+            {/* A16: Top competencias por clase */}
+            {(() => {
+              const compData: Record<"1eso" | "2eso", Record<string, number>> = {
+                "1eso": { CLC: 3.2, CPL: 2.8, STEM: 3.4, CD: 3.2, CPSAA: 3.1, CC: 3.1, CE: 3.3, CCEC: 2.7 },
+                "2eso": { CLC: 3.5, CPL: 3.2, STEM: 3.1, CD: 3.6, CPSAA: 3.3, CC: 3.2, CE: 2.9, CCEC: 3.1 },
+              };
+              const comps = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"];
+              const datos = compData[compClaseVista];
+              const maxVal = 4;
+              const refLinePct = (3.0 / maxVal) * 100; // referencia nivel 3.0 (Logro esperado)
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BarChart3 size={15} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Top competencias por clase</h3>
+                    <span className="text-[10px] text-text-muted ml-1">Media LOMLOE (1–4) · referencia nivel 3.0</span>
+                    <div className="ml-auto flex bg-background rounded-lg border border-card-border p-0.5 gap-0.5">
+                      {(["1eso", "2eso"] as const).map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setCompClaseVista(c)}
+                          className={`text-[10px] font-bold px-3 py-1 rounded-md cursor-pointer transition-all ${
+                            compClaseVista === c ? "bg-sidebar text-white" : "text-text-muted hover:text-text-secondary"
+                          }`}
+                        >
+                          {c === "1eso" ? "1º ESO" : "2º ESO"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Gráfico de barras con línea de referencia */}
+                  <div className="relative">
+                    <div className="flex items-end gap-3 h-40">
+                      {comps.map((comp) => {
+                        const val = datos[comp] ?? 0;
+                        const pct = (val / maxVal) * 100;
+                        const barColor = val >= 3.5 ? "bg-success" : val >= 3.0 ? "bg-accent-text" : val >= 2.0 ? "bg-warning" : "bg-urgent";
+                        return (
+                          <div key={comp} className="flex-1 flex flex-col items-center gap-1">
+                            <span className={`text-[9px] font-bold tabular-nums ${val >= 3.0 ? "text-accent-text" : "text-warning"}`}>
+                              {val.toFixed(1)}
+                            </span>
+                            <div className="w-full flex-1 bg-background rounded-t-lg overflow-hidden flex items-end">
+                              <div
+                                className={`w-full rounded-t-lg transition-all ${barColor}`}
+                                style={{ height: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-[9px] font-bold text-text-secondary">{comp}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Línea de referencia nivel 3.0 */}
+                    <div
+                      className="absolute left-0 right-0 border-t-2 border-dashed border-accent-text/50 pointer-events-none"
+                      style={{ bottom: `calc(${refLinePct}% + 20px)` }}
+                    >
+                      <span className="absolute right-0 -top-4 text-[8px] font-bold text-accent-text bg-card px-1">
+                        Nivel 3.0 (Logro esperado)
+                      </span>
+                    </div>
+                  </div>
+                  {/* Leyenda */}
+                  <div className="flex items-center gap-4 mt-4 pt-3 border-t border-card-border">
+                    {[
+                      { label: "≥ 3.5 — Avanzado",         color: "bg-success" },
+                      { label: "3.0–3.4 — Adquirido",       color: "bg-accent-text" },
+                      { label: "2.0–2.9 — En proceso",      color: "bg-warning" },
+                      { label: "< 2.0 — Iniciado",          color: "bg-urgent" },
+                    ].map((l) => (
+                      <div key={l.label} className="flex items-center gap-1.5">
+                        <div className={`w-3 h-3 rounded-sm ${l.color}`} />
+                        <span className="text-[9px] text-text-muted">{l.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}
