@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 37 ✅ (push: `e5fb17e`)
+- **Último ciclo completo**: Ciclo 38 ✅ (push: `85abef2`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 38
+- **Próximo ciclo**: Ciclo 39
 
 ---
 
@@ -1297,6 +1297,58 @@
 
 ---
 
+## Sprints completados — Ciclo 38
+
+### [SPRINT-TEACHER][T36] TeacherStudents — Ficha T2: rol Food Truck y avance por alumno ✅
+- Commit: `5e55449`
+- Archivo: `src/components/TeacherStudents.tsx`
+- Módulo-level: `rolT2PorAlumno` array 12 entradas × {rol, emoji, comp}, `avanceSem1T2Mock` array 12 tareas (0-3)
+- Estado añadido: `t36FiltroRol string` ("todos" default)
+- KPI strip: roles asignados (12/12), media tareas sem1, completaron 3/3
+- Filter pills: Todos + 5 roles únicos con count y emoji
+- Filas por alumno: avatar initials, nombre, rol emoji + comp badge, barra progreso tareas/3 con color semáforo
+- Verde = 3/3 completadas, Rojo = 0/3, Amarillo = en progreso
+- Nota pedagógica: roles orientados por comp dominante T1, revisables en T2
+- Import añadido: `Briefcase`
+
+### [SPRINT-STUDENT][S38] StudentDashboard — Presupuesto Food Truck interactivo ✅
+- Commit: `e860523`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Insertado entre C35 (Empresa por dentro) y S34 (Siguiente proyecto)
+- IIFE pattern con interface `Partida` interna, TOTAL = 3600 QC
+- 6 categorías: ingredientes/equipamiento/diseño/marketing/ubicación/contingencia
+- Inputs `type="number"` editables por categoría con step=50
+- Barra total con semáforo: success (≤90%) / warning (90-99%) / urgent (>100%)
+- Alerta con Calculator icon si sobrePresupuesto
+- Botón "Guardar presupuesto": 800ms delay + feedback CheckCircle2 3s; disabled si sobrePresupuesto
+- Nota pedagógica Bloque 2: "controlar costes antes de empezar"
+- Sin imports nuevos (Coins, Calculator, CheckCircle2, RefreshCw ya existían)
+
+### [SPRINT-ADMIN][A36] AdminDashboard — Ranking entre clases T2: semana 1 ✅
+- Commit: `de8c129`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Insertado en Overview tab izquierda después de A35 (Adopción T2)
+- 4 clases: 1ºA y 1ºB activas (ranking), 2ºA y 2ºB en "no iniciadas"
+- Podio ordenado por engagement: medallas 🥇🥈🥉, barra horizontal, tareas/alumno, QCoins generados
+- Mini chart barras — Q-Coins generados por clase activa (comparativa)
+- Sección "Todavía no iniciadas" con chips y fecha de inicio prevista
+- Nota pedagógica: competición mide esfuerzo colectivo, no rendimiento individual
+- Sin imports nuevos (Trophy ya existía)
+
+### [SPRINT-CULTURE][C36] StudentDashboard — Dinero Real: márgenes del menú (Bloque 2) ✅
+- Commit: `85abef2`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Insertado entre S38 (Presupuesto) y S34 (Siguiente proyecto)
+- Principio culture.md Bloque 2 "Dinero Real": finanzas integradas en el proyecto activo
+- 5 productos con inputs de coste y precio editables en tiempo real
+- Margen bruto por producto calculado dinámicamente: ≥60% verde, ≥40% amarillo, <40% rojo
+- KPI strip: margen bruto medio, clientes para breakeven, beneficio neto/día estimado
+- Nota IA contextual: explica qué es el margen con los datos reales del alumno
+- IIFE pattern con interface `ProductoMenu` interna
+- Sin imports nuevos (TrendingUp ya existía)
+
+---
+
 ## Sprints completados — Ciclo 37
 
 ### [SPRINT-TEACHER][T35] TeacherProjectGenerator — Banco de retos T2: 5 variantes Food Truck ✅
@@ -1711,6 +1763,10 @@
 - **Ciclo 37 — StudentProfile S37**: cartaProfesional/generandoCarta/cartaCopiada/cartaDescargada states. Carta en `<pre>`. handleDescargar(): HTML blob → download .pdf. Insertado después de C34, antes de Achievements. Imports añadidos: Copy, Download.
 - **Ciclo 37 — AdminDashboard A35**: IIFE panel en Overview izquierda después de A33 (Mapa transición). 3 KPIs con comparativa vs T1 día 1. 4 filas clase con estado activo/pendiente. Mini doble barra chart. Sin imports nuevos.
 - **Ciclo 37 — StudentDashboard C35**: interface `Rol` interna al IIFE. `rolActivo useState<string|null>`. 5 roles con emoji/dept/comp/tareas. CEO centrado arriba + grid-cols-4 abajo. Click toggle detalle. Sin imports nuevos (Briefcase ya existía).
+- **Ciclo 38 — TeacherStudents T36**: `rolT2PorAlumno` y `avanceSem1T2Mock` a nivel módulo (constantes, no dentro del componente). `t36FiltroRol` state al nivel del componente (no en IIFE). Import añadido: Briefcase.
+- **Ciclo 38 — StudentDashboard S38**: useState (valores, guardando, guardado) dentro del IIFE — patrón aceptado en este codebase. 6 partidas con interface `Partida` local. TOTAL = 3600 const.
+- **Ciclo 38 — AdminDashboard A36**: `clasesRanking` definido dentro del IIFE. Ordenación por engagement `.filter().sort()` para construir el podio. Sin estados nuevos (panel es estático con data mock).
+- **Ciclo 38 — StudentDashboard C36**: `productos` useState con interface `ProductoMenu` interna al IIFE. Fórmulas: margenBruto=(precio-coste)/precio*100, breakeven=costosFijos/((ingresos-costes)/N), beneficioNeto=ventas*(ingresos-costes)/N-fijos. Todos derivados en cada render.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
 - **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
