@@ -1,13 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone, Target, Sparkles, Download, Trophy, Star, BookOpen, RefreshCw } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
 import { useLang } from "@/lib/i18n";
 
 type Filter = "all" | "excelling" | "needs_attention";
+
+// T25 — Plan de acción individual
+interface PlanAccion {
+  id: string;
+  descripcion: string;
+  competencia: string;
+  tiempoMin: number;
+  estado: "pendiente" | "progreso" | "completado";
+}
 
 interface HistorialIntervencion {
   id: string;
@@ -146,10 +155,142 @@ export default function TeacherStudents() {
   const [inputs, setInputs] = useState<Record<string, string>>({});
   const [categorias, setCategorias] = useState<Record<string, Comentario["categoria"]>>({});
 
+  // T25 — Plan de acción individual
+  const [planAlumnoId, setPlanAlumnoId] = useState<string | null>(null);
+  const [planAcciones, setPlanAcciones] = useState<Record<string, PlanAccion[]>>({});
+  const [generandoPlan, setGenerandoPlan] = useState<string | null>(null);
+  const [planDescargado, setPlanDescargado] = useState<Set<string>>(new Set());
+  const [accionesEstado, setAccionesEstado] = useState<Record<string, "pendiente" | "progreso" | "completado">>({});
+
   const counts = {
     all: classStudents.length,
     excelling: classStudents.filter((s) => s.status === "excelling").length,
     needs_attention: classStudents.filter((s) => s.status === "needs_attention").length,
+  };
+
+  // T25 — Generar plan con IA
+  const planMockPorAlumno = (studentId: string, globalIdx: number): PlanAccion[] => {
+    // Top 2 comps (highest scores) and bottom 2
+    const scores = competencies.map((c, ci) => ({ key: c.key, score: studentCompScore(globalIdx, ci) }));
+    const sorted = [...scores].sort((a, b) => b.score - a.score);
+    const top2 = sorted.slice(0, 2);
+    const bottom2 = sorted.slice(-2);
+    return [
+      {
+        id: `p-${studentId}-1`,
+        descripcion: lbl(
+          `Reforzar ${top2[0].key}: preparar una sección del anuncio de Casa Limón aplicando tu punto fuerte.`,
+          `Reinforce ${top2[0].key}: prepare a section of the Casa Limón listing using your strength.`
+        ),
+        competencia: top2[0].key,
+        tiempoMin: 45,
+        estado: "pendiente",
+      },
+      {
+        id: `p-${studentId}-2`,
+        descripcion: lbl(
+          `Ampliar ${top2[1].key}: diseña un plan de comunicación con huéspedes en dos idiomas.`,
+          `Expand ${top2[1].key}: design a guest communication plan in two languages.`
+        ),
+        competencia: top2[1].key,
+        tiempoMin: 60,
+        estado: "pendiente",
+      },
+      {
+        id: `p-${studentId}-3`,
+        descripcion: lbl(
+          `Mejorar ${bottom2[0].key}: busca 3 ejemplos reales de Airbnb Málaga que trabajen esta competencia.`,
+          `Improve ${bottom2[0].key}: find 3 real Airbnb Málaga examples that work on this competency.`
+        ),
+        competencia: bottom2[0].key,
+        tiempoMin: 30,
+        estado: "pendiente",
+      },
+    ];
+  };
+
+  const handleGenerarPlan = async (studentId: string, globalIdx: number) => {
+    if (generandoPlan) return;
+    setGenerandoPlan(studentId);
+    try {
+      const student = classStudents[globalIdx];
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: `Genera un plan de acción semanal en español para el alumno ${student.name} del proyecto Airbnb Málaga. Incluye 3 acciones concretas: las 2 primeras refuerzan sus fortalezas (competencias LOMLOE más altas), la tercera aborda su competencia más baja. Cada acción: descripción breve (máx 15 palabras), competencia LOMLOE, tiempo estimado en minutos (30-60). Formato JSON array: [{"descripcion":"...","competencia":"CE","tiempoMin":45}]`,
+          history: [],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const raw: string = data.reply ?? "";
+        const match = raw.match(/\[[\s\S]*\]/);
+        if (match) {
+          const parsed = JSON.parse(match[0]) as { descripcion: string; competencia: string; tiempoMin: number }[];
+          const acciones: PlanAccion[] = parsed.slice(0, 3).map((item, i) => ({
+            id: `p-${studentId}-${i + 1}`,
+            descripcion: item.descripcion,
+            competencia: item.competencia,
+            tiempoMin: item.tiempoMin,
+            estado: "pendiente",
+          }));
+          setPlanAcciones((prev) => ({ ...prev, [studentId]: acciones }));
+          setGenerandoPlan(null);
+          return;
+        }
+      }
+    } catch { /* noop */ }
+    setPlanAcciones((prev) => ({ ...prev, [studentId]: planMockPorAlumno(studentId, globalIdx) }));
+    setGenerandoPlan(null);
+  };
+
+  const handleDescargarPlan = (student: typeof classStudents[number], acciones: PlanAccion[]) => {
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Plan de acción — ${student.name}</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 40px; background: #f4f0e9; }
+  .card { background: white; border-radius: 16px; padding: 32px; border: 1px solid #ededed; max-width: 600px; margin: 0 auto; }
+  h1 { color: #141414; font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #666; font-size: 12px; margin-bottom: 24px; }
+  .accion { background: #f4f0e9; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .badge { display: inline-block; background: #edffe3; color: #2f574d; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; margin-right: 6px; }
+  .estado { font-size: 10px; color: #9ca3af; }
+  .footer { font-size: 11px; color: #9ca3af; margin-top: 24px; padding-top: 16px; border-top: 1px solid #ededed; }
+</style></head><body>
+<div class="card">
+  <h1>Plan de acción individual — ${student.name}</h1>
+  <div class="sub">Proyecto Airbnb Málaga · QHUMA OS · Semana del 11 mar 2026</div>
+  ${acciones.map((a, i) => `
+  <div class="accion">
+    <div style="font-weight:700;font-size:14px;color:#141414;margin-bottom:8px;">Acción ${i + 1}</div>
+    <p style="font-size:13px;color:#333;margin-bottom:8px;">${a.descripcion}</p>
+    <span class="badge">${a.competencia}</span>
+    <span class="badge" style="background:#fffbeb;color:#f59e0b;">${a.tiempoMin} min</span>
+    <span class="estado">Estado: ${a.estado}</span>
+  </div>`).join("")}
+  <div class="footer">Generado por QHUMA OS · Prof. Ana Martínez · 1º ESO Málaga</div>
+</div></body></html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `plan_accion_${student.name.toLowerCase().replace(/\s+/g, "_")}_mar2026.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setPlanDescargado((prev) => new Set(prev).add(student.id));
+  };
+
+  const handleToggleAccionEstado = (accionId: string) => {
+    setAccionesEstado((prev) => {
+      const actual = prev[accionId] ?? "pendiente";
+      const siguiente: Record<string, "pendiente" | "progreso" | "completado"> = {
+        pendiente: "progreso",
+        progreso: "completado",
+        completado: "pendiente",
+      };
+      return { ...prev, [accionId]: siguiente[actual] };
+    });
   };
 
   const filtered =
@@ -296,6 +437,167 @@ export default function TeacherStudents() {
               {/* Panel expandido */}
               {isExpanded && (
                 <div className="border-t border-card-border bg-background p-5">
+
+                  {/* ─── T25: Plan de acción individual ─── */}
+                  {(() => {
+                    const acciones = planAcciones[student.id];
+                    const isPlanOpen = planAlumnoId === student.id;
+                    const isGenerando = generandoPlan === student.id;
+                    const yaDescargado = planDescargado.has(student.id);
+
+                    return (
+                      <div className="mb-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Target size={13} className="text-accent-text" />
+                          <h4 className="text-[12px] font-semibold text-text-primary">
+                            {lbl("Plan de acción individual", "Individual action plan")}
+                          </h4>
+                          <button
+                            onClick={() => setPlanAlumnoId(isPlanOpen ? null : student.id)}
+                            className="ml-auto text-[10px] font-medium text-accent-text bg-accent-light border border-accent/20 px-2.5 py-1 rounded-full hover:bg-accent/20 transition-colors cursor-pointer"
+                          >
+                            {isPlanOpen ? lbl("Ocultar", "Hide") : lbl("Ver plan", "View plan")}
+                          </button>
+                        </div>
+
+                        {isPlanOpen && (
+                          <div className="bg-card rounded-xl border border-card-border p-4">
+                            {/* Fortalezas / Áreas de mejora */}
+                            {(() => {
+                              const scores = competencies.map((c, ci) => ({ key: c.key, score: studentCompScore(globalIdx, ci), full: c.shortName }));
+                              const sorted = [...scores].sort((a, b) => b.score - a.score);
+                              const top2 = sorted.slice(0, 2);
+                              const bottom2 = sorted.slice(-2);
+                              return (
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                  <div className="bg-success-light rounded-xl p-3 border border-success/20">
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <Trophy size={11} className="text-success" />
+                                      <span className="text-[10px] font-bold text-success uppercase tracking-wide">
+                                        {lbl("Fortalezas", "Strengths")}
+                                      </span>
+                                    </div>
+                                    {top2.map((c) => (
+                                      <div key={c.key} className="flex items-center gap-1.5 mb-1">
+                                        <span className="text-[9px] font-bold bg-success text-white px-1.5 py-0.5 rounded">{c.key}</span>
+                                        <span className="text-[9px] text-text-secondary">{c.score}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="bg-warning-light rounded-xl p-3 border border-warning/20">
+                                    <div className="flex items-center gap-1.5 mb-2">
+                                      <Star size={11} className="text-warning" />
+                                      <span className="text-[10px] font-bold text-warning uppercase tracking-wide">
+                                        {lbl("Áreas de mejora", "Improvement areas")}
+                                      </span>
+                                    </div>
+                                    {bottom2.map((c) => (
+                                      <div key={c.key} className="flex items-center gap-1.5 mb-1">
+                                        <span className="text-[9px] font-bold bg-warning text-white px-1.5 py-0.5 rounded">{c.key}</span>
+                                        <span className="text-[9px] text-text-secondary">{c.score}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Plan semanal */}
+                            {acciones && acciones.length > 0 ? (
+                              <div className="mb-4">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <BookOpen size={11} className="text-text-muted" />
+                                  <span className="text-[11px] font-semibold text-text-primary">
+                                    {lbl("Plan semanal — 3 acciones", "Weekly plan — 3 actions")}
+                                  </span>
+                                </div>
+                                <div className="space-y-2">
+                                  {acciones.map((accion) => {
+                                    const estadoActual = accionesEstado[accion.id] ?? accion.estado;
+                                    const estadoCfg = {
+                                      pendiente: { label: lbl("Pendiente", "Pending"), bg: "bg-background", text: "text-text-muted", border: "border-card-border" },
+                                      progreso:  { label: lbl("En progreso", "In progress"), bg: "bg-warning-light", text: "text-warning", border: "border-warning/20" },
+                                      completado: { label: lbl("Completado", "Completed"), bg: "bg-success-light", text: "text-success", border: "border-success/20" },
+                                    }[estadoActual];
+                                    return (
+                                      <div key={accion.id} className={`rounded-xl p-3 border ${estadoCfg.bg} ${estadoCfg.border}`}>
+                                        <div className="flex items-start gap-2">
+                                          <button
+                                            onClick={() => handleToggleAccionEstado(accion.id)}
+                                            className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center cursor-pointer transition-all ${
+                                              estadoActual === "completado"
+                                                ? "bg-success border-success"
+                                                : estadoActual === "progreso"
+                                                ? "bg-warning border-warning"
+                                                : "bg-card border-card-border hover:border-accent-text/40"
+                                            }`}
+                                          >
+                                            {estadoActual === "completado" && <CheckCircle2 size={10} className="text-white" />}
+                                            {estadoActual === "progreso" && <Clock size={9} className="text-white" />}
+                                          </button>
+                                          <div className="flex-1 min-w-0">
+                                            <p className={`text-[11px] leading-relaxed ${estadoActual === "completado" ? "line-through text-text-muted" : "text-text-secondary"}`}>
+                                              {accion.descripcion}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-1.5">
+                                              <span className="text-[9px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded">
+                                                {accion.competencia}
+                                              </span>
+                                              <span className="text-[9px] text-text-muted">
+                                                {accion.tiempoMin} min
+                                              </span>
+                                              <span className={`text-[9px] font-semibold ml-auto ${estadoCfg.text}`}>
+                                                {estadoCfg.label}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="bg-background rounded-xl p-4 text-center mb-4">
+                                <Target size={20} className="text-text-muted mx-auto mb-2" />
+                                <p className="text-[11px] text-text-muted">
+                                  {lbl("Genera el plan para ver las acciones semanales", "Generate the plan to see weekly actions")}
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Botones */}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleGenerarPlan(student.id, globalIdx)}
+                                disabled={!!generandoPlan}
+                                className="flex items-center gap-1.5 text-[10px] font-semibold bg-sidebar text-accent px-3 py-2 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex-1 justify-center"
+                              >
+                                {isGenerando
+                                  ? <><RefreshCw size={11} className="animate-spin" />{lbl("Generando plan...", "Generating plan...")}</>
+                                  : <><Sparkles size={11} />{lbl("Generar plan con IA", "Generate plan with AI")}</>
+                                }
+                              </button>
+                              {acciones && acciones.length > 0 && (
+                                <button
+                                  onClick={() => handleDescargarPlan(student, acciones)}
+                                  className={`flex items-center gap-1.5 text-[10px] font-semibold px-3 py-2 rounded-xl transition-colors cursor-pointer ${
+                                    yaDescargado
+                                      ? "bg-success-light text-success border border-success/20"
+                                      : "bg-background text-text-secondary border border-card-border hover:bg-accent-light hover:text-accent-text"
+                                  }`}
+                                >
+                                  {yaDescargado ? <CheckCircle2 size={11} /> : <Download size={11} />}
+                                  {yaDescargado ? lbl("Descargado", "Downloaded") : lbl("Descargar plan", "Download plan")}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Barras de competencias */}
                   <h4 className="text-[12px] font-semibold text-text-primary mb-3">
                     {lbl("Competencias LOMLOE", "LOMLOE Competencies")}
