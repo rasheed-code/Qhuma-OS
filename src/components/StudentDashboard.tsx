@@ -1973,6 +1973,188 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── C35: Empresa por dentro — Estructura Food Truck ─────────────── */}
+      {(() => {
+        interface Rol {
+          id: string;
+          titulo: string;
+          emoji: string;
+          dept: string;
+          comp: string;
+          desc: string;
+          tareas: string[];
+        }
+        const roles: Rol[] = [
+          {
+            id: "ceo",
+            titulo: lbl("CEO / Líder de proyecto", "CEO / Project lead"),
+            emoji: "👑",
+            dept: lbl("Dirección", "Management"),
+            comp: "CE",
+            desc: lbl("Toma las decisiones estratégicas, coordina al equipo y presenta en el Demo Day.", "Makes strategic decisions, coordinates the team and presents at Demo Day."),
+            tareas: [
+              lbl("Definir el concepto del Food Truck", "Define the Food Truck concept"),
+              lbl("Asignar tareas a cada miembro", "Assign tasks to each member"),
+              lbl("Presentar el proyecto final", "Present the final project"),
+            ],
+          },
+          {
+            id: "cfo",
+            titulo: lbl("CFO / Finanzas", "CFO / Finance"),
+            emoji: "💰",
+            dept: lbl("Finanzas", "Finance"),
+            comp: "STEM",
+            desc: lbl("Gestiona el presupuesto de 3600 QC, calcula costes y proyecta ganancias.", "Manages the 3600 QC budget, calculates costs and projects profits."),
+            tareas: [
+              lbl("Elaborar el plan financiero", "Build the financial plan"),
+              lbl("Controlar los gastos", "Track spending"),
+              lbl("Calcular el punto de equilibrio", "Calculate breakeven point"),
+            ],
+          },
+          {
+            id: "cmo",
+            titulo: lbl("CMO / Marketing", "CMO / Marketing"),
+            emoji: "📣",
+            dept: lbl("Marketing", "Marketing"),
+            comp: "CLC",
+            desc: lbl("Crea la identidad visual, el nombre y la estrategia de comunicación.", "Creates the visual identity, name and communication strategy."),
+            tareas: [
+              lbl("Diseñar el logo y colores", "Design the logo and colors"),
+              lbl("Crear el slogan", "Create the tagline"),
+              lbl("Planificar redes sociales", "Plan social media"),
+            ],
+          },
+          {
+            id: "coo",
+            titulo: lbl("COO / Operaciones", "COO / Operations"),
+            emoji: "⚙️",
+            dept: lbl("Operaciones", "Operations"),
+            comp: "CPSAA",
+            desc: lbl("Diseña el menú, gestiona proveedores y planifica la logística del truck.", "Designs the menu, manages suppliers and plans truck logistics."),
+            tareas: [
+              lbl("Diseñar el menú de 5 productos", "Design the 5-product menu"),
+              lbl("Buscar proveedores", "Source suppliers"),
+              lbl("Planificar el espacio físico", "Plan physical space"),
+            ],
+          },
+          {
+            id: "cto",
+            titulo: lbl("CTO / Tecnología", "CTO / Technology"),
+            emoji: "💻",
+            dept: lbl("Tecnología", "Technology"),
+            comp: "CD",
+            desc: lbl("Crea la presencia digital: web, pedidos online y gestión de datos.", "Creates digital presence: website, online orders and data management."),
+            tareas: [
+              lbl("Crear la web del Food Truck", "Build the Food Truck website"),
+              lbl("Montar el sistema de pedidos", "Set up the ordering system"),
+              lbl("Analizar datos de ventas", "Analyze sales data"),
+            ],
+          },
+        ];
+        const deptColors: Record<string, string> = {
+          [lbl("Dirección", "Management")]:   "bg-sidebar text-accent",
+          [lbl("Finanzas", "Finance")]:        "bg-warning-light text-warning",
+          [lbl("Marketing", "Marketing")]:     "bg-accent-light text-accent-text",
+          [lbl("Operaciones", "Operations")]:  "bg-success-light text-success",
+          [lbl("Tecnología", "Technology")]:   "bg-urgent-light text-urgent",
+        };
+        const [rolActivo, setRolActivo] = useState<string | null>(null);
+        const rolData = roles.find((r) => r.id === rolActivo);
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-xl bg-accent-light flex items-center justify-center flex-shrink-0">
+                <Briefcase size={14} className="text-accent-text" />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                  {lbl("Empresa por dentro", "Inside the company")}
+                </h2>
+                <p className="text-[10px] text-text-secondary">
+                  {lbl("Estructura del Food Truck · ¿Quién hace qué?", "Food Truck structure · Who does what?")}
+                </p>
+              </div>
+            </div>
+
+            {/* Org chart row */}
+            <div className="mt-4 mb-3">
+              {/* CEO at top */}
+              <div className="flex justify-center mb-2">
+                <button
+                  onClick={() => setRolActivo(rolActivo === "ceo" ? null : "ceo")}
+                  className={`flex flex-col items-center gap-1 px-4 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${
+                    rolActivo === "ceo" ? "border-sidebar bg-sidebar text-accent" : "border-card-border bg-background hover:border-sidebar/40"
+                  }`}
+                >
+                  <span className="text-lg">👑</span>
+                  <span className={`text-[10px] font-bold ${rolActivo === "ceo" ? "text-accent" : "text-text-primary"}`}>CEO</span>
+                  <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-accent-light text-accent-text`}>CE</span>
+                </button>
+              </div>
+              {/* Connector line */}
+              <div className="flex justify-center mb-2">
+                <div className="w-px h-3 bg-border" />
+              </div>
+              {/* 4 departments */}
+              <div className="grid grid-cols-4 gap-2">
+                {roles.filter((r) => r.id !== "ceo").map((rol) => {
+                  const isActive = rolActivo === rol.id;
+                  return (
+                    <button
+                      key={rol.id}
+                      onClick={() => setRolActivo(isActive ? null : rol.id)}
+                      className={`flex flex-col items-center gap-1 px-2 py-2.5 rounded-xl border-2 transition-all cursor-pointer ${
+                        isActive ? "border-sidebar bg-sidebar" : "border-card-border bg-background hover:border-sidebar/40"
+                      }`}
+                    >
+                      <span className="text-base">{rol.emoji}</span>
+                      <span className={`text-[9px] font-bold ${isActive ? "text-accent" : "text-text-primary"}`}>{rol.id.toUpperCase()}</span>
+                      <span className={`text-[7px] font-semibold px-1 py-0.5 rounded-full ${deptColors[rol.dept] ?? "bg-border text-text-muted"}`}>{rol.comp}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Detail card */}
+            {rolData ? (
+              <div className="bg-background rounded-xl border border-card-border p-3.5 mt-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">{rolData.emoji}</span>
+                  <div>
+                    <p className="text-[12px] font-bold text-text-primary">{rolData.titulo}</p>
+                    <span className={`text-[8px] font-semibold px-1.5 py-0.5 rounded-full ${deptColors[rolData.dept] ?? ""}`}>{rolData.dept}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-text-secondary mb-2.5 leading-snug">{rolData.desc}</p>
+                <div className="space-y-1.5">
+                  {rolData.tareas.map((t, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-[9px] font-bold text-accent-text w-4 flex-shrink-0">{i + 1}.</span>
+                      <span className="text-[10px] text-text-primary leading-snug">{t}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-background rounded-xl border border-dashed border-card-border p-3 mt-3 text-center">
+                <p className="text-[10px] text-text-muted">{lbl("Toca un rol para ver qué hace y qué tareas tiene.", "Tap a role to see what they do and their tasks.")}</p>
+              </div>
+            )}
+
+            {/* Pedagogical note */}
+            <div className="mt-3 bg-accent-light rounded-xl px-3 py-2 border border-accent/20">
+              <p className="text-[10px] text-accent-text leading-snug">
+                {lbl(
+                  "Una empresa real tiene personas con funciones distintas. Conocer la estructura te ayuda a entender cómo encaja tu trabajo con el del resto del equipo.",
+                  "A real company has people with different roles. Understanding the structure helps you see how your work connects with the rest of the team."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center justify-between mb-4">
