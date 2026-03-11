@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 41 ✅ (push: `0352c8e`)
+- **Último ciclo completo**: Ciclo 42 ✅ (push: `8cd8920`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 42
+- **Próximo ciclo**: Ciclo 43
 
 ---
 
@@ -1343,6 +1343,59 @@
 - Panel narrativa IA (cuando generado): bg-sidebar/5 con cita en cursiva + opción eliminar
 - Nota pedagógica bg-accent-light: Bloque 3 — Narrativa propia
 - Insertado al final de la columna izquierda (último panel antes del cierre `</div>` de la columna)
+
+---
+
+## Sprints completados — Ciclo 42
+
+### [SPRINT-TEACHER][T40] TeacherDashboard — Revisiones T2 pendientes ✅
+- Commit: `8cd8920`
+- Archivo: `src/components/TeacherDashboard.tsx`
+- `enviosT2` array de 5 entradas (canvas/presupuesto) con alumno, avatar, tipo, fecha, comp — definido dentro del IIFE
+- `[revisados, setRevisados] = useState<Set<string>>(new Set())` — useState dentro del IIFE (patrón aceptado)
+- Barra de progreso N/5 revisadas + badge condicional success/warning
+- Por entrada: avatar, nombre, fecha, badge tipo (canvas=accent/presupuesto=warning), comp badge, botón "Revisar" → CheckCircle2
+- Nota pedagógica bg-accent-light: revisar canvas semana 3 = detección de misconceptions
+- Insertado después de T39 y antes del grid CompetencyProgress
+- Sin imports nuevos (ClipboardList, CheckCircle2 ya existían)
+
+### [SPRINT-STUDENT][S42] StudentDashboard — Modelo financiero T2 — Food Truck ✅
+- Commit: `8cd8920`
+- Archivo: `src/components/StudentDashboard.tsx`
+- IIFE puro, sin estados nuevos
+- `costes` array 3 items: ingredientes 2.50€ + envase 0.30€ + operación 0.80€ = 3.60€ costeTotal
+- `precioVenta` 8.40€, `margen` 4.80€, `margenPct` 57%
+- `costosFijos` 250€/mes, `racionesEquilibrio` Math.ceil(250/4.80) = 53, `racionesActuales` 38
+- Grid 2 cols: izq (desglose costes + total urgent) / der (precio success + margen bruto accent-light)
+- Barra punto de equilibrio: 38/53 raciones → 72% warning
+- Nota pedagógica bg-sidebar Bloque 2 Dinero Real + pregunta socrática implícita
+- Insertado antes de S41 (primer panel del bloque T2)
+- Sin imports nuevos (Calculator ya existía)
+
+### [SPRINT-ADMIN][A40] AdminDashboard Reports — Scoreboard T2 por clase semana 3 ✅
+- Commit: `8cd8920`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Estados añadidos: `exportandoScoreboard boolean`, `scoreboardExportado string|null`
+- `clasesT2` array 4 clases: 1ºA (72/up), 1ºB (68/up), 2ºA (45/down), 2ºB (38/down)
+- `handleExportar()`: 1s delay + CSV Blob real con BOM UTF-8 + filename dinámico `scoreboard_t2_semana3_{fecha}.csv`
+- Tabla 4 clases × 3 hitos (canvas/presupuesto/equipo) + score medio con barra CSS coloreada semáforo
+- TrendingUp/TrendingDown por clase según tendencia + badges coloreados por threshold
+- Alerta bg-urgent-light para 2ºA y 2ºB con rezago
+- Insertado al FINAL del tab Reports (antes del cierre `</div>` de space-y-5)
+- Sin imports nuevos (BarChart3, TrendingUp, TrendingDown, Download, CheckCircle2, AlertTriangle ya existían)
+
+### [SPRINT-CULTURE][C40] StudentDashboard — Consulta Socrática · Bloque 1 Mentalidad ✅
+- Commit: `8cd8920`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Principio culture.md Bloque 1 Mentalidad: Modo Socrático — la IA nunca da la respuesta directa en primera interacción
+- Estados añadidos: `preguntaSocratica string`, `respuestaSocratica string|null`, `cargandoSocratica boolean`
+- 3 example prompts clickables (precio menú / idea negocio / localización)
+- Input libre con onKeyDown Enter + botón Consultar (Sparkles)
+- `handleConsultar()` async: fetch /api/tutor-chat mode="tutor" con prompt Socrático explícito; fallback hardcoded
+- Respuesta en bg-sidebar con "Prof. Ana (IA) responde:" + botón "Nueva consulta" (X)
+- Nota pedagógica bg-accent-light explicando el modo socrático
+- Insertado entre S40 (Lean Canvas) y C38 (Pausa activa)
+- Sin imports nuevos (Brain, RefreshCw, Sparkles, X ya existían)
 
 ---
 
