@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp } from "lucide-react";
+import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -91,6 +91,10 @@ export default function TeacherGradeBook() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportFilename, setExportFilename] = useState<string | null>(null);
 
+  // T17 — PDF export
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [exportPDFFilename, setExportPDFFilename] = useState<string | null>(null);
+
   // T14 — Historial de cambios
   const [historialCambios, setHistorialCambios] = useState<HistorialCambio[]>([]);
   const [showHistorial, setShowHistorial] = useState(false);
@@ -171,6 +175,37 @@ export default function TeacherGradeBook() {
     setTimeout(() => setIsExporting(false), 1200);
   };
 
+  // T17: PDF export — informe trimestral
+  const handleExportPDF = () => {
+    setIsExportingPDF(true);
+    const fecha = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "2-digit" });
+    const filename = `informe_lomloe_${trimestre}_1eso_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const mediaGlobal = (classStudents.reduce((sum, s) => sum + rowAvg(s.id), 0) / classStudents.length).toFixed(2);
+    let topAlumno = classStudents[0];
+    for (const s of classStudents.slice(1)) {
+      if (rowAvg(s.id) > rowAvg(topAlumno.id)) topAlumno = s;
+    }
+    const alertCount = classStudents.filter((s) =>
+      COMPS.filter((c) => (activeGrades[s.id]?.[c] ?? 3) === 1).length >= 3
+    ).length;
+    const tableRows = classStudents.map((s) =>
+      `<tr><td>${s.name}</td>${COMPS.map((c) => `<td>${activeGrades[s.id]?.[c] ?? 3}</td>`).join("")}<td><strong>${rowAvg(s.id).toFixed(1)}</strong></td></tr>`
+    ).join("");
+    const distRows = ([1, 2, 3, 4] as Nivel[]).map((n) => {
+      const count = classStudents.reduce((sum, s) => sum + COMPS.filter((c) => (activeGrades[s.id]?.[c] ?? 3) === n).length, 0);
+      const total = classStudents.length * COMPS.length;
+      return `<p><strong>${nivelConfig[n].label} (${n})</strong>: ${count} de ${total} evaluaciones — ${Math.round((count / total) * 100)}%</p>`;
+    }).join("");
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Informe LOMLOE ${trimestre} · 1ºESO</title><style>body{font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;margin:36px}h1{font-size:18px;color:#1f514c;margin-bottom:4px}h2{font-size:13px;color:#1f514c;margin-top:20px;border-bottom:1px solid #d1d5db;padding-bottom:4px}p.meta{color:#9ca3af;font-size:10px;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:9px;margin-top:6px}th{background:#1f514c;color:#fff;padding:5px 3px;text-align:center}td{border:1px solid #e5e7eb;padding:4px 3px;text-align:center}td:first-child{text-align:left;padding-left:6px}.stat{display:inline-block;background:#f4f0e9;border-radius:6px;padding:6px 14px;margin:3px}.sv{display:block;font-size:16px;font-weight:bold;color:#1f514c}.alert{color:#dc2626}</style></head><body><h1>Informe LOMLOE · ${trimestre} · 1º ESO · QHUMA Málaga</h1><p class="meta">Proyecto Airbnb Málaga · Grupo 1º ESO A · ${fecha} · Generado por QHUMA OS</p><h2>Tabla de competencias LOMLOE</h2><table><thead><tr><th>Alumno/a</th>${COMPS.map((c) => `<th>${c}</th>`).join("")}<th>Media</th></tr></thead><tbody>${tableRows}</tbody></table><h2>Resumen estadístico</h2><div><div class="stat"><span class="sv">${mediaGlobal}</span>Media global de clase</div><div class="stat"><span class="sv">${topAlumno.name.split(" ")[0]}</span>Alumno destacado</div><div class="stat"><span class="sv ${alertCount > 0 ? "alert" : ""}">${alertCount}</span>Alertas urgentes</div><div class="stat"><span class="sv">${classStudents.length}</span>Total alumnos</div></div><h2>Distribución de niveles LOMLOE</h2>${distRows}<p class="meta" style="margin-top:20px">Informe generado conforme al Real Decreto 217/2022 LOMLOE · QHUMA OS · 8 competencias clave evaluadas</p></body></html>`;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    setExportPDFFilename(filename);
+    setTimeout(() => setIsExportingPDF(false), 1200);
+  };
+
   // T12: Alerta trimestral — alumnos con nivel 1 en ≥ 3 competencias (T16: usa activeGrades)
   const alertasTrimestral = classStudents.filter((s) =>
     COMPS.filter((c) => (activeGrades[s.id]?.[c] ?? 3) === 1).length >= 3
@@ -215,6 +250,14 @@ export default function TeacherGradeBook() {
               {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
               {isExporting ? "Exportando..." : `Exportar ${trimestre} CSV`}
             </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={isExportingPDF}
+              className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+            >
+              {isExportingPDF ? <RefreshCw size={13} className="animate-spin" /> : <FileText size={13} />}
+              {isExportingPDF ? "Generando..." : `Informe ${trimestre} PDF`}
+            </button>
           </div>
           {!editingEnabled && (
             <span className="text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
@@ -225,6 +268,12 @@ export default function TeacherGradeBook() {
             <div className="flex items-center gap-1">
               <CheckCircle2 size={9} className="text-success" />
               <span className="text-[9px] text-success font-mono">{exportFilename}</span>
+            </div>
+          )}
+          {exportPDFFilename && (
+            <div className="flex items-center gap-1">
+              <CheckCircle2 size={9} className="text-success" />
+              <span className="text-[9px] text-success font-mono">{exportPDFFilename}</span>
             </div>
           )}
         </div>
