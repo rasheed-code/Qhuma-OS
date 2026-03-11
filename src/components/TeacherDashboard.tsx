@@ -22,6 +22,8 @@ import {
   WifiOff,
   CalendarClock,
   RefreshCw,
+  Bell,
+  ClipboardList,
 } from "lucide-react";
 import { classStudents, teacherAlerts } from "@/data/students";
 import TeacherChat from "./TeacherChat";
@@ -78,6 +80,28 @@ const alumnosSinLogin: { id: string; nombre: string; avatar: string; diasSinLogi
   { id: "asl2", nombre: "Tomás Herrera", avatar: "TH", diasSinLogin: 2, ultimaActividad: "Mar 10 mar · 09:05" },
 ];
 
+// ── T22: Próximas entregas ─────────────────────────────────────────────────
+type EstadoEntrega = "pendiente" | "retrasado" | "entregado";
+interface EntregaProxima {
+  id: string;
+  alumno: string;
+  avatar: string;
+  tarea: string;
+  proyecto: string;
+  comp: CompKeyTeacher;
+  fechaLimite: string;
+  diasRestantes: number;
+  estado: EstadoEntrega;
+}
+
+const proximasEntregas: EntregaProxima[] = [
+  { id: "ep1", alumno: "Pablo Ruiz",        avatar: "PR", tarea: "Análisis de mercado revisado",          proyecto: "Airbnb Málaga",  comp: "STEM", fechaLimite: "Hoy · 23:59",   diasRestantes: 0,  estado: "retrasado" },
+  { id: "ep2", alumno: "Sofía Torres",      avatar: "ST", tarea: "Brand board Casa Limón v2",             proyecto: "Airbnb Málaga",  comp: "CCEC", fechaLimite: "Mañana · 18:00", diasRestantes: 1,  estado: "pendiente" },
+  { id: "ep3", alumno: "María Santos",      avatar: "MS", tarea: "Traducción listing al inglés",          proyecto: "Airbnb Málaga",  comp: "CPL",  fechaLimite: "Mañana · 23:59", diasRestantes: 1,  estado: "pendiente" },
+  { id: "ep4", alumno: "Diego López",       avatar: "DL", tarea: "Modelo financiero — 3 escenarios",      proyecto: "Airbnb Málaga",  comp: "CE",   fechaLimite: "Jue 13 mar",     diasRestantes: 2,  estado: "pendiente" },
+  { id: "ep5", alumno: "Ana Martín",        avatar: "AM", tarea: "Landing page Casa Limón publicada",     proyecto: "Airbnb Málaga",  comp: "CD",   fechaLimite: "Vie 14 mar",     diasRestantes: 3,  estado: "pendiente" },
+];
+
 export default function TeacherDashboard() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
@@ -85,6 +109,19 @@ export default function TeacherDashboard() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [activeAlerts, setActiveAlerts] = useState(new Set(teacherAlerts.map((a) => a.id)));
   const [prorrogadas, setProrrogadas] = useState<Set<string>>(new Set());
+
+  // T22 — Próximas entregas
+  const [recordadas, setRecordadas] = useState<Set<string>>(new Set());
+  const [recordandoId, setRecordandoId] = useState<string | null>(null);
+
+  const handleRecordar = (id: string) => {
+    if (recordandoId || recordadas.has(id)) return;
+    setRecordandoId(id);
+    setTimeout(() => {
+      setRecordadas((prev) => new Set([...prev, id]));
+      setRecordandoId(null);
+    }, 900);
+  };
 
   const alertConfig = {
     success: { ...alertConfigBase.success, label: lbl("Éxito", "Success") },
@@ -469,6 +506,86 @@ export default function TeacherDashboard() {
                 <span className="font-semibold text-text-secondary">Protocolo QHUMA:</span> Si un alumno lleva más de 3 días sin acceder, el sistema notifica automáticamente a la familia. Los datos se envían al informe de seguimiento mensual.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* T22: Próximas entregas ─────────────────────────────────── */}
+        <div className="bg-card rounded-2xl p-5 border border-card-border mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList size={15} className="text-accent-text" />
+              <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Próximas entregas", "Upcoming submissions")}</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              {proximasEntregas.filter((e) => e.estado === "retrasado").length > 0 && (
+                <span className="text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
+                  {proximasEntregas.filter((e) => e.estado === "retrasado").length} {lbl("retrasada", "overdue")}
+                </span>
+              )}
+              <span className="text-[9px] font-bold bg-warning-light text-warning px-2 py-0.5 rounded-full">
+                {proximasEntregas.filter((e) => e.estado === "pendiente").length} {lbl("pendientes", "pending")}
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {proximasEntregas.map((entrega) => {
+              const isRecordada = recordadas.has(entrega.id);
+              const isRecordando = recordandoId === entrega.id;
+              const diasBadge =
+                entrega.diasRestantes === 0
+                  ? { label: lbl("Hoy", "Today"), color: "bg-urgent-light text-urgent border border-urgent/20" }
+                  : entrega.diasRestantes === 1
+                  ? { label: lbl("Mañana", "Tomorrow"), color: "bg-warning-light text-warning border border-warning/20" }
+                  : { label: `${entrega.diasRestantes}d`, color: "bg-success-light text-success border border-success/20" };
+              const estadoBg =
+                entrega.estado === "retrasado" ? "border-urgent/20 bg-urgent-light" :
+                entrega.estado === "pendiente" ? "border-card-border bg-background" :
+                "border-success/20 bg-success-light";
+              return (
+                <div key={entrega.id} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 border transition-all ${estadoBg}`}>
+                  <div className="w-7 h-7 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                    {entrega.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[12px] font-semibold text-text-primary">{entrega.alumno}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/80 text-text-muted border border-card-border">
+                        {entrega.comp}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-text-secondary truncate">{entrega.tarea}</p>
+                    <p className="text-[9px] text-text-muted">{entrega.fechaLimite}</p>
+                  </div>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${diasBadge.color}`}>
+                    {diasBadge.label}
+                  </span>
+                  {isRecordada ? (
+                    <span className="flex items-center gap-1 text-[9px] font-bold text-success flex-shrink-0">
+                      <CheckCircle2 size={11} />
+                      {lbl("Enviado", "Sent")}
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleRecordar(entrega.id)}
+                      disabled={!!recordandoId}
+                      className="flex items-center gap-1 text-[9px] font-bold text-accent-text bg-white hover:bg-accent-light border border-accent/20 px-2 py-1 rounded-lg cursor-pointer transition-all flex-shrink-0 disabled:opacity-50"
+                    >
+                      {isRecordando ? (
+                        <RefreshCw size={9} className="animate-spin" />
+                      ) : (
+                        <Bell size={9} />
+                      )}
+                      {isRecordando ? lbl("Enviando…", "Sending…") : lbl("Recordar", "Remind")}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 p-2.5 bg-background rounded-xl border border-card-border">
+            <p className="text-[10px] text-text-muted leading-relaxed">
+              <span className="font-semibold text-text-secondary">Nota:</span> {lbl("El recordatorio se envía por email y notificación push. El alumno recibe el aviso con el nombre de la tarea y la fecha límite exacta.", "Reminder sent via email and push notification with task name and exact deadline.")}
+            </p>
           </div>
         </div>
 
