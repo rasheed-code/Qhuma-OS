@@ -35,6 +35,8 @@ import {
   TrendingDown,
   Minus,
   Briefcase,
+  UserCheck,
+  MessageSquare,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -50,6 +52,17 @@ import { Task } from "@/types";
 import WeeklyProgressView from "./WeeklyProgressView";
 import TeacherChat from "./TeacherChat";
 import LevelUpModal from "./LevelUpModal";
+
+const profesionalInvitado = {
+  nombre: "Marta Sánchez",
+  cargo: "Revenue Manager",
+  empresa: "Booking.com España",
+  iniciales: "MS",
+  años: 8,
+  sector: "Turismo & PropTech",
+  conexion: "Lo que Marta hace cada día está directamente relacionado con tu proyecto Airbnb. Esta semana calculas precios de temporada — ella lo hace a escala para miles de propiedades con datos en tiempo real.",
+  pregunta: "Acabas de enterarte de que habrá un festival de música en Málaga el próximo mes. ¿Qué harías con el precio de tu apartamento y por qué? ¿Qué datos buscarías antes de decidir?",
+};
 
 const mercadoTendencias = [
   { skill: "Gestión de plataformas digitales (Airbnb, Booking)", tendencia: "creciendo" as const, cambio: "+34%", salario: "€28k–42k", comp: "CD" },
@@ -92,6 +105,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [showCuerpoWidget, setShowCuerpoWidget] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(600);
   const [timerRunning, setTimerRunning] = useState(false);
+  const [showPreguntaInvitado, setShowPreguntaInvitado] = useState(false);
 
   useEffect(() => {
     if (!timerRunning || timerSeconds <= 0) return;
@@ -675,6 +689,77 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* S8: Industrias Vivas — Profesional invitado */}
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <UserCheck size={16} className="text-text-primary" />
+              <h2 className="text-[20px] font-semibold text-text-primary">Profesional Invitado</h2>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[10px] font-semibold border border-accent/20">
+              {profesionalInvitado.sector}
+            </span>
+          </div>
+
+          <div className="bg-card rounded-2xl border border-card-border overflow-hidden">
+            <div className="p-5">
+              {/* Perfil */}
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-14 h-14 rounded-2xl bg-sidebar text-accent font-bold text-[16px] flex items-center justify-center flex-shrink-0">
+                  {profesionalInvitado.iniciales}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-text-primary leading-tight">{profesionalInvitado.nombre}</p>
+                  <p className="text-[12px] text-text-secondary">{profesionalInvitado.cargo}</p>
+                  <p className="text-[11px] text-text-muted">{profesionalInvitado.empresa} · {profesionalInvitado.años} años de experiencia</p>
+                </div>
+                {/* Simulated video thumbnail */}
+                <div className="w-20 h-14 rounded-xl bg-sidebar/80 flex items-center justify-center flex-shrink-0 relative overflow-hidden cursor-pointer group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-sidebar to-accent-dark" />
+                  <div className="relative w-8 h-8 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                    <Play size={13} className="text-white ml-0.5" />
+                  </div>
+                  <span className="absolute bottom-1 right-1 text-[8px] text-white/60 font-medium">3:42</span>
+                </div>
+              </div>
+
+              {/* Conexión con el proyecto */}
+              <div className="bg-accent-light rounded-xl px-3 py-2.5 mb-4 border border-accent/20">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Briefcase size={11} className="text-accent-text" />
+                  <span className="text-[10px] font-bold text-accent-text uppercase tracking-wide">Conectado a tu proyecto</span>
+                </div>
+                <p className="text-[12px] text-text-secondary leading-relaxed">{profesionalInvitado.conexion}</p>
+              </div>
+
+              {/* Pregunta para reflexionar */}
+              <button
+                onClick={() => setShowPreguntaInvitado(!showPreguntaInvitado)}
+                className="w-full flex items-center justify-between gap-2 bg-background rounded-xl px-4 py-3 hover:border hover:border-card-border transition-all cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={14} className="text-accent-text flex-shrink-0" />
+                  <span className="text-[12px] font-semibold text-text-primary">Pregunta de reflexión de Marta</span>
+                </div>
+                <span className="text-[10px] text-accent-text font-bold group-hover:underline">
+                  {showPreguntaInvitado ? "Ocultar" : "Ver pregunta"}
+                </span>
+              </button>
+
+              {showPreguntaInvitado && (
+                <div className="mt-3 bg-warning-light rounded-xl px-4 py-3 border border-warning/20">
+                  <p className="text-[12px] text-text-primary leading-relaxed italic">
+                    &ldquo;{profesionalInvitado.pregunta}&rdquo;
+                  </p>
+                  <p className="text-[10px] text-text-muted mt-2">
+                    Comparte tu respuesta con la Profa. Ana en el chat →
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
