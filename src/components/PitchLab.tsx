@@ -232,6 +232,46 @@ export default function PitchLab() {
   const [coachingSection, setCoachingSection] = useState<string | null>(null);
   const [inversoresVotos, setInversoresVotos] = useState<Record<string, InversorVoto>>({});
 
+  // C12 — Ensayo cronometrado
+  const totalPitchSecs = pitchSections.reduce((sum, s) => sum + s.durationSeg, 0); // 270s
+  const sectionCumulative = pitchSections.reduce((acc, s, i) => {
+    return [...acc, (acc[i - 1] ?? 0) + s.durationSeg];
+  }, [] as number[]);
+  const [ensayoMode, setEnsayoMode] = useState(false);
+  const [ensayoRunning, setEnsayoRunning] = useState(false);
+  const [ensayoElapsed, setEnsayoElapsed] = useState(0);
+  const [ensayoCompleted, setEnsayoCompleted] = useState(false);
+
+  useEffect(() => {
+    if (!ensayoRunning || ensayoCompleted) return;
+    const interval = setInterval(() => {
+      setEnsayoElapsed((e) => {
+        if (e >= totalPitchSecs - 1) {
+          setEnsayoRunning(false);
+          setEnsayoCompleted(true);
+          return totalPitchSecs;
+        }
+        return e + 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [ensayoRunning, ensayoCompleted, totalPitchSecs]);
+
+  const currentEnsayoSectionIdx = Math.min(
+    sectionCumulative.findIndex((c) => ensayoElapsed < c),
+    pitchSections.length - 1
+  );
+  const currentEnsayoSection = pitchSections[currentEnsayoSectionIdx < 0 ? pitchSections.length - 1 : currentEnsayoSectionIdx];
+  const ensayoPct = Math.round((ensayoElapsed / totalPitchSecs) * 100);
+  const ensayoMins = Math.floor(ensayoElapsed / 60);
+  const ensayoSecs = ensayoElapsed % 60;
+
+  const handleResetEnsayo = () => {
+    setEnsayoElapsed(0);
+    setEnsayoRunning(false);
+    setEnsayoCompleted(false);
+  };
+
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
     if (!texto.trim() || coachingSection) return;
     setCoachingSection(sectionId);
@@ -315,6 +355,17 @@ export default function PitchLab() {
                 <span>~{totalWords} palabras</span>
               </div>
               <button
+                onClick={() => { setEnsayoMode(!ensayoMode); if (ensayoMode) handleResetEnsayo(); }}
+                className={`flex items-center gap-2 font-bold text-[12px] px-4 py-2 rounded-xl cursor-pointer transition-all ${
+                  ensayoMode
+                    ? "bg-warning text-white hover:brightness-110"
+                    : "bg-background border border-card-border text-text-secondary hover:border-accent-text/30"
+                }`}
+              >
+                <Timer size={14} />
+                {ensayoMode ? "Salir del ensayo" : "Ensayo cronometrado"}
+              </button>
+              <button
                 onClick={handleSimulate}
                 className="flex items-center gap-2 bg-sidebar text-accent font-bold text-[12px] px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
               >
@@ -335,6 +386,100 @@ export default function PitchLab() {
       </div>
 
       {mode === "write" ? (
+        <div>
+        {/* C12: Ensayo cronometrado */}
+        {ensayoMode && (
+          <div className={`rounded-2xl p-5 mb-5 border ${ensayoCompleted ? "bg-success-light border-success/20" : "bg-sidebar border-sidebar"}`}>
+            {ensayoCompleted ? (
+              /* Completed state */
+              <div className="flex items-center gap-5">
+                <div className="w-16 h-16 rounded-full bg-success flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 size={28} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-bold text-success uppercase tracking-wide mb-0.5">Ensayo completado</p>
+                  <p className="text-[20px] font-bold text-text-primary">
+                    Pitch completado en {ensayoMins}:{ensayoElapsed % 60 === 0 && ensayoMins > 0 ? "00" : String(ensayoSecs).padStart(2, "0")} min
+                  </p>
+                  <p className="text-[12px] text-text-secondary mt-0.5">Tiempo total del pitch: {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} · ¡Bien hecho!</p>
+                </div>
+                <button
+                  onClick={handleResetEnsayo}
+                  className="flex items-center gap-1.5 border border-success/30 text-success text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:bg-success/10 transition-all"
+                >
+                  <RotateCcw size={13} />
+                  Reiniciar
+                </button>
+              </div>
+            ) : (
+              /* Running state */
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Timer size={14} className="text-accent" />
+                    <span className="text-[12px] font-bold text-white uppercase tracking-wide">Ensayo cronometrado</span>
+                    <span className="text-[10px] text-white/50">— {Math.floor(totalPitchSecs / 60)}:{String(totalPitchSecs % 60).padStart(2, "0")} min total</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[20px] font-bold text-accent tabular-nums">
+                      {ensayoMins}:{String(ensayoSecs).padStart(2, "0")}
+                    </span>
+                  </div>
+                </div>
+                {/* Global progress bar */}
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-3">
+                  <div
+                    className="h-full bg-accent rounded-full transition-all duration-1000"
+                    style={{ width: `${ensayoPct}%` }}
+                  />
+                </div>
+                {/* Current section indicator */}
+                <div className="bg-white/8 rounded-xl p-3 mb-3 flex items-center gap-3">
+                  <currentEnsayoSection.icon size={15} className="text-accent flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-white/50 font-medium">Sección actual</p>
+                    <p className="text-[13px] font-bold text-white">{currentEnsayoSection.title}</p>
+                    <p className="text-[10px] text-white/50">{currentEnsayoSection.subtitle}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-[10px] text-white/40">Tiempo objetivo</p>
+                    <p className="text-[12px] font-bold text-accent">{currentEnsayoSection.durationSeg}s</p>
+                  </div>
+                </div>
+                {/* Section mini progress dots */}
+                <div className="flex gap-1.5 mb-3">
+                  {pitchSections.map((s, idx) => {
+                    const isDone = ensayoElapsed >= (sectionCumulative[idx - 1] ?? 0) + s.durationSeg;
+                    const isCurrent = idx === (currentEnsayoSectionIdx < 0 ? pitchSections.length - 1 : currentEnsayoSectionIdx);
+                    return (
+                      <div key={s.id} className="flex-1">
+                        <div className={`h-1 rounded-full ${isDone ? "bg-success" : isCurrent ? "bg-accent" : "bg-white/20"}`} />
+                        <p className={`text-[8px] mt-1 text-center ${isCurrent ? "text-accent font-bold" : "text-white/30"}`}>{s.title.split(" ")[0]}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Controls */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEnsayoRunning(!ensayoRunning)}
+                    className="flex items-center gap-2 bg-accent text-sidebar text-[12px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                  >
+                    {ensayoRunning ? <Pause size={13} /> : <Play size={13} />}
+                    {ensayoRunning ? "Pausar" : ensayoElapsed > 0 ? "Continuar" : "Empezar"}
+                  </button>
+                  <button
+                    onClick={handleResetEnsayo}
+                    className="flex items-center gap-2 bg-white/8 text-white text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:bg-white/15 transition-all"
+                  >
+                    <RotateCcw size={12} />
+                    Reiniciar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-4">
           {/* Section nav */}
           <div className="col-span-1 space-y-1.5">
@@ -514,6 +659,7 @@ export default function PitchLab() {
               </ul>
             </div>
           </div>
+        </div>
         </div>
       ) : (
         /* Feedback mode */
