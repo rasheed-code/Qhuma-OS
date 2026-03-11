@@ -2,6 +2,7 @@
 
 import { CheckCircle2, Play, Lock } from "lucide-react";
 import { trimesterProjects } from "@/data/tasks";
+import { useLang } from "@/lib/i18n";
 
 const statusConfig = {
   completed: { icon: CheckCircle2, color: "text-success", bg: "bg-success-light" },
@@ -10,13 +11,16 @@ const statusConfig = {
 };
 
 export default function TrimesterTimeline() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   return (
     <div className="bg-card rounded-2xl p-5 border border-card-border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[14px] font-semibold text-text-primary">
-          Trimester 1 Projects
+          {lbl("Proyectos Trimestre 1", "Trimester 1 Projects")}
         </h3>
-        <span className="text-[10px] text-text-muted">Real World Business</span>
+        <span className="text-[10px] text-text-muted">{lbl("Negocio Real", "Real World Business")}</span>
       </div>
 
       <div className="flex flex-col gap-3">

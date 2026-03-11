@@ -2,13 +2,17 @@
 
 import { Coins, Zap, TrendingUp } from "lucide-react";
 import { currentStudent } from "@/data/students";
+import { useLang } from "@/lib/i18n";
 
 export default function QCoins() {
+  const { lang } = useLang();
+  const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
   return (
     <div className="bg-card rounded-2xl p-5 border border-card-border">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[14px] font-semibold text-text-primary">
-          Q-Coins & XP
+          {lbl("Q-Coins y XP", "Q-Coins & XP")}
         </h3>
         <Coins size={16} className="text-accent" />
       </div>
@@ -32,7 +36,7 @@ export default function QCoins() {
           <div className="flex items-center gap-1.5 mb-1">
             <Zap size={13} className="text-success" />
             <span className="text-[10px] text-text-secondary font-medium">
-              XP This Week
+              {lbl("XP esta semana", "XP This Week")}
             </span>
           </div>
           <span className="text-[22px] font-bold text-text-primary">
@@ -45,7 +49,7 @@ export default function QCoins() {
           <div className="flex items-center gap-1.5 mb-1">
             <TrendingUp size={13} className="text-warning" />
             <span className="text-[10px] text-text-secondary font-medium">
-              Day Streak
+              {lbl("Racha diaria", "Day Streak")}
             </span>
           </div>
           <span className="text-[22px] font-bold text-text-primary">
@@ -57,7 +61,7 @@ export default function QCoins() {
         <div className="bg-background rounded-xl p-3">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-[10px] text-text-secondary font-medium">
-              Evidences
+              {lbl("Evidencias", "Evidences")}
             </span>
           </div>
           <div className="flex items-baseline gap-1">
