@@ -26,6 +26,7 @@ import StudentProfile from "@/components/StudentProfile";
 import StudentSettings from "@/components/StudentSettings";
 import TaskWorkspace from "@/components/TaskWorkspace";
 import EvidenceGallery from "@/components/EvidenceGallery";
+import StudentAchievements from "@/components/StudentAchievements";
 
 export default function Home() {
   const { lang, tr } = useLang();
@@ -112,6 +113,7 @@ export default function Home() {
           {role === "student" && activeView === "profile" && <StudentProfile />}
           {role === "student" && activeView === "settings" && <StudentSettings />}
           {role === "student" && activeView === "evidences" && <EvidenceGallery />}
+          {role === "student" && activeView === "achievements" && <StudentAchievements />}
           {role === "parent" && activeParentView === "overview" && (
             <ParentDashboard onNavigate={setActiveParentView} />
           )}

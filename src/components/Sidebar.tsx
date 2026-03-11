@@ -13,6 +13,7 @@ import {
   BookOpen,
   MessageSquare,
   GalleryHorizontalEnd,
+  Trophy,
 } from "lucide-react";
 import { Role, StudentView, TeacherView, ParentView } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -31,6 +32,7 @@ const studentNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: stri
   { icon: FolderKanban,           labelEs: "Mi Proyecto",   labelEn: "My Project",   view: "project" },
   { icon: BarChart3,              labelEs: "Competencias",  labelEn: "Competencies", view: "competencies" },
   { icon: GalleryHorizontalEnd,   labelEs: "Evidencias",    labelEn: "Evidence",     view: "evidences" },
+  { icon: Trophy,                 labelEs: "Logros",        labelEn: "Achievements", view: "achievements" },
   { icon: Calendar,               labelEs: "Calendario",    labelEn: "Calendar",     view: "calendar" },
   { icon: Coins,                  labelEs: "Q-Coins",       labelEn: "Q-Coins",      view: "qcoins" },
   { icon: User,                   labelEs: "Perfil",        labelEn: "Profile",      view: "profile" },
@@ -79,14 +81,11 @@ export default function Sidebar({
   const lbl = (es: string, en: string) => (lang === "es" ? es : en);
 
   // Role info — always Spanish for student/teacher, bilingual for parent
-  const roleInfo = {
+  const roleInfo: Record<string, { label: string; subtitle: string; dot: string }> = {
     student: { label: "1º ESO", subtitle: "Proyecto activo", dot: "bg-success" },
-    parent: {
-      label: "Familia García",
-      subtitle: "Lucas · 1º ESO",
-      dot: "bg-[#4F8EF7]",
-    },
+    parent:  { label: "Familia García", subtitle: "Lucas · 1º ESO", dot: "bg-accent" },
     teacher: { label: "Profa. Martínez", subtitle: "12 alumnos · 2 alertas", dot: "bg-warning" },
+    admin:   { label: "Admin QHUMA", subtitle: "Sistema activo", dot: "bg-success" },
   };
 
   const info = roleInfo[role];

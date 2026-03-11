@@ -1,10 +1,11 @@
 export type TaskStatus = "completed" | "in_progress" | "upcoming" | "locked";
 export type DayStatus = "completed" | "current" | "upcoming";
-export type Role = "student" | "parent" | "teacher";
+export type Role = "student" | "parent" | "teacher" | "admin";
 export type ViewMode = "daily" | "kanban";
-export type StudentView = "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences";
-export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings";
+export type StudentView = "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements";
+export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook";
 export type ParentView = "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings";
+export type AdminView = "overview" | "users" | "ai" | "schools" | "reports";
 
 export type EvidenceType =
   | "spreadsheet"
