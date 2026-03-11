@@ -2283,6 +2283,127 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── C36: Dinero Real — márgenes de tu menú Food Truck ───────────── */}
+      {(() => {
+        interface ProductoMenu { id: string; nombre: string; emoji: string; coste: number; precio: number }
+        const [productos, setProductos] = useState<ProductoMenu[]>([
+          { id: "p1", nombre: lbl("Burger Mediterráneo", "Mediterran. Burger"), emoji: "🍔", coste: 3.2, precio: 8.5 },
+          { id: "p2", nombre: lbl("Wrap de Pollo",       "Chicken Wrap"),        emoji: "🌯", coste: 2.5, precio: 7.0 },
+          { id: "p3", nombre: lbl("Bowl Vegano",         "Vegan Bowl"),          emoji: "🥗", coste: 2.0, precio: 6.5 },
+          { id: "p4", nombre: lbl("Patatas Bravas",      "Patatas Bravas"),      emoji: "🍟", coste: 0.8, precio: 3.5 },
+          { id: "p5", nombre: lbl("Limonada Artesanal",  "Artisanal Lemonade"),  emoji: "🍋", coste: 0.6, precio: 2.5 },
+        ]);
+        const COSTES_FIJOS_DIARIOS = 45; // QC
+        const VENTAS_DIA_EST = 30; // clientes estimados
+        const margenBruto = (p: ProductoMenu) => ((p.precio - p.coste) / p.precio) * 100;
+        const beneficioBruto = (p: ProductoMenu) => p.precio - p.coste;
+        const ingresosTotales = productos.reduce((s, p) => s + p.precio, 0);
+        const costeTotal = productos.reduce((s, p) => s + p.coste, 0);
+        const margenMedio = ingresosTotales > 0 ? ((ingresosTotales - costeTotal) / ingresosTotales) * 100 : 0;
+        const breakeven = margenMedio > 0 ? Math.ceil(COSTES_FIJOS_DIARIOS / ((ingresosTotales - costeTotal) / productos.length)) : 0;
+        const beneficioNetoDia = Math.round((VENTAS_DIA_EST * (ingresosTotales - costeTotal) / productos.length) - COSTES_FIJOS_DIARIOS);
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 rounded-xl bg-success-light flex items-center justify-center flex-shrink-0">
+                <TrendingUp size={14} className="text-success" />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                  {lbl("Dinero Real: márgenes de tu menú", "Real Money: your menu margins")}
+                </h2>
+                <p className="text-[10px] text-text-secondary">{lbl("Ajusta costes y precios — ve el impacto en directo", "Adjust costs and prices — see live impact")}</p>
+              </div>
+            </div>
+
+            {/* Summary KPIs */}
+            <div className="grid grid-cols-3 gap-2 mt-3 mb-4">
+              <div className="bg-success-light rounded-xl p-2.5 text-center">
+                <p className="text-[16px] font-bold text-success leading-none">{margenMedio.toFixed(0)}%</p>
+                <p className="text-[8px] text-text-muted mt-0.5">{lbl("Margen bruto medio", "Avg gross margin")}</p>
+              </div>
+              <div className="bg-accent-light rounded-xl p-2.5 text-center">
+                <p className="text-[16px] font-bold text-accent-text leading-none">{breakeven}</p>
+                <p className="text-[8px] text-text-muted mt-0.5">{lbl("Clientes p/breakeven", "Customers to break even")}</p>
+              </div>
+              <div className={`${beneficioNetoDia >= 0 ? "bg-success-light" : "bg-urgent-light"} rounded-xl p-2.5 text-center`}>
+                <p className={`text-[16px] font-bold leading-none ${beneficioNetoDia >= 0 ? "text-success" : "text-urgent"}`}>
+                  {beneficioNetoDia >= 0 ? "+" : ""}{beneficioNetoDia}€
+                </p>
+                <p className="text-[8px] text-text-muted mt-0.5">{lbl("Beneficio neto/día est.", "Est. net profit/day")}</p>
+              </div>
+            </div>
+
+            {/* Producto rows */}
+            <div className="space-y-2 mb-4">
+              {productos.map((p, i) => {
+                const mb = margenBruto(p);
+                const bb = beneficioBruto(p);
+                const mbColor = mb >= 60 ? "text-success" : mb >= 40 ? "text-warning" : "text-urgent";
+                const barColor = mb >= 60 ? "bg-success" : mb >= 40 ? "bg-warning" : "bg-urgent";
+                return (
+                  <div key={p.id} className="bg-background rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-base leading-none flex-shrink-0">{p.emoji}</span>
+                      <p className="text-[11px] font-semibold text-text-primary flex-1 min-w-0 truncate">{p.nombre}</p>
+                      <span className={`text-[11px] font-bold flex-shrink-0 ${mbColor}`}>{mb.toFixed(0)}% {lbl("mg", "mg")}</span>
+                    </div>
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] text-text-muted">{lbl("Coste", "Cost")}</span>
+                        <input
+                          type="number" min={0.1} max={99} step={0.1} value={p.coste}
+                          onChange={(e) => {
+                            const nv = Math.max(0.1, Number(Number(e.target.value).toFixed(2)));
+                            setProductos((prev) => prev.map((x, xi) => xi === i ? { ...x, coste: nv } : x));
+                          }}
+                          className="w-12 text-right text-[10px] font-bold text-text-primary bg-card border border-card-border rounded px-1.5 py-0.5 focus:outline-none focus:border-sidebar"
+                        />
+                        <span className="text-[8px] text-text-muted">€</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[8px] text-text-muted">{lbl("Precio", "Price")}</span>
+                        <input
+                          type="number" min={0.5} max={99} step={0.1} value={p.precio}
+                          onChange={(e) => {
+                            const nv = Math.max(0.5, Number(Number(e.target.value).toFixed(2)));
+                            setProductos((prev) => prev.map((x, xi) => xi === i ? { ...x, precio: nv } : x));
+                          }}
+                          className="w-12 text-right text-[10px] font-bold text-text-primary bg-card border border-card-border rounded px-1.5 py-0.5 focus:outline-none focus:border-sidebar"
+                        />
+                        <span className="text-[8px] text-text-muted">€</span>
+                      </div>
+                      <span className="text-[8px] text-text-muted ml-auto">{lbl("Ganancia", "Profit")}: <span className="font-bold text-accent-text">{bb.toFixed(2)}€</span></span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+                        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${Math.min(100, mb)}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* IA contextual note */}
+            <div className="bg-accent-light rounded-xl p-3 border border-accent/20">
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <span className="text-accent text-[8px] font-bold">IA</span>
+                </div>
+                <span className="text-[10px] font-semibold text-accent-text">{lbl("¿Qué es el margen bruto?", "What is gross margin?")}</span>
+              </div>
+              <p className="text-[10px] text-text-primary leading-snug">
+                {lbl(
+                  `Tu margen bruto medio es ${margenMedio.toFixed(0)}%. Eso significa que de cada euro que cobras, conservas ${(margenMedio / 100).toFixed(2)}€ después de pagar los ingredientes. Con ${VENTAS_DIA_EST} clientes al día necesitas vender a ${breakeven} para cubrir costes fijos. El resto es tu beneficio.`,
+                  `Your average gross margin is ${margenMedio.toFixed(0)}%. That means for every euro you charge, you keep ${(margenMedio / 100).toFixed(2)}€ after paying for ingredients. With ${VENTAS_DIA_EST} customers/day you need ${breakeven} to cover fixed costs. The rest is profit.`
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center justify-between mb-4">
