@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic, Timer, ChevronRight, ChevronLeft, Star, Target,
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
-  Users, TrendingUp, AlertCircle, Sparkles, Loader2,
+  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 interface PitchSection {
@@ -134,6 +134,58 @@ const inversoresConfig = [
   },
 ];
 
+// C13 — Guión de apoyo por sección
+const guionPorSeccion: Record<string, {
+  puntos: Array<{ texto: string; clave: boolean }>;
+  transicion: string;
+}> = {
+  problema: {
+    puntos: [
+      { texto: "3.200 pisos en Airbnb Málaga, pero solo el 18% supera el 65% de ocupación", clave: true },
+      { texto: "Los propietarios pierden entre 400€ y 800€/mes por no optimizar su anuncio", clave: true },
+      { texto: "Datos confirmados con el INE y AirDNA — 3 días de investigación", clave: false },
+      { texto: "Perfil afectado: familias malagueñas con piso en el centro histórico", clave: false },
+    ],
+    transicion: "«Ahora que sabéis el problema... aquí está la solución que diseñé.»",
+  },
+  solucion: {
+    puntos: [
+      { texto: "Casa Limón: servicio de gestión Airbnb completo para propietarios en Málaga", clave: true },
+      { texto: "Anuncio optimizado + guía de precios dinámica + atención a huéspedes incluida", clave: false },
+      { texto: "Diferencial: no soy una agencia cara — soy un gestor joven, local y digital", clave: true },
+      { texto: "Precio: 150€/mes por piso — un 40% menos que la competencia profesional", clave: false },
+    ],
+    transicion: "«Y el mercado para esta solución es mucho mayor de lo que pensaba...»",
+  },
+  mercado: {
+    puntos: [
+      { texto: "4.500 propietarios potenciales en Málaga capital según el INE 2025", clave: true },
+      { texto: "1.200 pisos turísticos registrados solo en el Centro Histórico", clave: false },
+      { texto: "Mercado potencial año 1: 100 clientes × 150€ = 15.000€/mes", clave: true },
+      { texto: "Crecimiento del alquiler vacacional en Málaga: +23% en 2025", clave: false },
+    ],
+    transicion: "«¿Y los números confirman que esto es viable? Sí. Veamos...»",
+  },
+  financiero: {
+    puntos: [
+      { texto: "Punto de equilibrio: 20 pisos gestionados = 3.000€/mes de ingresos", clave: true },
+      { texto: "Año 1 proyección conservadora: 30 pisos × 150€ = 4.500€/mes", clave: true },
+      { texto: "Coste de captación por cliente: 20€ en marketing y primera visita", clave: false },
+      { texto: "Margen neto estimado: 70% — modelo digital, sin oficina física", clave: false },
+    ],
+    transicion: "«Para llegar aquí necesito un arranque concreto — y eso es lo que os pido.»",
+  },
+  equipo: {
+    puntos: [
+      { texto: "Lucas García, 1º ESO QHUMA — 3 semanas construyendo este proyecto", clave: false },
+      { texto: "Competencias demostradas: análisis de datos, diseño, comunicación bilingüe", clave: true },
+      { texto: "Solicito 500€ para lanzar 3 pisos piloto en el Centro Histórico", clave: true },
+      { texto: "Meta a 6 meses: 20 pisos activos, modelo validado, listo para escalar", clave: false },
+    ],
+    transicion: "«¿Queréis ser parte de este primer paso? Estoy listo para empezar esta semana.»",
+  },
+};
+
 const generateFeedback = (sections: Record<string, string>): FeedbackScore[] => {
   const totalWords = Object.values(sections).join(" ").split(/\s+/).filter(Boolean).length;
   const filledSections = Object.values(sections).filter(s => s.trim().length > 30).length;
@@ -231,6 +283,16 @@ export default function PitchLab() {
   const [aiCoach, setAiCoach] = useState<Record<string, string | null>>({});
   const [coachingSection, setCoachingSection] = useState<string | null>(null);
   const [inversoresVotos, setInversoresVotos] = useState<Record<string, InversorVoto>>({});
+
+  // C13 — Guión de apoyo
+  const [guionOpen, setGuionOpen] = useState<Set<string>>(new Set());
+  const toggleGuion = (sectionId: string) => {
+    setGuionOpen((prev) => {
+      const next = new Set(prev);
+      next.has(sectionId) ? next.delete(sectionId) : next.add(sectionId);
+      return next;
+    });
+  };
 
   // C12 — Ensayo cronometrado
   const totalPitchSecs = pitchSections.reduce((sum, s) => sum + s.durationSeg, 0); // 270s
@@ -658,6 +720,54 @@ export default function PitchLab() {
                 ))}
               </ul>
             </div>
+
+            {/* C13: Guión de apoyo */}
+            {guionPorSeccion[current.id] && (
+              <div className="bg-card rounded-2xl border border-card-border overflow-hidden">
+                <button
+                  onClick={() => toggleGuion(current.id)}
+                  className="w-full flex items-center gap-2 px-4 py-3 hover:bg-background transition-colors cursor-pointer"
+                >
+                  <BookOpen size={13} className="text-text-secondary flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-text-primary flex-1 text-left">Guión de apoyo</span>
+                  <span className="text-[9px] text-text-muted bg-background px-2 py-0.5 rounded-full mr-1">
+                    {guionPorSeccion[current.id].puntos.filter((p) => p.clave).length} puntos clave
+                  </span>
+                  {guionOpen.has(current.id)
+                    ? <ChevronUp size={13} className="text-text-muted flex-shrink-0" />
+                    : <ChevronDown size={13} className="text-text-muted flex-shrink-0" />
+                  }
+                </button>
+                {guionOpen.has(current.id) && (
+                  <div className="px-4 pb-4 border-t border-card-border">
+                    <p className="text-[10px] text-text-muted py-2.5">
+                      Puntos que debes cubrir en esta sección — los marcados como <span className="font-bold text-sidebar">Clave</span> son imprescindibles.
+                    </p>
+                    <ul className="space-y-2 mb-4">
+                      {guionPorSeccion[current.id].puntos.map((punto, i) => (
+                        <li key={i} className={`flex items-start gap-2.5 rounded-xl px-3 py-2 ${punto.clave ? "bg-sidebar" : "bg-background"}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${punto.clave ? "bg-accent" : "bg-text-muted"}`} />
+                          <span className={`text-[11px] leading-relaxed flex-1 ${punto.clave ? "text-white" : "text-text-secondary"}`}>
+                            {punto.texto}
+                          </span>
+                          {punto.clave && (
+                            <span className="text-[8px] font-bold bg-accent text-sidebar px-1.5 py-0.5 rounded-full flex-shrink-0 self-start mt-0.5">
+                              Clave
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="bg-accent-light rounded-xl px-3 py-2.5 border border-accent-text/20">
+                      <p className="text-[9px] font-bold text-accent-text uppercase tracking-wide mb-1">Frase de transición →</p>
+                      <p className="text-[11px] text-accent-text italic leading-relaxed">
+                        {guionPorSeccion[current.id].transicion}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         </div>
