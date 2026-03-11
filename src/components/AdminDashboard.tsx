@@ -366,6 +366,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     setTimeout(() => { setGenerandoAgenda(false); setAgendaGenerada(true); }, 1200);
   };
 
+  // A21 — Bienestar docente
+  const [bienestarEncuestaEnviada, setBienestarEncuestaEnviada] = useState(false);
+  const [bienestarRespuestas, setBienestarRespuestas] = useState<Record<string, number>>({});
+  const [bienestarEnviando, setBienestarEnviando] = useState(false);
+
   // A20 — Centro de comunicación
   const [comunicadoDestinatario, setComunicadoDestinatario] = useState<"todos" | "docentes" | "familias" | "alumnos">("todos");
   const [comunicadoAsunto, setComunicadoAsunto] = useState("");
@@ -966,10 +971,169 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               );
             })()}
-          </div>
 
-          {/* Panel derecho — Actividad reciente */}
-          <div className="w-[260px] flex-shrink-0">
+          {/* A21: Bienestar docente */}
+          {(() => {
+            const docentesBienestar = [
+              { avatar: "AM", nombre: "Ana Martínez",  carga: 87, sesiones: 14, alertas: 2, riesgo: "medio"   as const },
+              { avatar: "CP", nombre: "Carlos Pérez",  carga: 62, sesiones: 9,  alertas: 0, riesgo: "bajo"    as const },
+              { avatar: "IM", nombre: "Isabel Mora",   carga: 94, sesiones: 18, alertas: 4, riesgo: "alto"    as const },
+            ];
+            const preguntasEncuesta = [
+              { id: "energia",     label: "Nivel de energía al final del día" },
+              { id: "carga",       label: "Carga administrativa percibida" },
+              { id: "satisfaccion",label: "Satisfacción con los resultados del grupo" },
+              { id: "apoyo",       label: "Sensación de apoyo del equipo directivo" },
+            ];
+            const riesgoConfig = {
+              bajo:  { label: "Bajo",  bg: "bg-success-light",  text: "text-success",     dot: "bg-success"  },
+              medio: { label: "Medio", bg: "bg-warning-light",  text: "text-warning",     dot: "bg-warning"  },
+              alto:  { label: "Alto",  bg: "bg-urgent-light",   text: "text-urgent",      dot: "bg-urgent"   },
+            };
+            const encuestaCompleta = preguntasEncuesta.every((p) => bienestarRespuestas[p.id] !== undefined);
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Activity size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Bienestar docente", "Teacher wellbeing")}</h3>
+                  <span className="ml-auto text-[10px] text-text-muted bg-background px-2 py-0.5 rounded-full">
+                    {docentesBienestar.filter((d) => d.riesgo === "alto").length} {lbl("en riesgo de sobrecarga", "at overload risk")}
+                  </span>
+                </div>
+
+                {/* Indicadores por docente */}
+                <div className="space-y-3 mb-5">
+                  {docentesBienestar.map((d) => {
+                    const cfg = riesgoConfig[d.riesgo];
+                    return (
+                      <div key={d.avatar} className={`rounded-xl p-3 border ${cfg.bg} ${d.riesgo === "alto" ? "border-urgent/25" : d.riesgo === "medio" ? "border-warning/25" : "border-success/25"}`}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                            {d.avatar}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[12px] font-semibold text-text-primary">{d.nombre}</span>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>{lbl("Riesgo", "Risk")} {cfg.label}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <span className="text-[9px] text-text-muted">{lbl("Carga semanal", "Weekly load")}</span>
+                                  <span className={`text-[9px] font-bold ${cfg.text}`}>{d.carga}%</span>
+                                </div>
+                                <div className="h-1.5 bg-white/60 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${d.carga >= 90 ? "bg-urgent" : d.carga >= 75 ? "bg-warning" : "bg-success"}`}
+                                    style={{ width: `${d.carga}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <span className="text-[9px] text-text-muted flex-shrink-0">{d.sesiones} {lbl("sesiones/sem", "sessions/wk")}</span>
+                              {d.alertas > 0 && (
+                                <span className="flex items-center gap-1 text-[9px] font-bold bg-urgent text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
+                                  <AlertTriangle size={8} />
+                                  {d.alertas}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {d.riesgo === "alto" && (
+                          <div className="mt-2 pl-10">
+                            <p className="text-[10px] text-urgent leading-relaxed">
+                              {lbl("Protocolo sugerido: reducir revisiones manuales esta semana. Activar generación automática de informes.", "Suggested protocol: reduce manual reviews this week. Enable automatic report generation.")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Encuesta semanal de bienestar */}
+                <div className="bg-background rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[11px] font-semibold text-text-primary">{lbl("Encuesta semanal — ¿Cómo está el equipo?", "Weekly survey — How is the team?")}</span>
+                    {bienestarEncuestaEnviada && (
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-success ml-auto">
+                        <CheckCircle2 size={10} /> {lbl("Enviada", "Submitted")}
+                      </span>
+                    )}
+                  </div>
+                  {bienestarEncuestaEnviada ? (
+                    <div className="space-y-2">
+                      {preguntasEncuesta.map((p) => (
+                        <div key={p.id} className="flex items-center gap-3">
+                          <span className="text-[10px] text-text-muted flex-1 truncate">{p.label}</span>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <div key={n} className={`w-4 h-4 rounded-sm ${n <= (bienestarRespuestas[p.id] ?? 0) ? "bg-accent-text" : "bg-card border border-card-border"}`} />
+                            ))}
+                          </div>
+                          <span className="text-[10px] font-bold text-text-primary w-4 text-right">{bienestarRespuestas[p.id] ?? "–"}</span>
+                        </div>
+                      ))}
+                      <div className="mt-2 pt-2 border-t border-card-border">
+                        <p className="text-[10px] text-text-muted">
+                          {lbl("Media del equipo:", "Team average:")}
+                          <span className="font-bold text-accent-text ml-1">
+                            {(preguntasEncuesta.reduce((s, p) => s + (bienestarRespuestas[p.id] ?? 0), 0) / preguntasEncuesta.length).toFixed(1)} / 5
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {preguntasEncuesta.map((p) => (
+                        <div key={p.id}>
+                          <span className="text-[10px] text-text-secondary block mb-1">{p.label}</span>
+                          <div className="flex gap-1.5">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <button
+                                key={n}
+                                onClick={() => setBienestarRespuestas((prev) => ({ ...prev, [p.id]: n }))}
+                                className={`w-8 h-8 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
+                                  bienestarRespuestas[p.id] === n
+                                    ? "bg-sidebar text-white"
+                                    : "bg-card border border-card-border text-text-muted hover:border-accent-text/40 hover:text-accent-text"
+                                }`}
+                              >
+                                {n}
+                              </button>
+                            ))}
+                            <span className="text-[9px] text-text-muted self-center ml-1">
+                              {bienestarRespuestas[p.id] === 1 ? lbl("Muy bajo", "Very low") : bienestarRespuestas[p.id] === 5 ? lbl("Óptimo", "Optimal") : ""}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex justify-end mt-1">
+                        <button
+                          disabled={!encuestaCompleta || bienestarEnviando}
+                          onClick={() => {
+                            if (!encuestaCompleta) return;
+                            setBienestarEnviando(true);
+                            setTimeout(() => { setBienestarEnviando(false); setBienestarEncuestaEnviada(true); }, 1200);
+                          }}
+                          className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {bienestarEnviando
+                            ? <><RefreshCw size={10} className="animate-spin" />{lbl("Enviando...", "Sending...")}</>
+                            : <><Send size={10} />{lbl("Enviar encuesta", "Submit survey")}</>
+                          }
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Panel derecho — Actividad reciente */}
+        <div className="w-[260px] flex-shrink-0">
             <div className="bg-card rounded-2xl border border-card-border p-5 h-full">
               <div className="flex items-center gap-2 mb-4">
                 <Clock size={14} className="text-text-primary" />
