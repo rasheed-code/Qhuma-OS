@@ -307,6 +307,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadedFilename, setDownloadedFilename] = useState<string | null>(null);
 
+  // A32 — Informe ejecutivo comparativo
+  const [ejecutivoGenerado, setEjecutivoGenerado] = useState(false);
+  const [generandoEjecutivo, setGenerandoEjecutivo] = useState(false);
+  const [ejecutivoDescargado, setEjecutivoDescargado] = useState(false);
+
   const plantillasPredefinidas = [
     {
       id: "lomloe",
@@ -3073,6 +3078,153 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* ── A32: Informe ejecutivo comparativo ──────────────────────────── */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <BarChart3 size={15} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Informe ejecutivo comparativo", "Comparative executive report")}
+                </h3>
+                <span className="text-[10px] font-bold text-accent-text bg-accent-light px-2 py-0.5 rounded-full">
+                  {lbl("2 centros", "2 schools")}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  if (ejecutivoGenerado) {
+                    setEjecutivoDescargado(true);
+                    setTimeout(() => setEjecutivoDescargado(false), 2500);
+                    return;
+                  }
+                  setGenerandoEjecutivo(true);
+                  setTimeout(() => { setGenerandoEjecutivo(false); setEjecutivoGenerado(true); }, 1400);
+                }}
+                disabled={generandoEjecutivo}
+                className={`flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer disabled:opacity-60 ${
+                  ejecutivoDescargado
+                    ? "bg-success text-white"
+                    : ejecutivoGenerado
+                    ? "bg-accent text-sidebar hover:brightness-110"
+                    : "bg-sidebar text-white hover:bg-accent-dark"
+                }`}
+              >
+                {generandoEjecutivo ? (
+                  <><RefreshCw size={11} className="animate-spin" />{lbl("Generando...", "Generating...")}</>
+                ) : ejecutivoDescargado ? (
+                  <><CheckCircle2 size={11} />{lbl("¡Descargado!", "Downloaded!")}</>
+                ) : ejecutivoGenerado ? (
+                  <><Download size={11} />{lbl("Descargar PDF", "Download PDF")}</>
+                ) : (
+                  <><Sparkles size={11} />{lbl("Generar informe", "Generate report")}</>
+                )}
+              </button>
+            </div>
+
+            {/* Metrics comparison grid */}
+            {(() => {
+              const metrics = [
+                {
+                  label: lbl("Alumnos activos", "Active students"),
+                  malaga: 312, madrid: 187, total: 499,
+                  unit: "", icon: Users,
+                  malagaPct: Math.round((312 / 499) * 100),
+                },
+                {
+                  label: lbl("Media LOMLOE", "LOMLOE avg"),
+                  malaga: 3.1, madrid: 2.9, total: 3.0,
+                  unit: "/4", icon: Target,
+                  malagaPct: Math.round((3.1 / 4) * 100),
+                  madridPctOverride: Math.round((2.9 / 4) * 100),
+                },
+                {
+                  label: lbl("Proyectos activos", "Active projects"),
+                  malaga: 14, madrid: 8, total: 22,
+                  unit: "", icon: FolderOpen,
+                  malagaPct: Math.round((14 / 22) * 100),
+                },
+                {
+                  label: lbl("Docentes", "Teachers"),
+                  malaga: 28, madrid: 19, total: 47,
+                  unit: "", icon: Users,
+                  malagaPct: Math.round((28 / 47) * 100),
+                },
+              ];
+              return (
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  {metrics.map((m) => {
+                    const Icon = m.icon;
+                    const mPct = m.malagaPct;
+                    const dPct = m.madridPctOverride ?? (100 - mPct);
+                    return (
+                      <div key={m.label} className="bg-background rounded-xl p-3">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Icon size={11} className="text-text-muted" />
+                          <span className="text-[10px] text-text-muted font-medium">{m.label}</span>
+                        </div>
+                        <div className="flex items-end justify-between mb-2">
+                          <div>
+                            <span className="text-[10px] text-text-muted">{lbl("Málaga:", "Málaga:")} </span>
+                            <span className="text-[12px] font-bold text-text-primary">{m.malaga}{m.unit}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-text-muted">{lbl("Madrid:", "Madrid:")} </span>
+                            <span className="text-[12px] font-bold text-text-primary">{m.madrid}{m.unit}</span>
+                          </div>
+                        </div>
+                        {/* Comparative bar */}
+                        <div className="h-2 rounded-full bg-border overflow-hidden flex">
+                          <div className="h-full bg-sidebar rounded-l-full transition-all" style={{ width: `${mPct}%` }} />
+                          <div className="h-full bg-accent-dark rounded-r-full transition-all" style={{ width: `${100 - mPct}%` }} />
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-[8px] text-sidebar font-semibold">Málaga {mPct}%</span>
+                          <span className="text-[8px] text-accent-dark font-semibold">Madrid {100 - mPct}%</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Generated executive summary */}
+            {ejecutivoGenerado && (
+              <div className="bg-background rounded-xl p-4 border border-card-border font-mono text-[10px] space-y-1.5">
+                <p className="text-accent-text font-bold text-[11px] not-italic font-sans">
+                  {lbl("INFORME EJECUTIVO COMPARATIVO — T2 2025-26", "COMPARATIVE EXECUTIVE REPORT — T2 2025-26")}
+                </p>
+                <p className="text-text-muted">
+                  {lbl("Generado:", "Generated:")} {new Date().toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                </p>
+                <div className="border-t border-card-border my-2" />
+                {[
+                  lbl("Red QHUMA: 2 centros · 499 alumnos activos · 47 docentes · 22 proyectos ABP", "QHUMA Network: 2 schools · 499 active students · 47 teachers · 22 PBL projects"),
+                  lbl("Media LOMLOE global: 3.0/4 · Málaga 3.1 (+0.2 vs T1) · Madrid 2.9 (+0.1 vs T1)", "Global LOMLOE avg: 3.0/4 · Málaga 3.1 (+0.2 vs T1) · Madrid 2.9 (+0.1 vs T1)"),
+                  lbl("Alumnos en riesgo: 12 (2.4%) — todos con seguimiento activo docente", "At-risk students: 12 (2.4%) — all with active teacher follow-up"),
+                  lbl("Demo Days T1: 100% de grupos completaron presentación pública", "Demo Days T1: 100% of groups completed public presentation"),
+                  lbl("Q-Coins distribuidas este trimestre: 34.800 · ratio medio 69 Q/alumno", "Q-Coins distributed this term: 34,800 · avg ratio 69 Q/student"),
+                  lbl("Evidencias digitales totales: 8.124 · calidad media: Logro esperado", "Total digital evidences: 8,124 · avg quality: Expected achievement"),
+                ].map((line, i) => (
+                  <p key={i} className="text-text-secondary">
+                    <span className="text-accent-text font-bold">{i + 1}.</span> {line}
+                  </p>
+                ))}
+                <div className="border-t border-card-border my-2" />
+                <p className="text-text-muted text-[9px]">
+                  {lbl("Generado por QHUMA OS · Para uso directivo y consejo escolar", "Generated by QHUMA OS · For management and school board use")}
+                </p>
+              </div>
+            )}
+
+            {!ejecutivoGenerado && (
+              <div className="rounded-xl bg-background border border-dashed border-card-border p-4 text-center">
+                <Building2 size={20} className="text-text-muted mx-auto mb-2" />
+                <p className="text-[11px] text-text-muted">{lbl("Pulsa «Generar informe» para crear el resumen ejecutivo comparativo de los 2 centros.", "Press «Generate report» to create the comparative executive summary for both schools.")}</p>
+              </div>
+            )}
           </div>
 
           {/* A28 — Estado de licencias y facturación */}
