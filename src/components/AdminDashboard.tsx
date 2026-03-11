@@ -6,7 +6,7 @@ import {
   CheckCircle2, AlertTriangle, TrendingUp, Activity, Zap,
   Download, UserPlus, Bell, ChevronDown, ArrowUp, ArrowDown,
   Server, Database, RefreshCw, Clock, Search, X, Landmark,
-  Vote, Eye, Save, TrendingDown, Minus, Calendar,
+  Vote, Eye, Save, TrendingDown, Minus, Calendar, ClipboardCheck,
 } from "lucide-react";
 import { AdminView } from "@/types";
 
@@ -241,10 +241,11 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
         {([
           { key: "overview" as AdminView, label: "Resumen",  icon: LayoutDashboard },
           { key: "users"    as AdminView, label: "Usuarios", icon: Users },
-          { key: "capital"  as AdminView, label: "Capital",  icon: Landmark },
-          { key: "ai"       as AdminView, label: "IA",       icon: Bot },
-          { key: "schools"  as AdminView, label: "Colegios", icon: Building2 },
-          { key: "reports"  as AdminView, label: "Informes", icon: FileText },
+          { key: "capital"     as AdminView, label: "Capital",    icon: Landmark },
+          { key: "ai"          as AdminView, label: "IA",         icon: Bot },
+          { key: "schools"     as AdminView, label: "Colegios",   icon: Building2 },
+          { key: "reports"     as AdminView, label: "Informes",   icon: FileText },
+          { key: "inspection"  as AdminView, label: "Inspección", icon: ClipboardCheck },
         ]).map((tab) => (
           <button
             key={tab.key}
@@ -1062,6 +1063,186 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           </div>
         </div>
       )}
+      {/* ─── TAB: INSPECCIÓN ─── */}
+      {activeView === "inspection" && (() => {
+        const inspeccionAlumnos = usuariosMock
+          .filter((u) => u.rol === "Alumno")
+          .map((u, i) => ({
+            ...u,
+            proyecto: i < 5 ? ["Airbnb Málaga", "Huerto Urbano Digital", "Podcast Escolar", "App Intercambio", "Estudio Animación"][i] : "Airbnb Málaga",
+            progreso: [72, 88, 45, 91, 67, 54, 38, 80, 76, 62][i] ?? 60,
+            evidencias: [9, 14, 6, 16, 11, 8, 5, 13, 10, 9][i] ?? 8,
+            nivelLomloe: [3, 4, 2, 4, 3, 2, 1, 3, 3, 2][i] as 1 | 2 | 3 | 4 ?? 2,
+          }));
+
+        const nivelLomloeCfg: Record<number, { label: string; bg: string; text: string }> = {
+          1: { label: "Inicio",        bg: "bg-urgent-light",  text: "text-urgent" },
+          2: { label: "En proceso",    bg: "bg-warning-light", text: "text-warning" },
+          3: { label: "Logro esp.",    bg: "bg-accent-light",  text: "text-accent-text" },
+          4: { label: "Sobresaliente", bg: "bg-success-light", text: "text-success" },
+        };
+
+        const checklist = [
+          { ok: true,  texto: "Programación curricular alineada con Real Decreto 217/2022 (ESO)" },
+          { ok: true,  texto: "Evaluación por competencias LOMLOE — 8 áreas activas" },
+          { ok: true,  texto: "Criterios de evaluación definidos por tarea y rúbrica de 4 niveles" },
+          { ok: true,  texto: "Evidencias de aprendizaje digitales con control de entrega" },
+          { ok: true,  texto: "Informe de progreso trimestral por alumno exportable" },
+          { ok: true,  texto: "Ratio docente-alumno: 1:12 (dentro del límite normativo)" },
+          { ok: false, texto: "Actas de evaluación firmadas por el claustro — pendiente T2" },
+          { ok: true,  texto: "Atención a la diversidad: seguimiento activo de 3 alumnos en riesgo" },
+          { ok: true,  texto: "Coordinación con familias: 100% con acceso al panel parental" },
+          { ok: false, texto: "Memoria anual de curso — pendiente de redactar (entrega junio 2026)" },
+        ];
+
+        const cumplimiento = Math.round((checklist.filter((c) => c.ok).length / checklist.length) * 100);
+
+        return (
+          <div className="space-y-5">
+            {/* KPIs de inspección */}
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                { label: "Alumnos activos",        valor: "12",   sub: "1º y 2º ESO",               bg: "bg-card", textV: "text-text-primary" },
+                { label: "Cumplimiento LOMLOE",    valor: `${cumplimiento}%`, sub: "8/10 requisitos", bg: "bg-success-light", textV: "text-success" },
+                { label: "Evidencias entregadas",  valor: "127",  sub: "de 192 posibles",             bg: "bg-accent-light",  textV: "text-accent-text" },
+                { label: "Proyectos en curso",     valor: "14",   sub: "4 colegios activos",          bg: "bg-card", textV: "text-text-primary" },
+              ].map((k) => (
+                <div key={k.label} className={`${k.bg} rounded-2xl border border-card-border p-4`}>
+                  <p className={`text-[28px] font-bold ${k.textV} leading-none mb-1`}>{k.valor}</p>
+                  <p className="text-[11px] font-semibold text-text-primary">{k.label}</p>
+                  <p className="text-[10px] text-text-muted">{k.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Tabla de alumnos */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Users size={15} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">Progreso por alumno — {trimestreLabel["2"]}</h3>
+                </div>
+                <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
+                  <Download size={12} />
+                  Exportar para inspección
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-card-border">
+                      {["Alumno", "Curso", "Proyecto", "Progreso", "Evidencias", "Nivel LOMLOE", "Estado"].map((h) => (
+                        <th key={h} className="text-left text-[10px] font-bold text-text-muted uppercase tracking-wide py-2 px-2">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inspeccionAlumnos.map((a) => {
+                      const nlCfg = nivelLomloeCfg[a.nivelLomloe];
+                      return (
+                        <tr key={a.id} className="border-b border-card-border/50 hover:bg-background transition-colors">
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                                {a.nombre.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                              </div>
+                              <span className="text-[11px] font-medium text-text-primary">{a.nombre}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-[11px] text-text-muted">{a.curso}</td>
+                          <td className="py-2.5 px-2 text-[11px] text-text-secondary truncate max-w-[140px]">{a.proyecto}</td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-1.5 bg-background rounded-full overflow-hidden">
+                                <div className="h-full rounded-full bg-accent-text" style={{ width: `${a.progreso}%` }} />
+                              </div>
+                              <span className="text-[10px] font-bold text-text-primary">{a.progreso}%</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-[11px] text-text-secondary">{a.evidencias}/16</td>
+                          <td className="py-2.5 px-2">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${nlCfg.bg} ${nlCfg.text}`}>
+                              {a.nivelLomloe} — {nlCfg.label}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${a.activo ? "bg-success-light text-success" : "bg-urgent-light text-urgent"}`}>
+                              {a.activo ? "Activo" : "Inactivo"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Checklist normativo */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <ClipboardCheck size={15} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Cumplimiento normativo — Real Decreto 217/2022</h3>
+                <span className={`ml-auto text-[10px] font-bold px-2.5 py-1 rounded-full ${cumplimiento >= 80 ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
+                  {checklist.filter(c => c.ok).length}/{checklist.length} requisitos
+                </span>
+              </div>
+              <div className="space-y-2">
+                {checklist.map((item, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${item.ok ? "bg-success-light" : "bg-urgent-light"}`}>
+                    {item.ok
+                      ? <CheckCircle2 size={14} className="text-success flex-shrink-0 mt-0.5" />
+                      : <AlertTriangle size={14} className="text-urgent flex-shrink-0 mt-0.5" />
+                    }
+                    <p className={`text-[11px] leading-relaxed ${item.ok ? "text-text-secondary" : "text-urgent"}`}>
+                      {item.texto}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Documentos disponibles */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText size={14} className="text-accent-text" />
+                <h3 className="text-[13px] font-semibold text-text-primary">Documentación para inspección</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { nombre: "Programación didáctica completa — 2025-26",     estado: "listo" },
+                  { nombre: "Evaluación competencial por alumno — T2",        estado: "listo" },
+                  { nombre: "Rúbricas de evaluación — todas las tareas",      estado: "listo" },
+                  { nombre: "Informe de atención a la diversidad",            estado: "listo" },
+                  { nombre: "Actas de evaluación del claustro — T2",          estado: "pendiente" },
+                  { nombre: "Memoria anual 2025-26",                          estado: "pendiente" },
+                ].map((doc) => (
+                  <div key={doc.nombre} className="flex items-center gap-3 bg-background rounded-xl p-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${doc.estado === "listo" ? "bg-success-light" : "bg-warning-light"}`}>
+                      {doc.estado === "listo"
+                        ? <Download size={13} className="text-success" />
+                        : <Clock size={13} className="text-warning" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-medium text-text-primary leading-snug truncate">{doc.nombre}</p>
+                      <span className={`text-[9px] font-bold ${doc.estado === "listo" ? "text-success" : "text-warning"}`}>
+                        {doc.estado === "listo" ? "Disponible para descarga" : "Pendiente de preparar"}
+                      </span>
+                    </div>
+                    {doc.estado === "listo" && (
+                      <button className="text-text-muted hover:text-accent-text transition-colors cursor-pointer flex-shrink-0">
+                        <Download size={13} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
