@@ -500,7 +500,7 @@ export default function TeacherAnalytics() {
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-[12px] font-semibold text-text-primary">{a.nombre}</span>
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full bg-card ${cfg.text}`}>{a.nivel}</span>
-                        <TendIcon size={11} className={`flex-shrink-0 ${tendColor}`} title={a.tendencia} />
+                        <TendIcon size={11} className={`flex-shrink-0 ${tendColor}`} />
                       </div>
                       {a.nivel !== "Bajo" && (
                         <p className="text-[10px] text-text-muted leading-snug">{microAccionPorNivel[a.nivel]}</p>
