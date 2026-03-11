@@ -551,12 +551,61 @@
 
 ---
 
-## Sprints pendientes — Ciclo 15
+---
 
-- [ ] [T14] TeacherGradeBook — añadir historial de cambios de nota: cada vez que se edita una celda, registrar (alumno, competencia, nivel anterior → nuevo, timestamp mock) en un array de estado; mostrar panel "Últimos cambios" (los 5 más recientes) debajo de la tabla, colapsable, con icono de flecha para subida/bajada de nivel
-- [ ] [S16] StudentPortfolio — sección "Evidencias destacadas": grid 2×2 con las 4 mejores evidencias del proyecto Airbnb Málaga (título, tipo de archivo con icono, competencia LOMLOE, descripción 1 línea, badge "Destacada"); al hacer clic, expande un preview inline con descripción completa y botón "Ver en galería"
-- [ ] [A14] AdminDashboard Capital mejorado — en tab Capital, añadir panel "Próxima reunión de inversores": fecha mock, lista de 3 proyectos que se presentarán, botón "Preparar agenda" que genera PDF simulado (filename dinámico); también añadir un KPI "Capital total comprometido" que suma las inversiones de proyectos en fase aprobado/financiado
-- [ ] [C14] PitchLab mejorado — añadir sistema de "Puntuación por sección": al simular la audiencia, además del feedback global, mostrar una puntuación individual por sección (1–10) derivada de la longitud y palabras clave del texto; mostrar tabla con sección, puntuación, y una barra visual de progreso; la sección más débil marcada con badge "Mejorar"
+## Ciclo 15 ✅ completado
+
+### [SPRINT-TEACHER][T14] TeacherGradeBook — historial de cambios ✅
+- Commit: `5279194`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- Interfaz `HistorialCambio`: alumnoNombre, competencia, nivelAnterior, nivelNuevo, timestamp
+- `saveEdit` registra cambios dentro del updater funcional de `setGrades` (acceso a `prev` sin stale)
+- `historialCambios` state: array max 20 entradas, prepend en cada edición diferente
+- Panel "Últimos cambios" colapsable (`showHistorial` state), 5 más recientes
+- ArrowUp verde (subida) / ArrowDown rojo (bajada); chips nivel anterior → nuevo con colores nivelConfig
+- Timestamp "Hoy · HH:MM" via toLocaleTimeString
+- Imports: ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp
+
+### [SPRINT-STUDENT][S16] StudentPortfolio — Evidencias destacadas ✅
+- Commit: `e22c2fa`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- `evidenciasDestacadas`: const módulo, 4 evidencias (análisis STEM · brand board CCEC · listing CLC · modelo financiero CE)
+- `expandedEvidencia: string | null` — preview inline al hacer clic en card
+- Grid 2×2: icono tipo (BarChart3/FileImage/FileText) + badge "Destacada" + título + descripcionCorta + competencia badge
+- Expandido: bg-accent-light, icono bg-accent-text/text-accent, descripcionCompleta + botón "Ver en galería"
+- `stopPropagation` en el área de preview para evitar colapsar al clicar descripción
+- Imports: FileImage, ExternalLink
+
+### [SPRINT-ADMIN][A14] AdminDashboard Capital — reunión inversores + KPI comprometido ✅
+- Commit: `936f839`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- KPI "Capital total comprometido": suma proyectos aprobado/financiado (€8.200), bg-sidebar con accent
+- Barra de progreso sobre €20.000 fondo semestral simulado
+- Panel "Próxima reunión de inversores": 25 mar · 10:00 · 3 proyectos en agenda
+- Botón "Preparar agenda PDF" con filename dinámico `agenda_inversores_QHUMA_{YYYYMMDD}.pdf`
+- `agendaGenerada`/`generandoAgenda` state + feedback CheckCircle2 + filename
+- Patrón IIFE para `capitalComprometido`, `agendaProyectos`, `agendaFilename`
+- Insertado entre KPI stats y "Proyectos QHUMA Capital"
+
+### [SPRINT-CULTURE][C14] PitchLab mejorado — Puntuación por sección ✅
+- Commit: `5b11485`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- `computeSectionScores()`: función módulo, score 1–10 por sección (wordRatio × 7 + bonus términos clave)
+- `sectionScores: Record<string, number> | null` state — computado en `handleSimulate`
+- Se limpia al volver a write mode ("Volver a practicar")
+- Tabla col-span-3 en modo feedback: sección, barra CSS, score, badge "Mejorar" para la más débil
+- Colores barra: bg-success (≥7) / bg-warning (5-6) / bg-urgent (<5)
+- Sección más débil: fondo bg-urgent-light + badge "Mejorar" rojo
+- Patrón IIFE para calcular `minScore` y `weakestId` dentro del JSX
+
+---
+
+## Sprints pendientes — Ciclo 16
+
+- [ ] [T15] TeacherGradeBook — modo "Comparar con trimestre anterior": toggle que permite ver, junto a cada nota actual, la nota del trimestre anterior (mock); mostrar flecha de subida/bajada y delta numérico (ej. "+1" o "−1") en cada celda; la fila de medias también muestra la variación
+- [ ] [S17] StudentPortfolio — sección "Competencia del mes": destaca la competencia con mayor crecimiento en el proyecto activo (STEM o CE según datos de compProgress), muestra su gráfico de progreso semanal (4 semanas, barras CSS), y un reto personalizado para la semana siguiente relacionado con esa competencia
+- [ ] [A15] AdminDashboard Overview — añadir widget "Actividad docente hoy": lista de las 3 últimas acciones de docentes (ej. "Ana Martínez asignó tarea a Lucas García", "Carlos Pérez generó informe LOMLOE"), cada una con avatar, descripción, timestamp y tipo de acción (icono según tipo); toggle "Ver todas" que expande hasta 6 entradas
+- [ ] [C15] PitchLab mejorado — añadir panel "Preguntas del jurado": 5 preguntas simuladas que los inversores harían tras el pitch (específicas del proyecto Airbnb Málaga: sobre mercado, competencia, escalabilidad, riesgo, equipo); cada pregunta con campo de respuesta libre, y botón "Evaluar respuesta" que llama a /api/tutor-chat con mode="pitchcoach" para dar feedback de la respuesta
 
 ---
 
@@ -569,10 +618,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C11 añade inversoresConfig + InversorVoto. C12 añade ensayoMode/Running/Elapsed/Completed + useEffect timer. C13 añade guionPorSeccion (const módulo) + guionOpen state (Set<string>) + panel colapsable Guión de apoyo. BookOpen/ChevronDown/ChevronUp imports.
-- **TeacherGradeBook**: T12 añade handleExportCSV, alertasTrimestral, isExporting/exportFilename. T13 añade sección "Distribución por competencia" con barra segmentada, BarChart3 import.
-- **StudentPortfolio**: S14 añade timelineHitos. S15 añade sección "Mi impacto real" (4 KPIs mock: ocupación/ingresos/reseñas/ranking). BarChart3/MapPin/Users imports.
-- **AdminDashboard**: A12 añade showIALogs. A13 añade metricsVista state ("semana"|"mes") + toggle en gráfico Actividad del tab Metrics. IIFE para actividadDiaria/actividadMensual.
+- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 añade computeSectionScores() + sectionScores state + tabla puntuación por sección en feedback mode. Limpieza en "Volver a practicar".
+- **TeacherGradeBook**: T12 exportCSV. T13 distribución por competencia. T14 añade HistorialCambio interface + historialCambios state + showHistorial state + panel colapsable "Últimos cambios". saveEdit registra dentro de setGrades updater. Imports: ArrowUp/Down/Right/History/ChevronDown/Up.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 añade evidenciasDestacadas (const módulo, 4 evidencias) + expandedEvidencia state + grid 2×2 con preview inline. FileImage/ExternalLink imports.
+- **AdminDashboard**: A13 metricsVista toggle. A14 añade agendaGenerada/generandoAgenda state + handleGenerarAgenda + KPI "Capital comprometido" (sidebar) + panel "Próxima reunión inversores". IIFE para capitalComprometido/agendaProyectos/agendaFilename.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
