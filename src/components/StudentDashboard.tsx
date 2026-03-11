@@ -412,7 +412,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             </div>
           </div>
 
-          <h1 className="text-[42px] font-semibold text-text-primary leading-[1.15]">
+          <h1 className="text-[28px] font-semibold text-text-primary leading-[1.15]">
             {viewMode === "today" ? lbl("Misión de Hoy", "Today's Mission") : lbl("Tu Semana", "Your Week")}
           </h1>
           <div className="flex items-center gap-3 mt-1">
