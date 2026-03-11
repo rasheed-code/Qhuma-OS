@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 22 ✅ (push: `48a5073`)
+- **Último ciclo completo**: Ciclo 23 ✅ (push: `be65066`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 23
+- **Próximo ciclo**: Ciclo 24
 
 ---
 
@@ -925,6 +925,56 @@
 
 ---
 
+---
+
+## Sprints completados — Ciclo 23
+
+### [SPRINT-TEACHER][T22] TeacherDashboard — Sección "Próximas entregas" ✅
+- Commit: `880f0c4`
+- Archivo modificado: `src/components/TeacherDashboard.tsx`
+- Const módulo: `proximasEntregas: EntregaProxima[]` — 5 entregas (Airbnb Málaga) con alumno, tarea, comp, fechaLimite, diasRestantes, estado (retrasado/pendiente)
+- Interface `EntregaProxima` + type `EstadoEntrega`
+- States: `recordadas: Set<string>`, `recordandoId: string | null`
+- `handleRecordar(id)`: 900ms delay + añade al Set + feedback CheckCircle2 "Enviado"
+- Badge días: 0d=urgent, 1d=warning, 2d+=success. Fondo row por estado
+- Nota de protocolo en bg-background al pie del panel
+- Imports añadidos: `Bell, ClipboardList`
+
+### [SPRINT-STUDENT][S24] StudentQCoins — historial filtrado, gráfico evolución, racha gasto ✅
+- Commit: `df914e2`
+- Archivo modificado: `src/components/StudentQCoins.tsx`
+- `evolucionMensual`: const módulo, 6 meses Oct–Mar con ganadas/gastadas
+- `transaccionesPendientes`: 2 entradas mock (Demo Day, revisión evidencias)
+- State: `filtroTx: "todo"|"ganadas"|"gastadas"|"pendientes"` con type local dentro del componente
+- Filtros 4 pills con colores semáforo. Transacciones pendientes visibles en "todo" y "pendientes"
+- Gráfico barras CSS h-20 side-by-side: sidebar (ganadas) / urgent/50 (gastadas). Badge "+N QC vs mes ant."
+- Badge "Racha de gasto inteligente" bg-sidebar activo cuando ratio gastadas/ganadas < 50% en 3 meses
+- Imports añadidos: `BarChart3, Filter, Award`
+
+### [SPRINT-ADMIN][A22] AdminDashboard — Gestión Q-Coins a nivel sistema ✅
+- Commit: `3e81e75`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- States: `showEmitirQCoins`, `emitirMotivo`, `emitirCantidad`, `emitirDestinatario`, `emitiendo`, `emitido`
+- `handleEmitirQCoins()`: 1.4s delay + feedback éxito 2.5s + cierre formulario
+- 4 KPIs: total en circulación 14.820 (bg-sidebar), emitidos +3.240 (success), canjeados -1.180 (urgent), crecimiento +8.4% (accent)
+- Top 5 alumnos por saldo: barras CSS proporcionales al máximo, avatar + saldo QC
+- Top 5 transacciones: ganadas/canjes con colores success/warning, alumno + motivo + fecha
+- Formulario "Emitir Q-Coins especiales": select destinatario, input cantidad (número), input motivo
+- Widget insertado en left column del tab Overview (después de Bienestar docente A21) dentro del mismo `space-y-5`
+- Imports añadidos: `Coins, Sparkles`
+
+### [SPRINT-CULTURE][C22] StudentPortfolio — Evidencias con QR ✅
+- Commit: `be65066`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- States: `qrVisible: string | null`, `imprimiendoTarjeta: string | null`
+- `handleImprimirTarjeta(ev)`: genera QR SVG 7×7 determinista (seed de ev.id.charCodeAt), construye HTML completo tarjeta con Inter, logo QHUMA, título, competencia, descripción completa, URL portfolio + QR embed. Blob descargable `tarjeta_evidencia_{id}_lucas_garcia.html`
+- QR inline: botón "Ver QR" / "Ocultar QR" en la sección expanded de cada evidencia. SVG 64×64 con mismo algoritmo seed. URL mock `qhuma.es/portfolio/lucas-garcia/ev-{id}`
+- Botón "Imprimir tarjeta" bg-sidebar con RefreshCw animado durante generación (1.5s)
+- Principio culture.md Bloque 3: el portfolio es relato de lo creado — el QR lleva la evidencia al mundo real
+- Imports añadidos: `QrCode, Printer`
+
+---
+
 ## Notas técnicas (leer antes de cada ciclo)
 
 - **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 7)
@@ -936,12 +986,14 @@
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
 - **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón. C18 añade ensayoPreguntaIntercalada/ensayoRespuestaIntercalada states + ensayoIntercaladasVisitadas useRef Set + useEffect detección transición sección + handleContinuarTrasIntercalada(). tipoMap: solucion→competencia, mercado→riesgo, financiero→operacional, equipo→inversión. Panel intercalado como 3ª rama del ternario ensayo. C19 añade ensayoScore/ensayoScoreFuerte/ensayoScoreMejora/ensayoScoreLoading states + useEffect sobre ensayoCompleted → fetch pitchcoach + panel score (barra 10 seg + punto fuerte + mejora). handleResetEnsayo() resetea C19 states. C20 añade ensayoTiemposPorSeccion Record<string,number> + ensayoSeccionAnteriorRef. useEffect del ensayo tick actualiza tiempos por sección en cada segundo. Panel running "Tiempo por sección": barras individuales + timer elapsed/objetivo coloreado semáforo. Post-ensayo: tabla tiempos con delta por sección. handleResetEnsayo() resetea C20. C21 añade exportandoGuion/guionExportado states + handleExportarGuion() — HTML blob con 5 secciones completas, guión C13, scores C14, resumen scores. Botón "Descargar guión" bg-accent en header del modo feedback. Badge de éxito col-span-3 con CheckCircle2. Imports añadidos: Download, RefreshCw.
 - **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header. T18 añade expandedAlumno/comentariosTrimestral/generandoFeedback/feedbackGenerado/copiadoFeedback states. Botón expand (MessageSquare+ChevronDown/Up) en celda nombre. Fila expandida con textarea comentario + borrador IA. generarFeedbackMock() función interna. handleGenerarFeedbackIA() fetch /api/tutor-chat mode=pitchcoach. handleCopiarFeedback() clipboard. T20 añade ObjetivoMejora interface + objetivosIniciales (const módulo) + objetivos/showObjetivos/nuevoObjetivoAlumnoId/Comp/Desc/Fecha states. Panel colapsable al final. Alumnos con nivel 1: comps en riesgo como badges urgent, checkbox circular por objetivo, formulario inline añadir. T21 añade exportandoInforme/exportInformeFilename states + handleExportarInformeIndividual(alumnoId) — HTML blob con radar T1/T2/T3, tabla LOMLOE, objetivos, feedback. Botón "Informe individual" (UserCheck icon, bg-sidebar) en modal T19. Import añadido: UserCheck.
-- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto. S20 añade ProximoPaso interface + proximosPasosMock (módulo) + proximosPasos/generandoProximosPasos/generandoPaso states + handleGenerarProximosPasos()/handleRegenerarPaso(i). Panel antes de "Crecimiento en competencias" con 3 cards accionables y botón Otro por paso. S21 cambia título sección "Historial de errores" → "Mis errores → Mis aprendizajes". Añade timeline vertical + superadosSet/confirmandoSuperacion/superacionMensaje states + handleMarcarSuperado() fetch pitchcoach. Barra progreso LOMLOE before→after en expanded. Dots timeline coloreados por superación.
-- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO). A17 añade notificacionesAutomaticas (const módulo, 5 entradas) + notificacionesEnviadas Set + notificandoId + handleEnviarNotificacion(). Widget en Overview columna izquierda. A18 añade comparativaMetrica state ("engagement" default) + panel "Análisis comparativo ampliado" con evolucionMensual (4×2 meses) side-by-side bars + comparativaCompetencias radar (8 COMPS × 2 colegios) con badge diferencia. Toggle 4 métricas en header. A19 añade Copy/Check imports + exportandoComparativa/comparativaExportada/copiandoResumen/resumenCopiado states. Botones "Exportar CSV" (Blob download 2 colegios × 4 métricas × 4 meses + 8 comps) y "Copiar resumen ejecutivo" (clipboard, texto diferencial español) en barra inferior panel A18. A20 añade comunicadoDestinatario/Asunto/Cuerpo/Enviando/Enviado states + historialComunicados array (5 entradas) + plantillasComunicado (3) + handleEnviarComunicado(). Widget "Centro de comunicación" en Overview col izquierda después de A17. Selector 4 destinatarios con count + 3 plantillas clickables + formulario + historial 5 enviados con badge tipo TOD/DOC/FAM/ALU. A21 añade bienestarEncuestaEnviada/bienestarRespuestas/bienestarEnviando states. Widget "Bienestar docente" en Overview izquierda (después de A20): 3 docentes con carga%, sesiones, alertas, riesgo bajo/medio/alto; protocolo inline para alto; encuesta semanal 4 ítems 1–5 con validación y vista resultados. Sin nuevos imports.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto. S20 añade ProximoPaso interface + proximosPasosMock (módulo) + proximosPasos/generandoProximosPasos/generandoPaso states + handleGenerarProximosPasos()/handleRegenerarPaso(i). Panel antes de "Crecimiento en competencias" con 3 cards accionables y botón Otro por paso. S21 cambia título sección "Historial de errores" → "Mis errores → Mis aprendizajes". Añade timeline vertical + superadosSet/confirmandoSuperacion/superacionMensaje states + handleMarcarSuperado() fetch pitchcoach. Barra progreso LOMLOE before→after en expanded. Dots timeline coloreados por superación. C22 añade qrVisible/imprimiendoTarjeta states + handleImprimirTarjeta(ev) — QR SVG 7×7 determinista (seed por id), HTML blob tarjeta con Inter + logo + descripción completa + QR embed. Botón "Ver QR" + QR inline en sección expanded de S16. Botón "Imprimir tarjeta" bg-sidebar con descarga directa. Imports añadidos: QrCode, Printer.
+- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO). A17 añade notificacionesAutomaticas (const módulo, 5 entradas) + notificacionesEnviadas Set + notificandoId + handleEnviarNotificacion(). Widget en Overview columna izquierda. A18 añade comparativaMetrica state ("engagement" default) + panel "Análisis comparativo ampliado" con evolucionMensual (4×2 meses) side-by-side bars + comparativaCompetencias radar (8 COMPS × 2 colegios) con badge diferencia. Toggle 4 métricas en header. A19 añade Copy/Check imports + exportandoComparativa/comparativaExportada/copiandoResumen/resumenCopiado states. Botones "Exportar CSV" (Blob download 2 colegios × 4 métricas × 4 meses + 8 comps) y "Copiar resumen ejecutivo" (clipboard, texto diferencial español) en barra inferior panel A18. A20 añade comunicadoDestinatario/Asunto/Cuerpo/Enviando/Enviado states + historialComunicados array (5 entradas) + plantillasComunicado (3) + handleEnviarComunicado(). Widget "Centro de comunicación" en Overview col izquierda después de A17. Selector 4 destinatarios con count + 3 plantillas clickables + formulario + historial 5 enviados con badge tipo TOD/DOC/FAM/ALU. A21 añade bienestarEncuestaEnviada/bienestarRespuestas/bienestarEnviando states. Widget "Bienestar docente" en Overview izquierda (después de A20): 3 docentes con carga%, sesiones, alertas, riesgo bajo/medio/alto; protocolo inline para alto; encuesta semanal 4 ítems 1–5 con validación y vista resultados. Sin nuevos imports. A22 añade showEmitirQCoins/emitirMotivo/emitirCantidad/emitirDestinatario/emitiendo/emitido states + handleEmitirQCoins() (1.4s delay, cierre auto 2.5s). Widget "Gestión Q-Coins sistema" en Overview left (después de A21): 4 KPIs grid, top-5 alumnos por saldo con barras CSS, top-5 transacciones ganadas/canjes, formulario emitir Q-Coins especiales con select/input/motivo. Imports añadidos: Coins, Sparkles.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
 - **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado. S22 añade sección "Economía de mi proyecto" entre IndustriasVivas y Mercado (4 KPIs, desglose 6 líneas, bloque IA socrático). S23 añade sección "Perfil cognitivo activo" entre Economía y Mercado — IIFE pattern, 8 inteligencias Gardner mapeadas a CompKey, inteligencia activa derivada de tareaActiva.competencies[0], panel bg-sidebar + grid top-3. Import añadido: Brain.
+- **StudentQCoins**: S24 añade evolucionMensual (const módulo, 6 meses) + transaccionesPendientes (2 entradas mock) + filtroTx state (type local "todo"|"ganadas"|"gastadas"|"pendientes"). Panel derecho: gráfico barras CSS side-by-side (sidebar/urgent) + badge "Racha gasto inteligente" (bg-sidebar, activo si ratio < 50% × 3 meses) + historial con filtros 4 pills. Imports añadidos: BarChart3, Filter, Award.
+- **TeacherDashboard**: T22 añade proximasEntregas (const módulo, 5 entregas) + interface EntregaProxima + type EstadoEntrega + recordadas Set + recordandoId state + handleRecordar() (900ms). Panel "Próximas entregas" insertado entre urgencias (T10) y seguimiento individual: lista con badge días (urgent/warning/success), fondo row por estado, botón Recordar con Bell icon + feedback CheckCircle2. Imports añadidos: Bell, ClipboardList.
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). Leer antes de editar en ciclos futuros.
