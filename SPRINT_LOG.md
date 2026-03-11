@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 35 ✅ (push: `fd5c929`)
+- **Último ciclo completo**: Ciclo 36 ✅ (push: `541b126`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 36
+- **Próximo ciclo**: Ciclo 37
 
 ---
 
@@ -1245,6 +1245,58 @@
 
 ---
 
+## Sprints completados — Ciclo 36
+
+### [SPRINT-TEACHER][T34] TeacherAnalytics — Talento emergente T2: perfiles Food Truck ✅
+- Commit: `21b8fca`
+- Archivo: `src/components/TeacherAnalytics.tsx`
+- Módulo-level: `talentoT2` — 12 alumnos con compDom (competencia dominante T1), rol Food Truck, cluster (financiero/creativo/gestor)
+- 3 clusters: Financieros (CE/STEM), Creativos (CCEC/CLC), Gestores (CC/CPSAA/CD)
+- Toggle de cluster con conteo por cluster + descripción pedagógica de cada perfil
+- Lista de alumnos del cluster activo: avatar, nombre, compDom badge, rol recomendado, botón "Asignar rol" (900ms → estado asignado)
+- KPI `N/12 asignados` en header; nota pedagógica en pie (roles orientativos, varios roles posibles)
+- IIFE pattern completo; useState interno; Lightbulb icon para nota; CheckCircle2 para estado asignado
+
+### [SPRINT-STUDENT][S36] StudentDashboard — Semana 1 Food Truck: primeros objetivos T2 ✅
+- Commit: `59b4b27`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Insertada entre S33 (resumen semanal) y S34 (adelanto T2)
+- 5 tareas IIFE (lun–vie): research STEM +20Q / concepto CE +25Q / logo CCEC +30Q / menú STEM +35Q / pitch CLC +40Q
+- Tarea de hoy derivada de `new Date().getDay()` (fallback miércoles)
+- Tarea del día en card bg-sidebar con barra CTA "Empezar ahora" (alert feedback)
+- Lista de 5 días con círculo numerado (✓ verde si completada, accent si es hoy, gris si pendiente), línea tachada si completada
+- Barra de progreso completadas/5 en accent-text; contador badge accent-light
+- Nota pedagógica al pie: explica el orden pedagógico intencional del ciclo emprendedor (STEM→CE→CCEC→STEM→CLC)
+- IIFE pattern; sin estados nuevos; sin imports nuevos
+
+### [SPRINT-ADMIN][A34] AdminDashboard — Presupuesto pedagógico T2 en tab Capital ✅
+- Commit: `be619ff`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Estados añadidos: `presupuestosAprobados Set<string>`, `aprobandoPresupuesto string|null`
+- Panel insertado al final del tab Capital (después de A25 proyectos en segunda ronda)
+- 4 clases: 1ºESO A (Food Truck, 3.600 QC), 1ºESO B (Food Truck, 3.600 QC), 2ºESO A (Ecomercado, 3.000 QC), 2ºESO B (App Turismo, 3.000 QC)
+- KPI strip: total asignados (bg-sidebar, accent), distribuidos (success-light), pendientes (warning-light)
+- Por clase: nombre + proyecto + badge inicio + barra de % gastado (verde si <60%, warning si >60%) + botón "Aprobar presupuesto" (900ms → success-light)
+- Nota pedagógica al pie sobre liberación por hitos y reversión al fondo central
+- IIFE pattern; handleAprobar 900ms delay
+
+### [SPRINT-CULTURE][C34] StudentProfile — Plan de aprendizaje T2 (Bloque 5 Aprendizaje continuo) ✅
+- Commit: `541b126`
+- Archivo: `src/components/StudentProfile.tsx`
+- Insertado antes de Achievements (después de S35 Industrias Vivas)
+- Detecta automáticamente la competencia más débil de T1 (`competencies.reduce(min)`)
+- Estado vacío: Sparkles icon + descripción + botón "Generar mi plan con IA" (fetch /api/tutor-chat mode="narrativa")
+- Plan de 4 semanas: parse por líneas `^[1-4]/`; fallback 4 semanas mock contextualizado al Food Truck + compDébil
+- 3 recursos recomendados: Lectura / Vídeo / Ejercicio — todos conectados al proyecto activo
+- Botón "Comprometerse con el plan T2": estado `planT2Comprometido` → badge "Comprometido T2" success-light en header
+- Botón "Regenerar" (RefreshCw animado) para volver a llamar la API
+- Nota pedagógica cultura Bloque 5: "La plataforma siempre propone el siguiente nivel"
+- Principio culture.md Bloque 5: Aprendizaje continuo — todo en contexto del proyecto activo, no aislado
+- Import añadido: `AlertCircle`
+- Estados añadidos: `planT2Generado string[]|null`, `generandoPlanT2 boolean`, `planT2Comprometido boolean`
+
+---
+
 ## Sprints completados — Ciclo 35
 
 ### [SPRINT-TEACHER][T33] TeacherAnalytics — Tendencia semanal T1: evolución de 8 competencias LOMLOE ✅
@@ -1595,6 +1647,11 @@
 - **TeacherDashboard**: T22 añade proximasEntregas (const módulo, 5 entregas) + interface EntregaProxima + type EstadoEntrega + recordadas Set + recordandoId state + handleRecordar() (900ms). Panel "Próximas entregas" insertado entre urgencias (T10) y seguimiento individual: lista con badge días (urgent/warning/success), fondo row por estado, botón Recordar con Bell icon + feedback CheckCircle2. Imports añadidos: Bell, ClipboardList. T26 añade semanaExpanded/semanaResumen/generandoResumen/resumenCopiado states + handleGenerarResumen() (fetch narrativa) + handleCopiarResumen() (clipboard). Panel colapsable "Semana en números" como PRIMER elemento del main content (antes del hero): 5 stats con trend arrows, card AI narrativa, botones Generar+Compartir. Imports añadidos: ChevronDown, ChevronUp, Coins, Trophy, Copy.
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
+- **Ciclo 36 — StudentDashboard layout**: Antes del Ciclo 36 se corrigió un bug crítico de layout — el `</div>` que cerraba el contenedor `flex-1 min-w-0` estaba en la línea 1636 (antes de S33), creando 4 columnas horizontales en el flex. Fix: eliminado el `</div>` prematuro, añadido nuevo `</div>{/* /flex-1 min-w-0 */}` después de S34 (línea ~1966). TypeScript pasa sin errores.
+- **Ciclo 36 — TeacherAnalytics T34**: `talentoT2` const módulo con 12 alumnos × {compDom, rol, cluster}. IIFE con useState interno para clusterActivo y rolesAsignados Set. No añade imports nuevos (CheckCircle2, Lightbulb ya existían). Panel al final del componente, después del T33 tendencia semanal.
+- **Ciclo 36 — StudentDashboard S36**: IIFE sin estados nuevos. `tareasS1` array const dentro del IIFE, diaIdx derivado de `new Date().getDay()`. Insertado entre S33 y S34. Sin imports nuevos.
+- **Ciclo 36 — AdminDashboard A34**: presupuestosAprobados Set<string> + aprobandoPresupuesto string|null declarados en el scope del componente (fuera del IIFE). Panel con IIFE al final del tab Capital, después de A25 segundaronda (línea ~2503). Sin imports nuevos.
+- **Ciclo 36 — StudentProfile C34**: planT2Generado/generandoPlanT2/planT2Comprometido states. Import añadido: AlertCircle. Detecta comp más débil via `competencies.reduce(min)`. Fallback: 4 semanas mock detalladas + 3 recursos contextualizados. Insertado antes de Achievements (después de S35 Industrias Vivas).
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
 - **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
