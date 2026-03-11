@@ -124,6 +124,9 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [reflexionGuardada, setReflexionGuardada] = useState(false);
   const [showReflexiones, setShowReflexiones] = useState(false);
 
+  // S32 — Demo Day prep checklist
+  const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
+
   // S29 — Modo enfoque Pomodoro
   const [enfoqueMode, setEnfoqueMode] = useState(false);
   const [enfoqueRunning, setEnfoqueRunning] = useState(false);
@@ -1622,6 +1625,121 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           );
         })())}
       </div>
+
+      {/* S32 — Demo Day prep */}
+      {(() => {
+        const demoDayItems: { id: string; text: string; comp: string }[] = [
+          { id: "pitch",      text: lbl("Pitch escrito (≥250 palabras)", "Pitch written (≥250 words)"),             comp: "CLC"  },
+          { id: "slides",     text: lbl("Slides preparadas (mínimo 5)", "Slides prepared (min. 5)"),                comp: "CD"   },
+          { id: "financiero", text: lbl("Modelo financiero actualizado", "Financial model updated"),               comp: "STEM" },
+          { id: "ensayo",     text: lbl("Ensayo cronometrado completado", "Timed run-through completed"),           comp: "CE"   },
+          { id: "feedback",   text: lbl("Feedback de Prof. Ana revisado", "Prof. Ana's feedback reviewed"),        comp: "CPSAA"},
+          { id: "equipo",     text: lbl("Equipo coordinado + roles definidos", "Team coordinated + roles defined"), comp: "CC"   },
+        ];
+        const total = demoDayItems.length;
+        const done = demoDayItems.filter(i => demoDayChecks.has(i.id)).length;
+        const pct = Math.round((done / total) * 100);
+        // Demo Day: Friday March 13. Today: March 11 → 2 days
+        const diasRestantes = 2;
+        const ringR = 22;
+        const ringCirc = 2 * Math.PI * ringR;
+        const ringFill = (pct / 100) * ringCirc;
+        const ringColor = pct >= 80 ? "text-success" : pct >= 50 ? "text-warning" : "text-urgent";
+        const ringStroke = pct >= 80 ? "#22c55e" : pct >= 50 ? "#f59e0b" : "#ef4444";
+        const compColors: Record<string, string> = {
+          CLC: "bg-accent-light text-accent-text", STEM: "bg-success-light text-success",
+          CD: "bg-warning-light text-warning", CE: "bg-sidebar text-white",
+          CPSAA: "bg-background text-text-secondary", CC: "bg-urgent-light text-urgent",
+        };
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-urgent flex items-center justify-center flex-shrink-0">
+                  <span className="text-white text-[11px] font-black">DD</span>
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                    {lbl("Preparación Demo Day", "Demo Day Preparation")}
+                  </h2>
+                  <p className="text-[10px] text-text-muted">{lbl("Viernes 13 mar · Casa Limón · Airbnb Málaga", "Friday 13 Mar · Casa Limón · Airbnb Málaga")}</p>
+                </div>
+              </div>
+              {/* Countdown */}
+              <div className={`flex flex-col items-center px-3 py-2 rounded-xl ${diasRestantes <= 1 ? "bg-urgent-light" : "bg-warning-light"}`}>
+                <span className={`text-[22px] font-black leading-none ${diasRestantes <= 1 ? "text-urgent" : "text-warning"}`}>{diasRestantes}</span>
+                <span className={`text-[9px] font-semibold ${diasRestantes <= 1 ? "text-urgent" : "text-warning"}`}>{lbl("días", "days")}</span>
+              </div>
+            </div>
+
+            {/* Readiness ring + checklist */}
+            <div className="flex gap-4">
+              {/* Ring */}
+              <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                <div className="relative w-14 h-14">
+                  <svg viewBox="0 0 54 54" className="w-14 h-14 -rotate-90">
+                    <circle cx="27" cy="27" r={ringR} fill="none" stroke="#ededed" strokeWidth="5" />
+                    <circle
+                      cx="27" cy="27" r={ringR} fill="none"
+                      stroke={ringStroke} strokeWidth="5"
+                      strokeDasharray={`${ringFill} ${ringCirc - ringFill}`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-[12px] font-black ${ringColor}`}>{pct}%</span>
+                  </div>
+                </div>
+                <span className="text-[9px] text-text-muted text-center leading-tight">{done}/{total} {lbl("listo", "ready")}</span>
+              </div>
+
+              {/* Checklist */}
+              <div className="flex-1 space-y-2">
+                {demoDayItems.map(item => {
+                  const checked = demoDayChecks.has(item.id);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setDemoDayChecks(prev => {
+                        const next = new Set(prev);
+                        if (next.has(item.id)) next.delete(item.id); else next.add(item.id);
+                        return next;
+                      })}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
+                        checked ? "bg-success-light border border-success/20" : "bg-background border border-card-border hover:border-accent/30"
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all ${
+                        checked ? "bg-success border-success" : "border-text-muted"
+                      }`}>
+                        {checked && <span className="text-white text-[8px] font-black">✓</span>}
+                      </div>
+                      <span className={`text-[11px] font-medium flex-1 leading-tight ${checked ? "line-through text-text-muted" : "text-text-primary"}`}>
+                        {item.text}
+                      </span>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${compColors[item.comp] ?? "bg-background text-text-muted"}`}>
+                        {item.comp}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Motivational footer */}
+            <div className={`mt-3 rounded-xl px-3 py-2 ${pct === 100 ? "bg-success-light border border-success/20" : "bg-accent-light border border-accent/20"}`}>
+              <p className={`text-[11px] font-medium leading-snug ${pct === 100 ? "text-success" : "text-accent-text"}`}>
+                {pct === 100
+                  ? lbl("🎯 ¡Estás listo! Casa Limón va a brillar en el Demo Day.", "🎯 You're ready! Casa Limón will shine at Demo Day.")
+                  : pct >= 66
+                  ? lbl("💪 Casi allí — revisa los puntos pendientes hoy mismo.", "💪 Almost there — check the remaining points today.")
+                  : lbl("⚡ Quedan 2 días. Cada ítem completado = más confianza en el escenario.", "⚡ 2 days left. Every item done = more confidence on stage.")}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Right: AI Chat — now fully powered by Gemini */}
       <div className="w-[300px] flex-shrink-0">
