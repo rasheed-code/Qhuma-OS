@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink, Share2, Copy, Eye, EyeOff, QrCode, Printer } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -435,6 +435,76 @@ export default function StudentPortfolio() {
       setSuperadosSet((prev) => { const n = new Set(prev); n.add(entry.id); return n; });
       setConfirmandoSuperacion(null);
     }
+  };
+
+  // C22 — Evidencias con QR
+  const [qrVisible, setQrVisible] = useState<string | null>(null);
+  const [imprimiendoTarjeta, setImprimiendoTarjeta] = useState<string | null>(null);
+
+  const handleImprimirTarjeta = (ev: typeof evidenciasDestacadas[number]) => {
+    setImprimiendoTarjeta(ev.id);
+    // Build deterministic QR-like pixel map (7×7 seed based on id)
+    const seed = ev.id.charCodeAt(2) ?? 1;
+    const cells: number[] = [];
+    for (let i = 0; i < 49; i++) {
+      cells.push(((seed * (i + 7) * 13) % 17) < 9 ? 1 : 0);
+    }
+    // Force corners
+    [0,1,6,7,42,43,48].forEach((idx) => { cells[idx] = 1; });
+    const qrSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 7 7">
+      ${cells.map((v, i) => v ? `<rect x="${i%7}" y="${Math.floor(i/7)}" width="1" height="1" fill="#1f514c"/>` : "").join("")}
+    </svg>`;
+    const qrDataUrl = "data:image/svg+xml," + encodeURIComponent(qrSvg);
+    const portfolioUrl = `https://qhuma.es/portfolio/lucas-garcia/evidencia-${ev.id}`;
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tarjeta evidencia — ${ev.titulo}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+  body { font-family: Inter, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f4f0e9; }
+  .card { width: 340px; background: white; border-radius: 20px; padding: 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); border: 1px solid #ededed; }
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .logo { width: 36px; height: 36px; background: #1f514c; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #c3f499; font-weight: 900; font-size: 18px; }
+  .project { font-size: 11px; color: #9ca3af; }
+  .badge { display: inline-block; background: #fffbeb; color: #f59e0b; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-bottom: 8px; }
+  .title { font-size: 15px; font-weight: 700; color: #141414; margin-bottom: 6px; }
+  .desc { font-size: 11px; color: #666; line-height: 1.5; margin-bottom: 12px; }
+  .comp { display: inline-block; background: #edffe3; color: #2f574d; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 12px; margin-right: 4px; }
+  .footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid #ededed; }
+  .alumno { font-size: 12px; color: #141414; font-weight: 600; }
+  .url { font-size: 9px; color: #9ca3af; margin-top: 2px; word-break: break-all; }
+  .qr { width: 64px; height: 64px; }
+  @media print { body { background: white; } }
+</style></head><body>
+<div class="card">
+  <div class="header">
+    <div class="logo">Q</div>
+    <div>
+      <div style="font-weight:700;font-size:14px;color:#141414;">qhumaOS</div>
+      <div class="project">Proyecto Airbnb Málaga · 1º ESO</div>
+    </div>
+  </div>
+  <div class="badge">Evidencia destacada</div>
+  <div class="title">${ev.titulo}</div>
+  <div class="desc">${ev.descripcionCompleta}</div>
+  <span class="comp">${ev.competencia}</span>
+  <span class="comp">${ev.tipo}</span>
+  <div class="footer">
+    <div>
+      <div class="alumno">Lucas García</div>
+      <div class="url">${portfolioUrl}</div>
+    </div>
+    <img src="${qrDataUrl}" class="qr" alt="QR evidencia" />
+  </div>
+</div>
+<script>window.onload = function() { window.print(); }</script>
+</body></html>`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `tarjeta_evidencia_${ev.id}_lucas_garcia.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setTimeout(() => setImprimiendoTarjeta(null), 1500);
   };
 
   // C9 — ErrorLog IA reflexión
@@ -979,11 +1049,56 @@ export default function StudentPortfolio() {
                   </div>
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t border-accent-text/10 pt-2.5" onClick={(e) => e.stopPropagation()}>
-                      <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{ev.descripcionCompleta}</p>
-                      <button className="flex items-center gap-1.5 text-[10px] font-bold text-accent-text hover:underline cursor-pointer">
-                        <ExternalLink size={11} />
-                        {lbl("Ver en galería", "View in gallery")}
-                      </button>
+                      <p className="text-[11px] text-text-secondary leading-relaxed mb-3">{ev.descripcionCompleta}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button className="flex items-center gap-1.5 text-[10px] font-bold text-accent-text hover:underline cursor-pointer">
+                          <ExternalLink size={11} />
+                          {lbl("Ver en galería", "View in gallery")}
+                        </button>
+                        <button
+                          onClick={() => setQrVisible(qrVisible === ev.id ? null : ev.id)}
+                          className="flex items-center gap-1.5 text-[10px] font-bold text-text-secondary bg-background hover:bg-card border border-card-border px-2 py-1 rounded-lg cursor-pointer transition-all"
+                        >
+                          <QrCode size={11} />
+                          {qrVisible === ev.id ? lbl("Ocultar QR", "Hide QR") : lbl("Ver QR", "View QR")}
+                        </button>
+                        <button
+                          onClick={() => handleImprimirTarjeta(ev)}
+                          disabled={imprimiendoTarjeta === ev.id}
+                          className="flex items-center gap-1.5 text-[10px] font-bold text-white bg-sidebar hover:brightness-110 px-2.5 py-1 rounded-lg cursor-pointer transition-all disabled:opacity-60"
+                        >
+                          {imprimiendoTarjeta === ev.id
+                            ? <><RefreshCw size={10} className="animate-spin" />{lbl("Generando…", "Generating…")}</>
+                            : <><Printer size={10} />{lbl("Imprimir tarjeta", "Print card")}</>
+                          }
+                        </button>
+                      </div>
+                      {/* QR mock SVG */}
+                      {qrVisible === ev.id && (() => {
+                        const seed = ev.id.charCodeAt(2) ?? 1;
+                        const cells: number[] = [];
+                        for (let i = 0; i < 49; i++) {
+                          cells.push(((seed * (i + 7) * 13) % 17) < 9 ? 1 : 0);
+                        }
+                        [0,1,6,7,42,43,48].forEach((idx) => { cells[idx] = 1; });
+                        const portfolioUrl = `qhuma.es/portfolio/lucas-garcia/ev-${ev.id}`;
+                        return (
+                          <div className="mt-3 bg-background rounded-xl p-3 border border-card-border flex items-center gap-4">
+                            <div className="flex-shrink-0 bg-white p-2 rounded-lg border border-card-border">
+                              <svg width="64" height="64" viewBox="0 0 7 7" shapeRendering="crispEdges">
+                                {cells.map((v, i) => v ? (
+                                  <rect key={i} x={i % 7} y={Math.floor(i / 7)} width="1" height="1" fill="#1f514c" />
+                                ) : null)}
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-semibold text-text-primary mb-0.5">{lbl("Código QR de la evidencia", "Evidence QR code")}</p>
+                              <p className="text-[9px] text-text-muted leading-relaxed mb-1">{lbl("Escanea para acceder a esta evidencia directamente en el portfolio público de Lucas García.", "Scan to access this evidence directly in Lucas García's public portfolio.")}</p>
+                              <p className="text-[9px] font-mono text-accent-text truncate">{portfolioUrl}</p>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
