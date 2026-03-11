@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp } from "lucide-react";
+import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -94,6 +94,13 @@ export default function TeacherGradeBook() {
   // T17 — PDF export
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [exportPDFFilename, setExportPDFFilename] = useState<string | null>(null);
+
+  // T18 — Feedback textual por alumno
+  const [expandedAlumno, setExpandedAlumno] = useState<string | null>(null);
+  const [comentariosTrimestral, setComentariosTrimestral] = useState<Record<string, string>>({});
+  const [generandoFeedback, setGenerandoFeedback] = useState<string | null>(null);
+  const [feedbackGenerado, setFeedbackGenerado] = useState<Record<string, string>>({});
+  const [copiadoFeedback, setCopiadoFeedback] = useState<string | null>(null);
 
   // T14 — Historial de cambios
   const [historialCambios, setHistorialCambios] = useState<HistorialCambio[]>([]);
@@ -204,6 +211,49 @@ export default function TeacherGradeBook() {
     URL.revokeObjectURL(url);
     setExportPDFFilename(filename);
     setTimeout(() => setIsExportingPDF(false), 1200);
+  };
+
+  // T18: Generar borrador IA por alumno
+  const handleGenerarFeedbackIA = async (alumnoId: string) => {
+    if (generandoFeedback) return;
+    setGenerandoFeedback(alumnoId);
+    const alumno = classStudents.find((s) => s.id === alumnoId);
+    if (!alumno) { setGenerandoFeedback(null); return; }
+    const notas = COMPS.map((c) => `${c}:${activeGrades[alumnoId]?.[c] ?? 3}`).join(", ");
+    const comentario = comentariosTrimestral[alumnoId] ?? "";
+    const prompt = `Redacta un breve comentario trimestral (2-3 frases) para el alumno ${alumno.name} con estas notas LOMLOE: ${notas}.${comentario ? ` Observaciones del docente: "${comentario}".` : ""} Usa tono académico, constructivo y personalizado.`;
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: prompt, mode: "pitchcoach" }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const texto = (data.reply ?? data.message ?? data.text ?? "").trim();
+        setFeedbackGenerado((prev) => ({ ...prev, [alumnoId]: texto || generarFeedbackMock(alumno.name, alumnoId) }));
+      } else {
+        setFeedbackGenerado((prev) => ({ ...prev, [alumnoId]: generarFeedbackMock(alumno.name, alumnoId) }));
+      }
+    } catch {
+      setFeedbackGenerado((prev) => ({ ...prev, [alumnoId]: generarFeedbackMock(alumno.name, alumnoId) }));
+    }
+    setGenerandoFeedback(null);
+  };
+
+  const generarFeedbackMock = (nombre: string, alumnoId: string): string => {
+    const nombre1 = nombre.split(" ")[0];
+    const fuerte = COMPS.find((c) => (activeGrades[alumnoId]?.[c] ?? 3) >= 4) ?? "CE";
+    const mejorar = COMPS.find((c) => (activeGrades[alumnoId]?.[c] ?? 3) <= 2) ?? null;
+    return `${nombre1} ha mostrado un progreso notable este trimestre, con especial destaque en ${compNombre[fuerte]}. ${mejorar ? `Se recomienda reforzar ${compNombre[mejorar]} mediante actividades de apoyo personalizadas.` : "Ha alcanzado los objetivos planteados en todas las competencias clave."} Su actitud participativa y colaborativa es un activo para el grupo.`;
+  };
+
+  const handleCopiarFeedback = async (alumnoId: string) => {
+    const texto = feedbackGenerado[alumnoId];
+    if (!texto) return;
+    try { await navigator.clipboard.writeText(texto); } catch {}
+    setCopiadoFeedback(alumnoId);
+    setTimeout(() => setCopiadoFeedback(null), 2000);
   };
 
   // T12: Alerta trimestral — alumnos con nivel 1 en ≥ 3 competencias (T16: usa activeGrades)
@@ -365,7 +415,9 @@ export default function TeacherGradeBook() {
               {classStudents.map((alumno, idx) => {
                 const avg = rowAvg(alumno.id);
                 const avgCfg = nivelConfig[Math.round(avg) as Nivel] ?? nivelConfig[3];
+                const isExpanded = expandedAlumno === alumno.id;
                 return (
+                  <>
                   <tr
                     key={alumno.id}
                     className={`border-b border-card-border/50 hover:bg-background/40 transition-colors ${idx % 2 === 0 ? "" : "bg-background/20"}`}
@@ -384,6 +436,18 @@ export default function TeacherGradeBook() {
                             <AlertTriangle size={10} className="text-urgent flex-shrink-0" />
                           </span>
                         )}
+                        <button
+                          onClick={() => setExpandedAlumno(isExpanded ? null : alumno.id)}
+                          title="Comentario y feedback IA"
+                          className={`ml-auto flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                            isExpanded
+                              ? "bg-accent-light text-accent-text border-accent-text/30"
+                              : "bg-background text-text-muted border-card-border hover:border-accent-text/30"
+                          }`}
+                        >
+                          <MessageSquare size={8} />
+                          {isExpanded ? <ChevronUp size={8} /> : <ChevronDown size={8} />}
+                        </button>
                       </div>
                     </td>
 
@@ -453,6 +517,65 @@ export default function TeacherGradeBook() {
                       </div>
                     </td>
                   </tr>
+                  {/* T18 — Panel de feedback textual expandido */}
+                  {isExpanded && (
+                    <tr key={`feedback-${alumno.id}`}>
+                      <td colSpan={COMPS.length + 2} className="px-5 py-3 bg-accent-light/40 border-b border-accent-text/10">
+                        <div className="flex gap-4">
+                          {/* Textarea comentario docente */}
+                          <div className="flex-1">
+                            <label className="text-[10px] font-semibold text-text-secondary block mb-1">
+                              Comentario trimestral del docente
+                            </label>
+                            <textarea
+                              value={comentariosTrimestral[alumno.id] ?? ""}
+                              onChange={(e) =>
+                                setComentariosTrimestral((prev) => ({ ...prev, [alumno.id]: e.target.value }))
+                              }
+                              placeholder={`Observaciones sobre ${alumno.name.split(" ")[0]} para ${trimestre}...`}
+                              className="w-full text-[11px] text-text-primary bg-card border border-card-border rounded-xl px-3 py-2 resize-none outline-none focus:border-accent-text/40 h-[68px] placeholder:text-text-muted"
+                            />
+                          </div>
+                          {/* Borrador IA */}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-[10px] font-semibold text-text-secondary">
+                                Borrador IA
+                              </label>
+                              {feedbackGenerado[alumno.id] && (
+                                <button
+                                  onClick={() => handleCopiarFeedback(alumno.id)}
+                                  className="flex items-center gap-1 text-[9px] font-semibold px-2 py-0.5 rounded-lg border border-card-border bg-card text-text-secondary hover:border-accent-text/30 transition-all cursor-pointer"
+                                >
+                                  {copiadoFeedback === alumno.id
+                                    ? <><CheckCircle2 size={9} className="text-success" /> Copiado</>
+                                    : <><Copy size={9} /> Copiar</>
+                                  }
+                                </button>
+                              )}
+                            </div>
+                            {feedbackGenerado[alumno.id] ? (
+                              <div className="bg-card border border-accent-text/20 rounded-xl px-3 py-2 text-[10px] text-text-primary leading-relaxed h-[68px] overflow-y-auto">
+                                {feedbackGenerado[alumno.id]}
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleGenerarFeedbackIA(alumno.id)}
+                                disabled={!!generandoFeedback}
+                                className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-2 rounded-xl bg-sidebar text-white cursor-pointer hover:brightness-110 transition-all disabled:opacity-60 mt-1"
+                              >
+                                {generandoFeedback === alumno.id
+                                  ? <><RefreshCw size={11} className="animate-spin" /> Generando...</>
+                                  : <><MessageSquare size={11} /> Generar borrador IA</>
+                                }
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </>
                 );
               })}
 
