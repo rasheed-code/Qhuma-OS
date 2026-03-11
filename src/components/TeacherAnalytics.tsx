@@ -1,6 +1,7 @@
 "use client";
 
-import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 
@@ -27,6 +28,17 @@ const semanas = [
   { label: "17 mar", entregas: 23, meta: 90, actual: true },
 ];
 
+const sinActividadHoy = [
+  { id: "p", nombre: "Pablo Ruiz",    avatar: "PR", ultimaAct: "Hace 3 días", tarea: "Plantillas de comunicación" },
+  { id: "t", nombre: "Tomás Herrera", avatar: "TH", ultimaAct: "Hace 2 días", tarea: "Análisis de mercado" },
+];
+
+function sparklineWeek(si: number, weekIdx: number, currentProgress: number): number {
+  const base = Math.max(10, currentProgress - (3 - weekIdx) * 9);
+  const noise = ((si * 11 + weekIdx * 7 + 5) % 14) - 7;
+  return Math.max(5, Math.min(100, base + noise));
+}
+
 const tiempoAsignatura = [
   { nombre: "Matemáticas",    pct: 28 },
   { nombre: "Lengua",         pct: 22 },
@@ -37,6 +49,8 @@ const tiempoAsignatura = [
 ];
 
 export default function TeacherAnalytics() {
+  const [contactados, setContactados] = useState<Set<string>>(new Set());
+
   const progMedio = Math.round(classStudents.reduce((s, a) => s + a.progress, 0) / classStudents.length);
   const totalEntregas = classStudents.reduce((s, a) => s + a.evidencesSubmitted, 0);
 
@@ -175,6 +189,44 @@ export default function TeacherAnalytics() {
             </div>
           </div>
 
+          {/* Sin actividad hoy */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <ZapOff size={14} className="text-urgent" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Sin actividad hoy</h3>
+              <span className="ml-auto text-[9px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
+                {sinActividadHoy.length} alumnos
+              </span>
+            </div>
+            <div className="space-y-2">
+              {sinActividadHoy.map((a) => {
+                const yaContactado = contactados.has(a.id);
+                return (
+                  <div key={a.id} className="flex items-center gap-3 bg-urgent-light rounded-xl p-3">
+                    <div className="w-8 h-8 rounded-full bg-sidebar text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                      {a.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-semibold text-text-primary">{a.nombre}</p>
+                      <p className="text-[10px] text-text-muted">Última actividad: {a.ultimaAct} · Pendiente: {a.tarea}</p>
+                    </div>
+                    <button
+                      onClick={() => setContactados((prev) => new Set([...prev, a.id]))}
+                      className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer flex-shrink-0 ${
+                        yaContactado
+                          ? "bg-success-light text-success"
+                          : "bg-card text-urgent hover:brightness-95"
+                      }`}
+                    >
+                      {yaContactado ? <CheckCircle2 size={11} /> : <MessageSquare size={11} />}
+                      {yaContactado ? "Contactado" : "Contactar"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Tabla de riesgo */}
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-4">
@@ -257,6 +309,48 @@ export default function TeacherAnalytics() {
             </div>
           </div>
 
+          {/* Distribución LOMLOE por competencia */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 size={14} className="text-text-primary" />
+              <h3 className="text-[13px] font-semibold text-text-primary">Distribución LOMLOE</h3>
+            </div>
+            <div className="flex gap-2 mb-3">
+              {([1, 2, 3, 4] as const).map((n) => (
+                <div key={n} className="flex items-center gap-1">
+                  <div className={`w-2.5 h-2.5 rounded-sm ${levelConfig[n].bg}`} />
+                  <span className="text-[8px] text-text-muted">{n}</span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              {competencies.map((comp, ci) => {
+                const counts = [0, 0, 0, 0];
+                classStudents.forEach((_, si) => { counts[seededLevel(si, ci) - 1]++; });
+                const total = classStudents.length;
+                return (
+                  <div key={comp.key}>
+                    <span className="text-[9px] font-bold text-text-secondary block mb-0.5">{comp.key}</span>
+                    <div className="flex h-3 rounded-full overflow-hidden">
+                      {counts.map((c, i) => {
+                        const pct = (c / total) * 100;
+                        const bgClasses = ["bg-urgent-light", "bg-warning-light", "bg-accent-light", "bg-success-light"];
+                        return pct > 0 ? (
+                          <div
+                            key={i}
+                            className={bgClasses[i]}
+                            style={{ width: `${pct}%` }}
+                            title={`Nivel ${i + 1}: ${c} alumnos`}
+                          />
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Mejores alumnos */}
           <div className="bg-card rounded-2xl border border-card-border p-5">
             <div className="flex items-center gap-2 mb-3">
@@ -279,6 +373,48 @@ export default function TeacherAnalytics() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Comparativa de progreso semanal — sparklines */}
+      <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp size={14} className="text-text-primary" />
+          <h3 className="text-[14px] font-semibold text-text-primary">Progreso semanal por alumno</h3>
+          <span className="ml-auto text-[10px] text-text-muted">Semanas 1 → 4 del proyecto</span>
+        </div>
+        <div className="grid grid-cols-6 gap-3">
+          {classStudents.map((alumno, si) => {
+            const weeks = [0, 1, 2, 3].map((w) => sparklineWeek(si, w, alumno.progress));
+            const max = Math.max(...weeks);
+            const trend = weeks[3] - weeks[0];
+            return (
+              <div key={alumno.id} className="bg-background rounded-xl p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0">
+                    {alumno.avatar}
+                  </div>
+                  <span className="text-[10px] font-semibold text-text-primary truncate">{alumno.name.split(" ")[0]}</span>
+                </div>
+                {/* Mini sparkline bars */}
+                <div className="flex items-end gap-0.5 h-8">
+                  {weeks.map((val, wi) => (
+                    <div
+                      key={wi}
+                      className={`flex-1 rounded-sm transition-all ${wi === 3 ? "bg-accent-text" : "bg-accent-light"}`}
+                      style={{ height: `${(val / max) * 100}%`, minHeight: "4px" }}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-[9px] text-text-muted">{weeks[0]}%</span>
+                  <span className={`text-[9px] font-bold ${trend >= 0 ? "text-success" : "text-urgent"}`}>
+                    {trend >= 0 ? "+" : ""}{trend}%
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
