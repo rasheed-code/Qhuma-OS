@@ -27,6 +27,8 @@ import {
   Code,
   Sparkles,
   TrendingUp,
+  CalendarDays,
+  LayoutGrid,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -39,6 +41,8 @@ import {
   projectImpact,
 } from "@/data/gamification";
 import { Task } from "@/types";
+import WeeklyProgressView from "./WeeklyProgressView";
+import TeacherChat from "./TeacherChat";
 
 const taskIcons = [
   { icon: Monitor, label: "Landing Page" },
@@ -68,6 +72,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   );
   const [missionAccepted, setMissionAccepted] = useState(false);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"today" | "week">("today");
 
   const doneTasks = today.tasks.filter((t) => t.status === "completed");
   const progressPercent = Math.round(
@@ -85,39 +90,74 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         {/* CD1: Epic Meaning — Hero Reframing */}
         <div className="mb-6">
           {/* Level badge + streak pills */}
-          <div className="flex items-center gap-2 mb-3">
-            <div className="inline-flex items-center gap-1.5 bg-accent-light px-3 py-1 rounded-full">
-              <Trophy size={12} className="text-accent-text" />
-              <span className="text-[11px] font-semibold text-accent-text">
-                Lvl {playerLevel.level} — {playerLevel.title}
-              </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 bg-accent-light px-3 py-1 rounded-full">
+                <Trophy size={12} className="text-accent-text" />
+                <span className="text-[11px] font-semibold text-accent-text">
+                  Lvl {playerLevel.level} — {playerLevel.title}
+                </span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 bg-warning-light px-3 py-1 rounded-full">
+                <Flame size={12} className="text-warning" />
+                <span className="text-[11px] font-semibold text-warning">
+                  {currentStudent.streak}-day streak
+                </span>
+              </div>
             </div>
-            <div className="inline-flex items-center gap-1.5 bg-warning-light px-3 py-1 rounded-full">
-              <Flame size={12} className="text-warning" />
-              <span className="text-[11px] font-semibold text-warning">
-                {currentStudent.streak}-day streak
-              </span>
+            {/* View toggle */}
+            <div className="flex items-center gap-1 bg-background rounded-xl p-1">
+              <button
+                onClick={() => setViewMode("today")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                  viewMode === "today"
+                    ? "bg-white shadow-sm text-text-primary"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                <LayoutGrid size={11} />
+                Hoy
+              </button>
+              <button
+                onClick={() => setViewMode("week")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
+                  viewMode === "week"
+                    ? "bg-white shadow-sm text-text-primary"
+                    : "text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                <CalendarDays size={11} />
+                Semana
+              </button>
             </div>
           </div>
 
           <h1 className="text-[42px] font-semibold text-text-primary leading-[1.15]">
-            Today&apos;s Mission
+            {viewMode === "today" ? "Misión de Hoy" : "Tu Semana"}
           </h1>
           <div className="flex items-center gap-3 mt-1">
             <span className="text-[16px] text-text-secondary">
-              Lucas&apos;s Airbnb
+              El Airbnb de Lucas · Málaga
             </span>
             {onOpenProject && (
               <button
                 onClick={onOpenProject}
                 className="flex items-center gap-1 text-[12px] font-medium text-accent-text hover:text-sidebar transition-colors cursor-pointer"
               >
-                View Project
+                Ver Proyecto
                 <ChevronRight size={14} />
               </button>
             )}
           </div>
         </div>
+
+        {/* WEEKLY VIEW */}
+        {viewMode === "week" && (
+          <WeeklyProgressView onOpenTask={onOpenTask} />
+        )}
+
+        {/* TODAY VIEW — only show when viewMode is "today" */}
+        {viewMode === "today" && <>
 
         {/* CD2: Accomplishment — Level Progression Bar */}
         <div className="mb-6">
@@ -536,64 +576,13 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             ))}
           </div>
         </div>
+
+        </> /* END TODAY VIEW */}
       </div>
 
-      {/* Right: Chat widget — UNCHANGED */}
+      {/* Right: AI Chat — now fully powered by Gemini */}
       <div className="w-[300px] flex-shrink-0">
-        {/* Chat header with gradient pill */}
-        <div className="bg-background rounded-2xl flex flex-col h-[520px]">
-          {/* Gradient header */}
-          <div className="p-4 pb-3">
-            <div className="inline-flex items-center gap-1.5 bg-gradient-to-r from-sidebar to-accent-dark px-3 py-1.5 rounded-full mb-3">
-              <MessageCircle size={12} className="text-accent" />
-              <span className="text-[11px] font-semibold text-white">
-                Chat with Prof. Ana
-              </span>
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 pb-3 flex flex-col gap-3">
-            {chatMessages.map((msg) => {
-              const isTeacher = msg.sender === "teacher";
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    isTeacher ? "items-start" : "items-end"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 ${
-                      isTeacher
-                        ? "bg-white rounded-tl-sm"
-                        : "bg-[#d9e8fc] text-text-primary rounded-tr-sm"
-                    }`}
-                  >
-                    <p className="text-[12px] leading-relaxed">{msg.message}</p>
-                  </div>
-                  <span className="text-[9px] text-text-muted mt-1 px-1">
-                    {msg.time}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Input */}
-          <div className="px-3 py-3">
-            <div className="flex items-center gap-2 bg-white rounded-xl px-3 py-2.5">
-              <input
-                type="text"
-                placeholder="Type something.."
-                className="flex-1 bg-transparent text-[12px] text-text-primary placeholder:text-text-muted outline-none"
-              />
-              <button className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center hover:bg-accent-dark transition-colors cursor-pointer">
-                <Send size={12} className="text-accent" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <TeacherChat role="student" />
       </div>
     </div>
   );

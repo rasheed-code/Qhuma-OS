@@ -455,14 +455,15 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
   };
 
   return (
-    <div className="max-w-3xl">
+    <div className="flex gap-6">
+    <div className="flex-1 min-w-0 max-w-3xl">
       {/* Back button */}
       <button
         onClick={onBack}
         className="flex items-center gap-1.5 text-[13px] text-text-muted hover:text-text-primary transition-colors cursor-pointer mb-6"
       >
         <ArrowLeft size={16} />
-        Back to Dashboard
+        Volver al Dashboard
       </button>
 
       {/* Task header */}
@@ -549,6 +550,171 @@ export default function TaskWorkspace({ taskId, onBack }: TaskWorkspaceProps) {
 
       {/* Evidence Submission */}
       <EvidenceSection submission={workspace.evidenceSubmission} task={task} />
+    </div>
+
+    {/* Right: Mentor IA contextual */}
+    <div className="w-[280px] flex-shrink-0">
+      <MentorSidebar task={task} currentStepId={expandedStepId} workspace={workspace} />
+    </div>
+    </div>
+  );
+}
+
+// ---- Mentor IA Sidebar ----
+import { useState as useSt, useRef as useRf } from "react";
+import { Brain, Send as SendIcon, Loader2 as Loader, Sparkles as Sp } from "lucide-react";
+
+interface MentorSidebarProps {
+  task: Task;
+  currentStepId: string | null;
+  workspace: import("@/types").TaskWorkspaceData;
+}
+
+function MentorSidebar({ task, currentStepId, workspace }: MentorSidebarProps) {
+  const currentStep = workspace.steps.find(s => s.id === currentStepId);
+  const [question, setQuestion] = useSt("");
+  const [answer, setAnswer] = useSt<string | null>(null);
+  const [loading, setLoading] = useSt(false);
+  const inputRef = useRf<HTMLInputElement>(null);
+
+  const quickHints = currentStep
+    ? [
+        `¿Cómo hago "${currentStep.title}"?`,
+        "¿Qué entrego exactamente?",
+        "Dame un ejemplo",
+      ]
+    : ["¿Cómo empiezo?", "¿Qué es una competencia?", "Explícame la tarea"];
+
+  const askMentor = async (q: string) => {
+    if (!q.trim() || loading) return;
+    setLoading(true);
+    setAnswer(null);
+    try {
+      const context = currentStep
+        ? `El alumno está en el paso: "${currentStep.title}". Instrucción: "${currentStep.instruction}". Tarea general: "${task.title}".`
+        : `El alumno está viendo la tarea: "${task.title}". Descripción: "${task.description}".`;
+
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: q,
+          history: [{ sender: "teacher", message: `Contexto: ${context}` }],
+        }),
+      });
+      const data = await res.json();
+      setAnswer(data.reply ?? "No pude responder ahora mismo.");
+    } catch {
+      setAnswer("Estoy teniendo problemas de conexión. ¡Sigue adelante!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="sticky top-4">
+      <div className="bg-card rounded-2xl border border-card-border overflow-hidden">
+        {/* Header */}
+        <div
+          className="px-4 py-3.5"
+          style={{ background: "linear-gradient(135deg, var(--sidebar) 0%, var(--accent-dark) 100%)" }}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center">
+              <Brain size={13} className="text-accent" />
+            </div>
+            <div>
+              <span className="text-[12px] font-semibold text-white block leading-tight">Mentor IA</span>
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                <span className="text-[9px] text-white/60">Contextual · Siempre disponible</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Current context */}
+        {currentStep && (
+          <div className="px-4 py-3 bg-accent-light border-b border-accent/20">
+            <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-0.5">
+              Paso actual
+            </span>
+            <span className="text-[11px] font-semibold text-accent-text leading-tight">
+              {currentStep.title}
+            </span>
+          </div>
+        )}
+
+        {/* Answer area */}
+        {answer && (
+          <div className="px-4 py-3 border-b border-border">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sp size={11} className="text-accent-text" />
+              <span className="text-[10px] font-semibold text-accent-text">Respuesta</span>
+            </div>
+            <p className="text-[11px] text-text-secondary leading-relaxed whitespace-pre-wrap">
+              {answer}
+            </p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="px-4 py-4 flex items-center gap-2 border-b border-border">
+            <Loader size={13} className="text-accent-text animate-spin" />
+            <span className="text-[11px] text-text-muted">Pensando...</span>
+          </div>
+        )}
+
+        {/* Quick hints */}
+        <div className="px-4 py-3 border-b border-border">
+          <span className="text-[9px] text-text-muted font-semibold uppercase tracking-wide block mb-2">
+            Preguntas rápidas
+          </span>
+          <div className="flex flex-col gap-1.5">
+            {quickHints.map((hint) => (
+              <button
+                key={hint}
+                onClick={() => {
+                  setQuestion(hint);
+                  askMentor(hint);
+                }}
+                className="text-left text-[10px] text-accent-text bg-accent-light border border-accent/30 px-2.5 py-1.5 rounded-xl hover:bg-accent/20 transition-colors cursor-pointer leading-snug"
+              >
+                {hint}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Free-form input */}
+        <div className="px-3 py-3">
+          <div className="flex items-center gap-2 bg-background rounded-xl px-3 py-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  askMentor(question);
+                  setQuestion("");
+                }
+              }}
+              placeholder="Pregunta algo..."
+              className="flex-1 bg-transparent text-[11px] text-text-primary placeholder:text-text-muted outline-none"
+              disabled={loading}
+            />
+            <button
+              onClick={() => { askMentor(question); setQuestion(""); }}
+              disabled={loading || !question.trim()}
+              className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center cursor-pointer disabled:opacity-40"
+            >
+              <SendIcon size={10} className="text-accent" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

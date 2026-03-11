@@ -171,44 +171,59 @@ export default function StudentCompetencies() {
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-[32px] font-semibold text-text-primary leading-tight">My Competencies</h1>
-          <p className="text-[14px] text-text-secondary mt-1">LOMLOE Framework — Trimester 1</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-[32px] font-semibold text-text-primary leading-tight">Mis Competencias</h1>
+              <p className="text-[14px] text-text-secondary mt-1">Marco LOMLOE · 8 competencias clave · Trimestre 1</p>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[11px] text-text-muted">Media general</span>
+              <span className="text-[28px] font-bold text-accent-text">
+                {Math.round(competencies.reduce((s, c) => s + c.progress, 0) / competencies.length)}%
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Summary pills */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-background rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-success-light flex items-center justify-center">
+          <div className="bg-success-light rounded-xl p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-success/10 flex items-center justify-center">
               <TrendingUp size={16} className="text-success" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">Strongest</span>
-              <span className="text-[13px] font-semibold text-text-primary">{strongest.shortName} {strongest.progress}%</span>
+              <span className="text-[10px] text-text-muted font-medium block">Tu fuerte</span>
+              <span className="text-[13px] font-bold text-success">{strongest.shortName} · {strongest.progress}%</span>
             </div>
           </div>
-          <div className="bg-background rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-accent-light flex items-center justify-center">
+          <div className="bg-accent-light rounded-xl p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-accent-text/10 flex items-center justify-center">
               <TrendingUp size={16} className="text-accent-text" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">Most Growth</span>
-              <span className="text-[13px] font-semibold text-text-primary">{mostGrowth.shortName} +{mostGrowth.progress - mostGrowth.previousProgress}%</span>
+              <span className="text-[10px] text-text-muted font-medium block">Mayor crecimiento</span>
+              <span className="text-[13px] font-bold text-accent-text">{mostGrowth.shortName} · +{mostGrowth.progress - mostGrowth.previousProgress}%</span>
             </div>
           </div>
-          <div className="bg-background rounded-xl p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-warning-light flex items-center justify-center">
+          <div className="bg-warning-light rounded-xl p-3 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-warning/10 flex items-center justify-center">
               <AlertTriangle size={16} className="text-warning" />
             </div>
             <div>
-              <span className="text-[10px] text-text-muted font-medium block">Needs Work</span>
-              <span className="text-[13px] font-semibold text-text-primary">{weakest.shortName} {weakest.progress}%</span>
+              <span className="text-[10px] text-text-muted font-medium block">A trabajar</span>
+              <span className="text-[13px] font-bold text-warning">{weakest.shortName} · {weakest.progress}%</span>
             </div>
           </div>
         </div>
 
         {/* Radar chart */}
         <div className="bg-card rounded-2xl p-5 border border-card-border mb-6">
-          <h2 className="text-[16px] font-semibold text-text-primary mb-2">Competency Map</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[16px] font-semibold text-text-primary">Mapa de Competencias</h2>
+            <span className="text-[10px] text-text-muted bg-background px-2.5 py-1 rounded-full">
+              Actualizado hoy
+            </span>
+          </div>
           <RadarChart data={competencies} />
         </div>
 
@@ -227,9 +242,9 @@ export default function StudentCompetencies() {
 
       {/* Right panel */}
       <div className="w-[300px] flex-shrink-0 flex flex-col gap-4">
-        {/* Growth This Week */}
+        {/* Crecimiento esta semana */}
         <div className="bg-card rounded-2xl p-5 border border-card-border">
-          <h3 className="text-[14px] font-semibold text-text-primary mb-4">Growth This Week</h3>
+          <h3 className="text-[14px] font-semibold text-text-primary mb-4">Crecimiento esta semana</h3>
           <div className="flex flex-col gap-3">
             {competencies.map((comp) => {
               const delta = comp.progress - comp.previousProgress;
@@ -249,9 +264,9 @@ export default function StudentCompetencies() {
           </div>
         </div>
 
-        {/* Related Evidence */}
+        {/* Evidencias relacionadas */}
         <div className="bg-card rounded-2xl p-5 border border-card-border">
-          <h3 className="text-[14px] font-semibold text-text-primary mb-4">Recent Evidence</h3>
+          <h3 className="text-[14px] font-semibold text-text-primary mb-4">Evidencias recientes</h3>
           <div className="flex flex-col gap-3">
             {recentEvidence.map((ev) => (
               <div key={ev.taskId} className="flex items-start gap-2.5 pb-3 border-b border-card-border last:border-0 last:pb-0">

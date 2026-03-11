@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "qhumaOS — Dashboard",
-  description: "Spain's First AI-Centric School Platform",
+  title: "qhumaOS — La plataforma educativa del futuro",
+  description: "El primer sistema operativo educativo con IA adaptativa, aprendizaje por proyectos y mentoría personalizada. Alineado con la LOMLOE.",
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={`${inter.variable} antialiased font-sans`}>
         {children}
       </body>

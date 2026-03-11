@@ -12,6 +12,10 @@ import {
   Lightbulb,
   ArrowRight,
   FileText,
+  Download,
+  Loader2,
+  Sparkles,
+  Heart,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { weekSchedule } from "@/data/tasks";
@@ -82,6 +86,39 @@ const upcomingDeliverables = [
 
 export default function ParentDashboard({ onNavigate }: ParentDashboardProps) {
   const [activeTab, setActiveTab] = useState<CardTab>("overview");
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [aiReport, setAiReport] = useState<{
+    summary?: string; strengths?: string[]; improvements?: string[]; encouragement?: string;
+  } | null>(null);
+
+  const generateFamilyReport = async () => {
+    setGeneratingReport(true);
+    setReportGenerated(false);
+    try {
+      const compData = competencies.map(c => ({ key: c.key, progress: c.progress }));
+      const res = await fetch("/api/generate-lomloe-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentName: "Lucas García",
+          studentClass: "1º ESO",
+          projectName: "Gestiona tu Airbnb en Málaga",
+          competencies: compData,
+          evidencesCount: currentStudent.evidencesSubmitted,
+          streak: currentStudent.streak,
+          reportType: "family",
+        }),
+      });
+      const data = await res.json();
+      if (!data.error) {
+        setAiReport(data);
+        setReportGenerated(true);
+      }
+    } catch { /* silent */ } finally {
+      setGeneratingReport(false);
+    }
+  };
 
   const completedTasks = weekSchedule
     .flatMap((d) => d.tasks)
@@ -146,24 +183,65 @@ export default function ParentDashboard({ onNavigate }: ParentDashboardProps) {
               </div>
 
               <div className="bg-accent-light rounded-xl p-4 mb-4 border border-accent-text/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center">
-                    <span className="text-accent text-[9px] font-bold">AI</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center">
+                      <Sparkles size={10} className="text-accent" />
+                    </div>
+                    <span className="text-[11px] font-semibold text-accent-text">
+                      Resumen inteligente de la semana
+                    </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-accent-text">
-                    Weekly Intelligence Summary
-                  </span>
+                  <button
+                    onClick={generateFamilyReport}
+                    disabled={generatingReport}
+                    className="flex items-center gap-1.5 text-[10px] font-semibold text-accent-text bg-white/60 hover:bg-white transition-colors px-2.5 py-1 rounded-lg cursor-pointer disabled:opacity-60 border border-accent/30"
+                  >
+                    {generatingReport ? (
+                      <Loader2 size={10} className="animate-spin" />
+                    ) : (
+                      <Download size={10} />
+                    )}
+                    {generatingReport ? "Generando..." : "Informe IA"}
+                  </button>
                 </div>
-                <p className="text-[13px] text-text-primary leading-relaxed">
-                  Lucas had a <strong>strong start</strong> to Phase 2. His
-                  landing page was highlighted by Prof. Ana as one of the best
-                  in class — excellent design and copy. This afternoon he moves
-                  into <strong>financial calculations</strong>: pricing, profit
-                  margins, and IVA applied to a real Airbnb. His{" "}
-                  <strong>Entrepreneurial competency jumped +8%</strong> this
-                  week. Demo Day is Friday — he needs to prepare a 5-slide pitch
-                  by Thursday.
-                </p>
+
+                {/* AI Report if generated */}
+                {aiReport && reportGenerated ? (
+                  <div>
+                    <p className="text-[13px] text-text-primary leading-relaxed mb-3">
+                      {aiReport.summary}
+                    </p>
+                    {aiReport.strengths && aiReport.strengths.length > 0 && (
+                      <div className="mb-2">
+                        <span className="text-[10px] font-bold text-success uppercase tracking-wide block mb-1">
+                          Puntos fuertes
+                        </span>
+                        {aiReport.strengths.map((s, i) => (
+                          <div key={i} className="flex items-start gap-1.5 mb-1">
+                            <CheckCircle2 size={10} className="text-success mt-0.5 flex-shrink-0" />
+                            <span className="text-[11px] text-text-secondary">{s}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {aiReport.encouragement && (
+                      <div className="flex items-start gap-2 bg-white/50 rounded-lg p-2.5 mt-2">
+                        <Heart size={12} className="text-urgent flex-shrink-0 mt-0.5" />
+                        <span className="text-[11px] text-text-primary italic">{aiReport.encouragement}</span>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[13px] text-text-primary leading-relaxed">
+                    Lucas ha tenido un <strong>inicio muy sólido</strong> en la Fase 2. Su
+                    página de aterrizaje fue destacada por la Prof. Ana como una de las mejores
+                    de clase. Esta tarde trabaja en <strong>cálculos financieros</strong>:
+                    precios, márgenes y IVA en un Airbnb real. Su{" "}
+                    <strong>competencia Emprendedora subió +8%</strong> esta
+                    semana. El Demo Day es el viernes — necesita preparar un pitch de 5 diapositivas.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-4 gap-3">
