@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy } from "lucide-react";
+import { FileSpreadsheet, Download, FileText, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2, BarChart3, ArrowUp, ArrowDown, ArrowRight, History, ChevronDown, ChevronUp, MessageSquare, Copy, Eye, X } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -94,6 +94,9 @@ export default function TeacherGradeBook() {
   // T17 — PDF export
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [exportPDFFilename, setExportPDFFilename] = useState<string | null>(null);
+
+  // T19 — Vista resumen por alumno (modal)
+  const [alumnoResumenId, setAlumnoResumenId] = useState<string | null>(null);
 
   // T18 — Feedback textual por alumno
   const [expandedAlumno, setExpandedAlumno] = useState<string | null>(null);
@@ -448,6 +451,14 @@ export default function TeacherGradeBook() {
                           <MessageSquare size={8} />
                           {isExpanded ? <ChevronUp size={8} /> : <ChevronDown size={8} />}
                         </button>
+                        {/* T19 — Ver resumen */}
+                        <button
+                          onClick={() => setAlumnoResumenId(alumno.id)}
+                          title="Ver resumen del alumno"
+                          className="flex items-center gap-0.5 text-[9px] font-semibold px-1.5 py-0.5 rounded-lg border bg-background text-text-muted border-card-border hover:border-accent-text/30 hover:text-accent-text transition-all cursor-pointer"
+                        >
+                          <Eye size={8} />
+                        </button>
                       </div>
                     </td>
 
@@ -794,6 +805,180 @@ export default function TeacherGradeBook() {
           );
         })}
       </div>
+
+      {/* T19 — Modal vista resumen por alumno */}
+      {alumnoResumenId && (() => {
+        const alumno = classStudents.find((s) => s.id === alumnoResumenId);
+        if (!alumno) return null;
+        const t1g = gradesTrimAnterior[alumnoResumenId] ?? {};
+        const t2g = initialGrades[alumnoResumenId] ?? {};
+        const t3g = gradesT3[alumnoResumenId] ?? {};
+        const avg = rowAvg(alumnoResumenId);
+        const histFiltered = historialCambios.filter((h) => h.alumnoNombre === alumno.name.split(" ")[0]);
+
+        // SVG radar helpers
+        const cx = 80, cy = 80, maxR = 60;
+        const angles = COMPS.map((_, i) => ((i * 360) / 8 - 90) * (Math.PI / 180));
+        const toPoint = (val: number, i: number) => {
+          const r = (val / 4) * maxR;
+          return { x: cx + r * Math.cos(angles[i]), y: cy + r * Math.sin(angles[i]) };
+        };
+        const gridPoly = (level: number) =>
+          COMPS.map((_, i) => {
+            const r = (level / 4) * maxR;
+            return `${cx + r * Math.cos(angles[i])},${cy + r * Math.sin(angles[i])}`;
+          }).join(" ");
+        const dataPoly = (grds: Record<string, Nivel>) =>
+          COMPS.map((c, i) => { const p = toPoint(grds[c] ?? 3, i); return `${p.x},${p.y}`; }).join(" ");
+        const labelPos = (i: number) => {
+          const r = maxR + 13;
+          return { x: cx + r * Math.cos(angles[i]), y: cy + r * Math.sin(angles[i]) };
+        };
+
+        return (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setAlumnoResumenId(null)}>
+            <div className="bg-card rounded-2xl border border-card-border w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+              {/* Header modal */}
+              <div className="flex items-center gap-3 px-6 py-4 border-b border-card-border">
+                <div className="w-10 h-10 rounded-full bg-sidebar text-white font-bold text-[13px] flex items-center justify-center flex-shrink-0">
+                  {alumno.avatar}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-text-primary">{alumno.name}</p>
+                  <p className="text-[11px] text-text-muted">1º ESO A · Proyecto Airbnb Málaga · Media global {avg.toFixed(1)}/4</p>
+                </div>
+                {alertasTrimestral.some((a) => a.id === alumnoResumenId) && (
+                  <span className="flex items-center gap-1 text-[9px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">
+                    <AlertTriangle size={9} /> Alerta
+                  </span>
+                )}
+                <button onClick={() => setAlumnoResumenId(null)} className="text-text-muted hover:text-text-primary cursor-pointer flex-shrink-0">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="p-6 grid grid-cols-5 gap-5">
+                {/* Columna izquierda — Radar SVG */}
+                <div className="col-span-2">
+                  <p className="text-[11px] font-semibold text-text-secondary mb-3">Radar de competencias (T2)</p>
+                  <svg width="160" height="160" viewBox="0 0 160 160" className="mx-auto">
+                    {/* Grid rings */}
+                    {([1, 2, 3, 4] as Nivel[]).map((lvl) => (
+                      <polygon key={lvl} points={gridPoly(lvl)} fill="none" stroke="#ededed" strokeWidth="1" />
+                    ))}
+                    {/* Axis lines */}
+                    {COMPS.map((_, i) => {
+                      const p = toPoint(4, i);
+                      return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#ededed" strokeWidth="1" />;
+                    })}
+                    {/* T1 polygon */}
+                    <polygon points={dataPoly(t1g as Record<string, Nivel>)} fill="#f59e0b" fillOpacity="0.15" stroke="#f59e0b" strokeWidth="1.5" strokeOpacity="0.5" />
+                    {/* T3 polygon */}
+                    <polygon points={dataPoly(t3g as Record<string, Nivel>)} fill="#22c55e" fillOpacity="0.15" stroke="#22c55e" strokeWidth="1.5" strokeOpacity="0.5" />
+                    {/* T2 polygon (active) */}
+                    <polygon points={dataPoly(t2g as Record<string, Nivel>)} fill="#2f574d" fillOpacity="0.25" stroke="#2f574d" strokeWidth="2" />
+                    {/* Labels */}
+                    {COMPS.map((c, i) => {
+                      const lp = labelPos(i);
+                      return <text key={c} x={lp.x} y={lp.y} textAnchor="middle" dominantBaseline="middle" fontSize="8" fontWeight="bold" fill="#666666">{c}</text>;
+                    })}
+                  </svg>
+                  {/* Leyenda radar */}
+                  <div className="flex flex-col gap-1 mt-2">
+                    {[
+                      { t: "T1", color: "bg-warning", opacity: "opacity-60" },
+                      { t: "T2", color: "bg-accent-text", opacity: "" },
+                      { t: "T3", color: "bg-success", opacity: "opacity-60" },
+                    ].map((l) => (
+                      <div key={l.t} className="flex items-center gap-1.5">
+                        <div className={`w-3 h-1.5 rounded-sm ${l.color} ${l.opacity}`} />
+                        <span className="text-[9px] text-text-muted">{l.t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Columna central — Comparativa T1/T2/T3 */}
+                <div className="col-span-2">
+                  <p className="text-[11px] font-semibold text-text-secondary mb-3">Comparativa trimestral</p>
+                  <div className="space-y-2">
+                    {COMPS.map((c) => {
+                      const v1 = (t1g[c] ?? 3) as Nivel;
+                      const v2 = (t2g[c] ?? 3) as Nivel;
+                      const v3 = (t3g[c] ?? 3) as Nivel;
+                      return (
+                        <div key={c} className="flex items-center gap-2">
+                          <span className="text-[9px] font-bold text-text-secondary w-10">{c}</span>
+                          <div className="flex-1 flex items-end gap-0.5 h-7">
+                            {[
+                              { v: v1, cls: "bg-warning opacity-70", t: "T1" },
+                              { v: v2, cls: "bg-accent-text", t: "T2" },
+                              { v: v3, cls: "bg-success opacity-70", t: "T3" },
+                            ].map(({ v, cls, t }) => (
+                              <div key={t} className="flex-1 flex flex-col items-center gap-0.5">
+                                <span className="text-[7px] font-bold text-text-muted">{v}</span>
+                                <div className={`w-full rounded-t-sm ${cls}`} style={{ height: `${(v / 4) * 20}px` }} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-3 mt-2 pt-2 border-t border-card-border">
+                    {[{ t: "T1", cls: "bg-warning" }, { t: "T2", cls: "bg-accent-text" }, { t: "T3", cls: "bg-success" }].map((l) => (
+                      <div key={l.t} className="flex items-center gap-1"><div className={`w-2 h-2 rounded-sm ${l.cls} opacity-80`} /><span className="text-[8px] text-text-muted">{l.t}</span></div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Columna derecha — Historial + Feedback T18 */}
+                <div className="col-span-1 flex flex-col gap-3">
+                  {/* Historial filtrado */}
+                  <div>
+                    <p className="text-[11px] font-semibold text-text-secondary mb-2">Cambios recientes</p>
+                    {histFiltered.length === 0 ? (
+                      <p className="text-[10px] text-text-muted italic">Sin cambios registrados</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {histFiltered.slice(0, 4).map((h, i) => (
+                          <div key={i} className="flex items-center gap-1.5 bg-background rounded-lg px-2 py-1.5">
+                            <div className={`w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 ${h.nivelNuevo > h.nivelAnterior ? "bg-success-light" : "bg-urgent-light"}`}>
+                              {h.nivelNuevo > h.nivelAnterior ? <ArrowUp size={8} className="text-success" /> : <ArrowDown size={8} className="text-urgent" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[9px] font-bold text-accent-text">{h.competencia}</span>
+                              <span className="text-[8px] text-text-muted ml-1">{h.nivelAnterior}→{h.nivelNuevo}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Feedback T18 */}
+                  {(comentariosTrimestral[alumnoResumenId] || feedbackGenerado[alumnoResumenId]) && (
+                    <div>
+                      <p className="text-[11px] font-semibold text-text-secondary mb-2">Feedback docente</p>
+                      {comentariosTrimestral[alumnoResumenId] && (
+                        <div className="bg-background rounded-lg px-2 py-2 mb-2">
+                          <p className="text-[9px] font-bold text-text-muted mb-0.5">Comentario</p>
+                          <p className="text-[9px] text-text-primary leading-relaxed">{comentariosTrimestral[alumnoResumenId]}</p>
+                        </div>
+                      )}
+                      {feedbackGenerado[alumnoResumenId] && (
+                        <div className="bg-accent-light rounded-lg px-2 py-2">
+                          <p className="text-[9px] font-bold text-accent-text mb-0.5">Borrador IA</p>
+                          <p className="text-[9px] text-text-primary leading-relaxed line-clamp-4">{feedbackGenerado[alumnoResumenId]}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
