@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Mic, Timer, ChevronRight, ChevronLeft, Star, Target,
   MessageSquare, BarChart3, Lightbulb, CheckCircle2, Play, Pause, RotateCcw,
-  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History,
+  Users, TrendingUp, AlertCircle, Sparkles, Loader2, BookOpen, ChevronDown, ChevronUp, History, Download, RefreshCw,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -661,6 +661,49 @@ export default function PitchLab() {
     ensayoSeccionAnteriorRef.current = -1;
   };
 
+  // C21 — Exportar guión completo
+  const [exportandoGuion, setExportandoGuion] = useState(false);
+  const [guionExportado, setGuionExportado] = useState<string | null>(null);
+
+  const handleExportarGuion = () => {
+    if (exportandoGuion) return;
+    setExportandoGuion(true);
+    const fecha = new Date().toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "2-digit" });
+    const filename = `guion_pitch_airbnb_malaga_${new Date().toISOString().slice(0, 10)}.pdf`;
+    const seccionesHTML = pitchSections.map((s) => {
+      const texto = notes[s.id] ?? "";
+      const palabras = texto.split(/\s+/).filter(Boolean).length;
+      const score = sectionScores?.[s.id];
+      const scoreColor = score !== undefined ? (score >= 7 ? "#22c55e" : score >= 5 ? "#f59e0b" : "#ef4444") : "#9ca3af";
+      const guion = guionPorSeccion[s.id];
+      const puntosHtml = guion?.puntos
+        .map((p) => `<li style="margin-bottom:4px;padding-left:4px;${p.clave ? "font-weight:bold;color:#1f514c" : "color:#666666"}">${p.clave ? "★ " : ""}${p.texto}</li>`)
+        .join("") ?? "";
+      return `
+        <div style="background:#fff;border:1px solid #ededed;border-radius:10px;padding:18px 20px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h2 style="font-size:14px;color:#1f514c;margin:0">${s.title}</h2>
+            ${score !== undefined ? `<span style="font-size:14px;font-weight:bold;color:${scoreColor}">${score}/10</span>` : ""}
+          </div>
+          <p style="font-size:10px;color:#9ca3af;margin:0 0 8px">${s.subtitle} · ${palabras} palabras · objetivo ~${s.wordTarget}</p>
+          ${texto ? `<div style="background:#f4f0e9;border-radius:8px;padding:12px;font-size:11px;color:#141414;line-height:1.6;white-space:pre-wrap;margin-bottom:10px">${texto.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>` : `<p style="font-style:italic;color:#9ca3af;font-size:11px">Sección no completada.</p>`}
+          ${puntosHtml ? `<div style="margin-top:8px"><p style="font-size:9px;font-weight:bold;color:#2f574d;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.05em">Puntos clave del guión</p><ul style="padding-left:16px;margin:0">${puntosHtml}</ul></div>` : ""}
+          ${guion?.transicion ? `<p style="margin-top:8px;font-style:italic;font-size:10px;color:#2f574d;border-left:3px solid #c3f499;padding-left:8px">${guion.transicion}</p>` : ""}
+        </div>`;
+    }).join("");
+    const scoreResumen = feedback
+      ? feedback.map((fb) => `<div style="display:inline-block;background:#f4f0e9;border-radius:8px;padding:6px 12px;margin:3px;text-align:center"><span style="display:block;font-size:16px;font-weight:bold;color:#1f514c">${fb.score}</span><span style="font-size:9px;color:#9ca3af">${fb.categoria}</span></div>`).join("")
+      : "";
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Guión de Pitch — El Airbnb de Lucas · Málaga</title><style>*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11px;color:#141414;margin:36px;line-height:1.5}h1{font-size:20px;color:#1f514c;margin-bottom:2px}p.meta{color:#9ca3af;font-size:10px;margin-bottom:18px}.footer{margin-top:24px;font-size:9px;color:#9ca3af;border-top:1px solid #ededed;padding-top:10px}</style></head><body><h1>Guión de Pitch — El Airbnb de Lucas · Málaga</h1><p class="meta">Alumno: Lucas García · 1º ESO QHUMA · Proyecto Airbnb Málaga · ${fecha}</p>${scoreResumen ? `<div style="margin-bottom:16px">${scoreResumen}</div>` : ""}${seccionesHTML}<p class="footer">Guión generado por QHUMA OS PitchLab · Proyecto Airbnb Málaga · Lucas García · 1º ESO</p></body></html>`;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    setGuionExportado(filename);
+    setTimeout(() => setExportandoGuion(false), 1200);
+  };
+
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
     if (!texto.trim() || coachingSection) return;
     setCoachingSection(sectionId);
@@ -1295,8 +1338,19 @@ export default function PitchLab() {
                 </p>
               </div>
               <div className="ml-auto flex gap-3">
+                {/* C21 — Exportar guión completo */}
                 <button
-                  onClick={() => { setMode("write"); setFeedback(null); setSectionScores(null); }}
+                  onClick={handleExportarGuion}
+                  disabled={exportandoGuion}
+                  className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                >
+                  {exportandoGuion
+                    ? <><RefreshCw size={12} className="animate-spin" />{lbl("Generando...", "Generating...")}</>
+                    : <><Download size={12} />{lbl("Descargar guión", "Download script")}</>
+                  }
+                </button>
+                <button
+                  onClick={() => { setMode("write"); setFeedback(null); setSectionScores(null); setGuionExportado(null); }}
                   className="flex items-center gap-1.5 border border-white/20 text-white text-[11px] font-semibold px-4 py-2.5 rounded-xl cursor-pointer hover:bg-white/10 transition-all"
                 >
                   <RotateCcw size={13} />
@@ -1304,6 +1358,15 @@ export default function PitchLab() {
                 </button>
               </div>
             </div>
+
+            {/* C21 — Feedback filename badge */}
+            {guionExportado && !exportandoGuion && (
+              <div className="col-span-3 flex items-center gap-2 bg-success-light border border-success/20 rounded-xl px-4 py-2.5">
+                <CheckCircle2 size={13} className="text-success flex-shrink-0" />
+                <span className="text-[11px] text-success font-medium flex-1">{lbl("Guión descargado:", "Script downloaded:")} {guionExportado}</span>
+                <button onClick={() => setGuionExportado(null)} className="text-text-muted hover:text-text-primary cursor-pointer text-[11px]">✕</button>
+              </div>
+            )}
 
             {/* Category scores */}
             {feedback.map((fb, i) => (
