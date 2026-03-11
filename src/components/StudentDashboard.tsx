@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Clock,
   CheckCircle2,
@@ -29,6 +29,9 @@ import {
   TrendingUp,
   CalendarDays,
   LayoutGrid,
+  Activity,
+  Play,
+  Pause,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -75,6 +78,20 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
   const [showLevelUp, setShowLevelUp] = useState(false);
+  const [showCuerpoWidget, setShowCuerpoWidget] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(600);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  useEffect(() => {
+    if (!timerRunning || timerSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setTimerSeconds((s) => {
+        if (s <= 1) { setTimerRunning(false); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerRunning, timerSeconds]);
 
   const doneTasks = today.tasks.filter((t) => t.status === "completed");
   const progressPercent = Math.round(
@@ -107,7 +124,16 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 </span>
               </div>
             </div>
-            {/* View toggle */}
+            {/* Cuerpo demo trigger */}
+            <button
+              onClick={() => { setShowCuerpoWidget(true); setTimerSeconds(600); setTimerRunning(false); }}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-background text-text-muted text-[10px] font-medium hover:text-accent-text transition-colors cursor-pointer"
+              title="Simular 90 minutos de pantalla"
+            >
+              <Activity size={11} />
+              Demo 90 min
+            </button>
+          {/* View toggle */}
             <div className="flex items-center gap-1 bg-background rounded-xl p-1">
               <button
                 onClick={() => setViewMode("today")}
@@ -219,6 +245,50 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
             <Zap size={22} className="text-sidebar" />
           </div>
         </div>
+
+        {/* C5: Cuerpo como herramienta — widget neurociencia */}
+        {showCuerpoWidget && (
+          <div className="relative overflow-hidden bg-sidebar rounded-2xl p-5 mb-6">
+            <div className="absolute top-3 right-3 opacity-10">
+              <Activity size={52} className="text-accent" />
+            </div>
+            <div className="flex items-center gap-2 mb-3">
+              <Activity size={15} className="text-accent" />
+              <span className="text-[12px] font-bold text-accent uppercase tracking-wider">Cuerpo como Herramienta</span>
+              <div className="ml-auto flex items-center gap-1 bg-white/10 px-2 py-0.5 rounded-full">
+                <Clock size={10} className="text-white/50" />
+                <span className="text-[10px] text-white/50 font-medium">Llevas 90 min en pantalla</span>
+              </div>
+            </div>
+            <p className="text-[13px] text-white/85 leading-relaxed mb-1 pr-10">
+              Tu cerebro necesita un descanso activo. La neurociencia muestra que el movimiento libera BDNF (Factor Neurotrófico Derivado del Cerebro), mejorando la memoria y la concentración hasta un 20% en las siguientes 2 horas.
+            </p>
+            <p className="text-[11px] text-white/40 mb-4 italic">Muévete 10 minutos → más capacidad cognitiva para el resto del día.</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/10 rounded-xl px-5 py-3 text-center min-w-[80px]">
+                  <span className="text-[28px] font-bold text-white block leading-none">
+                    {String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:{String(timerSeconds % 60).padStart(2, "0")}
+                  </span>
+                  <span className="text-[9px] text-white/35 block mt-0.5">minutos</span>
+                </div>
+                <button
+                  onClick={() => setTimerRunning(!timerRunning)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[12px] font-semibold rounded-xl transition-all cursor-pointer"
+                >
+                  {timerRunning ? <Pause size={14} /> : <Play size={14} />}
+                  {timerRunning ? "Pausar" : "Iniciar"}
+                </button>
+              </div>
+              <button
+                onClick={() => { setShowCuerpoWidget(false); setTimerRunning(false); setTimerSeconds(600); }}
+                className="px-4 py-2.5 bg-accent text-sidebar text-[12px] font-bold rounded-xl hover:brightness-110 transition-all cursor-pointer"
+              >
+                ✓ Volver al trabajo
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* CD7: Unpredictability — Flash Mission Card */}
         <div className="relative overflow-hidden bg-gradient-to-r from-sidebar to-accent-dark rounded-2xl p-5 mb-6">
