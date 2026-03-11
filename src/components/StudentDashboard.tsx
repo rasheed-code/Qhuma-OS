@@ -43,6 +43,7 @@ import {
 import { Task } from "@/types";
 import WeeklyProgressView from "./WeeklyProgressView";
 import TeacherChat from "./TeacherChat";
+import LevelUpModal from "./LevelUpModal";
 
 const taskIcons = [
   { icon: Monitor, label: "Landing Page" },
@@ -73,6 +74,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [missionAccepted, setMissionAccepted] = useState(false);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"today" | "week">("today");
+  const [showLevelUp, setShowLevelUp] = useState(false);
 
   const doneTasks = today.tasks.filter((t) => t.status === "completed");
   const progressPercent = Math.round(
@@ -175,7 +177,25 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
               style={{ width: `${levelPercent}%` }}
             />
           </div>
+          <div className="flex justify-end mt-1.5">
+            <button
+              onClick={() => setShowLevelUp(true)}
+              className="text-[10px] text-accent-text font-semibold underline underline-offset-2 cursor-pointer hover:opacity-70 transition-opacity"
+            >
+              ¡Simulador de subida de nivel!
+            </button>
+          </div>
         </div>
+
+        <LevelUpModal
+          isOpen={showLevelUp}
+          onClose={() => setShowLevelUp(false)}
+          prevLevel={playerLevel.level}
+          newLevel={playerLevel.level + 1}
+          newTitle={playerLevel.nextTitle}
+          xpGained={playerLevel.xpRequired - playerLevel.xpCurrent}
+          unlockedFeature="Modo Socrático con tu tutor IA"
+        />
 
         {/* Progress card */}
         <div className="bg-background rounded-2xl p-5 mb-6 flex items-center gap-4">
