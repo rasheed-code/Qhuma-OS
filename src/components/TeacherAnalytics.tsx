@@ -77,6 +77,18 @@ const tiempoAsignatura = [
   { nombre: "Arte",           pct: 6  },
 ];
 
+// ── T33: Tendencia semanal T1 ─────────────────────────────────────────────
+const t1CompTendencia: Record<string, { sem: number[] }> = {
+  CLC:   { sem: [2.1, 2.4, 2.7, 3.1] },
+  CPL:   { sem: [1.8, 2.0, 2.3, 2.5] },
+  STEM:  { sem: [2.5, 2.8, 3.1, 3.4] },
+  CD:    { sem: [2.3, 2.6, 3.0, 3.3] },
+  CPSAA: { sem: [2.0, 2.2, 2.6, 2.9] },
+  CC:    { sem: [1.9, 2.1, 2.4, 2.7] },
+  CE:    { sem: [2.2, 2.6, 3.0, 3.5] },
+  CCEC:  { sem: [1.7, 1.9, 2.2, 2.4] },
+};
+
 export default function TeacherAnalytics() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
@@ -933,6 +945,108 @@ export default function TeacherAnalytics() {
           </div>
         );
       })()}
+
+      {/* ── T33: Tendencia semanal T1 — evolución competencial ──────────────── */}
+      <div className="bg-card rounded-2xl border border-card-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={14} className="text-accent-text" />
+            <h3 className="text-[14px] font-semibold text-text-primary">
+              {lbl("Tendencia semanal T1 — 8 competencias LOMLOE", "Weekly T1 trend — 8 LOMLOE competencies")}
+            </h3>
+          </div>
+          <span className="text-[10px] text-text-muted bg-background px-2 py-1 rounded-lg border border-card-border">
+            {lbl("Media clase · escala 1–4", "Class avg · scale 1–4")}
+          </span>
+        </div>
+
+        {/* Summary KPIs */}
+        {(() => {
+          const compKeys = Object.keys(t1CompTendencia);
+          const totMejora = compKeys.filter(k => {
+            const d = t1CompTendencia[k];
+            return d.sem[3] - d.sem[0] >= 0.8;
+          }).length;
+          const mejorComp = compKeys.reduce((best, k) => {
+            const delta = t1CompTendencia[k].sem[3] - t1CompTendencia[k].sem[0];
+            const bestDelta = t1CompTendencia[best].sem[3] - t1CompTendencia[best].sem[0];
+            return delta > bestDelta ? k : best;
+          }, compKeys[0]);
+          const mediaFinal = compKeys.reduce((s, k) => s + t1CompTendencia[k].sem[3], 0) / compKeys.length;
+          const mediaInicio = compKeys.reduce((s, k) => s + t1CompTendencia[k].sem[0], 0) / compKeys.length;
+          return (
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="bg-success-light rounded-xl p-3 text-center">
+                <p className="text-[18px] font-black text-success leading-none">{mediaFinal.toFixed(1)}</p>
+                <p className="text-[9px] text-success font-medium mt-0.5">{lbl("Media final T1", "T1 final avg")}</p>
+                <p className="text-[9px] text-text-muted">{lbl("Inicio:", "Start:")} {mediaInicio.toFixed(1)}</p>
+              </div>
+              <div className="bg-accent-light rounded-xl p-3 text-center">
+                <p className="text-[18px] font-black text-accent-text leading-none">+{(mediaFinal - mediaInicio).toFixed(2)}</p>
+                <p className="text-[9px] text-accent-text font-medium mt-0.5">{lbl("Mejora global", "Global improvement")}</p>
+                <p className="text-[9px] text-text-muted">{lbl("Promedio 8 comps.", "Avg 8 comps.")}</p>
+              </div>
+              <div className="bg-background rounded-xl p-3 text-center border border-card-border">
+                <p className="text-[13px] font-black text-text-primary leading-none">{mejorComp}</p>
+                <p className="text-[9px] text-text-secondary font-medium mt-0.5">{lbl("Más mejorada", "Most improved")}</p>
+                <p className="text-[9px] text-success">
+                  +{(t1CompTendencia[mejorComp].sem[3] - t1CompTendencia[mejorComp].sem[0]).toFixed(1)} pts
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Competency sparklines */}
+        <div className="space-y-2.5">
+          {Object.entries(t1CompTendencia).map(([comp, data]) => {
+            const delta = data.sem[3] - data.sem[0];
+            const pctFinal = (data.sem[3] / 4) * 100;
+            const color = data.sem[3] >= 3.5 ? "bg-success" : data.sem[3] >= 2.5 ? "bg-accent-text" : data.sem[3] >= 2 ? "bg-warning" : "bg-urgent";
+            const textColor = data.sem[3] >= 3.5 ? "text-success" : data.sem[3] >= 2.5 ? "text-accent-text" : data.sem[3] >= 2 ? "text-warning" : "text-urgent";
+            const maxVal = 4;
+            return (
+              <div key={comp} className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-text-primary w-10 flex-shrink-0">{comp}</span>
+                {/* Sparkline bars */}
+                <div className="flex items-end gap-0.5 h-8 flex-shrink-0">
+                  {data.sem.map((v, wi) => {
+                    const h = Math.round((v / maxVal) * 100);
+                    const isLast = wi === data.sem.length - 1;
+                    return (
+                      <div key={wi} className="flex flex-col items-center gap-0.5 w-5">
+                        <div
+                          className={`w-full rounded-sm transition-all ${isLast ? color : "bg-border"}`}
+                          style={{ height: `${h}%` }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Progress bar final value */}
+                <div className="flex-1 bg-border rounded-full h-1.5 overflow-hidden">
+                  <div className={`h-full ${color} rounded-full`} style={{ width: `${pctFinal}%` }} />
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0 w-20 justify-end">
+                  <span className={`text-[11px] font-bold ${textColor}`}>{data.sem[3].toFixed(1)}</span>
+                  <span className={`text-[9px] font-semibold ${delta >= 0 ? "text-success" : "text-urgent"}`}>
+                    {delta >= 0 ? "+" : ""}{delta.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Weekly label axis */}
+        <div className="flex items-center mt-3 pl-[52px] gap-0.5">
+          {["Sem 1", "Sem 2", "Sem 3", "Sem 4"].map((s) => (
+            <div key={s} className="w-5 text-center">
+              <span className="text-[7px] text-text-muted">{s.replace("Sem ", "S")}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
