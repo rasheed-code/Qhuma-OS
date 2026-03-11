@@ -2155,6 +2155,134 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── S38: Mi presupuesto Food Truck — gestiona tus 3.600 QC ─────── */}
+      {(() => {
+        const TOTAL = 3600;
+        interface Partida { id: string; nombre: string; emoji: string; descripcion: string; def: number; colorBar: string }
+        const partidas: Partida[] = [
+          { id: "ingredientes", nombre: lbl("Ingredientes", "Ingredients"),        emoji: "🥘", descripcion: lbl("Materias primas y producto fresco", "Raw materials and fresh produce"), def: 1200, colorBar: "bg-success" },
+          { id: "equipamiento", nombre: lbl("Equipamiento", "Equipment"),          emoji: "🔧", descripcion: lbl("Maquinaria, utensilios, mobiliario", "Machinery, utensils, furniture"),     def: 800,  colorBar: "bg-sidebar" },
+          { id: "diseno",       nombre: lbl("Diseño y branding", "Design & Brand"),emoji: "🎨", descripcion: lbl("Logo, menú visual, uniformes", "Logo, visual menu, uniforms"),             def: 400,  colorBar: "bg-warning" },
+          { id: "marketing",    nombre: lbl("Marketing", "Marketing"),             emoji: "📣", descripcion: lbl("Redes sociales, flyers, publicidad", "Social media, flyers, advertising"),   def: 300,  colorBar: "bg-urgent" },
+          { id: "ubicacion",    nombre: lbl("Ubicación", "Location"),              emoji: "📍", descripcion: lbl("Permisos y alquiler de espacio", "Permits and space rental"),               def: 500,  colorBar: "bg-accent-text" },
+          { id: "contingencia", nombre: lbl("Contingencia", "Contingency"),        emoji: "🛡️", descripcion: lbl("Reserva para imprevistos", "Reserve for unexpected costs"),                def: 400,  colorBar: "bg-text-muted" },
+        ];
+        const [valores, setValores] = useState<number[]>(partidas.map((p) => p.def));
+        const [guardando, setGuardando] = useState(false);
+        const [guardado, setGuardado] = useState(false);
+        const totalGastado = valores.reduce((s, v) => s + v, 0);
+        const restante = TOTAL - totalGastado;
+        const sobrePresupuesto = restante < 0;
+        const pctUsado = Math.min(100, Math.round((totalGastado / TOTAL) * 100));
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-warning-light flex items-center justify-center flex-shrink-0">
+                  <Coins size={14} className="text-warning" />
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                    {lbl("Mi presupuesto Food Truck", "My Food Truck Budget")}
+                  </h2>
+                  <p className="text-[10px] text-text-secondary">{lbl("Gestiona tus 3.600 QC para el Trimestre 2", "Manage your 3,600 QC for Term 2")}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className={`text-[18px] font-bold leading-none ${sobrePresupuesto ? "text-urgent" : restante === 0 ? "text-success" : "text-text-primary"}`}>
+                  {restante < 0 ? `−${Math.abs(restante)}` : `+${restante}`} QC
+                </p>
+                <p className="text-[9px] text-text-muted">{sobrePresupuesto ? lbl("¡Te has pasado!", "Over budget!") : lbl("disponibles", "remaining")}</p>
+              </div>
+            </div>
+
+            {/* Total bar */}
+            <div className="mt-3 mb-4">
+              <div className="flex justify-between mb-1">
+                <span className="text-[9px] text-text-muted">{totalGastado.toLocaleString("es-ES")} QC {lbl("asignados", "allocated")}</span>
+                <span className="text-[9px] font-semibold text-text-primary">{pctUsado}% / 100%</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-border overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all ${sobrePresupuesto ? "bg-urgent" : pctUsado >= 90 ? "bg-warning" : "bg-success"}`}
+                  style={{ width: `${pctUsado}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Category rows */}
+            <div className="space-y-2 mb-4">
+              {partidas.map((p, i) => {
+                const val = valores[i];
+                const pct = Math.round((val / TOTAL) * 100);
+                return (
+                  <div key={p.id} className="bg-background rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <span className="text-base flex-shrink-0 leading-none">{p.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-text-primary">{p.nombre}</p>
+                        <p className="text-[9px] text-text-muted">{p.descripcion}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <input
+                          type="number"
+                          min={0}
+                          max={TOTAL}
+                          step={50}
+                          value={val}
+                          onChange={(e) => {
+                            const nv = Math.max(0, Math.min(TOTAL, Number(e.target.value)));
+                            setValores((prev) => { const next = [...prev]; next[i] = nv; return next; });
+                          }}
+                          className="w-16 text-right text-[11px] font-bold text-text-primary bg-card border border-card-border rounded-lg px-2 py-1 focus:outline-none focus:border-sidebar"
+                        />
+                        <span className="text-[9px] text-text-muted">QC</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full bg-border overflow-hidden">
+                        <div className={`h-full rounded-full ${p.colorBar}`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-[8px] text-text-muted w-6 text-right">{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Over-budget alert */}
+            {sobrePresupuesto && (
+              <div className="bg-urgent-light border border-urgent/20 rounded-xl px-3 py-2 mb-3 flex items-center gap-2">
+                <Calculator size={12} className="text-urgent flex-shrink-0" />
+                <p className="text-[10px] text-urgent leading-snug font-semibold">
+                  {lbl(`Has excedido el presupuesto en ${Math.abs(restante)} QC. Reduce alguna partida para poder guardar.`, `You're over budget by ${Math.abs(restante)} QC. Reduce a category to save.`)}
+                </p>
+              </div>
+            )}
+
+            {/* Save button */}
+            <button
+              onClick={() => { setGuardando(true); setTimeout(() => { setGuardando(false); setGuardado(true); setTimeout(() => setGuardado(false), 3000); }, 800); }}
+              disabled={guardando || sobrePresupuesto}
+              className="w-full flex items-center justify-center gap-2 bg-sidebar text-white text-[12px] font-bold py-2.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 mb-3"
+            >
+              {guardando ? <RefreshCw size={13} className="animate-spin" /> : guardado ? <CheckCircle2 size={13} /> : <Coins size={13} />}
+              {guardado ? lbl("¡Presupuesto guardado!", "Budget saved!") : lbl("Guardar presupuesto", "Save budget")}
+            </button>
+
+            {/* Pedagogical note */}
+            <div className="bg-accent-light rounded-xl px-3 py-2 border border-accent/20">
+              <p className="text-[10px] text-accent-text leading-snug">
+                {lbl(
+                  "Controlar los costes antes de empezar es lo que separa a un emprendedor de un soñador. Tu presupuesto es tu mapa de decisiones reales.",
+                  "Controlling costs before you start is what separates an entrepreneur from a dreamer. Your budget is your real decision map."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center justify-between mb-4">
