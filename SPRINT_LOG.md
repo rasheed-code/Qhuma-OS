@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 4 ✅ (push: `4479148`)
+- **Último ciclo completo**: Ciclo 5 ✅ (push: `14fc527`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 5
+- **Próximo ciclo**: Ciclo 6
 
 ---
 
@@ -112,28 +112,62 @@
 
 ---
 
-## Sprints pendientes — Ciclo 5
+## Ciclo 5 ✅ completado
 
-- [ ] [C4] PerfilInteligencias — sección en StudentProfile: 8 dimensiones (lingüística, lógica, espacial, musical, corporal, interpersonal, intrapersonal, naturalista), barras de progreso desde interacciones mock, metodología Gardner
-- [ ] [C5] CuerpoHerramienta — widget en StudentDashboard: aparece tras 90 min (simular con botón demo), micro-contenido neurociencia, temporizador 10 min regresivo, botón "Volver al trabajo"
-- [ ] [A2] AdminUserManagement — tabla 12 filas mock, búsqueda, filtros rol/estado, modal añadir usuario. Tab "Usuarios" en AdminDashboard.
-- [ ] [A5] QHUMACapital — lista proyectos en pitch, inversión solicitada (hasta €10.000), progreso votación, botón "Revisar pitch". Basado en QHUMA_Master_Document.md
+### [SPRINT-CULTURE][C4] PerfilInteligencias ✅
+- Commit: `d1300d2`
+- Archivo modificado: `src/components/StudentProfile.tsx`
+- Nueva sección "Perfil de Inteligencias" antes de Achievements
+- 8 dimensiones Gardner: lingüística, lógico-matemática, espacial, musical, corporal-cinestésica, interpersonal, intrapersonal, naturalista
+- Grid 2 columnas; barras degradado sidebar→accent; datos mock de 30 días de interacción
+- Texto introductorio: construido desde interacción, no test inicial
+- Imports añadidos: Brain, Music, Globe, Activity, Leaf, MessageSquare
+
+### [SPRINT-CULTURE][C5] CuerpoHerramienta ✅
+- Commit: `7de9eaa`
+- Archivo modificado: `src/components/StudentDashboard.tsx`
+- Botón "Demo 90 min" en fila de controles (junto al toggle Hoy/Semana)
+- Widget card bg-sidebar: mensaje BDNF + neurociencia, temporizador 10 min Play/Pause
+- "Volver al trabajo" cierra y reinicia el timer
+- useEffect con setInterval; se limpia al pausar o cerrar
+- Imports añadidos: useEffect, Activity, Play, Pause
+
+### [SPRINT-ADMIN][A2] AdminUserManagement ✅
+- Commit: `14fc527`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- usuariosMock expandido a 12 filas (añadidos: Lucía Fernández, Tomás Herrera, Isabel Mora, Roberto Núñez)
+- Búsqueda en tiempo real por nombre/email
+- Filtros select: rol y estado
+- Modal "Añadir usuario" con nombre, email, rol, grupo/curso
+- IIFE para evitar contaminar el scope del componente con las vars de filtrado
+
+### [SPRINT-ADMIN][A5] QHUMACapital ✅
+- Commit: `14fc527` (mismo commit que A2)
+- Archivos modificados: `src/components/AdminDashboard.tsx`, `src/types/index.ts`, `src/components/Sidebar.tsx`
+- AdminView ampliado con "capital"
+- Sidebar adminNav: nuevo ítem "Capital" (icono Landmark)
+- Tab "Capital" en AdminDashboard con: 4 KPIs, 5 proyectos mock con fases pitch/votación/aprobado/financiado
+- Barra de votos por proyecto, inversión hasta €10.000, botón "Revisar pitch"
+- faseConfig con colores del design system por fase
 
 ---
 
-## Sprints pendientes — Ciclo 6+
+## Sprints pendientes — Ciclo 6
 
 - [ ] [A3] AdminAIUsage — barras CSS uso IA por feature, coste €, heatmap uso por alumno
 - [ ] [A4] AdminSchoolSettings — form info colegio, checklist 8 competencias LOMLOE, calendario académico
+- [ ] [S6] MercadoRealTime — panel en StudentDashboard con tendencias laborales vinculadas al proyecto activo (Bloque 5 culture.md)
+- [ ] [S7] DeepDive — cuando el alumno lleva X minutos en un tema, la IA profundiza en vez de redirigir (culture.md Bloque 1)
+- [ ] [T6] TeacherComentarios — sistema de feedback inline en evidencias y tareas del alumno
 
 ---
 
 ## Notas técnicas (leer antes de cada ciclo)
 
-- **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab"
+- **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 5)
 - **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages"
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
-- **AdminView type**: "overview" | "users" | "ai" | "schools" | "reports"
+- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (añadido "capital" en Ciclo 5)
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
 - **StudentProfile**: no leer aún — C4 la modifica. Leer primero antes de editar.
