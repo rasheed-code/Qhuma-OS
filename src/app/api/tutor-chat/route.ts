@@ -38,9 +38,21 @@ REGLAS DE RESPUESTA:
 8. Conoces el rendimiento de Lucas: racha de 12 días, 340 Q-Coins, evidencias 9/16 entregadas
 9. Cuando uses el Modo Socrático, termina con "¿Qué se te ocurre?" o similar para mantener el diálogo abierto`;
 
+const DEEP_DIVE_ADDON = `
+
+MODO EXPLORACIÓN PROFUNDA ACTIVO:
+Lucas ha demostrado interés sostenido en este tema (ha generado más de 6 intercambios por iniciativa propia). Ahora ve más profundo en lugar de respuestas estándar.
+- Si habla de precios → introduce elasticidad de demanda y revenue management
+- Si habla de marketing → introduce análisis de cohortes de huéspedes y lifetime value
+- Si habla de operaciones → introduce escalabilidad y gestión de múltiples propiedades
+- Usa siempre la analogía: "¿Qué haría un profesional con 5 años de experiencia en este sector?"
+- Conecta cada concepto con tendencias reales del mercado laboral en turismo digital en España
+- Premia la iniciativa explícitamente: "Estás yendo exactamente al nivel al que van los mejores en esto."
+- Sigue usando el Modo Socrático, pero las preguntas de retorno deben ser de nivel experto`;
+
 export async function POST(request: NextRequest) {
   try {
-    const { message, history } = await request.json();
+    const { message, history, deepDive } = await request.json();
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
@@ -64,11 +76,15 @@ export async function POST(request: NextRequest) {
       parts: [{ text: message }],
     });
 
+    const systemInstruction = deepDive === true
+      ? SYSTEM_PROMPT + DEEP_DIVE_ADDON
+      : SYSTEM_PROMPT;
+
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents,
       config: {
-        systemInstruction: SYSTEM_PROMPT,
+        systemInstruction,
         temperature: 0.85,
         maxOutputTokens: 300,
       },

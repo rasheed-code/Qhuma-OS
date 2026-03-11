@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Loader2, Brain } from "lucide-react";
+import { Send, Sparkles, Loader2, Brain, Telescope } from "lucide-react";
 import { chatMessages as initialMessages } from "@/data/students";
 import { Role, ChatMessage } from "@/types";
 
@@ -30,8 +30,17 @@ export default function TeacherChat({ role }: { role: Role }) {
   );
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [deepDiveMode, setDeepDiveMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-activate Deep Dive when student has sent 6+ messages (sustained engagement)
+  const studentMsgCount = messages.filter((m) => m.sender === "student").length;
+  useEffect(() => {
+    if (role === "student" && studentMsgCount >= 6 && !deepDiveMode) {
+      setDeepDiveMode(true);
+    }
+  }, [studentMsgCount, role, deepDiveMode]);
 
   const title =
     role === "student"
@@ -88,7 +97,7 @@ export default function TeacherChat({ role }: { role: Role }) {
       const res = await fetch("/api/tutor-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history: historyToSend }),
+        body: JSON.stringify({ message: text, history: historyToSend, deepDive: deepDiveMode }),
       });
 
       const data = await res.json();
@@ -167,6 +176,12 @@ export default function TeacherChat({ role }: { role: Role }) {
               <span className="text-[8px] text-accent font-bold tracking-wide">SOCRÁTICO</span>
             </div>
           )}
+          {role === "student" && deepDiveMode && (
+            <div className="flex items-center gap-1 bg-warning/25 px-2 py-0.5 rounded-full">
+              <Telescope size={8} className="text-warning" />
+              <span className="text-[8px] text-warning font-bold tracking-wide">DEEP DIVE</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -229,6 +244,30 @@ export default function TeacherChat({ role }: { role: Role }) {
               {s}
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Deep Dive demo trigger — visible for students */}
+      {role === "student" && !deepDiveMode && (
+        <div className="px-3 pb-2">
+          <button
+            onClick={() => setDeepDiveMode(true)}
+            className="flex items-center gap-1.5 text-[10px] text-text-muted hover:text-accent-text transition-colors cursor-pointer"
+            title="Simula haber mantenido una conversación larga"
+          >
+            <Telescope size={10} />
+            Demo: activar Exploración Profunda
+          </button>
+        </div>
+      )}
+      {role === "student" && deepDiveMode && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center gap-1.5 bg-warning-light rounded-xl px-3 py-2 border border-warning/20">
+            <Telescope size={12} className="text-warning flex-shrink-0" />
+            <p className="text-[10px] text-text-secondary leading-tight">
+              <strong className="text-warning">Exploración Profunda activa</strong> — La IA irá más a fondo en cada respuesta y conectará con el mercado laboral real.
+            </p>
+          </div>
         </div>
       )}
 
