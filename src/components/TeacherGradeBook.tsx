@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileSpreadsheet, Download, Info, TrendingUp } from "lucide-react";
+import { FileSpreadsheet, Download, Info, TrendingUp, AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react";
 import { classStudents } from "@/data/students";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
@@ -48,6 +48,8 @@ export default function TeacherGradeBook() {
   const [editing, setEditing] = useState<string | null>(null); // "studentId-comp"
   const [editVal, setEditVal] = useState("");
   const [tooltipComp, setTooltipComp] = useState<CompKey | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportFilename, setExportFilename] = useState<string | null>(null);
 
   const saveEdit = useCallback(() => {
     if (!editing) return;
@@ -74,6 +76,31 @@ export default function TeacherGradeBook() {
   const avgColor = (avg: number) =>
     avg >= 3.5 ? "text-success" : avg >= 2.5 ? "text-accent-text" : avg >= 1.5 ? "text-text-primary" : "text-urgent";
 
+  // T12: CSV export
+  const handleExportCSV = () => {
+    setIsExporting(true);
+    const fecha = new Date().toISOString().slice(0, 10);
+    const filename = `notas_lomloe_T2_1eso_${fecha}.csv`;
+    const header = ["Alumno", ...COMPS, "Media"];
+    const filas = classStudents.map((s) => {
+      const avg = rowAvg(s.id).toFixed(2);
+      return [s.name, ...COMPS.map((c) => grades[s.id]?.[c] ?? 3), avg].join(",");
+    });
+    const csv = [header.join(","), ...filas].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    setExportFilename(filename);
+    setTimeout(() => setIsExporting(false), 1200);
+  };
+
+  // T12: Alerta trimestral — alumnos con nivel 1 en ≥ 3 competencias
+  const alertasTrimestral = classStudents.filter((s) =>
+    COMPS.filter((c) => (grades[s.id]?.[c] ?? 3) === 1).length >= 3
+  );
+
   return (
     <div>
       {/* Header */}
@@ -87,11 +114,21 @@ export default function TeacherGradeBook() {
             Competencias LOMLOE · 1º ESO · Semana 3 · Proyecto Airbnb Málaga
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all">
-            <Download size={13} />
-            Exportar LOMLOE
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={handleExportCSV}
+            disabled={isExporting}
+            className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2 rounded-xl cursor-pointer hover:border-accent-text/30 transition-all disabled:opacity-60"
+          >
+            {isExporting ? <RefreshCw size={13} className="animate-spin" /> : <Download size={13} />}
+            {isExporting ? "Exportando..." : "Exportar notas CSV"}
           </button>
+          {exportFilename && (
+            <div className="flex items-center gap-1">
+              <CheckCircle2 size={9} className="text-success" />
+              <span className="text-[9px] text-success font-mono">{exportFilename}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -110,6 +147,24 @@ export default function TeacherGradeBook() {
           <span className="text-[10px] text-text-muted">Haz clic en cualquier celda para editar</span>
         </div>
       </div>
+
+      {/* T12: Panel de alertas trimestrales */}
+      {alertasTrimestral.length > 0 && (
+        <div className="bg-urgent-light border border-urgent/20 rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
+          <AlertTriangle size={15} className="text-urgent flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-semibold text-text-primary">
+              Alerta trimestral — {alertasTrimestral.length} alumno{alertasTrimestral.length > 1 ? "s" : ""} con nivel 1 en 3 o más competencias
+            </p>
+            <p className="text-[10px] text-text-muted mt-0.5">
+              {alertasTrimestral.map((s) => s.name.split(" ")[0]).join(", ")} · Requieren plan de apoyo urgente
+            </p>
+          </div>
+          <span className="text-[9px] font-bold bg-urgent text-white px-2 py-0.5 rounded-full flex-shrink-0">
+            Urgente
+          </span>
+        </div>
+      )}
 
       {/* Tabla */}
       <div className="bg-card rounded-2xl border border-card-border overflow-hidden">
@@ -158,6 +213,11 @@ export default function TeacherGradeBook() {
                         <span className="text-[12px] font-medium text-text-primary whitespace-nowrap">
                           {alumno.name.split(" ")[0]}
                         </span>
+                        {alertasTrimestral.some((a) => a.id === alumno.id) && (
+                          <span title="Alerta trimestral: nivel 1 en ≥3 competencias">
+                            <AlertTriangle size={10} className="text-urgent flex-shrink-0" />
+                          </span>
+                        )}
                       </div>
                     </td>
 
