@@ -3,7 +3,7 @@ export type DayStatus = "completed" | "current" | "upcoming";
 export type Role = "student" | "parent" | "teacher" | "admin";
 export type ViewMode = "daily" | "kanban";
 export type StudentView = "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio";
-export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator";
+export type TeacherView = "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages";
 export type ParentView = "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings";
 export type AdminView = "overview" | "users" | "ai" | "schools" | "reports";
 

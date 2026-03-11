@@ -74,6 +74,7 @@ const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: stri
   { icon: FileSpreadsheet, labelEs: "Notas",       labelEn: "Grades",    view: "gradebook" },
   { icon: Calendar,        labelEs: "Calendario",  labelEn: "Calendar",  view: "calendar" },
   { icon: User,            labelEs: "Alumnos",     labelEn: "Students",  view: "students" },
+  { icon: MessageSquare,   labelEs: "Mensajes",    labelEn: "Messages",  view: "messages" },
   { icon: Settings,        labelEs: "Ajustes",     labelEn: "Settings",  view: "settings" },
 ];
 
