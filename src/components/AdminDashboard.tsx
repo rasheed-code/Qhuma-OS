@@ -1503,6 +1503,105 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
               </div>
             );
           })()}
+
+          {/* A31 — Tablero Demo Day en vivo */}
+          {(() => {
+            const turnosDemoDay = [
+              { nombre: "Lucas García",      hora: "09:00", estado: "completado" as const, qcoins: 120 },
+              { nombre: "Sofía Torres",       hora: "09:06", estado: "completado" as const, qcoins: 150 },
+              { nombre: "Pablo Ruiz",         hora: "09:12", estado: "en_curso"   as const, qcoins: 0   },
+              { nombre: "María Santos",       hora: "09:18", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Diego López",        hora: "09:24", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Ana Martín",         hora: "09:30", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Carlos Rivera",      hora: "09:36", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Laura Sanz",         hora: "09:42", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Tomás Herrera",      hora: "09:48", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Carla Vega",         hora: "09:54", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Alejandro Pérez",    hora: "10:00", estado: "pendiente"  as const, qcoins: 0   },
+              { nombre: "Valentina Cruz",     hora: "10:06", estado: "pendiente"  as const, qcoins: 0   },
+            ];
+            const estadoCfg = {
+              completado: { label: lbl("Presentado", "Done"),      bg: "bg-success-light text-success",     dot: "bg-success" },
+              en_curso:   { label: lbl("En directo", "Live now"),  bg: "bg-urgent-light text-urgent",       dot: "bg-urgent animate-pulse" },
+              pendiente:  { label: lbl("Pendiente", "Pending"),    bg: "bg-background text-text-muted",     dot: "bg-text-muted" },
+            };
+            const nCompletados = turnosDemoDay.filter(t => t.estado === "completado").length;
+            const nPendientes   = turnosDemoDay.filter(t => t.estado === "pendiente").length;
+            const enCurso       = turnosDemoDay.find(t => t.estado === "en_curso");
+            const totalQCoins   = turnosDemoDay.reduce((s, t) => s + t.qcoins, 0);
+            const familiaPresente = 18;
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={14} className="text-accent-text" />
+                    <h3 className="text-[13px] font-semibold text-text-primary">
+                      {lbl("Demo Day — Tablero en vivo", "Demo Day — Live Board")}
+                    </h3>
+                  </div>
+                  <span className="text-[10px] text-text-muted">
+                    {lbl("Viernes 13 mar · Sala magna", "Fri Mar 13 · Main hall")}
+                  </span>
+                </div>
+
+                {/* KPIs */}
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  <div className="bg-success-light rounded-xl p-3 text-center">
+                    <div className="text-[20px] font-bold text-success">{nCompletados}</div>
+                    <div className="text-[9px] text-success">{lbl("presentados", "done")}</div>
+                  </div>
+                  <div className="bg-urgent-light rounded-xl p-3 text-center">
+                    <div className="text-[20px] font-bold text-urgent">{nPendientes}</div>
+                    <div className="text-[9px] text-urgent">{lbl("pendientes", "pending")}</div>
+                  </div>
+                  <div className="bg-accent-light rounded-xl p-3 text-center">
+                    <div className="text-[20px] font-bold text-accent-text">{familiaPresente}</div>
+                    <div className="text-[9px] text-accent-text">{lbl("familias", "families")}</div>
+                  </div>
+                  <div className="bg-background rounded-xl p-3 text-center">
+                    <div className="text-[20px] font-bold text-text-primary">{totalQCoins}</div>
+                    <div className="text-[9px] text-text-muted">Q-Coins</div>
+                  </div>
+                </div>
+
+                {/* En curso */}
+                {enCurso && (
+                  <div className="bg-urgent-light border border-urgent/20 rounded-xl p-3 mb-4 flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-urgent animate-pulse flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-urgent">{lbl("Presentando ahora:", "Currently presenting:")}</p>
+                      <p className="text-[13px] font-semibold text-text-primary truncate">{enCurso.nombre}</p>
+                    </div>
+                    <span className="text-[11px] font-mono text-urgent flex-shrink-0">{enCurso.hora}</span>
+                  </div>
+                )}
+
+                {/* Turno list */}
+                <div className="space-y-1.5">
+                  {turnosDemoDay.map((t, i) => {
+                    const cfg = estadoCfg[t.estado];
+                    return (
+                      <div key={i} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg ${t.estado === "en_curso" ? "bg-urgent-light/50" : ""}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                        <span className="text-[10px] font-mono text-text-muted w-9 flex-shrink-0">{t.hora}</span>
+                        <span className={`text-[11px] font-medium flex-1 min-w-0 truncate ${t.estado === "completado" ? "text-text-muted line-through" : "text-text-primary"}`}>
+                          {t.nombre}
+                        </span>
+                        {t.qcoins > 0 && (
+                          <span className="text-[9px] font-bold text-accent-text flex-shrink-0">+{t.qcoins} QC</span>
+                        )}
+                        <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${cfg.bg}`}>
+                          {cfg.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Panel derecho — Actividad reciente */}
