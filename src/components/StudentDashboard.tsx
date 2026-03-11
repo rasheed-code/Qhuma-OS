@@ -44,6 +44,8 @@ import {
   BarChart3,
   Lightbulb,
   RefreshCw,
+  ArrowRight,
+  Rocket,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -1852,6 +1854,116 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           </div>
         );
       })()}
+
+      {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
+      <div className="bg-card rounded-2xl border border-card-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+              <Rocket size={14} className="text-accent" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                {lbl("Siguiente proyecto", "Next project")}
+              </h2>
+              <p className="text-[10px] text-text-muted">{lbl("T2 · Trimestre 2 · Ya disponible", "T2 · Term 2 · Now available")}</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-sidebar bg-accent-light px-2.5 py-1 rounded-full">
+            {lbl("Nuevo", "New")}
+          </span>
+        </div>
+
+        {/* Project card */}
+        <div className="rounded-xl bg-sidebar text-white p-4 mb-4">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="text-[10px] font-semibold text-accent mb-0.5">{lbl("Proyecto T2", "Project T2")}</p>
+              <h3 className="text-[14px] font-bold leading-tight">
+                {lbl("Diseña tu Food Truck", "Design your Food Truck")}
+              </h3>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-[18px]">🚚</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-white/70 leading-relaxed mb-3">
+            {lbl(
+              "Crea un concepto de food truck sostenible: marca, menú, modelo financiero y estrategia de localización en Málaga.",
+              "Create a sustainable food truck concept: brand, menu, financial model and location strategy in Málaga."
+            )}
+          </p>
+          <div className="flex items-center gap-2">
+            {["CE", "CD", "STEM", "CLC"].map((comp) => (
+              <span key={comp} className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{comp}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* 3 early-unlock tasks */}
+        <div className="mb-4">
+          <div className="flex items-center gap-1.5 mb-2.5">
+            <Zap size={11} className="text-[#F59E0B]" />
+            <span className="text-[11px] font-semibold text-text-primary">{lbl("3 tareas desbloqueables ya", "3 tasks unlockable now")}</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: "ft1", text: lbl("Investiga 3 food trucks de referencia",   "Research 3 reference food trucks"),    comp: "STEM", coins: 20, locked: false },
+              { id: "ft2", text: lbl("Elige tu concepto gastronómico y nombre", "Choose your food concept and name"),   comp: "CE",   coins: 25, locked: false },
+              { id: "ft3", text: lbl("Primer boceto del logo y colores",         "First logo sketch and color palette"), comp: "CCEC", coins: 30, locked: true  },
+            ].map((task) => (
+              <div
+                key={task.id}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl border ${
+                  task.locked
+                    ? "border-border bg-background opacity-60"
+                    : "border-accent/30 bg-accent-light"
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  task.locked ? "bg-border" : "bg-accent-dark"
+                }`}>
+                  {task.locked
+                    ? <Lock size={9} className="text-text-muted" />
+                    : <Zap size={9} className="text-white" />
+                  }
+                </div>
+                <span className={`text-[11px] font-medium flex-1 leading-tight ${task.locked ? "text-text-muted" : "text-text-primary"}`}>
+                  {task.text}
+                </span>
+                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar/10 text-sidebar flex-shrink-0">{task.comp}</span>
+                <span className="text-[10px] font-bold text-[#F59E0B] flex-shrink-0">+{task.coins}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Skills to develop */}
+        <div className="rounded-xl bg-background border border-card-border p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Brain size={11} className="text-accent-text" />
+            <span className="text-[11px] font-semibold text-text-primary">{lbl("Habilidades a desarrollar", "Skills to develop")}</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              lbl("Branding", "Branding"),
+              lbl("Costes variables", "Variable costs"),
+              lbl("Marketing local", "Local marketing"),
+              lbl("Pitch visual", "Visual pitch"),
+              lbl("Lean Canvas", "Lean Canvas"),
+            ].map((skill) => (
+              <span key={skill} className="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-card border border-card-border text-text-secondary">
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <button className="w-full mt-3 flex items-center justify-center gap-2 bg-sidebar text-white text-[12px] font-bold py-2.5 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer">
+          {lbl("Ver proyecto completo", "View full project")}
+          <ArrowRight size={13} />
+        </button>
+      </div>
 
       {/* Right: AI Chat — now fully powered by Gemini */}
       <div className="w-[300px] flex-shrink-0">
