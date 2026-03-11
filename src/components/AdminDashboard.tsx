@@ -4253,6 +4253,130 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               );
             })()}
+
+            {/* ── A37: Análisis LOMLOE T1→T2 por clase ─────────────────────── */}
+            {(() => {
+              const comps = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"];
+              const clases = [
+                {
+                  nombre: "1º ESO A", docente: "Ana Martínez",
+                  t1: [72, 55, 68, 75, 65, 55, 70, 62],
+                  t2: [78, 58, 74, 80, 71, 58, 76, 68],
+                },
+                {
+                  nombre: "1º ESO B", docente: "Carlos Rueda",
+                  t1: [68, 50, 72, 70, 60, 52, 65, 58],
+                  t2: [72, 52, 77, 73, 64, 55, 70, 62],
+                },
+                {
+                  nombre: "2º ESO A", docente: "Patricia López",
+                  t1: [75, 62, 65, 78, 70, 60, 68, 65],
+                  t2: [75, 62, 65, 78, 70, 60, 68, 65], // T2 no iniciado — mismo valor
+                },
+                {
+                  nombre: "2º ESO B", docente: "Miguel Torres",
+                  t1: [70, 58, 70, 72, 62, 55, 72, 60],
+                  t2: [70, 58, 70, 72, 62, 55, 72, 60], // T2 no iniciado
+                },
+              ];
+              const levelColor = (v: number) =>
+                v >= 75 ? "bg-success text-white" : v >= 60 ? "bg-accent-light text-accent-text" : v >= 45 ? "bg-warning-light text-warning" : "bg-urgent-light text-urgent";
+              const deltaColor = (d: number) =>
+                d > 0 ? "text-success" : d < 0 ? "text-urgent" : "text-text-muted";
+              return (
+                <div className="mt-5 bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <BarChart3 size={15} className="text-accent-text" />
+                      <h3 className="text-[14px] font-semibold text-text-primary">
+                        {lbl("Análisis LOMLOE T1 → T2 por clase", "LOMLOE Analysis T1 → T2 per class")}
+                      </h3>
+                    </div>
+                    <span className="text-[9px] text-text-muted">{lbl("Escala 0–100 · Verde ≥75 · Amarillo ≥60 · Rojo <45", "Scale 0–100 · Green ≥75 · Yellow ≥60 · Red <45")}</span>
+                  </div>
+
+                  {/* Heat table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="text-[9px] font-bold text-text-muted pb-2 pr-3 whitespace-nowrap">{lbl("Clase", "Class")}</th>
+                          {comps.map((c) => (
+                            <th key={c} className="text-[8px] font-bold text-text-muted pb-2 px-1 text-center whitespace-nowrap">{c}</th>
+                          ))}
+                          <th className="text-[9px] font-bold text-text-muted pb-2 pl-2 text-center">{lbl("Media", "Avg")}</th>
+                          <th className="text-[9px] font-bold text-text-muted pb-2 pl-2 text-center">{lbl("Δ T1→T2", "Δ T1→T2")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {clases.map((cl) => {
+                          const mediaT1 = Math.round(cl.t1.reduce((s, v) => s + v, 0) / cl.t1.length);
+                          const mediaT2 = Math.round(cl.t2.reduce((s, v) => s + v, 0) / cl.t2.length);
+                          const delta = mediaT2 - mediaT1;
+                          const t2Started = cl.t2.some((v, i) => v !== cl.t1[i]);
+                          return (
+                            <tr key={cl.nombre} className="border-t border-card-border">
+                              <td className="py-2 pr-3">
+                                <p className="text-[10px] font-bold text-text-primary whitespace-nowrap">{cl.nombre}</p>
+                                <p className="text-[8px] text-text-muted">{cl.docente}</p>
+                              </td>
+                              {cl.t2.map((v, ci) => {
+                                const d = v - cl.t1[ci];
+                                return (
+                                  <td key={comps[ci]} className="px-1 py-2 text-center">
+                                    <div className={`inline-flex flex-col items-center rounded-lg px-1.5 py-1 min-w-[32px] ${levelColor(v)}`}>
+                                      <span className="text-[9px] font-bold leading-none">{v}</span>
+                                      {t2Started && (
+                                        <span className={`text-[7px] leading-none mt-0.5 ${d > 0 ? "opacity-80" : "opacity-60"}`}>
+                                          {d > 0 ? `+${d}` : d === 0 ? "=" : `${d}`}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                );
+                              })}
+                              <td className="pl-2 py-2 text-center">
+                                <span className={`text-[10px] font-bold ${levelColor(mediaT2)} px-2 py-1 rounded-lg inline-block`}>{mediaT2}</span>
+                              </td>
+                              <td className="pl-2 py-2 text-center">
+                                {t2Started ? (
+                                  <span className={`text-[10px] font-bold ${deltaColor(delta)}`}>
+                                    {delta > 0 ? `+${delta}` : delta}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] text-text-muted">{lbl("Pend.", "Pend.")}</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Leyenda + nota */}
+                  <div className="flex items-center gap-4 mt-3 flex-wrap">
+                    {[
+                      { label: "≥75 Sobresaliente", color: "bg-success" },
+                      { label: "60–74 Logro esperado", color: "bg-accent-text" },
+                      { label: "45–59 En proceso", color: "bg-warning" },
+                      { label: "<45 Inicio", color: "bg-urgent" },
+                    ].map((l) => (
+                      <div key={l.label} className="flex items-center gap-1">
+                        <span className={`w-2.5 h-2.5 rounded ${l.color} inline-block`} />
+                        <span className="text-[8px] text-text-muted">{l.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-text-muted mt-2 leading-snug">
+                    {lbl(
+                      "Las celdas muestran el valor T2 con el delta respecto a T1. Las clases 2ºA y 2ºB aún no han iniciado T2.",
+                      "Cells show T2 value with delta vs T1. Classes 2A and 2B have not yet started T2."
+                    )}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
         );
       })()}
