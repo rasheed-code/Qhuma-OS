@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 30 ✅ (push: `ddb4a9b`)
+- **Último ciclo completo**: Ciclo 31 ✅ (push: `1ed5afb`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 31
+- **Próximo ciclo**: Ciclo 32
 
 ---
 
@@ -1242,6 +1242,46 @@
 - "Exportar insignias": HTML blob con grid de 8 insignias + estilos Inter, Blob/createObjectURL, filename insignias_lucas_garcia.html
 - Estados: badgeExpandida string|null, exportandoBadges, badgesExportadas
 - Imports añadidos: Lock, Shield
+
+---
+
+## Sprints completados — Ciclo 31
+
+### [SPRINT-I18N][I1] StudentDashboard + StudentCalendar — i18n alumno completo ✅
+- Commit: `31abb19`
+- Archivos: `src/components/StudentDashboard.tsx`, `src/components/StudentCalendar.tsx`
+- KPI array Economía (S22): label/info/meta de 4 KPIs envueltos en lbl()
+- "4 reservas activas" → lbl()
+- "Beneficio neto del mes" → lbl()
+- Difficulty badges: difLabel map (Básico/Medio/Avanzado → Basic/Medium/Advanced)
+- Mercado sección: "Actualizado hoy, 11 mar 2026" + "Conectado a: …" → lbl()
+- StudentCalendar: subtitle "Lanza tu Airbnb · Semana 3" → lbl()
+
+### [SPRINT-I18N][I2] TeacherProjectGenerator — i18n profesor completo ✅
+- Commit: `2a9738f`
+- Archivo: `src/components/TeacherProjectGenerator.tsx`
+- Archivo NO tenía useLang importado — añadido desde cero
+- Traducidos: h1, subtitle, buttons (Nueva config, Copiar, ¡Copiado!, Regenerar, Generando, Generar proyecto)
+- Form labels: Contexto, Duración, Competencias prioritarias
+- Placeholder textarea, "sem." → lbl()
+- Hints panel (Metodología QHUMA texto + 3 bullets)
+- Result section headers: Fases del proyecto, Entregables, Criterios de evaluación, Impacto real
+- Spinner "Regenerando…" → lbl()
+
+### [SPRINT-I18N][I3] Auditoría completa + fixes cruzados ✅
+- Commit: `d35a40e`
+- Archivos: `ProjectDetail.tsx`, `RoleSelector.tsx`, `EvidenceGallery.tsx`, `TeacherProjects.tsx`
+- ProjectDetail: useLang añadido, colConfig labels → labelEs/labelEn, Kanban column labels bilingüe
+- RoleSelector: useLang añadido, roles array movido dentro del componente, sublabels → lbl()
+- EvidenceGallery: "Proyecto: … Semana X de Y" → lbl() para wrapper y semana
+- TeacherProjects: placeholder textarea → lbl()
+- Confirmado: TeacherDashboard, TeacherAnalytics, TeacherStudents, TeacherGradeBook, TeacherCalendar, TeacherRubrica, todos los Parent* componentes, AdminDashboard — todos correctamente bilingüe
+
+### [SPRINT-I18N][I4] QCoins + TrimesterTimeline — widgets bilingüe ✅
+- Commit: `1ed5afb`
+- Archivos: `src/components/QCoins.tsx`, `src/components/TrimesterTimeline.tsx`
+- QCoins: useLang añadido, "Q-Coins & XP" / "XP This Week" / "Day Streak" / "Evidences" → lbl()
+- TrimesterTimeline: useLang añadido, "Trimester 1 Projects" / "Real World Business" → lbl()
 
 ---
 
