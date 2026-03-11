@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare, ArrowUp, ArrowDown, Minus, ShieldAlert, Download, Layers } from "lucide-react";
+import { TrendingUp, Users, FileCheck, Flame, AlertTriangle, CheckCircle2, Clock, BarChart3, ZapOff, MessageSquare, ArrowUp, ArrowDown, Minus, ShieldAlert, Download, Layers, Target, Lightbulb } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { useLang } from "@/lib/i18n";
@@ -805,6 +805,131 @@ export default function TeacherAnalytics() {
                 })}
               </div>
             )}
+          </div>
+        );
+      })()}
+
+      {/* T30 — Correlación esfuerzo × resultado */}
+      {(() => {
+        // Datos por alumno: esfuerzo (% tareas) y resultado (media LOMLOE) — deterministas por seed
+        const data = classStudents.map((s, si) => {
+          const effort = Math.round(((si * 53 + 29) % 46) + 44); // 44–89
+          const result = Math.round(((si * 37 + 19) % 46) + 38); // 38–83
+          return { s, effort, result };
+        });
+        const mid = { effort: 66, result: 60 };
+        type Q = "star" | "potential" | "support" | "priority";
+        const getQ = (e: number, r: number): Q => {
+          if (e >= mid.effort && r >= mid.result) return "star";
+          if (e < mid.effort  && r >= mid.result) return "potential";
+          if (e >= mid.effort && r < mid.result)  return "support";
+          return "priority";
+        };
+        const qCfg: Record<Q, { label: string; color: string; bg: string; dot: string; tip: string }> = {
+          star:      { label: lbl("Destacados",       "Stars"),            color: "text-success",     bg: "bg-success-light",  dot: "bg-success",     tip: lbl("Alto esfuerzo + alto resultado",   "High effort, high outcome") },
+          potential: { label: lbl("Potencial oculto", "Hidden potential"), color: "text-accent-text", bg: "bg-accent-light",   dot: "bg-accent-text", tip: lbl("Bajo esfuerzo + alto resultado",   "Low effort, high outcome") },
+          support:   { label: lbl("Necesitan apoyo",  "Need support"),     color: "text-warning",     bg: "bg-warning-light",  dot: "bg-warning",     tip: lbl("Alto esfuerzo + bajo resultado",   "High effort, low outcome") },
+          priority:  { label: lbl("Prioridad",        "Priority"),         color: "text-urgent",      bg: "bg-urgent-light",   dot: "bg-urgent",      tip: lbl("Bajo esfuerzo + bajo resultado",   "Low effort, low outcome") },
+        };
+        const acciones: Record<Q, string> = {
+          star:      lbl("Proponer reto avanzado o rol de mentor de equipo", "Offer advanced challenge or team mentor role"),
+          potential: lbl("Activar: ¿están aburridos? Ajustar dificultad",    "Check if bored — adjust challenge level"),
+          support:   lbl("Revisar metodología, no solo esfuerzo",            "Review learning strategy, not just effort"),
+          priority:  lbl("Intervención urgente: reunión + plan de acción",   "Urgent: schedule meeting + action plan"),
+        };
+        const counts = (["star","potential","support","priority"] as Q[]).map(q => ({
+          q, count: data.filter(d => getQ(d.effort, d.result) === q).length,
+        }));
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mt-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Target size={16} className="text-accent-text" />
+              <h3 className="text-[15px] font-semibold text-text-primary">
+                {lbl("Correlación esfuerzo × resultado", "Effort × outcome correlation")}
+              </h3>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Cada alumno posicionado por % tareas completadas (eje X) y media LOMLOE (eje Y).", "Each student plotted by task completion % (X axis) and average LOMLOE score (Y axis).")}
+            </p>
+
+            {/* Scatter plot */}
+            <div className="relative bg-background rounded-xl border border-card-border overflow-visible mb-4" style={{ height: "260px" }}>
+              {/* Axis labels */}
+              <span className="absolute bottom-2 inset-x-0 text-center text-[9px] text-text-muted pointer-events-none">
+                ← {lbl("Menos esfuerzo", "Less effort")} · {lbl("Más esfuerzo", "More effort")} →
+              </span>
+              <div className="absolute" style={{ left: "8px", top: "8px", right: "8px", bottom: "22px" }}>
+                {/* Quadrant lines */}
+                <div className="absolute inset-0 border-l-0 border-t-0">
+                  <div className="absolute top-0 bottom-0 left-1/2 border-l border-dashed border-card-border" />
+                  <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-card-border" />
+                </div>
+                {/* Quadrant corner labels */}
+                <span className="absolute top-2 right-2 text-[8px] font-bold text-success/70">{lbl("Destacados ↗", "Stars ↗")}</span>
+                <span className="absolute top-2 left-2 text-[8px] font-bold text-accent-text/70">{lbl("Potencial ↗", "Potential ↗")}</span>
+                <span className="absolute bottom-2 right-2 text-[8px] font-bold text-warning/70">{lbl("Apoyo ↘", "Support ↘")}</span>
+                <span className="absolute bottom-2 left-2 text-[8px] font-bold text-urgent/70">{lbl("Prioridad ↘", "Priority ↘")}</span>
+
+                {/* Student dots */}
+                {data.map(({ s, effort, result }) => {
+                  const q = getQ(effort, result);
+                  const cfg = qCfg[q];
+                  const xPct = Math.round(((effort - 40) / 55) * 100);
+                  const yPct = Math.round(((result - 34) / 55) * 100);
+                  const initials = s.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2);
+                  return (
+                    <div
+                      key={s.id}
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 group cursor-default z-10"
+                      style={{ left: `${Math.min(Math.max(xPct, 6), 94)}%`, bottom: `${Math.min(Math.max(yPct, 6), 94)}%` }}
+                    >
+                      <div className={`w-6 h-6 rounded-full ${cfg.dot} flex items-center justify-center text-white text-[7px] font-bold ring-2 ring-white shadow-sm`}>
+                        {initials}
+                      </div>
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 bg-sidebar text-white text-[9px] rounded-lg px-2 py-1.5 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-lg">
+                        <span className="font-semibold">{s.name}</span><br />
+                        {lbl("Esfuerzo", "Effort")}: {effort}% · {lbl("Resultado", "Result")}: {result}%
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quadrant summary cards */}
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {counts.map(({ q, count }) => {
+                const cfg = qCfg[q];
+                return (
+                  <div key={q} className={`${cfg.bg} rounded-xl p-3 text-center`}>
+                    <span className={`text-[20px] font-black ${cfg.color}`}>{count}</span>
+                    <p className="text-[9px] text-text-secondary mt-0.5 font-medium leading-tight">{cfg.label}</p>
+                    <p className="text-[8px] text-text-muted leading-tight mt-1">{cfg.tip}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Action recommendations per quadrant */}
+            <div className="bg-background rounded-xl p-4 space-y-2.5">
+              <div className="flex items-center gap-2 mb-2">
+                <Lightbulb size={13} className="text-warning" />
+                <span className="text-[11px] font-semibold text-text-primary">{lbl("Acciones recomendadas por cuadrante", "Recommended actions per quadrant")}</span>
+              </div>
+              {(["star","potential","support","priority"] as Q[]).map(q => {
+                const cfg = qCfg[q];
+                return (
+                  <div key={q} className="flex items-start gap-2.5">
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${cfg.dot}`} />
+                    <div>
+                      <span className={`text-[10px] font-bold ${cfg.color}`}>{cfg.label}: </span>
+                      <span className="text-[10px] text-text-secondary">{acciones[q]}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         );
       })()}
