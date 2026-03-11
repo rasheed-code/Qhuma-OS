@@ -71,6 +71,7 @@ const adminNav: { icon: typeof LayoutDashboard; labelEs: string; view: AdminView
   { icon: Building2,       labelEs: "Colegios",    view: "schools" },
   { icon: FileText,        labelEs: "Informes",    view: "reports" },
   { icon: Search,          labelEs: "Inspección",  view: "inspection" },
+  { icon: BarChart3,       labelEs: "Métricas",    view: "metrics" },
 ];
 
 const teacherNav: { icon: typeof LayoutDashboard; labelEs: string; labelEn: string; view: TeacherView }[] = [

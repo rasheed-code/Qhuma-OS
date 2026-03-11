@@ -1243,6 +1243,195 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
           </div>
         );
       })()}
+
+      {/* ─── TAB: MÉTRICAS (A8 — AdminMetricas) ─── */}
+      {activeView === "metrics" && (() => {
+        const riesgoAlumnos = [
+          { nombre: "Pablo Ruiz",     curso: "1º ESO", racha: 0,  evidencias: 2,  score: 15, nivel: "Alto" },
+          { nombre: "Tomás Herrera",  curso: "2º ESO", racha: 2,  evidencias: 6,  score: 32, nivel: "Medio" },
+          { nombre: "Carmen Vega",    curso: "1º ESO", racha: 5,  evidencias: 10, score: 64, nivel: "Bajo" },
+        ];
+        const engagementSemanal = [
+          { semana: "Sem 1 Feb", activos: 68, total: 12 },
+          { semana: "Sem 2 Feb", activos: 75, total: 12 },
+          { semana: "Sem 3 Feb", activos: 72, total: 12 },
+          { semana: "Sem 1 Mar", activos: 78, total: 12 },
+        ];
+        const comparativaColegios = [
+          { nombre: "QHUMA Málaga", retencion: 96, engagement: 78, evidencias: 66, lomloe: 89 },
+          { nombre: "QHUMA Madrid", retencion: 91, engagement: 71, evidencias: 58, lomloe: 83 },
+        ];
+        const metricas = [
+          { nombre: "Retención", max: 100, color: "bg-success" },
+          { nombre: "Engagement", max: 100, color: "bg-accent-text" },
+          { nombre: "Evidencias %", max: 100, color: "bg-warning" },
+          { nombre: "Cumpl. LOMLOE", max: 100, color: "bg-sidebar" },
+        ];
+        const riesgoNivelCfg: Record<string, { bg: string; text: string }> = {
+          Alto:  { bg: "bg-urgent-light",  text: "text-urgent" },
+          Medio: { bg: "bg-warning-light", text: "text-warning" },
+          Bajo:  { bg: "bg-accent-light",  text: "text-accent-text" },
+        };
+
+        return (
+          <div className="space-y-5">
+            {/* KPIs globales */}
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                { label: "Tasa de retención",    valor: "96%",  sub: "+2% vs trimestre anterior", bg: "bg-success-light", textV: "text-success" },
+                { label: "Engagement semanal",    valor: "78%",  sub: "Alumnos activos hoy",       bg: "bg-accent-light",  textV: "text-accent-text" },
+                { label: "Cumplimiento LOMLOE",   valor: "89%",  sub: "8 competencias evaluadas",  bg: "bg-card",          textV: "text-text-primary" },
+                { label: "Alumnos en riesgo",     valor: "3",    sub: "Scoring < 40 — intervenir", bg: "bg-urgent-light",  textV: "text-urgent" },
+              ].map((k) => (
+                <div key={k.label} className={`${k.bg} rounded-2xl border border-card-border p-4`}>
+                  <p className={`text-[28px] font-bold ${k.textV} leading-none mb-1`}>{k.valor}</p>
+                  <p className="text-[11px] font-semibold text-text-primary">{k.label}</p>
+                  <p className="text-[10px] text-text-muted">{k.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Comparativa entre colegios + Engagement semanal */}
+            <div className="flex gap-5">
+              {/* Comparativa */}
+              <div className="flex-1 bg-card rounded-2xl border border-card-border p-5">
+                <h3 className="text-[14px] font-semibold text-text-primary mb-4">Comparativa entre colegios QHUMA</h3>
+                <div className="flex flex-col gap-4">
+                  {metricas.map((metrica, mi) => {
+                    const vals = comparativaColegios.map((c) => {
+                      const arr = [c.retencion, c.engagement, c.evidencias, c.lomloe];
+                      return arr[mi];
+                    });
+                    return (
+                      <div key={metrica.nombre}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-medium text-text-secondary">{metrica.nombre}</span>
+                        </div>
+                        {comparativaColegios.map((col, ci) => (
+                          <div key={col.nombre} className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] text-text-muted w-28 truncate">{col.nombre.replace("QHUMA ", "")}</span>
+                            <div className="flex-1 h-2 rounded-full bg-background overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${metrica.color}`}
+                                style={{ width: `${vals[ci]}%`, opacity: ci === 0 ? 1 : 0.6 }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold text-text-primary w-8 text-right">{vals[ci]}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Engagement semanal */}
+              <div className="w-[280px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
+                <h3 className="text-[14px] font-semibold text-text-primary mb-1">Engagement semanal</h3>
+                <p className="text-[11px] text-text-muted mb-4">% alumnos activos por semana</p>
+                <div className="flex items-end gap-3 h-32">
+                  {engagementSemanal.map((sem) => {
+                    const pct = Math.round((sem.activos / 100) * 100);
+                    return (
+                      <div key={sem.semana} className="flex-1 flex flex-col items-center gap-1">
+                        <span className="text-[10px] font-bold text-accent-text">{sem.activos}%</span>
+                        <div className="w-full bg-background rounded-t-lg overflow-hidden flex-1 flex items-end">
+                          <div
+                            className="w-full bg-accent-text/80 rounded-t-lg transition-all"
+                            style={{ height: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-[8px] text-text-muted text-center leading-tight">
+                          {sem.semana.replace("Sem ", "S").replace(" Feb", "F").replace(" Mar", "M")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Riesgo de abandono */}
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle size={15} className="text-warning" />
+                <h3 className="text-[14px] font-semibold text-text-primary">Predicción de riesgo de abandono</h3>
+                <span className="ml-auto text-[10px] text-text-muted bg-background px-2.5 py-1 rounded-full">
+                  Scoring: racha × 3 + evidencias × 4 (máx 100)
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-card-border">
+                      {["Alumno", "Curso", "Racha (días)", "Evidencias", "Score riesgo", "Nivel", "Acción"].map((h) => (
+                        <th key={h} className="text-left text-[10px] font-bold text-text-muted uppercase tracking-wide py-2 px-2">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {riesgoAlumnos.map((al) => {
+                      const cfg = riesgoNivelCfg[al.nivel];
+                      return (
+                        <tr key={al.nombre} className="border-b border-card-border/50 hover:bg-background transition-colors">
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-sidebar text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                                {al.nombre.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                              </div>
+                              <span className="text-[11px] font-medium text-text-primary">{al.nombre}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-[11px] text-text-muted">{al.curso}</td>
+                          <td className="py-2.5 px-2">
+                            <span className={`text-[12px] font-bold ${al.racha === 0 ? "text-urgent" : al.racha < 5 ? "text-warning" : "text-success"}`}>
+                              {al.racha}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-12 h-1.5 bg-background rounded-full overflow-hidden">
+                                <div className="h-full bg-accent-text rounded-full" style={{ width: `${(al.evidencias / 16) * 100}%` }} />
+                              </div>
+                              <span className="text-[10px] text-text-secondary">{al.evidencias}/16</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-14 h-2 bg-background rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${al.score < 30 ? "bg-urgent" : al.score < 50 ? "bg-warning" : "bg-success"}`}
+                                  style={{ width: `${al.score}%` }}
+                                />
+                              </div>
+                              <span className="text-[11px] font-bold text-text-primary">{al.score}</span>
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.text}`}>
+                              {al.nivel}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <button className="text-[10px] font-medium text-accent-text hover:underline cursor-pointer">
+                              {al.nivel === "Alto" ? "Intervenir ahora" : al.nivel === "Medio" ? "Hacer seguimiento" : "Monitorear"}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-4 pt-4 border-t border-card-border">
+                <p className="text-[11px] text-text-muted leading-relaxed">
+                  <strong className="text-text-secondary">Metodología scoring:</strong> Racha de días activos × 3 + Evidencias entregadas × 4. Score {"<"} 30 = riesgo alto (contacto inmediato), 30-50 = riesgo medio (seguimiento semanal), {">"} 50 = riesgo bajo.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
