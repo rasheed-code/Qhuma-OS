@@ -24,6 +24,11 @@ import {
   RefreshCw,
   Bell,
   ClipboardList,
+  ChevronDown,
+  ChevronUp,
+  Coins,
+  Trophy,
+  Copy,
 } from "lucide-react";
 import { classStudents, teacherAlerts } from "@/data/students";
 import TeacherChat from "./TeacherChat";
@@ -114,6 +119,41 @@ export default function TeacherDashboard() {
   const [recordadas, setRecordadas] = useState<Set<string>>(new Set());
   const [recordandoId, setRecordandoId] = useState<string | null>(null);
 
+  // T26 — Semana en números
+  const [semanaExpanded, setSemanaExpanded] = useState(true);
+  const [semanaResumen, setSemanaResumen] = useState<string | null>(null);
+  const [generandoResumen, setGenerandoResumen] = useState(false);
+  const [resumenCopiado, setResumenCopiado] = useState(false);
+
+  const handleGenerarResumen = async () => {
+    if (generandoResumen) return;
+    setGenerandoResumen(true);
+    try {
+      const res = await fetch("/api/tutor-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "narrativa",
+          message: "Eres la IA de QHUMA OS. Genera un resumen semanal del docente en exactamente 3 frases para compartir con el equipo directivo. Datos: 7/12 evidencias revisadas, media LOMLOE 3.1/4, 8 alumnos mejoraron esta semana, 2 nuevos errores registrados, 340 Q-Coins distribuidos. El proyecto activo es Airbnb Málaga, 1º ESO. Sé conciso, profesional y destaca los logros más relevantes.",
+          history: [],
+        }),
+      });
+      const data = await res.json();
+      setSemanaResumen(data.reply ?? "Esta semana el grupo de 1º ESO ha mostrado una evolución positiva: 8 de 12 alumnos mejoraron su nivel LOMLOE, con una media de 3.1 sobre 4. Las 340 Q-Coins distribuidas reflejan el alto nivel de compromiso con el proyecto Airbnb Málaga. Se han identificado 2 nuevos errores de aprendizaje que serán abordados en la próxima sesión de refuerzo.");
+    } catch {
+      setSemanaResumen("Esta semana el grupo de 1º ESO ha mostrado una evolución positiva: 8 de 12 alumnos mejoraron su nivel LOMLOE, con una media de 3.1 sobre 4. Las 340 Q-Coins distribuidas reflejan el alto nivel de compromiso con el proyecto Airbnb Málaga. Se han identificado 2 nuevos errores de aprendizaje que serán abordados en la próxima sesión de refuerzo.");
+    } finally {
+      setGenerandoResumen(false);
+    }
+  };
+
+  const handleCopiarResumen = () => {
+    if (!semanaResumen) return;
+    navigator.clipboard.writeText(semanaResumen).catch(() => {});
+    setResumenCopiado(true);
+    setTimeout(() => setResumenCopiado(false), 2000);
+  };
+
   const handleRecordar = (id: string) => {
     if (recordandoId || recordadas.has(id)) return;
     setRecordandoId(id);
@@ -154,6 +194,146 @@ export default function TeacherDashboard() {
     <div className="flex gap-5">
       {/* Main content */}
       <div className="flex-1 min-w-0">
+
+        {/* T26: Semana en números ───────────────────────────────── */}
+        {(() => {
+          const semanaStats = [
+            {
+              icon: FileText,
+              label: lbl("Evidencias revisadas", "Evidence reviewed"),
+              valor: "7/12",
+              trend: +17,
+              color: "text-accent-text",
+              bg: "bg-accent-light",
+            },
+            {
+              icon: BarChart3,
+              label: lbl("Media nivel LOMLOE", "Avg LOMLOE level"),
+              valor: "3.1",
+              trend: +5,
+              color: "text-[#4F8EF7]",
+              bg: "bg-[#eff6ff]",
+            },
+            {
+              icon: TrendingUp,
+              label: lbl("Alumnos que mejoraron", "Students improved"),
+              valor: "8",
+              trend: +33,
+              color: "text-success",
+              bg: "bg-success-light",
+            },
+            {
+              icon: AlertCircle,
+              label: lbl("Nuevos errores registrados", "New errors logged"),
+              valor: "2",
+              trend: -50,
+              color: "text-warning",
+              bg: "bg-warning-light",
+            },
+            {
+              icon: Coins,
+              label: lbl("Q-Coins distribuidas", "Q-Coins distributed"),
+              valor: "340",
+              trend: +13,
+              color: "text-accent-text",
+              bg: "bg-accent-light",
+            },
+          ];
+          return (
+            <div className="bg-card rounded-2xl border border-card-border mb-5">
+              <button
+                onClick={() => setSemanaExpanded((v) => !v)}
+                className="w-full flex items-center justify-between px-5 py-4 cursor-pointer group"
+              >
+                <div className="flex items-center gap-2">
+                  <Trophy size={15} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("Semana en números", "Week in numbers")}
+                  </h3>
+                  <span className="text-[10px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full ml-1">
+                    {lbl("Semana 3 · 10–14 mar", "Week 3 · Mar 10–14")}
+                  </span>
+                </div>
+                {semanaExpanded
+                  ? <ChevronUp size={14} className="text-text-muted group-hover:text-text-primary transition-colors" />
+                  : <ChevronDown size={14} className="text-text-muted group-hover:text-text-primary transition-colors" />}
+              </button>
+
+              {semanaExpanded && (
+                <div className="px-5 pb-5">
+                  {/* Stats grid */}
+                  <div className="grid grid-cols-5 gap-3 mb-4">
+                    {semanaStats.map((stat) => {
+                      const Icon = stat.icon;
+                      const isPositive = stat.trend > 0;
+                      const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+                      const trendColor = stat.label === lbl("Nuevos errores registrados", "New errors logged")
+                        ? (isPositive ? "text-urgent" : "text-success")
+                        : (isPositive ? "text-success" : "text-urgent");
+                      return (
+                        <div key={stat.label} className={`rounded-xl p-3.5 ${stat.bg}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <Icon size={13} className={stat.color} />
+                            <div className={`flex items-center gap-0.5 ${trendColor}`}>
+                              <TrendIcon size={9} />
+                              <span className="text-[9px] font-bold">{Math.abs(stat.trend)}%</span>
+                            </div>
+                          </div>
+                          <span className="text-[22px] font-bold text-text-primary block leading-none mb-1">
+                            {stat.valor}
+                          </span>
+                          <span className="text-[9px] text-text-muted leading-tight block">{stat.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* AI summary */}
+                  {semanaResumen && (
+                    <div className="bg-accent-light rounded-xl p-4 border border-accent-text/10 mb-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                          <span className="text-accent text-[9px] font-bold">AI</span>
+                        </div>
+                        <span className="text-[11px] font-semibold text-accent-text">
+                          {lbl("Resumen narrativo generado", "Generated narrative summary")}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-text-primary leading-relaxed">{semanaResumen}</p>
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleGenerarResumen}
+                      disabled={generandoResumen}
+                      className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                    >
+                      {generandoResumen
+                        ? <><RefreshCw size={11} className="animate-spin" /> {lbl("Generando…", "Generating…")}</>
+                        : <><Brain size={11} /> {lbl("Generar resumen narrativo", "Generate narrative summary")}</>}
+                    </button>
+                    {semanaResumen && (
+                      <button
+                        onClick={handleCopiarResumen}
+                        className={`flex items-center gap-1.5 text-[11px] font-semibold px-4 py-2 rounded-xl cursor-pointer transition-all border ${
+                          resumenCopiado
+                            ? "bg-success-light text-success border-success/20"
+                            : "bg-card text-text-secondary border-card-border hover:border-accent-text/30"
+                        }`}
+                      >
+                        {resumenCopiado
+                          ? <><CheckCircle2 size={11} /> {lbl("¡Copiado!", "Copied!")}</>
+                          : <><Copy size={11} /> {lbl("Compartir con equipo directivo", "Share with leadership")}</>}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Hero — Buenos días + clase pulse */}
         <div
