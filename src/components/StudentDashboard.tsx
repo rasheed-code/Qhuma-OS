@@ -136,6 +136,11 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   // S32 — Demo Day prep checklist
   const [demoDayChecks, setDemoDayChecks] = useState<Set<string>>(new Set(["pitch", "financiero"]));
 
+  // C40 — Consulta Socrática · Bloque 1 Mentalidad
+  const [preguntaSocratica, setPreguntaSocratica] = useState("");
+  const [respuestaSocratica, setRespuestaSocratica] = useState<string | null>(null);
+  const [cargandoSocratica, setCargandoSocratica] = useState(false);
+
   // S41 — Mi equipo Food Truck
   const [mensajeEquipo, setMensajeEquipo] = useState("");
   const [enviandoMensaje, setEnviandoMensaje] = useState(false);
@@ -2526,6 +2531,126 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── S42: Mi modelo financiero T2 — Food Truck ───────────────────── */}
+      {(() => {
+        const costes = [
+          { item: lbl("Ingredientes por ración", "Ingredients per portion"), valor: 2.50, emoji: "🥘" },
+          { item: lbl("Envase & packaging",       "Packaging"),               valor: 0.30, emoji: "📦" },
+          { item: lbl("Operación (gas + km)",     "Operations (gas + km)"),   valor: 0.80, emoji: "⚡" },
+        ];
+        const costeTotal = costes.reduce((s, c) => s + c.valor, 0); // 3.60
+        const precioVenta = 8.40;
+        const margen = precioVenta - costeTotal; // 4.80
+        const margenPct = Math.round((margen / precioVenta) * 100); // 57%
+        const costosFijos = 250; // €/mes
+        const racionesEquilibrio = Math.ceil(costosFijos / margen); // 53
+        const racionesActuales = 38;
+        const pctEquilibrio = Math.min(100, Math.round((racionesActuales / racionesEquilibrio) * 100));
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Calculator size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Modelo financiero T2 — Food Truck", "T2 Financial model — Food Truck")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-1 rounded-full">
+                {lbl("Semana 3", "Week 3")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("Coste real de cada ración, precio de venta y punto de equilibrio diario.", "Real cost per portion, selling price and daily breakeven.")}
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Left: coste por ración */}
+              <div className="bg-background rounded-xl p-3 border border-card-border">
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">
+                  {lbl("Coste por ración", "Cost per portion")}
+                </p>
+                <div className="space-y-1.5 mb-3">
+                  {costes.map((c) => (
+                    <div key={c.item} className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] leading-none">{c.emoji}</span>
+                        <span className="text-[10px] text-text-secondary">{c.item}</span>
+                      </div>
+                      <span className="text-[11px] font-bold text-text-primary flex-shrink-0">{c.valor.toFixed(2)}€</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-card-border pt-2 flex justify-between">
+                  <span className="text-[11px] font-bold text-text-primary">{lbl("Total coste", "Total cost")}</span>
+                  <span className="text-[13px] font-black text-urgent">{costeTotal.toFixed(2)}€</span>
+                </div>
+              </div>
+
+              {/* Right: precio y margen */}
+              <div className="bg-background rounded-xl p-3 border border-card-border">
+                <p className="text-[10px] font-bold text-text-muted uppercase tracking-wide mb-2">
+                  {lbl("Precio & margen", "Price & margin")}
+                </p>
+                <div className="mb-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-text-muted">{lbl("Precio de venta", "Selling price")}</span>
+                    <span className="text-[13px] font-black text-success">{precioVenta.toFixed(2)}€</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-text-muted">{lbl("Coste total", "Total cost")}</span>
+                    <span className="text-[12px] font-bold text-urgent">−{costeTotal.toFixed(2)}€</span>
+                  </div>
+                </div>
+                <div className="bg-accent-light rounded-lg px-2.5 py-2 flex justify-between items-center">
+                  <span className="text-[11px] font-bold text-accent-text">{lbl("Margen bruto", "Gross margin")}</span>
+                  <div className="text-right">
+                    <span className="text-[15px] font-black text-accent-text">{margen.toFixed(2)}€</span>
+                    <span className="text-[9px] text-text-muted block">{margenPct}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Punto de equilibrio */}
+            <div className="bg-background rounded-xl p-3 border border-card-border mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-semibold text-text-primary">
+                  {lbl("Punto de equilibrio diario", "Daily breakeven")}
+                </p>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                  pctEquilibrio >= 100 ? "bg-success-light text-success" : "bg-warning-light text-warning"
+                }`}>
+                  {racionesActuales}/{racionesEquilibrio} {lbl("raciones", "portions")}
+                </span>
+              </div>
+              <div className="h-3 bg-card rounded-full overflow-hidden border border-card-border mb-1.5">
+                <div
+                  className={`h-full rounded-full transition-all ${pctEquilibrio >= 100 ? "bg-success" : "bg-warning"}`}
+                  style={{ width: `${pctEquilibrio}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-text-muted">
+                {lbl(
+                  `Necesitas vender ${racionesEquilibrio} raciones/día para cubrir costes fijos (${costosFijos}€/mes). Llevas ${racionesActuales} esta semana.`,
+                  `You need to sell ${racionesEquilibrio} portions/day to cover fixed costs (€${costosFijos}/mo). You've sold ${racionesActuales} this week.`
+                )}
+              </p>
+            </div>
+
+            {/* Bloque 2 note */}
+            <div className="bg-sidebar rounded-xl px-3 py-2.5">
+              <p className="text-[10px] text-white/80 leading-relaxed">
+                {lbl(
+                  "💡 Bloque 2 — Dinero Real: estos números son los mismos que calcula cualquier emprendedor real antes de abrir su negocio. El margen bruto del 57% está por encima de la media del sector hostelería (45%). ¿Qué pasaría si los ingredientes subieran un 20%?",
+                  "💡 Block 2 — Real Money: these are the same numbers any real entrepreneur calculates before opening their business. A 57% gross margin is above the hospitality sector average (45%). What would happen if ingredients rose 20%?"
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S41: Mi equipo Food Truck ────────────────────────────────────── */}
       {(() => {
         const equipo = {
@@ -2800,6 +2925,132 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 {lbl(
                   "Un Lean Canvas no es un documento escolar — es el mapa de tus decisiones reales. Cada bloque que rellenas esta semana es una hipótesis que validarás con clientes reales en el mercado.",
                   "A Lean Canvas isn't a school document — it's the map for your real decisions. Every block you fill this week is a hypothesis you'll validate with real customers at the market."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── C40: Consulta Socrática · Bloque 1 Mentalidad ─────────────────── */}
+      {(() => {
+        const preguntasEjemplo = [
+          lbl("¿Qué precio debería poner a mi menú?", "What price should I set for my menu?"),
+          lbl("¿Cómo sé si mi idea de negocio es buena?", "How do I know if my business idea is good?"),
+          lbl("¿Dónde debería colocar el food truck?", "Where should I put the food truck?"),
+        ];
+
+        const handleConsultar = async () => {
+          if (!preguntaSocratica.trim()) return;
+          setCargandoSocratica(true);
+          try {
+            const res = await fetch("/api/tutor-chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                mode: "tutor",
+                message: `Modo Socrático activado. El alumno pregunta: "${preguntaSocratica}". Su proyecto es un Food Truck en Málaga (T2, semana 3). NUNCA des la respuesta directamente. Responde SIEMPRE con una sola pregunta de retorno poderosa que lleve al alumno a descubrir la respuesta por sí mismo. Sé conciso: una sola pregunta, máximo 2 frases.`,
+                history: [],
+              }),
+            });
+            const data = await res.json();
+            setRespuestaSocratica(data.reply ?? "¿Qué información necesitarías recopilar antes de poder responder esa pregunta por ti mismo?");
+          } catch {
+            setRespuestaSocratica("¿Qué información necesitarías recopilar antes de poder responder esa pregunta por ti mismo?");
+          } finally {
+            setCargandoSocratica(false);
+          }
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <Brain size={14} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Consulta con la IA · Modo Socrático", "Ask the AI · Socratic Mode")}
+                </h3>
+              </div>
+              <span className="text-[9px] bg-sidebar text-white font-bold px-2 py-1 rounded-full">
+                {lbl("Bloque 1 · Mentalidad", "Block 1 · Mindset")}
+              </span>
+            </div>
+            <p className="text-[11px] text-text-muted mb-4">
+              {lbl("La IA no da respuestas directas — te hace pensar. Formula una pregunta sobre tu Food Truck y recibe una pregunta de retorno.", "The AI doesn't give direct answers — it makes you think. Ask a question about your Food Truck and receive a counter-question.")}
+            </p>
+
+            {/* Example prompts */}
+            {!respuestaSocratica && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {preguntasEjemplo.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPreguntaSocratica(p)}
+                    className="text-[9px] text-text-secondary bg-background border border-card-border px-2 py-1 rounded-lg hover:border-accent-text/40 hover:text-accent-text transition-colors cursor-pointer"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input or response */}
+            {!respuestaSocratica ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={preguntaSocratica}
+                  onChange={(e) => setPreguntaSocratica(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleConsultar(); }}
+                  placeholder={lbl("Escribe tu pregunta sobre el Food Truck...", "Type your Food Truck question...")}
+                  className="flex-1 bg-background border border-card-border rounded-xl px-3 py-2 text-[12px] text-text-primary placeholder-text-muted outline-none focus:border-accent-text/50 transition-colors"
+                />
+                <button
+                  onClick={handleConsultar}
+                  disabled={!preguntaSocratica.trim() || cargandoSocratica}
+                  className="bg-sidebar text-white text-[11px] font-bold px-3 py-2 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                  {cargandoSocratica ? (
+                    <RefreshCw size={11} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={11} />
+                  )}
+                  {lbl("Consultar", "Ask")}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Question asked */}
+                <div className="bg-background rounded-xl px-3 py-2.5 border border-card-border">
+                  <p className="text-[9px] font-bold text-text-muted uppercase tracking-wide mb-1">{lbl("Tu pregunta", "Your question")}</p>
+                  <p className="text-[12px] text-text-secondary italic">«{preguntaSocratica}»</p>
+                </div>
+
+                {/* Socratic response */}
+                <div className="bg-sidebar rounded-xl px-3 py-3">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Brain size={10} className="text-accent" />
+                    <span className="text-[9px] font-bold text-accent uppercase tracking-wide">{lbl("Prof. Ana (IA) responde:", "Prof. Ana (AI) replies:")}</span>
+                  </div>
+                  <p className="text-[12px] text-white/90 leading-relaxed italic">«{respuestaSocratica}»</p>
+                </div>
+
+                <button
+                  onClick={() => { setRespuestaSocratica(null); setPreguntaSocratica(""); }}
+                  className="text-[10px] text-text-muted hover:text-accent-text transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <X size={10} />
+                  {lbl("Nueva consulta", "New question")}
+                </button>
+              </div>
+            )}
+
+            {/* Culture note */}
+            <div className="mt-3 bg-accent-light rounded-xl px-3 py-2">
+              <p className="text-[9px] text-accent-text leading-relaxed">
+                {lbl(
+                  "🧠 Modo Socrático (Bloque 1 Mentalidad): la IA nunca da la respuesta directa en la primera interacción. Siempre lanza una pregunta de retorno que activa tu pensamiento crítico.",
+                  "🧠 Socratic Mode (Block 1 Mindset): the AI never gives a direct answer on first interaction. It always launches a counter-question that activates your critical thinking."
                 )}
               </p>
             </div>

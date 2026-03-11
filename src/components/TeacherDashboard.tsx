@@ -1136,6 +1136,97 @@ export default function TeacherDashboard() {
           );
         })()}
 
+        {/* ── T40: Revisiones T2 pendientes ─────────────────────────────── */}
+        {(() => {
+          const [revisados, setRevisados] = useState<Set<string>>(new Set());
+          const enviosT2 = [
+            { id: "r1", alumno: "Lucas García",    avatar: "LG", tipo: lbl("Canvas",      "Canvas"),  fecha: lbl("Hoy · 09:15",    "Today · 09:15"),    comp: "CE"   },
+            { id: "r2", alumno: "Sofía Torres",    avatar: "ST", tipo: lbl("Canvas",      "Canvas"),  fecha: lbl("Hoy · 10:32",    "Today · 10:32"),    comp: "CCEC" },
+            { id: "r3", alumno: "Diego López",     avatar: "DL", tipo: lbl("Presupuesto", "Budget"),  fecha: lbl("Ayer · 16:40",   "Yesterday · 16:40"), comp: "STEM" },
+            { id: "r4", alumno: "Ana Martín",      avatar: "AM", tipo: lbl("Canvas",      "Canvas"),  fecha: lbl("Ayer · 15:20",   "Yesterday · 15:20"), comp: "CE"   },
+            { id: "r5", alumno: "Carla Vega",      avatar: "CV", tipo: lbl("Presupuesto", "Budget"),  fecha: lbl("Mar 10 · 11:05", "Mar 10 · 11:05"),   comp: "CE"   },
+          ];
+          const revisadasCount = revisados.size;
+
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-5 mt-5">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <ClipboardList size={14} className="text-accent-text" />
+                  <h3 className="text-[14px] font-semibold text-text-primary">
+                    {lbl("Revisiones T2 pendientes", "T2 pending reviews")}
+                  </h3>
+                </div>
+                <span className={`text-[9px] font-bold px-2 py-1 rounded-full ${
+                  revisadasCount === enviosT2.length ? "bg-success-light text-success" : "bg-warning-light text-warning"
+                }`}>
+                  {revisadasCount}/{enviosT2.length} {lbl("revisadas", "reviewed")}
+                </span>
+              </div>
+              <p className="text-[11px] text-text-muted mb-4">
+                {lbl("Canvas y presupuestos T2 enviados esta semana. Revisa y deja feedback antes del viernes.", "T2 canvases and budgets submitted this week. Review and give feedback before Friday.")}
+              </p>
+
+              {/* Progress bar */}
+              <div className="mb-4">
+                <div className="h-1.5 bg-background rounded-full overflow-hidden border border-card-border">
+                  <div
+                    className="h-full bg-success transition-all duration-500 rounded-full"
+                    style={{ width: `${(revisadasCount / enviosT2.length) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* List */}
+              <div className="space-y-2 mb-4">
+                {enviosT2.map((e) => {
+                  const done = revisados.has(e.id);
+                  const isCanvas = e.tipo === lbl("Canvas", "Canvas");
+                  return (
+                    <div key={e.id} className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
+                      done ? "bg-success-light border-success/20" : "bg-background border-card-border"
+                    }`}>
+                      <div className="w-7 h-7 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                        <span className="text-[9px] font-bold text-accent">{e.avatar}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[12px] font-semibold text-text-primary truncate">{e.alumno}</p>
+                        <p className="text-[10px] text-text-muted">{e.fecha}</p>
+                      </div>
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                        isCanvas ? "bg-accent-light text-accent-text" : "bg-warning-light text-warning"
+                      }`}>
+                        {e.tipo}
+                      </span>
+                      <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar/10 text-sidebar flex-shrink-0">{e.comp}</span>
+                      {done ? (
+                        <CheckCircle2 size={14} className="text-success flex-shrink-0" />
+                      ) : (
+                        <button
+                          onClick={() => setRevisados(prev => new Set([...prev, e.id]))}
+                          className="text-[9px] font-bold bg-sidebar text-white px-2.5 py-1 rounded-lg hover:bg-accent-dark transition-colors cursor-pointer flex-shrink-0"
+                        >
+                          {lbl("Revisar", "Review")}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Pedagogical note */}
+              <div className="bg-accent-light rounded-xl px-3 py-2.5">
+                <p className="text-[10px] text-accent-text leading-relaxed">
+                  {lbl(
+                    "Revisar el canvas en las primeras 3 semanas detecta misconceptions antes de que el alumno construya sobre hipótesis incorrectas. Un feedback de 2 líneas antes del viernes vale más que una corrección completa en semana 6.",
+                    "Reviewing the canvas in the first 3 weeks detects misconceptions before students build on incorrect hypotheses. 2-line feedback before Friday is worth more than a full correction in week 6."
+                  )}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Bottom: Competency Progress */}
         <div className="grid grid-cols-2 gap-5">
           <CompetencyProgress />

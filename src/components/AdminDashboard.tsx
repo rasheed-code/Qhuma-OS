@@ -479,6 +479,10 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   const [solicitandoAmpliacion, setSolicitandoAmpliacion] = useState(false);
   const [descargandoFactura, setDescargandoFactura] = useState<string | null>(null);
 
+  // A40 — Scoreboard T2 por clase
+  const [exportandoScoreboard, setExportandoScoreboard] = useState(false);
+  const [scoreboardExportado, setScoreboardExportado] = useState<string | null>(null);
+
   const handleSolicitarAmpliacion = () => {
     if (solicitandoAmpliacion) return;
     setSolicitandoAmpliacion(true);
@@ -4011,6 +4015,144 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                     )}
                   </>
                 )}
+              </div>
+            );
+          })()}
+
+          {/* ── A40: Scoreboard T2 por clase — semana 3 ─────────────────────── */}
+          {(() => {
+            const clasesT2 = [
+              { id: "1a", nombre: "1º ESO A", canvas: 9,  presupuesto: 7, equipo: 12, mediaScore: 72, tendencia: "up"   as const },
+              { id: "1b", nombre: "1º ESO B", canvas: 8,  presupuesto: 6, equipo: 11, mediaScore: 68, tendencia: "up"   as const },
+              { id: "2a", nombre: "2º ESO A", canvas: 4,  presupuesto: 2, equipo: 7,  mediaScore: 45, tendencia: "down" as const },
+              { id: "2b", nombre: "2º ESO B", canvas: 3,  presupuesto: 1, equipo: 6,  mediaScore: 38, tendencia: "down" as const },
+            ];
+            const totalAlumnos = 12;
+            const scoreTxt = (s: number) => s >= 70 ? "text-success" : s >= 50 ? "text-warning" : "text-urgent";
+
+            const handleExportar = () => {
+              if (exportandoScoreboard) return;
+              setExportandoScoreboard(true);
+              const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+              setTimeout(() => {
+                const csv = [
+                  "Clase,Canvas enviados,Presupuestos,Alumnos en equipo,Score medio",
+                  ...clasesT2.map(c => `${c.nombre},${c.canvas}/${totalAlumnos},${c.presupuesto}/${totalAlumnos},${c.equipo}/${totalAlumnos},${c.mediaScore}/100`),
+                ].join("\n");
+                const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `scoreboard_t2_semana3_${fecha}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                setExportandoScoreboard(false);
+                setScoreboardExportado(`scoreboard_t2_semana3_${fecha}.csv`);
+                setTimeout(() => setScoreboardExportado(null), 3000);
+              }, 1000);
+            };
+
+            return (
+              <div className="bg-card rounded-2xl border border-card-border p-5">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">
+                      {lbl("Scoreboard T2 por clase — Semana 3", "T2 Scoreboard by class — Week 3")}
+                    </h3>
+                  </div>
+                  <button
+                    onClick={handleExportar}
+                    disabled={exportandoScoreboard}
+                    className="flex items-center gap-1.5 text-[10px] font-bold bg-sidebar text-white px-2.5 py-1.5 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {exportandoScoreboard ? (
+                      <><RefreshCw size={10} className="animate-spin" />{lbl("Exportando...", "Exporting...")}</>
+                    ) : (
+                      <><Download size={10} />{lbl("Exportar CSV", "Export CSV")}</>
+                    )}
+                  </button>
+                </div>
+
+                {scoreboardExportado && (
+                  <div className="flex items-center gap-1.5 bg-success-light rounded-xl px-3 py-2 mt-2 mb-3">
+                    <CheckCircle2 size={11} className="text-success" />
+                    <span className="text-[10px] text-success font-semibold">{scoreboardExportado}</span>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-text-muted mb-4">
+                  {lbl("Estado de los 3 hitos T2 y puntuación media del proyecto por clase. Semana 3 — Food Truck.", "Status of the 3 T2 milestones and average project score per class. Week 3 — Food Truck.")}
+                </p>
+
+                {/* Table */}
+                <div className="overflow-x-auto mb-4">
+                  <table className="w-full text-[11px]">
+                    <thead>
+                      <tr className="text-text-muted text-[9px] uppercase tracking-wide border-b border-card-border">
+                        <th className="text-left pb-2 pr-3">{lbl("Clase", "Class")}</th>
+                        <th className="text-center pb-2 px-2">Canvas</th>
+                        <th className="text-center pb-2 px-2">{lbl("Presup.", "Budget")}</th>
+                        <th className="text-center pb-2 px-2">{lbl("Equipo", "Team")}</th>
+                        <th className="text-right pb-2 pl-2">Score</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-card-border">
+                      {clasesT2.map((c) => (
+                        <tr key={c.id} className="hover:bg-background/50 transition-colors">
+                          <td className="py-2.5 pr-3 font-semibold text-text-primary">
+                            <div className="flex items-center gap-1.5">
+                              {c.tendencia === "up"
+                                ? <TrendingUp size={10} className="text-success flex-shrink-0" />
+                                : <TrendingDown size={10} className="text-urgent flex-shrink-0" />
+                              }
+                              {c.nombre}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${c.canvas >= 8 ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
+                              {c.canvas}/{totalAlumnos}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 text-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${c.presupuesto >= 7 ? "bg-success-light text-success" : "bg-warning-light text-warning"}`}>
+                              {c.presupuesto}/{totalAlumnos}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-2 text-center">
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${c.equipo >= 10 ? "bg-success-light text-success" : c.equipo >= 7 ? "bg-warning-light text-warning" : "bg-urgent-light text-urgent"}`}>
+                              {c.equipo}/{totalAlumnos}
+                            </span>
+                          </td>
+                          <td className="py-2.5 pl-2">
+                            <div className="flex items-center gap-2 justify-end">
+                              <div className="flex-1 max-w-[60px] h-1.5 bg-background rounded-full overflow-hidden border border-card-border">
+                                <div
+                                  className={`h-full rounded-full ${c.mediaScore >= 70 ? "bg-success" : c.mediaScore >= 50 ? "bg-warning" : "bg-urgent"}`}
+                                  style={{ width: `${c.mediaScore}%` }}
+                                />
+                              </div>
+                              <span className={`text-[10px] font-black w-8 text-right flex-shrink-0 ${scoreTxt(c.mediaScore)}`}>
+                                {c.mediaScore}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Alert for struggling classes */}
+                <div className="bg-urgent-light border border-urgent/20 rounded-xl px-3 py-2.5 flex items-start gap-2">
+                  <AlertTriangle size={11} className="text-urgent flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-urgent leading-snug">
+                    {lbl(
+                      "2º ESO A y 2º ESO B muestran rezago significativo en semana 3. Recomendado: sesión de recuperación T2 esta semana con apoyo docente adicional.",
+                      "2nd ESO A and B show significant lag in week 3. Recommended: T2 catch-up session this week with additional teacher support."
+                    )}
+                  </p>
+                </div>
               </div>
             );
           })()}
