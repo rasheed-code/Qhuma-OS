@@ -98,6 +98,42 @@ interface FeedbackScore {
   mejora: string;
 }
 
+interface InversorVoto {
+  decision: "si" | "no" | null;
+  razon: string | null;
+  loading: boolean;
+}
+
+const inversoresConfig = [
+  {
+    id: "conservadora",
+    nombre: "Marta Ruiz",
+    perfil: "Conservadora",
+    capital: 30000,
+    avatar: "MR",
+    descripcion: "Inversora tradicional — prioriza ROI probado y riesgo controlado",
+    umbral: 72,
+  },
+  {
+    id: "moderado",
+    nombre: "Javier Torres",
+    perfil: "Moderado",
+    capital: 75000,
+    avatar: "JT",
+    descripcion: "Business angel — busca modelo escalable con tracción inicial",
+    umbral: 58,
+  },
+  {
+    id: "arriesgada",
+    nombre: "Elena López",
+    perfil: "Arriesgada",
+    capital: 150000,
+    avatar: "EL",
+    descripcion: "Inversora de riesgo — apuesta por ideas disruptivas con potencial",
+    umbral: 40,
+  },
+];
+
 const generateFeedback = (sections: Record<string, string>): FeedbackScore[] => {
   const totalWords = Object.values(sections).join(" ").split(/\s+/).filter(Boolean).length;
   const filledSections = Object.values(sections).filter(s => s.trim().length > 30).length;
@@ -194,6 +230,7 @@ export default function PitchLab() {
   const [timerDone, setTimerDone] = useState(false);
   const [aiCoach, setAiCoach] = useState<Record<string, string | null>>({});
   const [coachingSection, setCoachingSection] = useState<string | null>(null);
+  const [inversoresVotos, setInversoresVotos] = useState<Record<string, InversorVoto>>({});
 
   const handlePedirConsejo = async (sectionId: string, texto: string) => {
     if (!texto.trim() || coachingSection) return;
@@ -222,10 +259,35 @@ export default function PitchLab() {
   const totalWords = Object.values(notes).join(" ").split(/\s+/).filter(Boolean).length;
   const filledCount = pitchSections.filter(s => (notes[s.id] || "").trim().length > 10).length;
 
-  const handleSimulate = () => {
+  const handleSimulate = async () => {
     const fb = generateFeedback(notes);
+    const avg = Math.round(fb.reduce((s, f) => s + f.score, 0) / fb.length);
     setFeedback(fb);
     setMode("feedback");
+    setInversoresVotos({});
+
+    // Trigger investor votes sequentially with stagger
+    for (let idx = 0; idx < inversoresConfig.length; idx++) {
+      const inv = inversoresConfig[idx];
+      await new Promise<void>((r) => setTimeout(r, idx * 950 + 600));
+      const decision: "si" | "no" = avg >= inv.umbral ? "si" : "no";
+      setInversoresVotos((prev) => ({ ...prev, [inv.id]: { decision: null, razon: null, loading: true } }));
+      try {
+        const res = await fetch("/api/tutor-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "pitchcoach",
+            message: `Soy ${inv.nombre}, inversora ${inv.perfil.toLowerCase()}. He evaluado el pitch de Lucas (Airbnb Málaga, puntuación media ${avg}/100, ${filledCount}/5 secciones). Mi decisión es ${decision === "si" ? "INVERTIR" : "NO INVERTIR"}. En máximo 15 palabras, da UNA razón concisa desde mi perspectiva ${inv.perfil.toLowerCase()}.`,
+            history: [],
+          }),
+        });
+        const data = await res.json();
+        setInversoresVotos((prev) => ({ ...prev, [inv.id]: { decision, razon: data.reply ?? null, loading: false } }));
+      } catch {
+        setInversoresVotos((prev) => ({ ...prev, [inv.id]: { decision, razon: "Sin conexión en este momento.", loading: false } }));
+      }
+    }
   };
 
   const avgScore = feedback ? Math.round(feedback.reduce((s, f) => s + f.score, 0) / feedback.length) : 0;
@@ -517,6 +579,91 @@ export default function PitchLab() {
                 </div>
               </div>
             ))}
+
+            {/* C11: Panel de Inversores Simulados */}
+            {Object.keys(inversoresVotos).length > 0 && (() => {
+              const capitalConseguido = inversoresConfig
+                .filter((inv) => inversoresVotos[inv.id]?.decision === "si")
+                .reduce((sum, inv) => sum + inv.capital, 0);
+              return (
+                <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Users size={14} className="text-accent-text" />
+                      <span className="text-[13px] font-bold text-text-primary">Inversores simulados</span>
+                    </div>
+                    {capitalConseguido > 0 && (
+                      <div className="flex items-center gap-2 bg-success-light border border-success/20 rounded-xl px-4 py-2">
+                        <TrendingUp size={13} className="text-success" />
+                        <span className="text-[12px] font-bold text-success">
+                          {capitalConseguido.toLocaleString("es-ES")} € conseguidos
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    {inversoresConfig.map((inv) => {
+                      const voto = inversoresVotos[inv.id];
+                      const isLoading = voto?.loading ?? false;
+                      const decision = voto?.decision ?? null;
+                      const razon = voto?.razon ?? null;
+                      return (
+                        <div
+                          key={inv.id}
+                          className={`rounded-xl p-4 border transition-all ${
+                            decision === "si"
+                              ? "bg-success-light border-success/25"
+                              : decision === "no"
+                              ? "bg-urgent-light border-urgent/25"
+                              : "bg-background border-card-border"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 mb-3">
+                            <div className="w-9 h-9 rounded-full bg-sidebar text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+                              {inv.avatar}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[12px] font-bold text-text-primary leading-tight">{inv.nombre}</p>
+                              <p className="text-[10px] text-text-muted">{inv.perfil}</p>
+                            </div>
+                            {isLoading ? (
+                              <Loader2 size={16} className="text-text-muted animate-spin flex-shrink-0" />
+                            ) : decision !== null ? (
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                decision === "si" ? "bg-success text-white" : "bg-urgent text-white"
+                              }`}>
+                                <span className="text-[14px] font-black">{decision === "si" ? "✓" : "✗"}</span>
+                              </div>
+                            ) : null}
+                          </div>
+                          <p className="text-[10px] text-text-muted mb-2 leading-relaxed">{inv.descripcion}</p>
+                          {decision !== null && (
+                            <div className={`text-[10px] font-semibold mb-1 ${decision === "si" ? "text-success" : "text-urgent"}`}>
+                              {decision === "si" ? `Invierte ${inv.capital.toLocaleString("es-ES")} €` : "No invierte"}
+                            </div>
+                          )}
+                          {razon && (
+                            <p className="text-[10px] text-text-secondary leading-relaxed italic">
+                              &ldquo;{razon}&rdquo;
+                            </p>
+                          )}
+                          {isLoading && (
+                            <p className="text-[10px] text-text-muted italic">Evaluando pitch...</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {capitalConseguido === 0 && !inversoresConfig.some((inv) => inversoresVotos[inv.id]?.loading) && (
+                    <div className="mt-4 bg-urgent-light rounded-xl px-4 py-3 border border-urgent/20">
+                      <p className="text-[11px] text-urgent font-medium">
+                        Ningún inversor ha apostado por el proyecto esta vez. Refuerza el modelo financiero y la sección de mercado para convencerlos.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* AI coach feedback per section (collected during writing) */}
             {Object.keys(aiCoach).some(k => aiCoach[k]) && (
