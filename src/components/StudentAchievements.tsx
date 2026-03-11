@@ -624,6 +624,112 @@ export default function StudentAchievements() {
           </div>
         </div>
 
+        {/* ── S39: Insignias Food Truck T2 ──────────────────────────────── */}
+        {(() => {
+          interface InsigniaT2 {
+            id: string;
+            nombre: string;
+            emoji: string;
+            descripcion: string;
+            comp: string;
+            fase: string;
+            xp: number;
+            desbloqueada: boolean;
+            progreso?: { actual: number; total: number };
+          }
+          const insigniasT2: InsigniaT2[] = [
+            { id: "ft1", nombre: lbl("Concepto en pie", "Concept Standing"), emoji: "💡", descripcion: lbl("Definiste el concepto y el nombre de tu food truck", "You defined your food truck concept and name"), comp: "CE", fase: lbl("Fase 1", "Phase 1"), xp: 50, desbloqueada: true },
+            { id: "ft2", nombre: lbl("Marca propia", "Own Brand"), emoji: "🎨", descripcion: lbl("Creaste un brand board completo para tu food truck", "You created a full brand board for your food truck"), comp: "CCEC", fase: lbl("Fase 1", "Phase 1"), xp: 75, desbloqueada: true },
+            { id: "ft3", nombre: lbl("Maestro del menú", "Menu Master"), emoji: "🍔", descripcion: lbl("Diseñaste los 5 productos con descripción y margen calculado", "You designed all 5 products with descriptions and calculated margins"), comp: "STEM", fase: lbl("Fase 2", "Phase 2"), xp: 100, desbloqueada: false, progreso: { actual: 3, total: 5 } },
+            { id: "ft4", nombre: lbl("Punto de equilibrio", "Breakeven"), emoji: "⚖️", descripcion: lbl("Calculaste el punto de equilibrio de tu food truck", "You calculated your food truck's breakeven point"), comp: "STEM", fase: lbl("Fase 3", "Phase 3"), xp: 125, desbloqueada: false, progreso: { actual: 0, total: 1 } },
+            { id: "ft5", nombre: lbl("Inversor convencido", "Convinced Investor"), emoji: "🤝", descripcion: lbl("Presentaste el pitch y obtuviste una puntuación ≥ 3.5", "You pitched and scored ≥ 3.5"), comp: "CLC", fase: lbl("Fase 4", "Phase 4"), xp: 200, desbloqueada: false, progreso: { actual: 0, total: 1 } },
+            { id: "ft6", nombre: lbl("Financiero del año", "Finance of the Year"), emoji: "💰", descripcion: lbl("Margen bruto medio de menú ≥ 65%", "Average menu gross margin ≥ 65%"), comp: "CE", fase: lbl("Fase 3", "Phase 3"), xp: 150, desbloqueada: false },
+            { id: "ft7", nombre: lbl("Triple competencia", "Triple Competency"), emoji: "🌟", descripcion: lbl("Completaste tareas de CE, STEM y CCEC en la misma semana", "You completed CE, STEM and CCEC tasks in the same week"), comp: "CPSAA", fase: lbl("Sem 2", "Wk 2"), xp: 175, desbloqueada: false },
+            { id: "ft8", nombre: lbl("Food Truck lanzado", "Food Truck Launched"), emoji: "🚚", descripcion: lbl("Completaste todas las fases del proyecto Food Truck", "You completed all phases of the Food Truck project"), comp: "CE", fase: lbl("Final T2", "T2 Final"), xp: 500, desbloqueada: false },
+          ];
+          const desbloqueadas = insigniasT2.filter((i) => i.desbloqueada);
+          const enProgreso = insigniasT2.filter((i) => !i.desbloqueada && i.progreso);
+          const bloqueadas = insigniasT2.filter((i) => !i.desbloqueada && !i.progreso);
+          return (
+            <div className="bg-card border border-card-border rounded-2xl p-5 mb-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg leading-none">🚚</span>
+                  <h2 className="text-[14px] font-bold text-text-primary">{lbl("Insignias Food Truck T2", "Food Truck T2 Badges")}</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] bg-success-light text-success font-bold px-2 py-0.5 rounded-full border border-success/20">{desbloqueadas.length}/{insigniasT2.length} {lbl("desbloqueadas", "unlocked")}</span>
+                  <span className="text-[9px] bg-accent-light text-accent-text font-bold px-2 py-0.5 rounded-full">{desbloqueadas.reduce((s, i) => s + i.xp, 0)} XP</span>
+                </div>
+              </div>
+
+              {/* Desbloqueadas */}
+              {desbloqueadas.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-[9px] text-text-muted font-semibold uppercase tracking-wide mb-2">{lbl("Conseguidas", "Earned")}</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {desbloqueadas.map((ins) => (
+                      <div key={ins.id} className="flex items-center gap-2.5 bg-success-light rounded-xl px-3 py-2.5 border border-success/20">
+                        <span className="text-xl leading-none flex-shrink-0">{ins.emoji}</span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold text-text-primary truncate">{ins.nombre}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[7px] font-bold bg-sidebar text-accent px-1 py-0.5 rounded-full">{ins.comp}</span>
+                            <span className="text-[8px] text-text-muted">{ins.fase} · +{ins.xp} XP</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* En progreso */}
+              {enProgreso.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-[9px] text-text-muted font-semibold uppercase tracking-wide mb-2">{lbl("En progreso", "In progress")}</p>
+                  <div className="space-y-2">
+                    {enProgreso.map((ins) => {
+                      const pct = Math.round((ins.progreso!.actual / ins.progreso!.total) * 100);
+                      return (
+                        <div key={ins.id} className="bg-warning-light rounded-xl px-3 py-2.5 border border-warning/20">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-base leading-none flex-shrink-0">{ins.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-bold text-text-primary">{ins.nombre}</p>
+                              <p className="text-[9px] text-text-muted">{ins.descripcion}</p>
+                            </div>
+                            <span className="text-[9px] font-bold text-warning flex-shrink-0">{ins.progreso!.actual}/{ins.progreso!.total}</span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-border overflow-hidden">
+                            <div className="h-full rounded-full bg-warning" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Bloqueadas */}
+              {bloqueadas.length > 0 && (
+                <div>
+                  <p className="text-[9px] text-text-muted font-semibold uppercase tracking-wide mb-2">{lbl("Bloqueadas", "Locked")}</p>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {bloqueadas.map((ins) => (
+                      <div key={ins.id} className="relative bg-background rounded-xl p-2 border border-card-border text-center">
+                        <span className="text-xl leading-none opacity-30">{ins.emoji}</span>
+                        <p className="text-[8px] text-text-muted mt-1 leading-tight truncate">{ins.nombre}</p>
+                        <span className="text-[7px] font-bold bg-background border border-border text-text-muted px-1 py-0.5 rounded-full mt-0.5 inline-block">{ins.fase}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Stats rarity row */}
         <div className="grid grid-cols-3 gap-3 mb-5">
           {(["Común", "Raro", "Legendario"] as Rarity[]).map((r) => {
