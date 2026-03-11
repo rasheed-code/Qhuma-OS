@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 36 ✅ (push: `541b126`)
+- **Último ciclo completo**: Ciclo 37 ✅ (push: `e5fb17e`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 37
+- **Próximo ciclo**: Ciclo 38
 
 ---
 
@@ -1297,6 +1297,61 @@
 
 ---
 
+## Sprints completados — Ciclo 37
+
+### [SPRINT-TEACHER][T35] TeacherProjectGenerator — Banco de retos T2: 5 variantes Food Truck ✅
+- Commit: `d0763ea`
+- Archivo: `src/components/TeacherProjectGenerator.tsx`
+- Interfaz `ReteT2` + `bancoretoT2` array a nivel módulo: 5 variantes (ft-clasico/ft-dark/ft-sostenible/ft-fusion/ft-eventos)
+- Cada reto: dificultad 1–5 con colores design system, descripción, competencias LOMLOE, entregables, QCoins, imagen emoji
+- Nuevos states: `modo ("generador"|"banco")`, `retoExpandido string|null`, `retoUsado string|null`
+- `dificultadCfg` Record 5 niveles mapeados a colores design system
+- Toggle "Generador IA / Banco de Retos T2" tabs encima del contenido existente
+- Banco view: lista expandible con detalle (competencias chips, entregables bullets, QCoins), botón "Usar este" pre-rellena `result` state
+- Ternario actualizado: `modo==="banco"` → banco, sino `step==="config"` → config form, sino → result
+- Imports añadidos: `Layers, ChevronDown, ChevronUp, CheckCircle2`
+
+### [SPRINT-STUDENT][S37] StudentProfile — Carta profesional IA (Bloque 3 Narrativa propia) ✅
+- Commit: `1a55530`
+- Archivo: `src/components/StudentProfile.tsx`
+- Insertado antes de Achievements (después de C34 Plan de aprendizaje)
+- Botón "Generar carta con IA": fetch /api/tutor-chat mode="narrativa" con contexto nombre/proyectos/competencias
+- Fallback carta hardcoded en es/en contextualizada a T1 Casa Limón con los datos del alumno
+- Carta en `<pre>` con `whitespace-pre-wrap`, scroll max-h-48
+- Botón "Copiar": navigator.clipboard → `cartaCopiada` badge 3s
+- Botón "Descargar": HTML blob → descarga con extensión .pdf (nombre real del alumno)
+- Botón "Regenerar": vuelve a llamar la API
+- Nota pedagógica: Bloque 3 Narrativa propia — "Tu trayectoria cuenta una historia"
+- Imports añadidos: `Copy`, `Download`
+- Estados añadidos: `cartaProfesional string|null`, `generandoCarta boolean`, `cartaCopiada boolean`, `cartaDescargada boolean`
+
+### [SPRINT-ADMIN][A35] AdminDashboard — Adopción T2 en tiempo real (Overview tab) ✅
+- Commit: `73a503d`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Insertado en Overview tab izquierda, después de A33 (Mapa de transición T1→T2), antes del panel derecho
+- KPI strip 3 cols: clases activas (sidebar) / alumnos conectados (accent-text) / tarea 1 entregada (success)
+- Comparativa vs T1 día 1: +33pp y +22pp — texto verde/warning semáforo
+- 4 filas de clase: 1ºA y 1ºB activas (bg-accent-light), 2ºA y 2ºB pendientes (bg-background)
+- Mini gráfico doble barra (engagement verde obscuro / tarea1 success) por clase activa
+- Leyenda color + nota pedagógica "datos actualizados cada 15 min"
+- IIFE pattern. Sin nuevos imports.
+
+### [SPRINT-CULTURE][C35] StudentDashboard — Empresa por dentro: Estructura Food Truck (Bloque 2) ✅
+- Commit: `e5fb17e`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Insertado entre S36 (Semana 1 Food Truck) y S34 (Siguiente proyecto)
+- Org chart interactivo: CEO arriba + línea conector + 4 departamentos (CFO/CMO/COO/CTO) en grid 4 cols
+- Cada rol: emoji + código + badge competencia LOMLOE (CE/STEM/CLC/CPSAA/CD)
+- Click en rol → `rolActivo` state → tarjeta detalle: emoji, título, depto, descripción, 3 tareas numeradas
+- Sin rol activo: estado vacío "Toca un rol para ver..."
+- 5 colores por departamento: sidebar/warning-light/accent-light/success-light/urgent-light
+- Nota pedagógica: "conocer la estructura te ayuda a entender cómo encaja tu trabajo con el del equipo"
+- Principio culture.md Bloque 2: Empresa por dentro — estructuras organizativas a través del proyecto activo
+- IIFE pattern con interface `Rol` interna + `rolActivo` useState
+- Imports añadidos: ninguno (Briefcase ya existía)
+
+---
+
 ## Sprints completados — Ciclo 35
 
 ### [SPRINT-TEACHER][T33] TeacherAnalytics — Tendencia semanal T1: evolución de 8 competencias LOMLOE ✅
@@ -1652,6 +1707,10 @@
 - **Ciclo 36 — StudentDashboard S36**: IIFE sin estados nuevos. `tareasS1` array const dentro del IIFE, diaIdx derivado de `new Date().getDay()`. Insertado entre S33 y S34. Sin imports nuevos.
 - **Ciclo 36 — AdminDashboard A34**: presupuestosAprobados Set<string> + aprobandoPresupuesto string|null declarados en el scope del componente (fuera del IIFE). Panel con IIFE al final del tab Capital, después de A25 segundaronda (línea ~2503). Sin imports nuevos.
 - **Ciclo 36 — StudentProfile C34**: planT2Generado/generandoPlanT2/planT2Comprometido states. Import añadido: AlertCircle. Detecta comp más débil via `competencies.reduce(min)`. Fallback: 4 semanas mock detalladas + 3 recursos contextualizados. Insertado antes de Achievements (después de S35 Industrias Vivas).
+- **Ciclo 37 — TeacherProjectGenerator T35**: `bancoretoT2` a nivel módulo, 5 retos con dificultad 1-5. `modo state` controla tab activo. Ternario triple: banco → generador-config → generador-result. Botón "Usar este" en banco pre-rellena `result` state y cambia modo a "generador". Imports añadidos: Layers, ChevronDown, ChevronUp, CheckCircle2.
+- **Ciclo 37 — StudentProfile S37**: cartaProfesional/generandoCarta/cartaCopiada/cartaDescargada states. Carta en `<pre>`. handleDescargar(): HTML blob → download .pdf. Insertado después de C34, antes de Achievements. Imports añadidos: Copy, Download.
+- **Ciclo 37 — AdminDashboard A35**: IIFE panel en Overview izquierda después de A33 (Mapa transición). 3 KPIs con comparativa vs T1 día 1. 4 filas clase con estado activo/pendiente. Mini doble barra chart. Sin imports nuevos.
+- **Ciclo 37 — StudentDashboard C35**: interface `Rol` interna al IIFE. `rolActivo useState<string|null>`. 5 roles con emoji/dept/comp/tareas. CEO centrado arriba + grid-cols-4 abajo. Click toggle detalle. Sin imports nuevos (Briefcase ya existía).
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). S28 añade useState + mentorMensaje/enviandoMentor/mentorEnviado/mentorFormOpen states + handlePedirConsejo(). Sección "Mi red de apoyo" insertada ANTES de "Competencias" (después de evidence portfolio): IIFE pattern, 3 mentor cards con avatar/rol/specialty badges/último mensaje/tiempo respuesta, form inline textarea + botones Enviar+Cancelar + feedback success-light. specialtyColors Record dentro del IIFE. Imports añadidos: useState, Clock, ChevronRight, CheckCircle2, Send, RefreshCw. Leer antes de editar en ciclos futuros.
 - **DeepDive / TeacherChat**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat. C24 extiende el useEffect existente: computa deepDiveDepth (0-100) + extrae deepDiveHilos (last 3 AI sentences). Añade deepDiveSesiones (max 3, LIFO) + guardandoSesion/sessionGuardada/showSesiones states. Panel profundímetro + hilos + guardar sesión + colapsable sesiones insertados en el bloque deepDiveMode. Imports añadidos: BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2. C28 añade tutoriaMode/tutoriaStep(0-3)/tutoriaTimers(number[])/tutoriaCompletados(Set<number>)/tutoriaSesiones(array)/guardandoTutoria/tutoriaGuardada/tutoriaTimerRunning states + tutoriaIntervalRef useRef (para cleanup interval). `agendaTutoria` array de 4 pasos definido DENTRO del componente (usa lbl()). Botón "TUTORÍA" (ClipboardList) en header del chat toggle. Panel tutoriaMode: progress bar 4 segs, 4 step cards con timer countdown/barra/pregunta clickable, checkbox circular, Iniciar/Pausar, handleGuardarTutoria() 1.2s delay + sesión en historial. Imports añadidos: ClipboardList, Timer, X.
 - **TeacherCalendar**: T8 rewrote completely — vista semana/mes. T28 añade vista "trimestre" a VistaCalendario type. semanasTrimestrales (array 12 semanas generado en componente). getSemanaPorDia() helper. Panel "Duplicar semana" con selects origen/destino + handleDuplicarSemana() 900ms + chips copias. Grid 12×6 con dots de eventos por día, resaltado semanas especiales (S1 accent, S8 warning, S12 success). Imports añadidos: Copy, RefreshCw.
