@@ -1034,7 +1034,7 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           </div>
 
           {/* 4 KPIs financieros */}
-          <div className="grid grid-cols-4 gap-3 mb-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
             {[
               { label: lbl("Ingresos este mes", "Monthly revenue"), valor: "1.240€", meta: "1.850€", pct: 67, bg: "bg-success-light", barColor: "bg-success", icon: Coins, info: lbl("vs. objetivo mensual", "vs. monthly target") },
               { label: lbl("Gastos fijos", "Fixed costs"), valor: "310€", meta: "350€ máx.", pct: 89, bg: "bg-warning-light", barColor: "bg-warning", icon: Receipt, info: lbl("limpieza + suministros", "cleaning + supplies") },
