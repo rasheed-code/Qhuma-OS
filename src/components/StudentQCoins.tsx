@@ -5,7 +5,7 @@ import {
   Coins, Zap, Flame, Trophy, Sparkles, Timer, Users, Lightbulb,
   Palette, Swords, Star, Lock, TrendingUp, TrendingDown,
   ShoppingCart, X, CheckCircle2, Camera, Cpu, MapPin, Mic, Loader2,
-  BarChart3, Filter, Award,
+  BarChart3, Filter, Award, Building2, BookOpen, Briefcase, UserCheck, Ticket,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { playerLevel, coinTransactions, shopItems, achievements } from "@/data/gamification";
@@ -13,7 +13,7 @@ import { competencies } from "@/data/competencies";
 import { useLang } from "@/lib/i18n";
 
 // ─── Mercado de canjes ───────────────────────────────────────────────
-type Categoria = "Todo" | "Talleres" | "Maker" | "Excursiones" | "Passion";
+type Categoria = "Todo" | "Talleres" | "Maker" | "Excursiones" | "Passion" | "Experiencias";
 
 interface ItemMercado {
   id: string;
@@ -76,13 +76,33 @@ const transaccionesPendientes = [
   { id: "p2", descripcion: "Revisión de evidencias T2",     cantidad: 80,  fecha: "Pendiente · Mar 17 mar" },
 ];
 
-const categorias: Categoria[] = ["Todo", "Talleres", "Maker", "Excursiones", "Passion"];
+// ─── S31: Tienda de experiencias ────────────────────────────────────
+interface Experiencia {
+  id: string;
+  titulo: string;
+  precio: number;
+  aforo: { ocupado: number; total: number };
+  fecha: string;
+  descripcion: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+}
+
+interface Reserva {
+  id: string;
+  expId: string;
+  titulo: string;
+  fecha: string;
+  ticket: string;
+}
+
+const categorias: Categoria[] = ["Todo", "Talleres", "Maker", "Excursiones", "Passion", "Experiencias"];
 const catColors: Record<Categoria, string> = {
   Todo: "bg-background text-text-secondary",
   Talleres: "bg-accent-light text-accent-text",
   Maker: "bg-success-light text-success",
   Excursiones: "bg-warning-light text-warning",
   Passion: "bg-urgent-light text-urgent",
+  Experiencias: "bg-sidebar/10 text-sidebar",
 };
 
 export default function StudentQCoins() {
@@ -128,11 +148,20 @@ export default function StudentQCoins() {
     Maker: "Maker",
     Excursiones: lbl("Excursiones", "Trips"),
     Passion: "Passion",
+    Experiencias: lbl("Experiencias", "Experiences"),
   };
+
+  // S31 — Tienda de experiencias
+  const experienciasData: Experiencia[] = [
+    { id: "ex1", titulo: lbl("Visita empresa tecnológica en Málaga", "Tech company visit in Málaga"),  precio: 500, aforo: { ocupado: 10, total: 12 }, fecha: "25 mar", descripcion: lbl("Tarde inmersiva en una empresa tech de Málaga. Conoce cómo se construye producto real y conecta con ingenieros.", "Immersive afternoon at a Málaga tech company."), icon: Building2 },
+    { id: "ex2", titulo: lbl("Workshop fotografía profesional",      "Professional photography workshop"), precio: 350, aforo: { ocupado: 6,  total: 8  }, fecha: "1 abr",  descripcion: lbl("3h con fotógrafo profesional. Aprende a capturar el apartamento Casa Limón para maximizar conversión en Airbnb.", "3h with a pro photographer."), icon: Camera },
+    { id: "ex3", titulo: lbl("Charla inversor real QHUMA Capital",   "QHUMA Capital investor talk"),      precio: 250, aforo: { ocupado: 12, total: 15 }, fecha: "15 abr", descripcion: lbl("Sesión con inversor real del ecosistema QHUMA Capital. Preguntas abiertas sobre tu proyecto Airbnb Málaga.", "Q&A session with a real QHUMA Capital investor about your project."), icon: BookOpen },
+    { id: "ex4", titulo: lbl("Mentoría 1:1 con alumni empresa",      "1:1 mentoring with alumni"),         precio: 400, aforo: { ocupado: 3,  total: 5  }, fecha: "22 abr", descripcion: lbl("1h de mentoría personalizada con un alumni QHUMA que trabaja en empresa real. Perspectiva de futuro laboral directo.", "1h personalized mentoring with a QHUMA alumni working at a real company."), icon: UserCheck },
+  ];
 
   const itemsFiltrados = catActiva === "Todo" ? mercadoItems : mercadoItems.filter((i) => i.categoria === catActiva);
   const totalCarrito = carrito.reduce((s, i) => s + i.precio, 0);
-  const saldoDisponible = currentStudent.qcoins;
+  const saldoDisponible = saldoActual;
   const puedeComprar = totalCarrito > 0 && totalCarrito <= saldoDisponible;
 
   const addToCart = (item: ItemMercado) => {
@@ -148,6 +177,36 @@ export default function StudentQCoins() {
   // S24 — Historial de transacciones con filtro
   type FiltroTx = "todo" | "ganadas" | "gastadas" | "pendientes";
   const [filtroTx, setFiltroTx] = useState<FiltroTx>("todo");
+
+  // S31 — Tienda de experiencias
+  const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [cancelando, setCancelando] = useState<string | null>(null);
+  const [saldoActual, setSaldoActual] = useState(currentStudent.qcoins);
+  const [reservandoId, setReservandoId] = useState<string | null>(null);
+  const [confirmacionReserva, setConfirmacionReserva] = useState<string | null>(null);
+  const [showMisReservas, setShowMisReservas] = useState(false);
+
+  const handleReservar = (exp: Experiencia) => {
+    if (saldoActual < exp.precio) return;
+    setReservandoId(exp.id);
+    setTimeout(() => {
+      const ticket = `QHM-${exp.id.toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      setReservas((prev) => [{ id: ticket, expId: exp.id, titulo: exp.titulo, fecha: exp.fecha, ticket }, ...prev]);
+      setSaldoActual((s) => s - exp.precio);
+      setConfirmacionReserva(ticket);
+      setReservandoId(null);
+      setTimeout(() => setConfirmacionReserva(null), 5000);
+    }, 1000);
+  };
+
+  const handleCancelar = (reservaId: string, precio: number) => {
+    setCancelando(reservaId);
+    setTimeout(() => {
+      setReservas((prev) => prev.filter((r) => r.id !== reservaId));
+      setSaldoActual((s) => s + precio);
+      setCancelando(null);
+    }, 800);
+  };
 
   // suppress unused warning
   void iaVersion;
@@ -166,7 +225,7 @@ export default function StudentQCoins() {
               <Coins size={16} className="text-accent" />
               <span className="text-[12px] font-bold text-accent uppercase tracking-wider">{lbl("Saldo Q-Coins", "Q-Coins Balance")}</span>
             </div>
-            <div className="text-[48px] font-bold text-white leading-none mb-4">{saldoDisponible}</div>
+            <div className="text-[48px] font-bold text-white leading-none mb-4">{saldoActual}</div>
             <div className="flex items-center gap-6">
               <div className="flex-1 max-w-xs">
                 <div className="flex items-center justify-between mb-1">
@@ -321,6 +380,157 @@ export default function StudentQCoins() {
             })}
           </div>
         </div>
+
+        {/* ─── S31: Tienda de Experiencias ─── */}
+        {(catActiva === "Todo" || catActiva === "Experiencias") && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Tienda de Experiencias", "Experience Store")}</h2>
+                <p className="text-[11px] text-text-muted mt-0.5">{lbl("Reserva tu plaza en experiencias reales del mundo profesional", "Reserve your spot at real professional experiences")}</p>
+              </div>
+              {reservas.length > 0 && (
+                <button
+                  onClick={() => setShowMisReservas((v) => !v)}
+                  className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                >
+                  <Ticket size={11} />
+                  {showMisReservas ? lbl("Ocultar reservas", "Hide bookings") : `${lbl("Mis reservas", "My bookings")} (${reservas.length})`}
+                </button>
+              )}
+            </div>
+
+            {/* Confirmación de reserva */}
+            {confirmacionReserva && (
+              <div className="flex items-start gap-3 bg-success-light border border-success/20 rounded-xl p-4 mb-4">
+                <CheckCircle2 size={18} className="text-success flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-[12px] font-bold text-success">{lbl("¡Plaza reservada con éxito!", "Spot reserved successfully!")}</p>
+                  <p className="text-[11px] text-text-secondary mt-0.5">{lbl("Tu código de ticket:", "Your ticket code:")} <span className="font-bold text-sidebar">{confirmacionReserva}</span></p>
+                  <p className="text-[10px] text-text-muted mt-1">{lbl("Guarda este código. Lo necesitarás el día del evento.", "Save this code. You'll need it on the day of the event.")}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Mis reservas */}
+            {showMisReservas && reservas.length > 0 && (
+              <div className="bg-background rounded-2xl p-4 mb-4 border border-card-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Ticket size={13} className="text-sidebar" />
+                  <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Mis reservas activas", "My active bookings")}</h3>
+                </div>
+                <div className="space-y-2">
+                  {reservas.map((r) => {
+                    const exp = experienciasData.find((e) => e.id === r.expId);
+                    return (
+                      <div key={r.id} className="flex items-center gap-3 bg-card rounded-xl p-3 border border-card-border">
+                        <div className="w-8 h-8 rounded-lg bg-sidebar/10 flex items-center justify-center flex-shrink-0">
+                          {exp && <exp.icon size={14} className="text-sidebar" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] font-semibold text-text-primary truncate">{r.titulo}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] text-text-muted">{r.fecha}</span>
+                            <span className="text-[9px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">{r.ticket}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const precio = exp?.precio ?? 0;
+                            handleCancelar(r.id, precio);
+                          }}
+                          disabled={cancelando === r.id}
+                          className="text-[9px] font-bold text-urgent border border-urgent/20 bg-urgent-light px-2.5 py-1.5 rounded-xl cursor-pointer hover:brightness-95 transition-all disabled:opacity-50 flex-shrink-0"
+                        >
+                          {cancelando === r.id ? "…" : lbl("Cancelar", "Cancel")}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Grid de experiencias */}
+            <div className="grid grid-cols-2 gap-4">
+              {experienciasData.map((exp) => {
+                const plazasLibres = exp.aforo.total - exp.aforo.ocupado;
+                const yaTieneReserva = reservas.some((r) => r.expId === exp.id);
+                const puedePagar = saldoActual >= exp.precio;
+                const plazasPct = (exp.aforo.ocupado / exp.aforo.total) * 100;
+                return (
+                  <div key={exp.id} className={`bg-card rounded-2xl p-4 border transition-all ${yaTieneReserva ? "border-success/30 ring-1 ring-success/20" : "border-card-border"}`}>
+                    {/* Imagen placeholder */}
+                    <div className="w-full h-20 rounded-xl bg-sidebar/10 flex items-center justify-center mb-3 relative overflow-hidden">
+                      <exp.icon size={32} className="text-sidebar/40" />
+                      {yaTieneReserva && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1 bg-success text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
+                          <CheckCircle2 size={9} />
+                          {lbl("Reservada", "Booked")}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="text-[12px] font-bold text-text-primary leading-snug flex-1 pr-2">{exp.titulo}</p>
+                      <span className="text-[9px] font-bold bg-warning-light text-text-primary px-2 py-0.5 rounded-full flex-shrink-0">{exp.fecha}</span>
+                    </div>
+                    <p className="text-[10px] text-text-muted leading-relaxed mb-3">{exp.descripcion}</p>
+                    {/* Aforo */}
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[9px] text-text-muted">{lbl("Plazas", "Spots")}: {exp.aforo.ocupado}/{exp.aforo.total}</span>
+                        <span className={`text-[9px] font-bold ${plazasLibres <= 2 ? "text-urgent" : plazasLibres <= 4 ? "text-warning" : "text-success"}`}>
+                          {plazasLibres} {lbl("libres", "left")}
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-background rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${plazasPct >= 90 ? "bg-urgent" : plazasPct >= 70 ? "bg-warning" : "bg-success"}`}
+                          style={{ width: `${plazasPct}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1">
+                        <Coins size={11} className="text-accent-text" />
+                        <span className="text-[14px] font-bold text-accent-text">{exp.precio}</span>
+                        <span className="text-[9px] text-text-muted">QC</span>
+                      </div>
+                      {yaTieneReserva ? (
+                        <span className="text-[10px] font-bold text-success bg-success-light px-3 py-1.5 rounded-xl">
+                          ✓ {lbl("Reservada", "Booked")}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleReservar(exp)}
+                          disabled={!puedePagar || plazasLibres === 0 || reservandoId === exp.id}
+                          className={`flex items-center gap-1.5 text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                            puedePagar && plazasLibres > 0
+                              ? "bg-sidebar text-white hover:brightness-110"
+                              : "bg-background text-text-muted cursor-not-allowed"
+                          } disabled:opacity-60`}
+                        >
+                          {reservandoId === exp.id ? (
+                            <Loader2 size={10} className="animate-spin" />
+                          ) : (
+                            <Ticket size={10} />
+                          )}
+                          {reservandoId === exp.id
+                            ? lbl("Reservando…", "Booking…")
+                            : plazasLibres === 0
+                            ? lbl("Sin plazas", "Full")
+                            : !puedePagar
+                            ? lbl("Sin saldo", "No funds")
+                            : lbl("Reservar plaza", "Reserve spot")}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ─── Historial de canjes ─── */}
         <div className="mb-8">
