@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw, Sparkles, GitCommit, BarChart3, MapPin, Users, FileImage, ExternalLink } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -140,9 +140,50 @@ const timelineHitos = [
   { fecha: "Próximo", titulo: "Demo Day — Pitch ante inversores reales", competencia: "CE" as CompKey, xp: 200, completado: false, fase: "Semana 4" },
 ];
 
+// S16 — Evidencias destacadas
+const evidenciasDestacadas = [
+  {
+    id: "ev1",
+    titulo: "Análisis de mercado Airbnb Málaga",
+    tipo: "Hoja de cálculo",
+    icono: "spreadsheet" as const,
+    competencia: "STEM" as CompKey,
+    descripcionCorta: "Precios, ocupación y segmentación de 120 listings del centro histórico",
+    descripcionCompleta: "Hoja de cálculo con 3 meses de datos del INE y AirDNA. Incluye análisis de 120 listings activos, distribución de precios por temporada (€48 noche en verano vs €32 en invierno) y modelo de proyección de ocupación para Casa Limón. Primera evidencia entregada del proyecto.",
+  },
+  {
+    id: "ev2",
+    titulo: "Brand board Casa Limón",
+    tipo: "Imagen",
+    icono: "image" as const,
+    competencia: "CCEC" as CompKey,
+    descripcionCorta: "Identidad visual completa: paleta mediterránea, tipografía, logo y guía de uso",
+    descripcionCompleta: "Brand board con la identidad visual de Casa Limón. Paleta de colores mediterránea (arena #F5E6C8, verde olivo #7A8450, terracota #C4714A), tipografía Playfair Display + Inter, logotipo en 3 variantes y guía de aplicación para el listing de Airbnb y redes sociales. 3 iteraciones antes de aprobación.",
+  },
+  {
+    id: "ev3",
+    titulo: "Listing bilingüe Casa Limón",
+    tipo: "Documento",
+    icono: "document" as const,
+    competencia: "CLC" as CompKey,
+    descripcionCorta: "Descripción en español e inglés con SEO optimizado para Airbnb",
+    descripcionCompleta: "Texto del listing completo en español e inglés (1.200 palabras cada uno), optimizado para búsqueda en Airbnb. Incluye guía de bienvenida bilingüe y 10 plantillas de comunicación con huéspedes para los escenarios más frecuentes: check-in, preguntas, problemas e incidencias.",
+  },
+  {
+    id: "ev4",
+    titulo: "Modelo financiero y punto de equilibrio",
+    tipo: "Hoja de cálculo",
+    icono: "spreadsheet" as const,
+    competencia: "CE" as CompKey,
+    descripcionCorta: "3 escenarios de ocupación (40/65/85%) con proyección a 12 meses",
+    descripcionCompleta: "Modelo financiero con proyección a 12 meses para Casa Limón. Escenario conservador (40% = 1.200€/mes), realista (65% = 1.850€/mes) y optimista (85% = 2.400€/mes). Punto de equilibrio alcanzado en mes 3 con ocupación realista. Coste de captación: 20€/cliente. Margen neto estimado: 70%.",
+  },
+];
+
 export default function StudentPortfolio() {
   const [activeComp, setActiveComp] = useState<CompKey | null>(null);
   const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set(["e1"]));
+  const [expandedEvidencia, setExpandedEvidencia] = useState<string | null>(null);
   const [narrativaIA, setNarrativaIA] = useState<string | null>(null);
   const [isGenerandoNarrativa, setIsGenerandoNarrativa] = useState(false);
 
@@ -399,6 +440,64 @@ export default function StudentPortfolio() {
                 <span className="text-[9px] text-white/40">Entre 1.200 listings registrados en la zona</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* S16: Evidencias destacadas */}
+        <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Star size={14} className="text-accent-text" />
+            <span className="text-[13px] font-semibold text-text-primary">Evidencias destacadas</span>
+            <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">
+              4 seleccionadas
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {evidenciasDestacadas.map((ev) => {
+              const isExpanded = expandedEvidencia === ev.id;
+              const EvidenciaIcon = ev.icono === "spreadsheet" ? BarChart3 : ev.icono === "image" ? FileImage : FileText;
+              return (
+                <div
+                  key={ev.id}
+                  className={`rounded-xl border transition-all cursor-pointer ${isExpanded ? "border-accent-text/30 bg-accent-light" : "border-card-border bg-background hover:border-accent-text/20"}`}
+                  onClick={() => setExpandedEvidencia(isExpanded ? null : ev.id)}
+                >
+                  <div className="p-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${isExpanded ? "bg-accent-text" : "bg-card border border-card-border"}`}>
+                          <EvidenciaIcon size={13} className={isExpanded ? "text-accent" : "text-text-muted"} />
+                        </div>
+                        <div>
+                          <span className="text-[9px] text-text-muted block">{ev.tipo}</span>
+                          <span className="text-[8px] font-bold bg-warning-light text-warning px-1.5 py-0.5 rounded-full">Destacada</span>
+                        </div>
+                      </div>
+                      {isExpanded
+                        ? <ChevronUp size={12} className="text-accent-text flex-shrink-0 mt-0.5" />
+                        : <ChevronDown size={12} className="text-text-muted flex-shrink-0 mt-0.5" />
+                      }
+                    </div>
+                    <p className={`text-[11px] font-semibold leading-snug mb-1 ${isExpanded ? "text-accent-text" : "text-text-primary"}`}>
+                      {ev.titulo}
+                    </p>
+                    <p className="text-[10px] text-text-muted leading-relaxed">{ev.descripcionCorta}</p>
+                    <span className={`inline-block mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(ev.competencia)}`}>
+                      {ev.competencia}
+                    </span>
+                  </div>
+                  {isExpanded && (
+                    <div className="px-3 pb-3 border-t border-accent-text/10 pt-2.5" onClick={(e) => e.stopPropagation()}>
+                      <p className="text-[11px] text-text-secondary leading-relaxed mb-2">{ev.descripcionCompleta}</p>
+                      <button className="flex items-center gap-1.5 text-[10px] font-bold text-accent-text hover:underline cursor-pointer">
+                        <ExternalLink size={11} />
+                        Ver en galería
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
