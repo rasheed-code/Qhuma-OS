@@ -38,6 +38,9 @@ import {
   UserCheck,
   MessageSquare,
   Brain,
+  Focus,
+  RotateCcw,
+  X,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -114,6 +117,14 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
   const [iaConsejoDescanso, setIaConsejoDescanso] = useState<string | null>(null);
   const [loadingConsejo, setLoadingConsejo] = useState(false);
 
+  // S29 — Modo enfoque Pomodoro
+  const [enfoqueMode, setEnfoqueMode] = useState(false);
+  const [enfoqueRunning, setEnfoqueRunning] = useState(false);
+  const [enfoqueElapsed, setEnfoqueElapsed] = useState(0);
+  const [enfoqueFase, setEnfoqueFase] = useState<"trabajo" | "descanso">("trabajo");
+  const [sesionesHoy, setSesionesHoy] = useState(2);
+  const [enfoqueCompleted, setEnfoqueCompleted] = useState(false);
+
   const fetchConsejoIA = async (tareaActual: string) => {
     setLoadingConsejo(true);
     try {
@@ -151,6 +162,31 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
     }, 1000);
     return () => clearInterval(interval);
   }, [timerRunning, timerSeconds]);
+
+  // S29 — Pomodoro useEffect (same pattern as PitchLab ensayo timer)
+  useEffect(() => {
+    if (!enfoqueRunning || enfoqueCompleted) return;
+    const totalSecs = enfoqueFase === "trabajo" ? 25 * 60 : 5 * 60;
+    if (enfoqueElapsed >= totalSecs) return;
+    const interval = setInterval(() => {
+      setEnfoqueElapsed((e) => {
+        const next = e + 1;
+        if (next >= totalSecs) {
+          setEnfoqueRunning(false);
+          if (enfoqueFase === "trabajo") {
+            setEnfoqueCompleted(true);
+            setSesionesHoy((s) => s + 1);
+          } else {
+            setEnfoqueFase("trabajo");
+            setEnfoqueElapsed(0);
+          }
+          return next;
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [enfoqueRunning, enfoqueElapsed, enfoqueFase, enfoqueCompleted]);
 
   const doneTasks = today.tasks.filter((t) => t.status === "completed");
   const progressPercent = Math.round(
@@ -1286,6 +1322,155 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         </div>
 
         </> /* END TODAY VIEW */}
+
+        {/* S29 — Floating "Modo enfoque" button + panel (absolute within flex-1 left column) */}
+        {viewMode === "today" && ((() => {
+          const totalSecs = enfoqueFase === "trabajo" ? 25 * 60 : 5 * 60;
+          const remaining = Math.max(totalSecs - enfoqueElapsed, 0);
+          const mins = Math.floor(remaining / 60);
+          const secs = remaining % 60;
+          const mmss = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+          const ringPct = totalSecs > 0 ? 1 - enfoqueElapsed / totalSecs : 1;
+          const circum = 2 * Math.PI * 44;
+          const dash = ringPct * circum;
+          const sesionesHistorico = [
+            { hora: "08:45", tarea: "Modelo de ingresos (STEM)" },
+            { hora: "10:15", tarea: "Análisis de competencia (CE)" },
+          ];
+          return (
+            <div>
+              {/* Floating button */}
+              {!enfoqueMode && (
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => { setEnfoqueMode(true); setEnfoqueCompleted(false); setEnfoqueElapsed(0); setEnfoqueFase("trabajo"); setEnfoqueRunning(false); }}
+                    className="flex items-center gap-2 bg-sidebar text-accent text-[12px] font-bold px-4 py-2.5 rounded-xl hover:brightness-110 transition-all cursor-pointer"
+                  >
+                    <Focus size={14} />
+                    {lbl("Modo enfoque", "Focus mode")}
+                  </button>
+                </div>
+              )}
+
+              {/* Panel overlay */}
+              {enfoqueMode && (
+                <div className={`mt-6 bg-card rounded-2xl border border-card-border p-6 ${enfoqueCompleted ? "ring-2 ring-success animate-pulse" : ""}`}>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-2">
+                      <Focus size={15} className="text-accent-text" />
+                      <h3 className="text-[15px] font-bold text-text-primary">{lbl("Modo enfoque", "Focus mode")}</h3>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${enfoqueFase === "trabajo" ? "bg-accent-light text-accent-text" : "bg-success-light text-success"}`}>
+                        {enfoqueFase === "trabajo" ? lbl("Trabajo · 25 min", "Work · 25 min") : lbl("Descanso · 5 min", "Break · 5 min")}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => { setEnfoqueMode(false); setEnfoqueRunning(false); setEnfoqueElapsed(0); setEnfoqueCompleted(false); setEnfoqueFase("trabajo"); }}
+                      className="text-text-muted hover:text-text-secondary transition-colors cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-6 items-start">
+                    {/* Ring + timer */}
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="relative w-28 h-28">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="44" fill="none" stroke="#f4f0e9" strokeWidth="8" />
+                          <circle
+                            cx="50" cy="50" r="44"
+                            fill="none"
+                            stroke={enfoqueFase === "trabajo" ? "#2f574d" : "#22c55e"}
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={`${dash} ${circum}`}
+                            style={{ transition: "stroke-dasharray 1s linear" }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-[22px] font-black leading-none ${enfoqueCompleted ? "text-success" : "text-text-primary"}`}>{mmss}</span>
+                          <span className="text-[8px] text-text-muted mt-0.5">{enfoqueFase === "trabajo" ? lbl("restantes", "remaining") : lbl("descanso", "break")}</span>
+                        </div>
+                      </div>
+
+                      {/* Controls */}
+                      {enfoqueCompleted ? (
+                        <button
+                          onClick={() => { setEnfoqueCompleted(false); setEnfoqueFase("descanso"); setEnfoqueElapsed(0); setEnfoqueRunning(true); }}
+                          className="flex items-center gap-1.5 bg-success text-white text-[11px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                        >
+                          <Play size={12} />
+                          {lbl("Iniciar descanso 5 min", "Start 5-min break")}
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setEnfoqueRunning(!enfoqueRunning)}
+                            className={`flex items-center gap-1.5 text-[11px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all ${
+                              enfoqueRunning ? "bg-warning-light text-warning border border-warning/20" : "bg-sidebar text-accent"
+                            }`}
+                          >
+                            {enfoqueRunning ? <><Pause size={12} />{lbl("Pausar", "Pause")}</> : <><Play size={12} />{enfoqueElapsed > 0 ? lbl("Continuar", "Resume") : lbl("Iniciar", "Start")}</>}
+                          </button>
+                          <button
+                            onClick={() => { setEnfoqueElapsed(0); setEnfoqueRunning(false); setEnfoqueCompleted(false); setEnfoqueFase("trabajo"); }}
+                            className="p-2 rounded-xl bg-background text-text-muted hover:text-text-secondary border border-card-border cursor-pointer transition-all"
+                            title={lbl("Reiniciar", "Reset")}
+                          >
+                            <RotateCcw size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right info */}
+                    <div className="flex-1 min-w-0">
+                      {/* Tarea activa */}
+                      <div className="bg-accent-light rounded-xl p-3 mb-4 border border-accent/20">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <ClipboardCheck size={11} className="text-accent-text" />
+                          <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide">{lbl("Tarea activa", "Active task")}</span>
+                        </div>
+                        <p className="text-[12px] font-semibold text-text-primary leading-snug">
+                          {today.tasks.find((t) => t.status === "in_progress")?.title ?? lbl("Completar modelo financiero Casa Limón", "Complete Casa Limón financial model")}
+                        </p>
+                      </div>
+
+                      {/* Sesiones completadas */}
+                      <div className="mb-3">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Trophy size={11} className="text-accent-text" />
+                          <span className="text-[10px] font-semibold text-text-primary">{lbl("Sesiones hoy", "Sessions today")}</span>
+                          <span className="ml-auto text-[10px] font-bold text-accent-text">{sesionesHoy} {lbl("completadas", "completed")}</span>
+                        </div>
+                        <div className="space-y-1">
+                          {sesionesHistorico.map((s, i) => (
+                            <div key={i} className="flex items-center gap-2 bg-background rounded-lg px-2.5 py-1.5">
+                              <CheckCircle2 size={10} className="text-success flex-shrink-0" />
+                              <span className="text-[9px] text-text-muted flex-shrink-0">{s.hora}</span>
+                              <span className="text-[9px] text-text-primary truncate">{s.tarea}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {enfoqueCompleted && (
+                        <div className="bg-success-light rounded-xl px-3 py-2.5 border border-success/20">
+                          <div className="flex items-center gap-1.5">
+                            <Zap size={12} className="text-success flex-shrink-0" />
+                            <p className="text-[12px] font-bold text-success">
+                              {lbl("¡Sesión completada! +20 Q-Coins", "Session complete! +20 Q-Coins")}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })())}
       </div>
 
       {/* Right: AI Chat — now fully powered by Gemini */}
