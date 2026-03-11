@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardCheck, ChevronDown, ChevronUp, Eye, EyeOff, Save, CheckCircle2 } from "lucide-react";
+import { ClipboardCheck, ChevronDown, ChevronUp, Eye, EyeOff, Save, CheckCircle2, Copy, FolderOpen, Download, Layers, Calendar, RefreshCw } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { useLang } from "@/lib/i18n";
 
@@ -149,6 +149,43 @@ export default function TeacherRubrica() {
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
 
+  // T24 — Rúbricas guardadas (datos dentro del componente porque usan lbl)
+  const rubricasGuardadas = [
+    {
+      id: "g1",
+      nombre: lbl("Análisis de mercado turístico Málaga", "Málaga Tourism Market Analysis"),
+      competencias: ["STEM", "CE", "CD"],
+      criterios: 4,
+      fechaCreada: "28 feb 2026",
+      proyecto: "Airbnb Málaga",
+      distribucion: [8, 25, 42, 25], // % alumnos en nivel 1/2/3/4
+    },
+    {
+      id: "g2",
+      nombre: lbl("Diseño de identidad de marca — Casa Limón", "Brand Identity Design — Casa Limón"),
+      competencias: ["CCEC", "CLC", "CD"],
+      criterios: 3,
+      fechaCreada: "2 mar 2026",
+      proyecto: "Airbnb Málaga",
+      distribucion: [0, 17, 50, 33],
+    },
+    {
+      id: "g3",
+      nombre: lbl("Modelo financiero — punto de equilibrio", "Financial Model — Break-even"),
+      competencias: ["STEM", "CE", "CLC"],
+      criterios: 3,
+      fechaCreada: "5 mar 2026",
+      proyecto: "Airbnb Málaga",
+      distribucion: [8, 33, 42, 17],
+    },
+  ];
+
+  const proyectosActivos = [
+    lbl("Airbnb Málaga — 1º ESO", "Airbnb Málaga — Year 7"),
+    lbl("Huerto Urbano Digital — 2º ESO", "Urban Digital Garden — Year 8"),
+    lbl("Podcast Escolar — 1º ESO B", "School Podcast — Year 7B"),
+  ];
+
   const nivelConfig: Record<Nivel, { label: string; bg: string; text: string; border: string }> = {
     1: { label: lbl("Inicio", "Beginning"),              bg: "bg-urgent-light",  text: "text-urgent",      border: "border-urgent/30" },
     2: { label: lbl("En proceso", "In progress"),        bg: "bg-warning-light", text: "text-warning",     border: "border-warning/30" },
@@ -161,6 +198,14 @@ export default function TeacherRubrica() {
   const [vistaAlumno, setVistaAlumno] = useState(false);
   const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const [savedRubrica, setSavedRubrica] = useState<string | null>(null);
+
+  // T24 — Panel rúbricas guardadas
+  const [rubricasDuplicadas, setRubricasDuplicadas] = useState<Set<string>>(new Set());
+  const [duplicandoId, setDuplicandoId] = useState<string | null>(null);
+  const [asignandoRubricaId, setAsignandoRubricaId] = useState<string | null>(null);
+  const [rubricaAsignada, setRubricaAsignada] = useState<Record<string, string>>({});
+  const [exportandoRubrica, setExportandoRubrica] = useState<string | null>(null);
+  const [rubricaExportada, setRubricaExportada] = useState<Set<string>>(new Set());
 
   const rubrica = rubricasMock.find((r) => r.id === activeRubrica)!;
 
@@ -218,6 +263,163 @@ export default function TeacherRubrica() {
             {savedRubrica === rubrica.id ? <CheckCircle2 size={13} className="text-accent" /> : <Save size={13} />}
             {savedRubrica === rubrica.id ? lbl("Guardada", "Saved") : lbl("Guardar rúbrica", "Save rubric")}
           </button>
+        </div>
+      </div>
+
+      {/* T24 — Panel Mis rúbricas guardadas */}
+      <div className="bg-card rounded-2xl border border-card-border p-5 mb-5">
+        <div className="flex items-center gap-2 mb-4">
+          <FolderOpen size={15} className="text-accent-text" />
+          <h2 className="text-[14px] font-semibold text-text-primary">{lbl("Mis rúbricas guardadas", "My saved rubrics")}</h2>
+          <span className="ml-auto text-[9px] font-bold bg-accent-light text-accent-text px-2 py-0.5 rounded-full">{rubricasGuardadas.length} {lbl("rúbricas", "rubrics")}</span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {rubricasGuardadas.map((rg) => {
+            const isDuplicada = rubricasDuplicadas.has(rg.id);
+            const isAsignada = !!rubricaAsignada[rg.id];
+            const isExportada = rubricaExportada.has(rg.id);
+            const nivelColors = ["bg-urgent", "bg-warning", "bg-accent-text", "bg-success"];
+            return (
+              <div key={rg.id} className="bg-background rounded-2xl p-4 border border-card-border">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <p className="text-[12px] font-semibold text-text-primary leading-snug flex-1">{rg.nombre}</p>
+                  {isAsignada && (
+                    <span className="flex-shrink-0 text-[8px] font-bold bg-success-light text-success px-1.5 py-0.5 rounded-full">
+                      {lbl("Asignada", "Assigned")}
+                    </span>
+                  )}
+                </div>
+                {/* Competencias */}
+                <div className="flex gap-1 flex-wrap mb-2">
+                  {rg.competencias.map((comp) => (
+                    <span key={comp} className="text-[8px] font-bold bg-sidebar text-accent px-1.5 py-0.5 rounded-full">{comp}</span>
+                  ))}
+                </div>
+                {/* Meta info */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-1">
+                    <Layers size={9} className="text-text-muted" />
+                    <span className="text-[9px] text-text-muted">{rg.criterios} {lbl("criterios", "criteria")}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Calendar size={9} className="text-text-muted" />
+                    <span className="text-[9px] text-text-muted">{rg.fechaCreada}</span>
+                  </div>
+                </div>
+                {/* Distribución de niveles */}
+                <div className="mb-3">
+                  <p className="text-[9px] text-text-muted mb-1.5">{lbl("Distribución de alumnos por nivel", "Students per level")}</p>
+                  <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
+                    {rg.distribucion.map((pct, idx) => (
+                      <div
+                        key={idx}
+                        className={`${nivelColors[idx]} rounded-sm`}
+                        style={{ width: `${pct}%` }}
+                        title={`Nivel ${idx + 1}: ${pct}%`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    {rg.distribucion.map((pct, idx) => (
+                      <span key={idx} className="text-[8px] text-text-muted">{pct}%</span>
+                    ))}
+                  </div>
+                </div>
+                {/* Acciones */}
+                <div className="flex flex-col gap-1.5">
+                  {/* Duplicar */}
+                  <button
+                    onClick={() => {
+                      if (duplicandoId) return;
+                      setDuplicandoId(rg.id);
+                      setTimeout(() => {
+                        setRubricasDuplicadas((prev) => new Set(prev).add(rg.id));
+                        setDuplicandoId(null);
+                      }, 900);
+                    }}
+                    className="flex items-center justify-center gap-1.5 text-[10px] font-semibold bg-card border border-card-border text-text-secondary px-3 py-1.5 rounded-xl hover:border-accent-text/30 transition-all cursor-pointer"
+                  >
+                    {duplicandoId === rg.id ? (
+                      <><RefreshCw size={10} className="animate-spin" />{lbl("Duplicando...", "Duplicating...")}</>
+                    ) : isDuplicada ? (
+                      <><CheckCircle2 size={10} className="text-success" />{lbl("Copia creada", "Copy created")}</>
+                    ) : (
+                      <><Copy size={10} />{lbl("Duplicar", "Duplicate")}</>
+                    )}
+                  </button>
+                  {/* Asignar a proyecto */}
+                  {asignandoRubricaId === rg.id ? (
+                    <div className="flex flex-col gap-1">
+                      <select
+                        className="text-[10px] bg-background border border-accent-text/30 rounded-lg px-2 py-1.5 text-text-primary outline-none cursor-pointer"
+                        defaultValue=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            setRubricaAsignada((prev) => ({ ...prev, [rg.id]: e.target.value }));
+                            setAsignandoRubricaId(null);
+                          }
+                        }}
+                      >
+                        <option value="">{lbl("Seleccionar proyecto...", "Select project...")}</option>
+                        {proyectosActivos.map((p) => (
+                          <option key={p} value={p}>{p}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => setAsignandoRubricaId(null)}
+                        className="text-[9px] text-text-muted hover:text-urgent transition-colors cursor-pointer"
+                      >
+                        {lbl("Cancelar", "Cancel")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setAsignandoRubricaId(rg.id)}
+                      className={`flex items-center justify-center gap-1.5 text-[10px] font-semibold px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                        isAsignada
+                          ? "bg-success-light text-success border border-success/20"
+                          : "bg-accent-light text-accent-text border border-accent/20 hover:bg-accent/20"
+                      }`}
+                    >
+                      {isAsignada ? (
+                        <><CheckCircle2 size={10} />{lbl("Asignada", "Assigned")} · {rubricaAsignada[rg.id]?.split("—")[0].trim()}</>
+                      ) : (
+                        <>{lbl("Asignar a proyecto", "Assign to project")}</>
+                      )}
+                    </button>
+                  )}
+                  {/* Descargar PDF */}
+                  <button
+                    onClick={() => {
+                      if (exportandoRubrica) return;
+                      setExportandoRubrica(rg.id);
+                      setTimeout(() => {
+                        const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${rg.nombre}</title><style>body{font-family:sans-serif;padding:32px;max-width:800px;margin:0 auto}h1{color:#1f514c;font-size:20px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ededed;padding:8px 12px;font-size:12px}th{background:#edffe3;color:#2f574d;text-align:left}.nivel{display:inline-block;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700}</style></head><body><h1>${rg.nombre}</h1><p style="color:#666;font-size:12px">Proyecto: ${rg.proyecto} · Creada: ${rg.fechaCreada} · Competencias: ${rg.competencias.join(", ")}</p><table><thead><tr><th>Criterio</th><th>Nivel 1 — Inicio</th><th>Nivel 2 — En proceso</th><th>Nivel 3 — Logro esperado</th><th>Nivel 4 — Logro sobresaliente</th></tr></thead><tbody><tr><td>${rg.nombre}</td><td>El alumno necesita apoyo significativo para lograr los aprendizajes.</td><td>El alumno avanza hacia los aprendizajes con apoyo docente.</td><td>El alumno alcanza los aprendizajes de forma autónoma.</td><td>El alumno supera los aprendizajes y los aplica en nuevos contextos.</td></tr></tbody></table><p style="margin-top:24px;font-size:10px;color:#9ca3af">Generado por qhumaOS · ${new Date().toLocaleDateString("es-ES")}</p></body></html>`;
+                        const blob = new Blob([html], { type: "text/html" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `rubrica_${rg.id}_airbnb_malaga.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        setRubricaExportada((prev) => new Set(prev).add(rg.id));
+                        setExportandoRubrica(null);
+                      }, 1200);
+                    }}
+                    className="flex items-center justify-center gap-1.5 text-[10px] font-semibold bg-sidebar text-white px-3 py-1.5 rounded-xl hover:bg-accent-dark transition-all cursor-pointer"
+                  >
+                    {exportandoRubrica === rg.id ? (
+                      <><RefreshCw size={10} className="animate-spin" />{lbl("Generando...", "Generating...")}</>
+                    ) : isExportada ? (
+                      <><CheckCircle2 size={10} className="text-accent" />{lbl("Descargada", "Downloaded")}</>
+                    ) : (
+                      <><Download size={10} />{lbl("Descargar PDF", "Download PDF")}</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
