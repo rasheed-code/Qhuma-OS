@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 12 ✅ (push: `50f7a9f`)
+- **Último ciclo completo**: Ciclo 18 ✅ (push: `d017f48`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 13
+- **Próximo ciclo**: Ciclo 19
 
 ---
 
@@ -694,12 +694,62 @@
 
 ---
 
-## Sprints pendientes — Ciclo 18
+## Ciclo 18 ✅ completado
 
-- [ ] [T17] TeacherGradeBook — exportar informe PDF: botón "Exportar informe PDF" en el header que genera un documento con tabla de notas del trimestre activo, gráfico de distribución (texto), resumen estadístico (media, alumno top, alumno con alerta) y metadatos (colegio, grupo, fecha); descarga real via Blob + URL.createObjectURL
-- [ ] [S19] StudentPortfolio — modo "Vista pública compartible": botón "Compartir portfolio" en el header que genera una URL mock y muestra un panel de "Vista pública" con los datos más destacados (competencias, hitos, logro top, impacto); toggle para mostrar/ocultar datos personales (nombre completo, notas numéricas)
-- [ ] [A17] AdminDashboard — panel "Notificaciones automáticas": en la pestaña Overview, un widget que lista 5 notificaciones pendientes de enviar (alumno sin actividad, hito completado, inversor aprueba proyecto, informe listo), cada una con destinatario, canal (email/SMS) y botón "Enviar ahora" con feedback visual; estado de enviadas
-- [ ] [C17] PitchLab — historial de sesiones en vivo: guardar en estado las últimas 3 sesiones de "Inversores en vivo" (inversor, puntuación, fecha, pregunta clave), mostrar panel "Historial de sesiones" debajo del panel de inversores en vivo con evolución de puntuación y botón "Repetir con este inversor"
+### [SPRINT-TEACHER][T17] TeacherGradeBook — exportar informe PDF ✅
+- Commit: `cfdd96e`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- Imports añadidos: `FileText`
+- States: `isExportingPDF: boolean`, `exportPDFFilename: string | null`
+- `handleExportPDF()`: genera HTML completo con tabla 12×8 LOMLOE + resumen estadístico (media global, alumno top, alertas) + distribución por niveles. Blob text/html descargable como .pdf via URL.createObjectURL.
+- Filename dinámico: `informe_lomloe_T2_1eso_FECHA.pdf`
+- Botón "Informe TX PDF" bg-sidebar junto al CSV en header; spinner RefreshCw durante generación
+- Feedback filename con CheckCircle2 tras descarga exitosa
+
+### [SPRINT-STUDENT][S19] StudentPortfolio — modo Vista pública compartible ✅
+- Commit: `2ae9b04`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- Imports añadidos: `Share2, Copy, Eye, EyeOff`
+- States: `showVistaPublica: boolean`, `vistaPublicaURL: string | null`, `urlCopiada: boolean`, `mostrarDatosPersonales: boolean`
+- `handleCompartirPortfolio()`: genera URL mock `https://qhuma.es/portfolio/lucas-garcia-{token}` al primer click; muestra panel
+- `handleCopiarURL()`: navigator.clipboard.writeText + feedback "¡Copiada!" 2s
+- Panel con: barra URL + botón Copiar, toggle Datos visibles/ocultos, card previsualización
+- Previsualización: avatar + nombre (oculto si toggle off), top 4 competencias (barras ocultas si toggle off), 3 últimos hitos completados, 3 KPIs de impacto (valores ocultos si toggle off)
+- Botón "Compartir portfolio" bg-accent (pill) en header junto a "Regenerar narrativa IA"
+
+### [SPRINT-ADMIN][A17] AdminDashboard — panel Notificaciones automáticas ✅
+- Commit: `40b2b6f`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Import añadido: `Send`
+- `notificacionesAutomaticas`: const módulo, 5 entradas (2 alumno_inactivo warning/urgent, 1 hito_completado success, 1 inversor_aprueba accent, 1 informe_listo muted)
+- States: `notificacionesEnviadas: Set<string>`, `notificandoId: string | null`
+- `handleEnviarNotificacion(id)`: 900ms delay → añade id al Set enviadas
+- Widget en columna izquierda del tab Overview (después de Actividad docente hoy)
+- Cada notificación: avatar icono contextual, destinatario + canal badge (email/SMS), mensaje, contacto
+- Botón "Enviar ahora" → spinner RefreshCw → estado "Enviada" con CheckCircle2 verde
+- Badge "N pendientes" en header del widget, actualizado reactivamente
+
+### [SPRINT-CULTURE][C17] PitchLab — historial de sesiones en vivo ✅
+- Commit: `d017f48`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- Import añadido: `History`
+- Interface: `SesionVivo { inversor, puntuacion, comentario, fecha, preguntaClave }`
+- State: `historialSesiones: SesionVivo[]` (máx 3, LIFO)
+- `handleRepetirConInversor(inv)`: inicia sesión con inversor específico (no random)
+- `handleEnviarRespuestaVivo` modificado: guarda sesión en historialSesiones al llegar a step 4 (en rama try y catch)
+- Panel col-span-3 en feedback mode antes de Mentor message; visible solo cuando historialSesiones.length > 0
+- Gráfico de evolución: barras CSS h-20 en orden cronológico (reverse), visible si ≥2 sesiones
+- Lista de sesiones: card por sesión con inversor + puntuación grande + fecha + pregunta clave + comentario
+- Botón "Repetir con {nombre}" llama handleRepetirConInversor con el inversor de la sesión
+
+---
+
+## Sprints pendientes — Ciclo 19
+
+- [ ] [T18] TeacherGradeBook — modo "Feedback textual por alumno": en la vista expandida de cada fila, añadir un textarea de "Comentario trimestral" por alumno (guardado en estado), con botón "Generar borrador IA" que llama a /api/tutor-chat mode="pitchcoach" para generar texto de feedback basado en sus notas LOMLOE; botón "Copiar" para clipboard
+- [ ] [S20] StudentPortfolio — sección "Próximos pasos recomendados": 3 pasos accionables específicos del proyecto generados por IA (mode="narrativa"), cada uno con competencia, acción concreta y estimación de tiempo; botón de regeneración individual por paso
+- [ ] [A18] AdminDashboard — panel "Comparativa entre colegios": en el tab Métricas, expandir la comparativa existente Málaga vs Madrid con 2 gráficos adicionales (evolución mensual side-by-side y radar de competencias por colegio) con toggle de competencia y badge de diferencia
+- [ ] [C18] PitchLab — modo "Ensayo con preguntas intercaladas": durante el ensayo cronometrado, al pasar de sección aparece una pregunta de compresión del jurado (random de preguntasJurado filtrada por sección); el alumno responde antes de continuar al siguiente segmento
 
 ---
 
@@ -712,10 +762,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). Panel col-span-3 en feedback mode antes de mentor message.
-- **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). Selector T1/T2/T3 en header. CSV filename dinámico con trimestre.
-- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. Panel antes del timeline con 3 bullets colapsables + nota personal.
-- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO).
+- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón.
+- **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto.
+- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO). A17 añade notificacionesAutomaticas (const módulo, 5 entradas) + notificacionesEnviadas Set + notificandoId + handleEnviarNotificacion(). Widget en Overview columna izquierda.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
