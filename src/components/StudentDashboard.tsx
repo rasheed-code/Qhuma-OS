@@ -32,6 +32,9 @@ import {
   Activity,
   Play,
   Pause,
+  TrendingDown,
+  Minus,
+  Briefcase,
 } from "lucide-react";
 import { weekSchedule } from "@/data/tasks";
 import { currentStudent, chatMessages } from "@/data/students";
@@ -47,6 +50,14 @@ import { Task } from "@/types";
 import WeeklyProgressView from "./WeeklyProgressView";
 import TeacherChat from "./TeacherChat";
 import LevelUpModal from "./LevelUpModal";
+
+const mercadoTendencias = [
+  { skill: "Gestión de plataformas digitales (Airbnb, Booking)", tendencia: "creciendo" as const, cambio: "+34%", salario: "€28k–42k", comp: "CD" },
+  { skill: "Marketing turístico digital y SEO",                   tendencia: "creciendo" as const, cambio: "+28%", salario: "€24k–38k", comp: "CE" },
+  { skill: "Análisis de datos de reservas y revenue management",  tendencia: "creciendo" as const, cambio: "+45%", salario: "€32k–55k", comp: "STEM" },
+  { skill: "Comunicación con clientes multiidioma",               tendencia: "estable"   as const, cambio: "+8%",  salario: "€20k–30k", comp: "CLC" },
+  { skill: "Gestión presencial básica sin tecnología",            tendencia: "bajando"   as const, cambio: "-12%", salario: "€18k–22k", comp: "CC" },
+];
 
 const taskIcons = [
   { icon: Monitor, label: "Landing Page" },
@@ -664,6 +675,56 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
                 )}
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* S6: Mercado en Tiempo Real */}
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <Briefcase size={16} className="text-text-primary" />
+              <h2 className="text-[20px] font-semibold text-text-primary">Mercado en Tiempo Real</h2>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-background text-text-muted text-[10px] font-medium border border-card-border">
+              Actualizado hoy, 11 mar 2026
+            </span>
+          </div>
+
+          {/* Insight IA */}
+          <div className="bg-accent-light rounded-xl p-4 border border-accent/20 mb-4">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                <span className="text-accent text-[8px] font-bold">IA</span>
+              </div>
+              <span className="text-[11px] font-semibold text-accent-text">Conectado a: Gestiona tu Airbnb en Málaga</span>
+            </div>
+            <p className="text-[12px] text-text-primary leading-relaxed">
+              El sector turístico digital en España creció un <strong>18% en 2025</strong>. Las habilidades que estás trabajando esta semana — plataformas digitales, comunicación y análisis financiero — están entre las más demandadas. Tu proyecto no es un ejercicio: es un portfolio real.
+            </p>
+          </div>
+
+          {/* Tendencias */}
+          <div className="space-y-2">
+            {mercadoTendencias.map((t) => {
+              const Icon = t.tendencia === "creciendo" ? TrendingUp : t.tendencia === "bajando" ? TrendingDown : Minus;
+              const colorClass = t.tendencia === "creciendo" ? "text-success" : t.tendencia === "bajando" ? "text-urgent" : "text-warning";
+              const bgClass = t.tendencia === "creciendo" ? "bg-success-light" : t.tendencia === "bajando" ? "bg-urgent-light" : "bg-warning-light";
+              return (
+                <div key={t.skill} className="flex items-center gap-3 bg-background rounded-xl p-3">
+                  <div className={`w-7 h-7 rounded-lg ${bgClass} flex items-center justify-center flex-shrink-0`}>
+                    <Icon size={14} className={colorClass} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-text-primary leading-snug truncate">{t.skill}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className={`text-[10px] font-bold ${colorClass}`}>{t.cambio}</span>
+                      <span className="text-[10px] text-text-muted">· {t.salario}/año · Competencia</span>
+                      <span className="text-[9px] font-bold bg-accent-light text-accent-text px-1.5 py-0.5 rounded-full">{t.comp}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
