@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare } from "lucide-react";
+import { BookOpen, TrendingUp, FileText, Star, ChevronRight, Award, Lightbulb, MessageSquare, AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 
 const COMPS = ["CLC", "CPL", "STEM", "CD", "CPSAA", "CC", "CE", "CCEC"] as const;
 type CompKey = typeof COMPS[number];
@@ -81,8 +81,65 @@ const compColor = (key: CompKey) => {
   return colors[key];
 };
 
+interface ErrorEntry {
+  id: string;
+  date: string;
+  title: string;
+  phase: string;
+  competency: CompKey;
+  asumí: string;
+  falló: string;
+  cambiaría: string;
+  resolved: boolean;
+}
+
+const errorLog: ErrorEntry[] = [
+  {
+    id: "e1",
+    date: "Semana 1 · Lunes",
+    title: "Precios incorrectos en el análisis de mercado",
+    phase: "Investigación",
+    competency: "STEM",
+    asumí: "Que los precios de Airbnb eran fijos todo el año, sin variación por temporada.",
+    falló: "Los datos del INE mostraban variaciones del 40% entre temporada alta y baja. Mi modelo financiero inicial era completamente incorrecto.",
+    cambiaría: "Buscar siempre datos históricos de al menos 12 meses antes de asumir medias. Preguntar: ¿qué factores externos podrían cambiar este dato?",
+    resolved: true,
+  },
+  {
+    id: "e2",
+    date: "Semana 2 · Miércoles",
+    title: "Logo del brand board no encajaba con el público objetivo",
+    phase: "Diseño",
+    competency: "CCEC",
+    asumí: "Que un diseño moderno y minimalista funcionaría para cualquier segmento de viajeros.",
+    falló: "Mi tutora señaló que el segmento familiar que había elegido espera calidez visual, no frialdad corporativa. El logo no comunicaba lo correcto.",
+    cambiaría: "Definir primero al cliente ideal con detalle antes de cualquier decisión visual. Hacer al menos 2 versiones para targets diferentes antes de elegir.",
+    resolved: true,
+  },
+  {
+    id: "e3",
+    date: "Semana 3 · Jueves",
+    title: "El punto de equilibrio calculado era demasiado optimista",
+    phase: "Modelo financiero",
+    competency: "CE",
+    asumí: "Que tendría ocupación del 80% todo el año desde el primer mes.",
+    falló: "Ignoré la curva de aprendizaje: un nuevo anuncio tarda 2-3 meses en ganar valoraciones y visibilidad. Mi modelo mostraba rentabilidad inmediata que no era realista.",
+    cambiaría: "Modelar siempre un escenario conservador (40% ocupación), uno realista (65%) y uno optimista (85%). Nunca solo el optimista.",
+    resolved: false,
+  },
+];
+
 export default function StudentPortfolio() {
   const [activeComp, setActiveComp] = useState<CompKey | null>(null);
+  const [expandedErrors, setExpandedErrors] = useState<Set<string>>(new Set(["e1"]));
+
+  const toggleError = (id: string) => {
+    setExpandedErrors(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="flex gap-6">
@@ -177,6 +234,63 @@ export default function StudentPortfolio() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Error Log — culture.md Bloque 1 */}
+        <div className="mt-5">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertCircle size={15} className="text-urgent" />
+            <h2 className="text-[16px] font-bold text-text-primary">Historial de errores aprendidos</h2>
+            <span className="text-[10px] bg-urgent-light text-urgent font-bold px-2 py-0.5 rounded-full ml-auto">
+              {errorLog.filter(e => !e.resolved).length} pendiente de resolver
+            </span>
+          </div>
+          <p className="text-[11px] text-text-muted mb-3 leading-relaxed">
+            Cada error es una evidencia de pensamiento iterativo. No se penaliza — se analiza. Forma parte de tu portfolio oficial.
+          </p>
+          <div className="space-y-3">
+            {errorLog.map((entry) => {
+              const isOpen = expandedErrors.has(entry.id);
+              return (
+                <div key={entry.id} className={`rounded-2xl border ${entry.resolved ? "border-card-border bg-card" : "border-urgent/20 bg-urgent-light"}`}>
+                  <button
+                    onClick={() => toggleError(entry.id)}
+                    className="w-full flex items-center gap-3 p-4 text-left cursor-pointer"
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${entry.resolved ? "bg-success-light" : "bg-urgent-light border border-urgent/20"}`}>
+                      {entry.resolved
+                        ? <RefreshCw size={13} className="text-success" />
+                        : <AlertCircle size={13} className="text-urgent" />
+                      }
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[12px] font-semibold text-text-primary">{entry.title}</span>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${compColor(entry.competency)}`}>{entry.competency}</span>
+                        {entry.resolved && <span className="text-[9px] text-success font-semibold">✓ Resuelto</span>}
+                      </div>
+                      <span className="text-[10px] text-text-muted">{entry.date} · {entry.phase}</span>
+                    </div>
+                    {isOpen ? <ChevronUp size={14} className="text-text-muted flex-shrink-0" /> : <ChevronDown size={14} className="text-text-muted flex-shrink-0" />}
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 pb-4 space-y-2.5">
+                      {[
+                        { label: "¿Qué asumí?", value: entry.asumí, color: "text-warning", bg: "bg-warning-light border-warning/20" },
+                        { label: "¿Dónde falló?", value: entry.falló, color: "text-urgent", bg: "bg-urgent-light border-urgent/20" },
+                        { label: "¿Qué cambiaría?", value: entry.cambiaría, color: "text-accent-text", bg: "bg-accent-light border-accent-text/20" },
+                      ].map((item) => (
+                        <div key={item.label} className={`rounded-xl border p-3 ${item.bg}`}>
+                          <span className={`text-[9px] font-bold uppercase tracking-wide ${item.color} block mb-1`}>{item.label}</span>
+                          <p className="text-[11px] text-text-secondary leading-relaxed">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
