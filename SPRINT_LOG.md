@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 5 ✅ (push: `14fc527`)
+- **Último ciclo completo**: Ciclo 6 ✅ (push: `3c25bc0`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 6
+- **Próximo ciclo**: Ciclo 7
 
 ---
 
@@ -152,13 +152,54 @@
 
 ---
 
-## Sprints pendientes — Ciclo 6
+## Ciclo 6 ✅ completado
 
-- [ ] [A3] AdminAIUsage — barras CSS uso IA por feature, coste €, heatmap uso por alumno
-- [ ] [A4] AdminSchoolSettings — form info colegio, checklist 8 competencias LOMLOE, calendario académico
-- [ ] [S6] MercadoRealTime — panel en StudentDashboard con tendencias laborales vinculadas al proyecto activo (Bloque 5 culture.md)
-- [ ] [S7] DeepDive — cuando el alumno lleva X minutos en un tema, la IA profundiza en vez de redirigir (culture.md Bloque 1)
-- [ ] [T6] TeacherComentarios — sistema de feedback inline en evidencias y tareas del alumno
+### [SPRINT-ADMIN][A3] AdminAIUsage ✅
+- Commit: `61cfaaf`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- 4 KPIs: llamadas, coste, tiempo, tasa socrática 74%
+- Barras CSS por funcionalidad con % del total y coste €
+- Comparativa semanal: barras CSS 4 semanas (Feb–Mar)
+- Heatmap 12 usuarios × 5 días con interpolación rgb accent→sidebar por intensidad
+- Leyenda de color en el heatmap
+
+### [SPRINT-ADMIN][A4] AdminSchoolSettings ✅
+- Commit: `61cfaaf` (mismo commit que A3)
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Formulario editable para info del colegio (nombre, director, email, nivel, dirección)
+- 8 toggles de competencias LOMLOE con click; conteo activas/8
+- Calendario académico 3 trimestres con estados activo/completado/próximo
+- Escala LOMLOE 1-4 con etiquetas oficiales: Inicio / En proceso / Logro esperado / Logro sobresaliente
+- Nuevos datos: heatmapAlumnos, comparativaSemanal, escalasLOMLOE, trimestres
+- Nuevos imports: Save, TrendingDown, Minus, Calendar
+
+### [SPRINT-STUDENT][S6] MercadoRealTime ✅
+- Commit: `eba9e0b`
+- Archivo modificado: `src/components/StudentDashboard.tsx`
+- Sección nueva al final del today view: "Mercado en Tiempo Real"
+- 5 tendencias Turismo & PropTech vinculadas al proyecto Airbnb Málaga
+- TrendingUp/TrendingDown/Minus con colores success/urgent/warning
+- Cambio %, salario referencia, competencia LOMLOE por tendencia
+- Bloque IA contextualizado con insight real: +18% turismo digital 2025
+- Principio culture.md Bloque 5: integrado en proyecto activo, no clase aislada
+
+### [SPRINT-CULTURE][S7] DeepDive ✅
+- Commit: `3c25bc0`
+- Archivos modificados: `src/app/api/tutor-chat/route.ts` + `src/components/TeacherChat.tsx`
+- DEEP_DIVE_ADDON: instrucciones de nivel experto (revenue management, cohortes, LTV, escalabilidad)
+- API acepta parámetro deepDive: boolean; se activa el addon solo cuando true
+- TeacherChat: auto-activa tras 6 mensajes del alumno; botón demo disponible
+- Pill "DEEP DIVE" (icono Telescope) en el header junto a "SOCRÁTICO"
+- Banner warning-light cuando modo activo
+
+---
+
+## Sprints pendientes — Ciclo 7
+
+- [ ] [T6] TeacherComentarios — sistema de feedback inline en evidencias y tareas del alumno (comentarios inline + historial por tarea)
+- [ ] [S8] IndustriasVivas — inmersión en sector real: tarjeta "Profesional invitado" en StudentDashboard con perfil + video + pregunta para reflexionar (culture.md Bloque 4)
+- [ ] [A6] AdminReportsEnhanced — generador de informe LOMLOE automático: selector alumno/grupo/trimestre, preview PDF simulado, descarga
+- [ ] [C6] NarrativaPropia — potenciar StudentPortfolio: botón "Regenerar narrativa IA" llama a /api/tutor-chat con prompt especial para generar párrafo de aprendizaje contextualizado al proyecto
 
 ---
 
@@ -167,10 +208,12 @@
 - **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 5)
 - **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages"
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
-- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (añadido "capital" en Ciclo 5)
+- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (sin cambios en Ciclo 6)
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
-- **StudentProfile**: no leer aún — C4 la modifica. Leer primero antes de editar.
+- **StudentProfile**: C4 ya modificado (PerfilInteligencias). Leer antes de editar en ciclos futuros.
+- **DeepDive**: TeacherChat auto-activa deepDiveMode tras 6 mensajes del alumno. El addon se añade al SYSTEM_PROMPT en la API. No duplicar lógica al modificar TeacherChat.
+- **MercadoRealTime**: mercadoTendencias array definido en StudentDashboard.tsx (no en un archivo de datos separado).
 - **AdminDashboard**: el tab "Usuarios" existe pero es UI simplificada. A2 lo expande con tabla real.
 - **QHUMA Capital**: según QHUMA_Master_Document, inversión real de hasta €10.000. El panel A5 debe mostrar proyectos en distintas fases de evaluación (pitch → votación → aprobado → financiado).
 - **Q-Coins**: canjeables por talleres, equipamiento maker studio, excursiones, prioridad Passion Workshop.
