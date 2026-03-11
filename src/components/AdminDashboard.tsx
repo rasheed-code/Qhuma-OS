@@ -174,6 +174,28 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     direccion: "Calle Larios 12, 29005 Málaga",
   });
 
+  // A6 — Reports generator state
+  const reportAlumnos = usuariosMock.filter((u) => u.rol === "Alumno");
+  const [reportAlumno, setReportAlumno] = useState(reportAlumnos[0]?.nombre ?? "");
+  const [reportTrimestre, setReportTrimestre] = useState<"1" | "2" | "3">("2");
+  const [reportTipo, setReportTipo] = useState<"individual" | "grupo" | "lomloe" | "inspeccion">("individual");
+  const [reportPreview, setReportPreview] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleGenerarInforme = () => {
+    setIsGenerating(true);
+    setReportPreview(false);
+    setTimeout(() => { setIsGenerating(false); setReportPreview(true); }, 1400);
+  };
+  const handleDescargar = () => {
+    setIsDownloading(true);
+    setTimeout(() => setIsDownloading(false), 1200);
+  };
+
+  const trimestreLabel: Record<string, string> = { "1": "1er Trimestre 2025-26", "2": "2º Trimestre 2025-26", "3": "3er Trimestre 2025-26" };
+  const tipoLabel: Record<string, string> = { individual: "Individual", grupo: "Grupo", lomloe: "LOMLOE Completo", inspeccion: "Inspección" };
+
   return (
     <div>
       {/* Header */}
@@ -879,38 +901,164 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
 
       {/* ─── TAB: INFORMES ─── */}
       {activeView === "reports" && (
-        <div className="bg-card rounded-2xl border border-card-border p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[14px] font-semibold text-text-primary">Informes generados</h3>
-            <button className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all">
-              <Download size={12} />
-              Nuevo informe
+        <div className="space-y-5">
+          {/* Generador de informes */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText size={15} className="text-accent-text" />
+              <h3 className="text-[14px] font-semibold text-text-primary">Generador de informes LOMLOE</h3>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* Selector alumno */}
+              <div>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Alumno</label>
+                <select
+                  value={reportAlumno}
+                  onChange={(e) => { setReportAlumno(e.target.value); setReportPreview(false); }}
+                  className="w-full bg-background border border-card-border rounded-xl px-3 py-2.5 text-[12px] text-text-primary outline-none cursor-pointer appearance-none"
+                >
+                  {reportAlumnos.map((a) => (
+                    <option key={a.id} value={a.nombre}>{a.nombre} · {a.curso}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selector trimestre */}
+              <div>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Trimestre</label>
+                <select
+                  value={reportTrimestre}
+                  onChange={(e) => { setReportTrimestre(e.target.value as "1" | "2" | "3"); setReportPreview(false); }}
+                  className="w-full bg-background border border-card-border rounded-xl px-3 py-2.5 text-[12px] text-text-primary outline-none cursor-pointer appearance-none"
+                >
+                  <option value="1">1er Trimestre</option>
+                  <option value="2">2º Trimestre (actual)</option>
+                  <option value="3">3er Trimestre</option>
+                </select>
+              </div>
+
+              {/* Selector tipo */}
+              <div>
+                <label className="text-[10px] font-bold text-text-muted uppercase tracking-wide block mb-1.5">Tipo de informe</label>
+                <select
+                  value={reportTipo}
+                  onChange={(e) => { setReportTipo(e.target.value as typeof reportTipo); setReportPreview(false); }}
+                  className="w-full bg-background border border-card-border rounded-xl px-3 py-2.5 text-[12px] text-text-primary outline-none cursor-pointer appearance-none"
+                >
+                  <option value="individual">Individual</option>
+                  <option value="grupo">Grupo / Clase</option>
+                  <option value="lomloe">LOMLOE Completo</option>
+                  <option value="inspeccion">Para Inspección</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              onClick={handleGenerarInforme}
+              disabled={isGenerating}
+              className="flex items-center gap-2 bg-sidebar text-white text-[12px] font-bold px-4 py-2.5 rounded-xl cursor-pointer hover:bg-accent-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isGenerating ? (
+                <><RefreshCw size={13} className="animate-spin" /> Generando informe...</>
+              ) : (
+                <><FileText size={13} /> Generar informe</>
+              )}
             </button>
           </div>
-          <div className="space-y-2.5">
-            {[
-              { nombre: "Informe LOMLOE — Semana 3 — 1º ESO", tipo: "LOMLOE", fecha: "Hoy 10:30", tamaño: "245 KB" },
-              { nombre: "Evaluación competencial trimestral — Todos los grupos", tipo: "Evaluación", fecha: "Ayer 16:15", tamaño: "1.2 MB" },
-              { nombre: "Narrativa de progreso — Lucas García", tipo: "Individual", fecha: "Ayer 11:00", tamaño: "87 KB" },
-              { nombre: "Resumen mensual IA — Febrero 2026", tipo: "IA", fecha: "1 mar", tamaño: "334 KB" },
-              { nombre: "Datos para inspección educativa — T1 2026", tipo: "Inspección", fecha: "28 feb", tamaño: "2.1 MB" },
-            ].map((r) => (
-              <div key={r.nombre} className="flex items-center gap-3 p-3 bg-background rounded-xl hover:border hover:border-card-border transition-all">
-                <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center flex-shrink-0">
-                  <FileText size={14} className="text-accent-text" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-medium text-text-primary truncate">{r.nombre}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[9px] font-bold bg-background border border-card-border px-1.5 py-0.5 rounded-full text-text-muted">{r.tipo}</span>
-                    <span className="text-[9px] text-text-muted">{r.fecha} · {r.tamaño}</span>
+
+          {/* Preview del informe */}
+          {reportPreview && (
+            <div className="bg-card rounded-2xl border border-accent-text/20 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center">
+                    <FileText size={14} className="text-accent-text" />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-text-primary">
+                      Informe {tipoLabel[reportTipo]} — {reportAlumno}
+                    </p>
+                    <p className="text-[10px] text-text-muted">{trimestreLabel[reportTrimestre]} · Generado ahora</p>
                   </div>
                 </div>
-                <button className="text-text-muted hover:text-accent-text transition-colors cursor-pointer">
-                  <Download size={14} />
+                <button
+                  onClick={handleDescargar}
+                  disabled={isDownloading}
+                  className="flex items-center gap-1.5 bg-accent text-sidebar text-[11px] font-bold px-3 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-60"
+                >
+                  {isDownloading ? <RefreshCw size={12} className="animate-spin" /> : <Download size={12} />}
+                  {isDownloading ? "Preparando..." : "Descargar PDF"}
                 </button>
               </div>
-            ))}
+
+              {/* Estructura del informe preview */}
+              <div className="bg-background rounded-xl p-4 font-mono text-[11px] space-y-2">
+                <p className="text-text-primary font-bold text-[12px]">
+                  INFORME {tipoLabel[reportTipo].toUpperCase()} — LOMLOE 2022 — QHUMA MÁLAGA
+                </p>
+                <p className="text-text-muted">Alumno/a: {reportAlumno} · Curso: 1º ESO · {trimestreLabel[reportTrimestre]}</p>
+                <div className="border-t border-card-border my-2" />
+                {[
+                  { n: "1", titulo: "Datos del alumno y contexto educativo" },
+                  { n: "2", titulo: "Proyecto activo: Gestiona tu Airbnb en Málaga" },
+                  { n: "3", titulo: "Evaluación de las 8 competencias LOMLOE" },
+                  { n: "4", titulo: "Evidencias entregadas: 9/16 · Calidad general: Logro esperado" },
+                  { n: "5", titulo: "Historial de errores documentados y superados" },
+                  { n: "6", titulo: "Observaciones del docente mentor" },
+                  { n: "7", titulo: "Escala LOMLOE: Logro sobresaliente en CE (90%)" },
+                  { n: "8", titulo: "Recomendaciones para el siguiente trimestre" },
+                ].map((s) => (
+                  <p key={s.n} className="text-text-secondary">
+                    <span className="text-accent-text font-bold">{s.n}.</span> {s.titulo}
+                  </p>
+                ))}
+                <div className="border-t border-card-border my-2" />
+                <p className="text-text-muted text-[10px]">
+                  Generado por QHUMA OS · Normativa Real Decreto 217/2022 · {new Date().toLocaleDateString("es-ES")}
+                </p>
+              </div>
+
+              {/* Escala LOMLOE resumen */}
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                {escalasLOMLOE.map((e) => (
+                  <div key={e.nivel} className={`rounded-xl p-3 ${e.bg}`}>
+                    <p className={`text-[10px] font-bold ${e.text} mb-0.5`}>Nivel {e.nivel}</p>
+                    <p className={`text-[9px] font-semibold ${e.text}`}>{e.etiqueta}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Informes recientes */}
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            <h3 className="text-[13px] font-semibold text-text-primary mb-3">Informes recientes</h3>
+            <div className="space-y-2.5">
+              {[
+                { nombre: "Informe LOMLOE — Semana 3 — 1º ESO", tipo: "LOMLOE", fecha: "Hoy 10:30", tamaño: "245 KB" },
+                { nombre: "Evaluación competencial trimestral — Todos los grupos", tipo: "Evaluación", fecha: "Ayer 16:15", tamaño: "1.2 MB" },
+                { nombre: "Narrativa de progreso — Lucas García", tipo: "Individual", fecha: "Ayer 11:00", tamaño: "87 KB" },
+                { nombre: "Resumen mensual IA — Febrero 2026", tipo: "IA", fecha: "1 mar", tamaño: "334 KB" },
+                { nombre: "Datos para inspección educativa — T1 2026", tipo: "Inspección", fecha: "28 feb", tamaño: "2.1 MB" },
+              ].map((r) => (
+                <div key={r.nombre} className="flex items-center gap-3 p-3 bg-background rounded-xl hover:border hover:border-card-border transition-all">
+                  <div className="w-8 h-8 rounded-lg bg-accent-light flex items-center justify-center flex-shrink-0">
+                    <FileText size={14} className="text-accent-text" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-text-primary truncate">{r.nombre}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[9px] font-bold bg-background border border-card-border px-1.5 py-0.5 rounded-full text-text-muted">{r.tipo}</span>
+                      <span className="text-[9px] text-text-muted">{r.fecha} · {r.tamaño}</span>
+                    </div>
+                  </div>
+                  <button className="text-text-muted hover:text-accent-text transition-colors cursor-pointer">
+                    <Download size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
