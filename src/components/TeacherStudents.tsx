@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone, Target, Sparkles, Download, Trophy, Star, BookOpen, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle2, AlertTriangle, Clock, Phone, Target, Sparkles, Download, Trophy, Star, BookOpen, RefreshCw, Play, Pause, RotateCcw, ClipboardList } from "lucide-react";
 import { classStudents } from "@/data/students";
 import { competencies } from "@/data/competencies";
 import { weekSchedule } from "@/data/tasks";
@@ -161,6 +161,21 @@ export default function TeacherStudents() {
   const [generandoPlan, setGenerandoPlan] = useState<string | null>(null);
   const [planDescargado, setPlanDescargado] = useState<Set<string>>(new Set());
   const [accionesEstado, setAccionesEstado] = useState<Record<string, "pendiente" | "progreso" | "completado">>({});
+
+  // T31 — Demo Day evaluación en directo
+  const [demoDaySlot, setDemoDaySlot] = useState<string | null>(null);
+  const [demoDayScores, setDemoDayScores] = useState<Record<string, number[]>>({});
+  const [demoDayPresentados, setDemoDayPresentados] = useState<Set<string>>(new Set());
+  const [demoDayTimer, setDemoDayTimer] = useState(0);
+  const [demoDayRunning, setDemoDayRunning] = useState(false);
+  const [demoDayExportando, setDemoDayExportando] = useState(false);
+  const [demoDayExportado, setDemoDayExportado] = useState(false);
+
+  useEffect(() => {
+    if (!demoDayRunning) return;
+    const id = setInterval(() => setDemoDayTimer((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [demoDayRunning]);
 
   const counts = {
     all: classStudents.length,
@@ -745,6 +760,224 @@ export default function TeacherStudents() {
           );
         })}
       </div>
+
+      {/* T31 — Demo Day: evaluación en directo */}
+      {(() => {
+        const criterios = [
+          lbl("Claridad del problema", "Problem clarity"),
+          lbl("Solución propuesta", "Proposed solution"),
+          lbl("Viabilidad financiera", "Financial viability"),
+          lbl("Presentación oral", "Oral presentation"),
+        ];
+        const nivelLabel = (n: number) => ["", lbl("Inicio", "Beginning"), lbl("En proceso", "Developing"), lbl("Logro", "Achieved"), lbl("Sobresaliente", "Outstanding")][n];
+        const nivelBg = ["", "bg-urgent-light text-urgent", "bg-warning-light text-warning", "bg-accent-light text-accent-text", "bg-success-light text-success"];
+        const slotMin = [
+          "09:00", "09:06", "09:12", "09:18", "09:24", "09:30",
+          "09:36", "09:42", "09:48", "09:54", "10:00", "10:06",
+        ];
+        const totalSecs = 6 * 60; // 6 min per slot
+        const timerMM = String(Math.floor(demoDayTimer / 60)).padStart(2, "0");
+        const timerSS = String(demoDayTimer % 60).padStart(2, "0");
+        const timerPct = Math.min((demoDayTimer / totalSecs) * 100, 100);
+        const timerOver = demoDayTimer >= totalSecs;
+
+        const handleIniciarSlot = (id: string) => {
+          setDemoDaySlot(id);
+          setDemoDayTimer(0);
+          setDemoDayRunning(true);
+          if (!demoDayScores[id]) setDemoDayScores((prev) => ({ ...prev, [id]: [3, 3, 3, 3] }));
+        };
+        const handleMarcarPresentado = (id: string) => {
+          setDemoDayRunning(false);
+          setDemoDayPresentados((prev) => new Set([...prev, id]));
+          setDemoDaySlot(null);
+          setDemoDayTimer(0);
+        };
+        const handleExportar = () => {
+          setDemoDayExportando(true);
+          setTimeout(() => {
+            const rows = classStudents.map((s, i) => {
+              const scores = demoDayScores[s.id] ?? ["-", "-", "-", "-"];
+              const avg = typeof scores[0] === "number" ? (scores.reduce((a, b) => a + (b as number), 0) / 4).toFixed(1) : "-";
+              return `<tr><td>${i + 1}</td><td>${s.name}</td>${criterios.map((_, ci) => `<td>${scores[ci] ?? "-"}</td>`).join("")}<td><strong>${avg}</strong></td><td>${demoDayPresentados.has(s.id) ? "✓" : ""}</td></tr>`;
+            }).join("");
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Demo Day Evaluación</title><style>body{font-family:Arial;padding:40px;background:#f4f0e9}table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}th{background:#1f514c;color:#fff;padding:10px 12px;font-size:12px}td{padding:9px 12px;border-bottom:1px solid #ededed;font-size:12px}h1{color:#1f514c}p{color:#666;font-size:12px}</style></head><body><h1>Demo Day — Evaluación en directo</h1><p>QHUMA OS · Proyecto Casa Limón · ${new Date().toLocaleDateString("es-ES")}</p><table><thead><tr><th>#</th><th>Alumno</th>${criterios.map(c => `<th>${c}</th>`).join("")}<th>Media</th><th>Presentado</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            const blob = new Blob([html], { type: "text/html" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = `demo_day_evaluacion_${new Date().toISOString().slice(0, 10)}.pdf`;
+            a.click(); URL.revokeObjectURL(url);
+            setDemoDayExportando(false); setDemoDayExportado(true);
+            setTimeout(() => setDemoDayExportado(false), 3000);
+          }, 1200);
+        };
+
+        return (
+          <div className="mt-6 bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ClipboardList size={15} className="text-accent-text" />
+                <h3 className="text-[14px] font-semibold text-text-primary">
+                  {lbl("Demo Day — Evaluación en directo", "Demo Day — Live Evaluation")}
+                </h3>
+                <span className="text-[10px] font-bold bg-urgent-light text-urgent px-2 py-0.5 rounded-full">
+                  {lbl("Viernes 13 mar · 09:00h", "Friday Mar 13 · 09:00")}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {demoDayExportado && <span className="text-[11px] text-success flex items-center gap-1"><CheckCircle2 size={12} />{lbl("Exportado", "Exported")}</span>}
+                <button
+                  onClick={handleExportar}
+                  disabled={demoDayExportando}
+                  className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {demoDayExportando ? <RefreshCw size={11} className="animate-spin" /> : <Download size={11} />}
+                  {lbl("Exportar notas", "Export grades")}
+                </button>
+              </div>
+            </div>
+
+            {/* Timer for active presentation */}
+            {demoDaySlot && (
+              <div className={`mb-4 rounded-xl p-4 border ${timerOver ? "bg-urgent-light border-urgent/20" : "bg-accent-light border-accent/20"}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[12px] font-semibold text-accent-text">
+                    {lbl("Presentando:", "Presenting:")} {classStudents.find(s => s.id === demoDaySlot)?.name}
+                  </span>
+                  <span className={`text-[22px] font-mono font-bold ${timerOver ? "text-urgent" : "text-accent-text"}`}>
+                    {timerMM}:{timerSS}
+                  </span>
+                </div>
+                <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-3">
+                  <div
+                    className={`h-full rounded-full transition-all ${timerOver ? "bg-urgent" : "bg-accent-text"}`}
+                    style={{ width: `${timerPct}%` }}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setDemoDayRunning((r) => !r)}
+                    className="flex items-center gap-1 bg-sidebar text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer"
+                  >
+                    {demoDayRunning ? <><Pause size={11} />{lbl("Pausar", "Pause")}</> : <><Play size={11} />{lbl("Reanudar", "Resume")}</>}
+                  </button>
+                  <button
+                    onClick={() => { setDemoDayTimer(0); setDemoDayRunning(false); }}
+                    className="flex items-center gap-1 bg-background text-text-secondary text-[11px] font-medium px-3 py-1.5 rounded-xl cursor-pointer"
+                  >
+                    <RotateCcw size={11} />{lbl("Reiniciar", "Reset")}
+                  </button>
+                  <button
+                    onClick={() => handleMarcarPresentado(demoDaySlot)}
+                    className="flex items-center gap-1 bg-success text-white text-[11px] font-bold px-3 py-1.5 rounded-xl cursor-pointer ml-auto"
+                  >
+                    <CheckCircle2 size={11} />{lbl("Marcar presentado", "Mark as done")}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Evaluation grid */}
+            <div className="space-y-2">
+              {classStudents.map((student, i) => {
+                const presentado = demoDayPresentados.has(student.id);
+                const activo = demoDaySlot === student.id;
+                const scores = demoDayScores[student.id] ?? [];
+                const avg = scores.length === 4 ? (scores.reduce((a, b) => a + b, 0) / 4).toFixed(1) : null;
+                return (
+                  <div
+                    key={student.id}
+                    className={`rounded-xl border px-3 py-2.5 transition-all ${
+                      activo ? "border-accent-text/30 bg-accent-light" : presentado ? "border-success/20 bg-success-light/40" : "border-card-border bg-background"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Slot time + number */}
+                      <span className="text-[9px] font-mono text-text-muted w-10 flex-shrink-0">{slotMin[i]}</span>
+                      {/* Name */}
+                      <span className={`text-[12px] font-semibold flex-1 min-w-0 ${presentado ? "text-success" : activo ? "text-accent-text" : "text-text-primary"}`}>
+                        {presentado && <CheckCircle2 size={11} className="inline mr-1 text-success" />}
+                        {student.name}
+                      </span>
+                      {/* Score criteria (only if evaluated) */}
+                      {scores.length === 4 && (
+                        <div className="flex gap-1 flex-shrink-0">
+                          {scores.map((sc, ci) => (
+                            <button
+                              key={ci}
+                              onClick={() => {
+                                const next = sc < 4 ? sc + 1 : 1;
+                                setDemoDayScores((prev) => {
+                                  const cur = [...(prev[student.id] ?? [3, 3, 3, 3])];
+                                  cur[ci] = next;
+                                  return { ...prev, [student.id]: cur };
+                                });
+                              }}
+                              title={criterios[ci]}
+                              className={`w-6 h-6 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${nivelBg[sc]}`}
+                            >
+                              {sc}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {/* Avg */}
+                      {avg && (
+                        <span className="text-[11px] font-bold text-text-primary w-8 text-center flex-shrink-0">
+                          {avg}
+                        </span>
+                      )}
+                      {/* Action button */}
+                      {!presentado && !activo && (
+                        <button
+                          onClick={() => handleIniciarSlot(student.id)}
+                          className="flex items-center gap-1 bg-sidebar text-white text-[9px] font-bold px-2.5 py-1 rounded-lg cursor-pointer hover:brightness-110 transition-all flex-shrink-0"
+                        >
+                          <Play size={9} />{lbl("Iniciar", "Start")}
+                        </button>
+                      )}
+                      {presentado && (
+                        <span className="text-[9px] font-bold bg-success text-white px-2 py-0.5 rounded-full flex-shrink-0">
+                          {lbl("Presentado", "Done")}
+                        </span>
+                      )}
+                    </div>
+                    {/* Criteria labels (only for active) */}
+                    {activo && scores.length === 4 && (
+                      <div className="mt-2 flex gap-1">
+                        {criterios.map((c, ci) => (
+                          <div key={ci} className="flex-1 text-center">
+                            <span className="text-[8px] text-text-muted leading-tight block">{c}</span>
+                            <span className={`text-[9px] font-semibold ${nivelBg[scores[ci]]} px-1.5 py-0.5 rounded-md inline-block mt-0.5`}>
+                              {nivelLabel(scores[ci])}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Summary */}
+            <div className="mt-4 flex items-center gap-3 pt-3 border-t border-card-border">
+              <div className="flex items-center gap-1.5 bg-success-light rounded-xl px-3 py-1.5">
+                <span className="text-[18px] font-bold text-success">{demoDayPresentados.size}</span>
+                <span className="text-[9px] text-success">{lbl("presentados", "done")}</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-background rounded-xl px-3 py-1.5">
+                <span className="text-[18px] font-bold text-text-primary">{classStudents.length - demoDayPresentados.size}</span>
+                <span className="text-[9px] text-text-muted">{lbl("pendientes", "pending")}</span>
+              </div>
+              <span className="text-[10px] text-text-muted ml-auto">
+                {lbl("Haz clic en los números de criterio para cambiar el nivel (1–4)", "Click criterion numbers to change LOMLOE level (1–4)")}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
