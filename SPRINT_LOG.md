@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 18 ✅ (push: `d017f48`)
+- **Último ciclo completo**: Ciclo 19 ✅ (push: `06a8cf8`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 19
+- **Próximo ciclo**: Ciclo 20
 
 ---
 
@@ -744,12 +744,62 @@
 
 ---
 
-## Sprints pendientes — Ciclo 19
+## Sprints completados — Ciclo 19
 
-- [ ] [T18] TeacherGradeBook — modo "Feedback textual por alumno": en la vista expandida de cada fila, añadir un textarea de "Comentario trimestral" por alumno (guardado en estado), con botón "Generar borrador IA" que llama a /api/tutor-chat mode="pitchcoach" para generar texto de feedback basado en sus notas LOMLOE; botón "Copiar" para clipboard
-- [ ] [S20] StudentPortfolio — sección "Próximos pasos recomendados": 3 pasos accionables específicos del proyecto generados por IA (mode="narrativa"), cada uno con competencia, acción concreta y estimación de tiempo; botón de regeneración individual por paso
-- [ ] [A18] AdminDashboard — panel "Comparativa entre colegios": en el tab Métricas, expandir la comparativa existente Málaga vs Madrid con 2 gráficos adicionales (evolución mensual side-by-side y radar de competencias por colegio) con toggle de competencia y badge de diferencia
-- [ ] [C18] PitchLab — modo "Ensayo con preguntas intercaladas": durante el ensayo cronometrado, al pasar de sección aparece una pregunta de compresión del jurado (random de preguntasJurado filtrada por sección); el alumno responde antes de continuar al siguiente segmento
+### [SPRINT-TEACHER][T18] TeacherGradeBook — feedback textual por alumno ✅
+- Commit: `befb700`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- Imports añadidos: `MessageSquare, Copy`
+- States: `expandedAlumno: string | null`, `comentariosTrimestral: Record<string, string>`, `generandoFeedback: string | null`, `feedbackGenerado: Record<string, string>`, `copiadoFeedback: string | null`
+- Botón expand/collapse con `MessageSquare + ChevronDown/Up` en celda de nombre de cada alumno (bg-accent-light cuando expanded)
+- Fila expandida (colspan = COMPS.length + 2): panel flex con textarea "Comentario trimestral" (izquierda) + bloque "Borrador IA" (derecha)
+- `handleGenerarFeedbackIA(alumnoId)`: fetch /api/tutor-chat mode="pitchcoach", prompt con notas LOMLOE del alumno + comentario docente; fallback a `generarFeedbackMock()` (función interna que genera texto con fortaleza/mejora de las notas reales)
+- `handleCopiarFeedback(alumnoId)`: navigator.clipboard.writeText + feedback "Copiado" 2s
+- Botón "Copiar" con Copy/CheckCircle2 en panel de Borrador IA generado
+- Botón "Generar borrador IA" bg-sidebar con RefreshCw animado durante generación
+
+### [SPRINT-STUDENT][S20] StudentPortfolio — próximos pasos recomendados ✅
+- Commit: `bdfda90`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- Interface módulo: `ProximoPaso { competencia: CompKey; accion: string; tiempo: string; descripcion: string }`
+- `proximosPasosMock`: 3 pasos (CE: pitch Demo Day, CD: landing page, CPL: FAQ francés)
+- States: `proximosPasos: ProximoPaso[] | null`, `generandoProximosPasos: boolean`, `generandoPaso: number | null`
+- `handleGenerarProximosPasos()`: fetch /api/tutor-chat mode="narrativa" solicitando JSON array; parse jsonMatch(/\[[\s\S]*\]/); fallback a proximosPasosMock
+- `handleRegenerarPaso(index)`: fetch /api/tutor-chat para paso alternativo (JSON objeto); parse jsonMatch(/\{[\s\S]*?\}/); fallback a array `alternativas[index % 3]`
+- Panel insertado antes de "Competency growth overview": botón "Generar con IA" (Sparkles) cuando no hay pasos; 3 cards con número, competencia badge, tiempo badge, acción, descripción, y botón "Otro" (RefreshCw) por cada paso
+- Estado vacío: icon Lightbulb centrado con descripción del comportamiento esperado
+
+### [SPRINT-ADMIN][A18] AdminDashboard — comparativa ampliada entre colegios ✅
+- Commit: `0b2cc0c`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- State añadido: `comparativaMetrica: "retencion" | "engagement" | "evidencias" | "lomloe"` (default "engagement")
+- Panel nuevo "Análisis comparativo ampliado" insertado entre comparativa básica + engagement y Riesgo de abandono (tab Métricas)
+- Toggle de 4 métricas en header del panel: chip activo bg-sidebar text-white
+- `evolucionMensual`: objeto Record por métrica con 4 meses (Dic/Ene/Feb/Mar) × 2 colegios; definido en IIFE de la vista
+- `comparativaCompetencias`: 8 COMPS × {malaga, madrid} con valores mock diferenciados
+- Gráfico evolución mensual: barras CSS side-by-side (sidebar / accent-text/50), valor encima de cada barra, badge diferencia (+N/-N) bajo cada mes
+- Radar competencias: filas por competencia con 2 barras CSS apiladas (altura proporcional al mayor) + badge diferencia Mlg−Mad (success-light si positivo, urgent-light si negativo)
+- Leyenda en ambos sub-gráficos: □ Málaga / □ Madrid
+
+### [SPRINT-CULTURE][C18] PitchLab — ensayo con preguntas intercaladas ✅
+- Commit: `06a8cf8`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- States: `ensayoPreguntaIntercalada: typeof preguntasJurado[number] | null`, `ensayoRespuestaIntercalada: string`
+- `ensayoIntercaladasVisitadas: useRef<Set<number>>`: ref (no state) para evitar re-triggers tras responder
+- useEffect detecta `currentEnsayoSectionIdx`: cuando idx > 0 y no visitado y ensayoRunning → busca pregunta de preguntasJurado filtrada por tipo (solucion→competencia, mercado→riesgo, financiero→operacional, equipo→inversión) → pausa ensayo, muestra pregunta
+- `handleContinuarTrasIntercalada()`: limpia pregunta/respuesta, reanuda ensayoRunning
+- `handleResetEnsayo()` extendido: limpia estados C18 y resetea el ref Set
+- UI dentro del bloque ensayo: tercera rama del ternario (`ensayoCompleted ? ... : ensayoPreguntaIntercalada ? ... : <running>`)
+- Panel pregunta: avatar inversor + nombre, badge tipo (tipoColor), pregunta en texto grande, textarea respuesta, botones "Continuar ensayo" (disabled si vacío) y "Omitir pregunta"
+
+---
+
+## Sprints pendientes — Ciclo 20
+
+- [ ] [T19] TeacherGradeBook — "Vista resumen por alumno": al hacer click en el nombre expandido de un alumno, abrir un panel lateral/modal con: gráfico de radar CSS de las 8 competencias, comparativa T1/T2/T3 en minibarras, historial de cambios filtrado solo para ese alumno, y el comentario/feedback generado en T18
+- [ ] [S21] StudentPortfolio — sección "Mis errores → Mis aprendizajes": timeline visual de los 3 errores del Error Log, cada uno con icono de estado (resuelto/pendiente), barra de progreso de "superación" basada en las notas LOMLOE de la competencia afectada, y botón "Marcar como superado" con confirmación IA
+- [ ] [A19] AdminDashboard — "Exportar informe comparativo": en el panel de comparativa ampliada (A18), añadir botón "Exportar CSV comparativa" que genere un CSV con los datos de los 2 colegios × 4 métricas × 4 meses + las 8 competencias, y botón "Copiar resumen ejecutivo" que genera texto con los diferenciales clave para email/clipboard
+- [ ] [C19] PitchLab — "Puntuación con IA al terminar ensayo": al completar el ensayo cronometrado (estado ensayoCompleted), llamar a /api/tutor-chat mode="pitchcoach" con el tiempo empleado y las respuestas intercaladas registradas para obtener: puntuación global del ensayo (1-10), punto fuerte detectado, punto de mejora prioritario; mostrar en el panel de "Ensayo completado"
 
 ---
 
@@ -762,10 +812,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón.
-- **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header.
-- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto.
-- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO). A17 añade notificacionesAutomaticas (const módulo, 5 entradas) + notificacionesEnviadas Set + notificandoId + handleEnviarNotificacion(). Widget en Overview columna izquierda.
+- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). C17 añade SesionVivo interface + historialSesiones state (max 3) + handleRepetirConInversor(). Panel historial col-span-3 antes del mentor message con gráfico evolución y "Repetir" botón. C18 añade ensayoPreguntaIntercalada/ensayoRespuestaIntercalada states + ensayoIntercaladasVisitadas useRef Set + useEffect detección transición sección + handleContinuarTrasIntercalada(). tipoMap: solucion→competencia, mercado→riesgo, financiero→operacional, equipo→inversión. Panel intercalado como 3ª rama del ternario ensayo.
+- **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). T17 añade isExportingPDF/exportPDFFilename states + handleExportPDF() → HTML Blob descarga. Botón "Informe TX PDF" bg-sidebar en header. T18 añade expandedAlumno/comentariosTrimestral/generandoFeedback/feedbackGenerado/copiadoFeedback states. Botón expand (MessageSquare+ChevronDown/Up) en celda nombre. Fila expandida con textarea comentario + borrador IA. generarFeedbackMock() función interna. handleGenerarFeedbackIA() fetch /api/tutor-chat mode=pitchcoach. handleCopiarFeedback() clipboard.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. S19 añade showVistaPublica/vistaPublicaURL/urlCopiada/mostrarDatosPersonales states + handleCompartirPortfolio()/handleCopiarURL(). Panel Vista pública con URL, toggle datos, top-4 comps, 3 hitos, 3 KPIs impacto. S20 añade ProximoPaso interface + proximosPasosMock (módulo) + proximosPasos/generandoProximosPasos/generandoPaso states + handleGenerarProximosPasos()/handleRegenerarPaso(i). Panel antes de "Crecimiento en competencias" con 3 cards accionables y botón Otro por paso.
+- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO). A17 añade notificacionesAutomaticas (const módulo, 5 entradas) + notificacionesEnviadas Set + notificandoId + handleEnviarNotificacion(). Widget en Overview columna izquierda. A18 añade comparativaMetrica state ("engagement" default) + panel "Análisis comparativo ampliado" con evolucionMensual (4×2 meses) side-by-side bars + comparativaCompetencias radar (8 COMPS × 2 colegios) con badge diferencia. Toggle 4 métricas en header.
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
