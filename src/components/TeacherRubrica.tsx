@@ -129,10 +129,147 @@ const rubricasMock: RubricaMock[] = [
   },
 ];
 
+// T37 — Rúbricas T2 Food Truck
+const rubricasT2Mock: RubricaMock[] = [
+  {
+    id: "t2r1",
+    tarea: "Concepto y naming del Food Truck",
+    fase: "Fase 1 — Semana 1",
+    descripcion: "El alumno define el concepto de su food truck: nombre, historia de marca, público objetivo y propuesta de valor diferenciada.",
+    criterios: [
+      {
+        key: "CLC", nombre: "Comunicación Lingüística",
+        descriptores: [
+          "El nombre no comunica nada. La propuesta de valor está ausente o es incoherente.",
+          "El nombre existe pero no conecta con el concepto. La historia de marca es muy genérica.",
+          "El nombre es memorable, la propuesta de valor es clara y la historia conecta con el público.",
+          "Nombre con valor semántico, bilingüe y registrable. Historia de marca con voz propia y cohesión total.",
+        ],
+      },
+      {
+        key: "CE", nombre: "Competencia Emprendedora",
+        descriptores: [
+          "No identifica un público objetivo ni una necesidad de mercado.",
+          "Identifica un público de forma vaga. La propuesta no está diferenciada.",
+          "Público bien definido y propuesta de valor diferenciada con respecto a competidores locales.",
+          "Análisis de competidores real, propuesta única e hipótesis de early adopters con fundamento.",
+        ],
+      },
+      {
+        key: "CCEC", nombre: "Expresión Cultural",
+        descriptores: [
+          "Sin identidad visual. El concepto no tiene coherencia estética.",
+          "Identidad básica: colores y tipografía elegidos sin criterio estético claro.",
+          "Brand board coherente: paleta de marca, tipografía y tono alineados con el concepto culinario.",
+          "Identidad visual diferenciada con referentes reales, moodboard y guía de estilo completa.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "t2r2",
+    tarea: "Diseño de menú: 5 productos",
+    fase: "Fase 2 — Semana 2",
+    descripcion: "El alumno diseña un menú de 5 productos con descripción, precio, coste y margen calculado, justificando las decisiones desde criterios de rentabilidad y experiencia del cliente.",
+    criterios: [
+      {
+        key: "STEM", nombre: "Competencia STEM",
+        descriptores: [
+          "Precios sin calcular el coste. No identifica el margen de cada producto.",
+          "Calcula coste y precio en algún producto pero sin criterio sistemático.",
+          "Todos los productos tienen coste, precio y margen calculados. Identifica el más rentable.",
+          "Análisis de sensibilidad de precios con escenarios de demanda y punto de equilibrio del menú.",
+        ],
+      },
+      {
+        key: "CCEC", nombre: "Expresión Cultural",
+        descriptores: [
+          "Descripción de los platos genérica o ausente. No hay diseño visual del menú.",
+          "Descripción básica. El diseño del menú no refleja la identidad de marca.",
+          "Descripción evocadora de cada plato, diseño visual coherente con el brand del food truck.",
+          "Fotografía o ilustración de producto, copy que evoca experiencia y diseño de menú imprimible.",
+        ],
+      },
+      {
+        key: "CE", nombre: "Competencia Emprendedora",
+        descriptores: [
+          "Los productos no forman una oferta coherente ni responden a una lógica de negocio.",
+          "La oferta es coherente pero no está ordenada por rentabilidad ni por lógica de venta.",
+          "Menú equilibrado entre productos de alto y bajo margen, con al menos un producto estrella claro.",
+          "Estrategia de menu engineering: productos analizados por popularidad y margen, con acción recomendada.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "t2r3",
+    tarea: "Modelo financiero Food Truck",
+    fase: "Fase 3 — Semana 3",
+    descripcion: "El alumno elabora el modelo financiero del food truck: costes fijos, costes variables, ingresos proyectados, punto de equilibrio y escenarios de rentabilidad.",
+    criterios: [
+      {
+        key: "STEM", nombre: "Competencia STEM",
+        descriptores: [
+          "El modelo no distingue costes fijos de variables. Los cálculos tienen errores.",
+          "Distingue tipos de costes pero el punto de equilibrio está mal calculado.",
+          "Modelo correcto con costes, ingresos y punto de equilibrio. Escenario realista justificado.",
+          "Modelo con tres escenarios, análisis de sensibilidad y proyección de 3 meses con supuestos explícitos.",
+        ],
+      },
+      {
+        key: "CE", nombre: "Competencia Emprendedora",
+        descriptores: [
+          "No identifica si el negocio es viable ni cuándo recuperará la inversión.",
+          "Calcula rentabilidad solo en el escenario optimista.",
+          "Evalúa viabilidad en tres escenarios y justifica la inversión inicial de 3600 QC.",
+          "Propone palancas de mejora de rentabilidad y KPIs de seguimiento semanal con umbrales de alerta.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "t2r4",
+    tarea: "Pitch Demo Day T2",
+    fase: "Fase 4 — Semana 8",
+    descripcion: "El alumno presenta su food truck ante el jurado en 5 minutos: concepto, menú, modelo financiero y visión a 6 meses. La evaluación mide tanto el contenido como la capacidad de defensa.",
+    criterios: [
+      {
+        key: "CLC", nombre: "Comunicación Lingüística",
+        descriptores: [
+          "La presentación no tiene estructura. El tiempo no se cumple. La audiencia no entiende el concepto.",
+          "Estructura básica. El tiempo se supera o no se aprovecha. Poca claridad en los argumentos clave.",
+          "Presentación con inicio potente, desarrollo claro y cierre que invita a la acción. Tiempo controlado.",
+          "Pitch de nivel profesional: narrativa, datos, remate emocional y capacidad de respuesta a preguntas del jurado.",
+        ],
+      },
+      {
+        key: "CE", nombre: "Competencia Emprendedora",
+        descriptores: [
+          "El alumno no puede defender las decisiones de negocio ante preguntas del jurado.",
+          "Defiende el proyecto con dificultad. Algunos argumentos de negocio están incompletos.",
+          "Defiende las decisiones con datos del modelo financiero y lógica de mercado.",
+          "Responde a objeciones reales, propone alternativas y muestra mentalidad de mejora continua.",
+        ],
+      },
+      {
+        key: "CPSAA", nombre: "Personal y Social",
+        descriptores: [
+          "No gestiona los nervios. Presenta mirando las notas, sin contacto visual.",
+          "Gestión básica del nerviosismo. Contacto visual escaso con la audiencia.",
+          "Presencia segura, gestión del espacio y contacto visual distribuido entre el jurado.",
+          "Aplomo, adaptabilidad al imprevisto y liderazgo narrativo que inspira confianza al inversor.",
+        ],
+      },
+    ],
+  },
+];
+
+const allRubricasMock = [...rubricasMock, ...rubricasT2Mock];
+
 // Mock scores por alumno: studentId → criterioKey → nivel
 function initScores(): Record<string, Record<string, Record<string, Nivel>>> {
   const result: Record<string, Record<string, Record<string, Nivel>>> = {};
-  rubricasMock.forEach((r) => {
+  allRubricasMock.forEach((r) => {
     result[r.id] = {};
     classStudents.forEach((s, si) => {
       result[r.id][s.id] = {};
@@ -193,6 +330,10 @@ export default function TeacherRubrica() {
     4: { label: lbl("Logro sobresaliente", "Advanced"),  bg: "bg-success-light", text: "text-success",     border: "border-success/30" },
   };
 
+  // T37 — Trimestre selector
+  const [trimestreRubrica, setTrimestreRubrica] = useState<"T1" | "T2">("T1");
+  const rubricasActivas = trimestreRubrica === "T1" ? rubricasMock : rubricasT2Mock;
+
   const [activeRubrica, setActiveRubrica] = useState<string>(rubricasMock[0].id);
   const [scores, setScores] = useState(initScores);
   const [vistaAlumno, setVistaAlumno] = useState(false);
@@ -207,7 +348,7 @@ export default function TeacherRubrica() {
   const [exportandoRubrica, setExportandoRubrica] = useState<string | null>(null);
   const [rubricaExportada, setRubricaExportada] = useState<Set<string>>(new Set());
 
-  const rubrica = rubricasMock.find((r) => r.id === activeRubrica)!;
+  const rubrica = (rubricasActivas.find((r) => r.id === activeRubrica) ?? rubricasActivas[0])!;
 
   const cycleNivel = (rubricaId: string, studentId: string, criterioKey: string) => {
     setScores((prev) => {
@@ -245,7 +386,9 @@ export default function TeacherRubrica() {
             <h1 className="text-[22px] font-bold text-text-primary">{lbl("Rúbricas de Evaluación", "Assessment Rubrics")}</h1>
           </div>
           <p className="text-[13px] text-text-secondary">
-            {lbl("Criterios LOMLOE 1-4 · Proyecto Airbnb Málaga · 1º ESO", "LOMLOE criteria 1-4 · Airbnb Málaga Project · Year 7")}
+            {trimestreRubrica === "T1"
+              ? lbl("Criterios LOMLOE 1-4 · Proyecto Airbnb Málaga · 1º ESO", "LOMLOE criteria 1-4 · Airbnb Málaga · Year 7")
+              : lbl("Criterios LOMLOE 1-4 · Proyecto Food Truck · 1º ESO", "LOMLOE criteria 1-4 · Food Truck Project · Year 7")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -423,11 +566,37 @@ export default function TeacherRubrica() {
         </div>
       </div>
 
+      {/* T37 — Selector de trimestre */}
+      <div className="flex gap-2 mb-5">
+        {(["T1", "T2"] as const).map((t) => (
+          <button
+            key={t}
+            onClick={() => {
+              setTrimestreRubrica(t);
+              setActiveRubrica(t === "T1" ? rubricasMock[0].id : rubricasT2Mock[0].id);
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-semibold transition-all cursor-pointer border ${
+              trimestreRubrica === t
+                ? "bg-sidebar text-white border-sidebar"
+                : "bg-card text-text-muted border-card-border hover:border-sidebar/30"
+            }`}
+          >
+            <span>{t}</span>
+            <span className={`text-[10px] ${trimestreRubrica === t ? "text-accent" : "text-text-muted"}`}>
+              {t === "T1" ? lbl("Airbnb Málaga", "Airbnb Málaga") : lbl("Food Truck", "Food Truck")}
+            </span>
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${trimestreRubrica === t ? "bg-white/20 text-white" : "bg-background text-text-muted"}`}>
+              {t === "T1" ? rubricasMock.length : rubricasT2Mock.length} {lbl("rúbricas", "rubrics")}
+            </span>
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-4 gap-5">
         {/* Panel izquierdo — lista de rúbricas */}
         <div className="col-span-1 space-y-2.5">
           <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-3">{lbl("Tareas del proyecto", "Project tasks")}</p>
-          {rubricasMock.map((r) => (
+          {rubricasActivas.map((r) => (
             <button
               key={r.id}
               onClick={() => setActiveRubrica(r.id)}
