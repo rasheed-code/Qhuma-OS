@@ -366,6 +366,44 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
     setTimeout(() => { setGenerandoAgenda(false); setAgendaGenerada(true); }, 1200);
   };
 
+  // A20 — Centro de comunicación
+  const [comunicadoDestinatario, setComunicadoDestinatario] = useState<"todos" | "docentes" | "familias" | "alumnos">("todos");
+  const [comunicadoAsunto, setComunicadoAsunto] = useState("");
+  const [comunicadoCuerpo, setComunicadoCuerpo] = useState("");
+  const [comunicadoEnviando, setComunicadoEnviando] = useState(false);
+  const [comunicadoEnviado, setComunicadoEnviado] = useState(false);
+  const [historialComunicados, setHistorialComunicados] = useState([
+    { id: "c1", asunto: "Demo Day viernes 13 marzo — confirmación asistencia", destinatario: "todos", hora: "Ayer · 16:42", destinatarios: 24 },
+    { id: "c2", asunto: "Informe LOMLOE T2 disponible para descarga", destinatario: "docentes", hora: "Hace 2 días · 10:15", destinatarios: 3 },
+    { id: "c3", asunto: "Felicidades — Daniel Torres alcanza Nivel 5 Arquitecto", destinatario: "familias", hora: "Hace 3 días · 09:30", destinatarios: 12 },
+    { id: "c4", asunto: "Recordatorio: entrega de evidencias antes del viernes", destinatario: "alumnos", hora: "Hace 4 días · 15:00", destinatarios: 12 },
+    { id: "c5", asunto: "Reunión de claustro — martes 17 marzo 14:00", destinatario: "docentes", hora: "Hace 5 días · 11:20", destinatarios: 3 },
+  ]);
+  const plantillasComunicado = [
+    { id: "p1", label: "Recordatorio entrega", asunto: "Recordatorio: entrega de evidencias — semana en curso", cuerpo: "Hola,\n\nOs recordamos que la entrega de evidencias de la semana en curso cierra el próximo viernes a las 23:59.\n\nRevisad el tablero de proyectos en QHUMA OS para confirmar el estado de cada tarea.\n\nUn saludo,\nEquipo QHUMA Málaga" },
+    { id: "p2", label: "Invitación Demo Day", asunto: "Estáis invitados al Demo Day de 1º ESO — ¡Este viernes!", cuerpo: "Hola,\n\nTenemos el placer de invitaros al Demo Day de los proyectos de 1º ESO, donde nuestros alumnos presentarán sus proyectos ante inversores.\n\nFecha: viernes 13 de marzo · 16:00\nLugar: Sala de usos múltiples QHUMA Málaga\n\n¡Os esperamos!\nEquipo QHUMA Málaga" },
+    { id: "p3", label: "Aviso incidencia", asunto: "Comunicado de servicio: incidencia técnica resuelta", cuerpo: "Hola,\n\nOs informamos de que la incidencia técnica detectada esta mañana en la plataforma QHUMA OS ha sido resuelta satisfactoriamente. Todos los servicios funcionan con normalidad.\n\nDisculpad las molestias.\nEquipo técnico QHUMA" },
+  ];
+  const handleEnviarComunicado = () => {
+    if (!comunicadoAsunto.trim() || !comunicadoCuerpo.trim()) return;
+    setComunicadoEnviando(true);
+    setTimeout(() => {
+      const destinatariosCount = comunicadoDestinatario === "todos" ? 24 : comunicadoDestinatario === "docentes" ? 3 : comunicadoDestinatario === "familias" ? 12 : 12;
+      setHistorialComunicados((prev) => [{
+        id: `c${Date.now()}`,
+        asunto: comunicadoAsunto,
+        destinatario: comunicadoDestinatario,
+        hora: "Ahora · " + new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+        destinatarios: destinatariosCount,
+      }, ...prev].slice(0, 5));
+      setComunicadoEnviando(false);
+      setComunicadoEnviado(true);
+      setComunicadoAsunto("");
+      setComunicadoCuerpo("");
+      setTimeout(() => setComunicadoEnviado(false), 3000);
+    }, 1400);
+  };
+
   return (
     <div>
       {/* Header */}
@@ -812,6 +850,122 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 })}
               </div>
             </div>
+
+            {/* A20: Centro de comunicación */}
+            {(() => {
+              const destinatarioConfig: Record<string, { label: string; count: number; badge: string }> = {
+                todos:    { label: "Todos (alumnos + docentes + familias)", count: 24, badge: "bg-sidebar text-white" },
+                docentes: { label: "Solo docentes",                          count: 3,  badge: "bg-accent-text text-white" },
+                familias: { label: "Solo familias",                           count: 12, badge: "bg-warning text-white" },
+                alumnos:  { label: "Solo alumnos",                            count: 12, badge: "bg-success text-white" },
+              };
+              const cfg = destinatarioConfig[comunicadoDestinatario];
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Send size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">{lbl("Centro de comunicación", "Communication center")}</h3>
+                  </div>
+
+                  {/* Selector de destinatarios */}
+                  <div className="flex gap-1.5 mb-3 flex-wrap">
+                    {(["todos", "docentes", "familias", "alumnos"] as const).map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setComunicadoDestinatario(d)}
+                        className={`text-[10px] font-semibold px-2.5 py-1.5 rounded-lg border cursor-pointer transition-all capitalize ${
+                          comunicadoDestinatario === d
+                            ? "bg-sidebar text-white border-sidebar"
+                            : "bg-background text-text-muted border-card-border hover:text-text-secondary"
+                        }`}
+                      >
+                        {d === "todos" ? lbl("Todos", "All") : d === "docentes" ? lbl("Docentes", "Teachers") : d === "familias" ? lbl("Familias", "Families") : lbl("Alumnos", "Students")}
+                        <span className={`ml-1 text-[8px] px-1.5 py-0.5 rounded-full ${
+                          comunicadoDestinatario === d ? "bg-white/20" : "bg-background"
+                        }`}>
+                          {destinatarioConfig[d].count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Plantillas rápidas */}
+                  <div className="flex gap-1.5 mb-3 flex-wrap">
+                    <span className="text-[10px] text-text-muted self-center">{lbl("Plantilla:", "Template:")}</span>
+                    {plantillasComunicado.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => { setComunicadoAsunto(p.asunto); setComunicadoCuerpo(p.cuerpo); }}
+                        className="text-[9px] font-semibold px-2 py-1 rounded-lg bg-accent-light text-accent-text border border-accent/20 cursor-pointer hover:brightness-95 transition-all"
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Formulario */}
+                  <div className="space-y-2.5">
+                    <input
+                      type="text"
+                      placeholder={lbl("Asunto del comunicado...", "Subject...")}
+                      value={comunicadoAsunto}
+                      onChange={(e) => setComunicadoAsunto(e.target.value)}
+                      className="w-full text-[11px] bg-background border border-card-border rounded-xl px-3 py-2 text-text-primary outline-none focus:border-accent-text/40 placeholder:text-text-muted"
+                    />
+                    <textarea
+                      placeholder={lbl("Escribe el mensaje aquí...", "Write your message here...")}
+                      value={comunicadoCuerpo}
+                      onChange={(e) => setComunicadoCuerpo(e.target.value)}
+                      className="w-full text-[11px] bg-background border border-card-border rounded-xl px-3 py-2 resize-none outline-none focus:border-accent-text/40 h-[80px] placeholder:text-text-muted text-text-primary"
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-text-muted">
+                        {lbl("Para:", "To:")} <span className="font-semibold text-text-secondary">{cfg.count} destinatarios</span>
+                      </span>
+                      {comunicadoEnviado ? (
+                        <span className="flex items-center gap-1.5 text-[11px] font-bold text-success">
+                          <CheckCircle2 size={13} /> {lbl("¡Enviado correctamente!", "Sent successfully!")}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={handleEnviarComunicado}
+                          disabled={!comunicadoAsunto.trim() || !comunicadoCuerpo.trim() || comunicadoEnviando}
+                          className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {comunicadoEnviando
+                            ? <><RefreshCw size={11} className="animate-spin" />{lbl("Enviando...", "Sending...")}</>
+                            : <><Send size={11} />{lbl("Enviar comunicado", "Send message")}</>
+                          }
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Historial de comunicados */}
+                  <div className="mt-4 pt-4 border-t border-card-border">
+                    <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wide mb-2">{lbl("Enviados recientes", "Recently sent")}</p>
+                    <div className="space-y-2">
+                      {historialComunicados.slice(0, 5).map((c) => (
+                        <div key={c.id} className="flex items-start gap-2.5">
+                          <div className={`text-[7px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 mt-0.5 ${
+                            c.destinatario === "todos" ? "bg-sidebar text-white" :
+                            c.destinatario === "docentes" ? "bg-accent-light text-accent-text" :
+                            c.destinatario === "familias" ? "bg-warning-light text-text-primary" :
+                            "bg-success-light text-success"
+                          }`}>
+                            {c.destinatario === "todos" ? "TOD" : c.destinatario === "docentes" ? "DOC" : c.destinatario === "familias" ? "FAM" : "ALU"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-medium text-text-primary leading-snug truncate">{c.asunto}</p>
+                            <span className="text-[9px] text-text-muted">{c.hora} · {c.destinatarios} {lbl("destinatarios", "recipients")}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Panel derecho — Actividad reciente */}
