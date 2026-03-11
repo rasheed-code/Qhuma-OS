@@ -161,6 +161,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   // A12 — Salud sistema IA state
   const [showIALogs, setShowIALogs] = useState(false);
 
+  // A13 — Metrics vista toggle
+  const [metricsVista, setMetricsVista] = useState<"semana" | "mes">("semana");
+
   // A2 — Users management state
   const [userSearch, setUserSearch] = useState("");
   const [userFilterRol, setUserFilterRol] = useState("Todos");
@@ -1829,30 +1832,70 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 </div>
               </div>
 
-              {/* Engagement semanal */}
-              <div className="w-[280px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
-                <h3 className="text-[14px] font-semibold text-text-primary mb-1">Engagement semanal</h3>
-                <p className="text-[11px] text-text-muted mb-4">% alumnos activos por semana</p>
-                <div className="flex items-end gap-3 h-32">
-                  {engagementSemanal.map((sem) => {
-                    const pct = Math.round((sem.activos / 100) * 100);
-                    return (
-                      <div key={sem.semana} className="flex-1 flex flex-col items-center gap-1">
-                        <span className="text-[10px] font-bold text-accent-text">{sem.activos}%</span>
-                        <div className="w-full bg-background rounded-t-lg overflow-hidden flex-1 flex items-end">
-                          <div
-                            className="w-full bg-accent-text/80 rounded-t-lg transition-all"
-                            style={{ height: `${pct}%` }}
-                          />
-                        </div>
-                        <span className="text-[8px] text-text-muted text-center leading-tight">
-                          {sem.semana.replace("Sem ", "S").replace(" Feb", "F").replace(" Mar", "M")}
-                        </span>
+              {/* A13: Engagement semanal / diario con toggle */}
+              {(() => {
+                const actividadDiaria = [
+                  { label: "Lun", activos: 71 },
+                  { label: "Mar", activos: 78 },
+                  { label: "Mié", activos: 82 },
+                  { label: "Jue", activos: 75 },
+                  { label: "Vie", activos: 68 },
+                  { label: "Sáb", activos: 32 },
+                  { label: "Dom", activos: 18 },
+                ];
+                const actividadMensual = [
+                  { label: "Sem 1", activos: 68 },
+                  { label: "Sem 2", activos: 75 },
+                  { label: "Sem 3", activos: 72 },
+                  { label: "Sem 4", activos: 78 },
+                ];
+                const datos = metricsVista === "semana" ? actividadDiaria : actividadMensual;
+                const maxActivos = Math.max(...datos.map((d) => d.activos));
+                return (
+                  <div className="w-[280px] flex-shrink-0 bg-card rounded-2xl border border-card-border p-5">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-[14px] font-semibold text-text-primary">Actividad</h3>
+                      <div className="flex bg-background rounded-lg p-0.5 gap-0.5">
+                        <button
+                          onClick={() => setMetricsVista("semana")}
+                          className={`text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-all ${metricsVista === "semana" ? "bg-card text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
+                        >
+                          Semana
+                        </button>
+                        <button
+                          onClick={() => setMetricsVista("mes")}
+                          className={`text-[9px] font-bold px-2 py-1 rounded-md cursor-pointer transition-all ${metricsVista === "mes" ? "bg-card text-text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
+                        >
+                          Mes
+                        </button>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
+                    </div>
+                    <p className="text-[11px] text-text-muted mb-4">
+                      {metricsVista === "semana" ? "% alumnos activos · últimos 7 días" : "% alumnos activos · últimas 4 semanas"}
+                    </p>
+                    <div className="flex items-end gap-2 h-32">
+                      {datos.map((d) => {
+                        const pct = Math.round((d.activos / maxActivos) * 100);
+                        const isWeekend = metricsVista === "semana" && (d.label === "Sáb" || d.label === "Dom");
+                        return (
+                          <div key={d.label} className="flex-1 flex flex-col items-center gap-1">
+                            <span className={`text-[9px] font-bold ${isWeekend ? "text-text-muted" : "text-accent-text"}`}>
+                              {d.activos}%
+                            </span>
+                            <div className="w-full bg-background rounded-t-lg overflow-hidden flex-1 flex items-end">
+                              <div
+                                className={`w-full rounded-t-lg transition-all ${isWeekend ? "bg-text-muted/30" : "bg-accent-text/80"}`}
+                                style={{ height: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="text-[8px] text-text-muted text-center leading-tight">{d.label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Riesgo de abandono */}
