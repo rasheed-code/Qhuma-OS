@@ -393,6 +393,89 @@ export default function PitchLab() {
     }
   };
 
+  // C16 — Inversores en vivo
+  const primerasPreguntasVivo: Record<string, string> = {
+    conservadora: "¿Cuál es tu plan concreto para conseguir los primeros 3 clientes esta semana?",
+    moderado:     "Si alguien ya hace esto en Málaga, ¿qué te hace mejor que ellos hoy mismo?",
+    arriesgada:   "¿Qué pasaría con tu modelo si Airbnb aumenta sus comisiones un 30% mañana?",
+  };
+  const [vivoInversor, setVivoInversor] = useState<typeof inversoresConfig[number] | null>(null);
+  const [vivoPreguntas, setVivoPreguntas] = useState<string[]>([]);
+  const [vivoRespuestas, setVivoRespuestas] = useState<string[]>([]);
+  const [vivoStep, setVivoStep] = useState<0 | 1 | 2 | 3 | 4>(0); // 0=idle,1–3=steps,4=done
+  const [vivoRespuestaActual, setVivoRespuestaActual] = useState("");
+  const [vivoIsGenerating, setVivoIsGenerating] = useState(false);
+  const [vivoPuntuacion, setVivoPuntuacion] = useState<number | null>(null);
+  const [vivoComentario, setVivoComentario] = useState<string | null>(null);
+
+  const handleIniciarSesionVivo = () => {
+    const random = inversoresConfig[Math.floor(Math.random() * inversoresConfig.length)];
+    setVivoInversor(random);
+    setVivoPreguntas([primerasPreguntasVivo[random.id] ?? "¿Por qué apostaría yo por este proyecto hoy?"]);
+    setVivoRespuestas([]);
+    setVivoRespuestaActual("");
+    setVivoStep(1);
+    setVivoPuntuacion(null);
+    setVivoComentario(null);
+  };
+
+  const handleEnviarRespuestaVivo = async () => {
+    if (!vivoRespuestaActual.trim() || vivoIsGenerating || !vivoInversor) return;
+    const nuevasRespuestas = [...vivoRespuestas, vivoRespuestaActual];
+    setVivoRespuestas(nuevasRespuestas);
+    setVivoRespuestaActual("");
+    setVivoIsGenerating(true);
+
+    if (vivoStep < 3) {
+      // Generar siguiente pregunta
+      try {
+        const historial = vivoPreguntas.map((q, i) => `Q${i + 1}: "${q}" → R${i + 1}: "${nuevasRespuestas[i] ?? ""}"`).join("\n");
+        const res = await fetch("/api/tutor-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "pitchcoach",
+            message: `Eres ${vivoInversor.nombre}, inversor/a ${vivoInversor.perfil.toLowerCase()} en un pitch de Airbnb Málaga. Historial de la sesión:\n${historial}\nGenera la siguiente pregunta de seguimiento (1 sola frase directa, máximo 20 palabras, sin preámbulo).`,
+            history: [],
+          }),
+        });
+        const data = await res.json();
+        const nextQ = (data.reply ?? "¿Puedes concretar más?").split("\n")[0].replace(/^["""']+|["""']+$/g, "").trim();
+        setVivoPreguntas((prev) => [...prev, nextQ]);
+        setVivoStep((s) => (s + 1) as 1 | 2 | 3 | 4);
+      } catch {
+        setVivoPreguntas((prev) => [...prev, "¿Puedes explicar cómo escalarías en 6 meses?"]);
+        setVivoStep((s) => (s + 1) as 1 | 2 | 3 | 4);
+      }
+    } else {
+      // Evaluación final
+      try {
+        const historial = vivoPreguntas.map((q, i) => `Q${i + 1}: "${q}" → R${i + 1}: "${nuevasRespuestas[i] ?? ""}"`).join("\n");
+        const res = await fetch("/api/tutor-chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "pitchcoach",
+            message: `Eres ${vivoInversor.nombre}, inversor/a ${vivoInversor.perfil.toLowerCase()}. Evaluación de Lucas García (Airbnb Málaga) tras 3 preguntas:\n${historial}\nPuntuación del 1 al 10 y comentario en máximo 15 palabras. Formato exacto:\nPUNTUACIÓN: X/10\nCOMENTARIO: [texto]`,
+            history: [],
+          }),
+        });
+        const data = await res.json();
+        const raw: string = data.reply ?? "";
+        const scoreMatch = raw.match(/PUNTUACI[ÓO]N[:\s]+(\d+)/i);
+        const comentMatch = raw.match(/COMENTARIO[:\s]+(.+)/i);
+        setVivoPuntuacion(scoreMatch ? parseInt(scoreMatch[1]) : 7);
+        setVivoComentario(comentMatch ? comentMatch[1].trim() : "Respuestas sólidas, falta concretar el escalado.");
+        setVivoStep(4);
+      } catch {
+        setVivoPuntuacion(6);
+        setVivoComentario("Buena base, pero necesitas más datos de mercado.");
+        setVivoStep(4);
+      }
+    }
+    setVivoIsGenerating(false);
+  };
+
   // C13 — Guión de apoyo
   const [guionOpen, setGuionOpen] = useState<Set<string>>(new Set());
   const toggleGuion = (sectionId: string) => {
@@ -1167,6 +1250,160 @@ export default function PitchLab() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* C16: Inversores en vivo */}
+            <div className="col-span-3 bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Mic size={14} className="text-sidebar" />
+                <span className="text-[13px] font-semibold text-text-primary">Inversores en vivo</span>
+                <span className="text-[10px] text-text-muted ml-1">Sesión de 3 preguntas encadenadas · inversor aleatorio</span>
+                {vivoStep === 0 && (
+                  <button
+                    onClick={handleIniciarSesionVivo}
+                    className="ml-auto flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-4 py-2 rounded-xl cursor-pointer hover:brightness-110 transition-all"
+                  >
+                    <Play size={11} />
+                    Iniciar sesión en vivo
+                  </button>
+                )}
+                {vivoStep > 0 && vivoStep < 4 && (
+                  <button
+                    onClick={() => { setVivoStep(0); setVivoInversor(null); }}
+                    className="ml-auto text-[9px] text-text-muted hover:text-urgent cursor-pointer"
+                  >
+                    Cancelar sesión
+                  </button>
+                )}
+                {vivoStep === 4 && (
+                  <button
+                    onClick={handleIniciarSesionVivo}
+                    className="ml-auto flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[10px] font-bold px-3 py-1.5 rounded-xl cursor-pointer hover:border-accent-text/30"
+                  >
+                    <RotateCcw size={10} />
+                    Nueva sesión
+                  </button>
+                )}
+              </div>
+
+              {/* Estado idle */}
+              {vivoStep === 0 && (
+                <div className="bg-background rounded-xl px-4 py-5 flex flex-col items-center gap-2">
+                  <Users size={20} className="text-text-muted" />
+                  <p className="text-[11px] text-text-muted text-center">
+                    Un inversor aleatorio te hará 3 preguntas encadenadas. La segunda y tercera dependen de tu respuesta anterior. Al final, recibirás una puntuación de 1 a 10.
+                  </p>
+                </div>
+              )}
+
+              {/* Sesión activa */}
+              {vivoInversor && vivoStep >= 1 && (
+                <div>
+                  {/* Inversor seleccionado */}
+                  <div className="flex items-center gap-3 bg-sidebar rounded-xl px-4 py-3 mb-4">
+                    <div className="w-9 h-9 rounded-full bg-accent/20 text-accent font-bold text-[12px] flex items-center justify-center flex-shrink-0">
+                      {vivoInversor.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-[12px] font-bold text-white">{vivoInversor.nombre}</p>
+                      <p className="text-[10px] text-white/50">{vivoInversor.descripcion}</p>
+                    </div>
+                    {vivoStep < 4 && (
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {[1, 2, 3].map((s) => (
+                          <div key={s} className={`w-2 h-2 rounded-full ${s <= vivoStep ? "bg-accent" : "bg-white/20"}`} />
+                        ))}
+                        <span className="text-[9px] text-white/40 ml-1">Pregunta {Math.min(vivoStep, 3)} de 3</span>
+                      </div>
+                    )}
+                    {vivoStep === 4 && (
+                      <span className="text-[9px] font-bold bg-success text-white px-2 py-0.5 rounded-full">Completada</span>
+                    )}
+                  </div>
+
+                  {/* Historial de preguntas y respuestas */}
+                  <div className="space-y-3 mb-4">
+                    {vivoPreguntas.map((preg, i) => (
+                      <div key={i}>
+                        {/* Pregunta del inversor */}
+                        <div className="flex items-start gap-2 mb-2">
+                          <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                            {vivoInversor.avatar}
+                          </div>
+                          <div className="bg-background rounded-xl rounded-tl-sm px-3 py-2 flex-1">
+                            <span className="text-[9px] font-bold text-text-muted uppercase tracking-wide block mb-0.5">Pregunta {i + 1}</span>
+                            <p className="text-[11px] text-text-primary leading-relaxed italic">&ldquo;{preg}&rdquo;</p>
+                          </div>
+                        </div>
+                        {/* Respuesta del alumno (si ya la dio) */}
+                        {vivoRespuestas[i] && (
+                          <div className="flex items-start gap-2 justify-end">
+                            <div className="bg-accent-light rounded-xl rounded-tr-sm px-3 py-2 max-w-[85%]">
+                              <span className="text-[9px] font-bold text-accent-text uppercase tracking-wide block mb-0.5">Tu respuesta</span>
+                              <p className="text-[11px] text-text-primary leading-relaxed">{vivoRespuestas[i]}</p>
+                            </div>
+                            <div className="w-5 h-5 rounded-full bg-sidebar text-white text-[8px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                              LG
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Input respuesta actual (si no ha terminado) */}
+                  {vivoStep <= 3 && vivoStep === vivoPreguntas.length && !vivoIsGenerating && (
+                    <div className="space-y-2">
+                      <textarea
+                        value={vivoRespuestaActual}
+                        onChange={(e) => setVivoRespuestaActual(e.target.value)}
+                        placeholder="Responde de forma directa y concisa. El inversor espera claridad..."
+                        rows={3}
+                        className="w-full text-[11px] text-text-primary bg-background border border-card-border rounded-xl px-3 py-2.5 outline-none focus:border-accent-text/40 resize-none transition-colors placeholder:text-text-muted"
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-text-muted">
+                          {vivoRespuestaActual.split(/\s+/).filter(Boolean).length} palabras
+                        </span>
+                        <button
+                          onClick={handleEnviarRespuestaVivo}
+                          disabled={!vivoRespuestaActual.trim() || vivoIsGenerating}
+                          className="flex items-center gap-1.5 bg-sidebar text-white text-[10px] font-bold px-4 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <ChevronRight size={11} />
+                          {vivoStep < 3 ? "Enviar y continuar" : "Enviar y finalizar"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Generando siguiente pregunta */}
+                  {vivoIsGenerating && (
+                    <div className="flex items-center gap-3 bg-background rounded-xl px-4 py-3">
+                      <Loader2 size={13} className="text-accent-text animate-spin flex-shrink-0" />
+                      <span className="text-[11px] text-text-secondary">
+                        {vivoStep <= 3 ? "Preparando la siguiente pregunta..." : "Calculando tu puntuación final..."}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Evaluación final */}
+                  {vivoStep === 4 && vivoPuntuacion !== null && (
+                    <div className={`rounded-xl p-5 text-center ${vivoPuntuacion >= 8 ? "bg-success-light" : vivoPuntuacion >= 6 ? "bg-accent-light" : "bg-warning-light"}`}>
+                      <p className="text-[11px] font-semibold text-text-secondary mb-1">{vivoInversor.nombre} · Puntuación final</p>
+                      <p className={`text-[48px] font-bold leading-none mb-2 ${vivoPuntuacion >= 8 ? "text-success" : vivoPuntuacion >= 6 ? "text-accent-text" : "text-warning"}`}>
+                        {vivoPuntuacion}<span className="text-[20px] font-normal text-text-muted">/10</span>
+                      </p>
+                      {vivoComentario && (
+                        <p className="text-[12px] text-text-secondary italic max-w-md mx-auto">&ldquo;{vivoComentario}&rdquo;</p>
+                      )}
+                      <p className="text-[10px] text-text-muted mt-2">
+                        {vivoPuntuacion >= 8 ? "¡Excelente sesión! Estás listo para el Demo Day." : vivoPuntuacion >= 6 ? "Buena base. Practica los detalles financieros." : "Sigue practicando — especialmente el modelo de mercado."}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Mentor message */}
