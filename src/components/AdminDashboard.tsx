@@ -233,6 +233,9 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
   // A13 — Metrics vista toggle
   const [metricsVista, setMetricsVista] = useState<"semana" | "mes">("semana");
 
+  // A18 — Comparativa colegios extended
+  const [comparativaMetrica, setComparativaMetrica] = useState<"retencion" | "engagement" | "evidencias" | "lomloe">("engagement");
+
   // A16 — Top competencias por clase
   const [compClaseVista, setCompClaseVista] = useState<"1eso" | "2eso">("1eso");
 
@@ -2195,6 +2198,132 @@ export default function AdminDashboard({ activeView, onNavigate }: AdminDashboar
                 );
               })()}
             </div>
+
+            {/* A18 — Análisis comparativo ampliado */}
+            {(() => {
+              const evolucionMensual: Record<"retencion" | "engagement" | "evidencias" | "lomloe", { mes: string; malaga: number; madrid: number }[]> = {
+                retencion:  [{ mes: "Dic", malaga: 93, madrid: 88 }, { mes: "Ene", malaga: 94, madrid: 89 }, { mes: "Feb", malaga: 95, madrid: 90 }, { mes: "Mar", malaga: 96, madrid: 91 }],
+                engagement: [{ mes: "Dic", malaga: 70, madrid: 65 }, { mes: "Ene", malaga: 73, madrid: 67 }, { mes: "Feb", malaga: 76, madrid: 70 }, { mes: "Mar", malaga: 78, madrid: 71 }],
+                evidencias: [{ mes: "Dic", malaga: 55, madrid: 48 }, { mes: "Ene", malaga: 58, madrid: 52 }, { mes: "Feb", malaga: 62, madrid: 55 }, { mes: "Mar", malaga: 66, madrid: 58 }],
+                lomloe:     [{ mes: "Dic", malaga: 84, madrid: 79 }, { mes: "Ene", malaga: 86, madrid: 80 }, { mes: "Feb", malaga: 88, madrid: 82 }, { mes: "Mar", malaga: 89, madrid: 83 }],
+              };
+              const comparativaCompetencias = [
+                { comp: "CLC",   malaga: 72, madrid: 68 },
+                { comp: "CPL",   malaga: 58, madrid: 63 },
+                { comp: "STEM",  malaga: 85, madrid: 79 },
+                { comp: "CD",    malaga: 88, madrid: 76 },
+                { comp: "CPSAA", malaga: 74, madrid: 71 },
+                { comp: "CC",    malaga: 68, madrid: 70 },
+                { comp: "CE",    malaga: 90, madrid: 82 },
+                { comp: "CCEC",  malaga: 55, madrid: 62 },
+              ];
+              const metricaLabels: Record<"retencion" | "engagement" | "evidencias" | "lomloe", string> = {
+                retencion: "Retención", engagement: "Engagement", evidencias: "Evidencias %", lomloe: "Cumpl. LOMLOE",
+              };
+              const datosEvol = evolucionMensual[comparativaMetrica];
+              const maxEvol = Math.max(...datosEvol.flatMap((d) => [d.malaga, d.madrid]));
+              return (
+                <div className="bg-card rounded-2xl border border-card-border p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BarChart3 size={14} className="text-accent-text" />
+                    <h3 className="text-[14px] font-semibold text-text-primary">Análisis comparativo ampliado</h3>
+                    {/* Toggle de métrica */}
+                    <div className="ml-auto flex gap-1 bg-background rounded-xl border border-card-border p-0.5">
+                      {(["retencion", "engagement", "evidencias", "lomloe"] as const).map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => setComparativaMetrica(m)}
+                          className={`text-[9px] font-bold px-2.5 py-1 rounded-lg cursor-pointer transition-all ${
+                            comparativaMetrica === m ? "bg-sidebar text-white" : "text-text-muted hover:text-text-secondary"
+                          }`}
+                        >
+                          {metricaLabels[m]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-5">
+                    {/* Evolución mensual side-by-side */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-[11px] font-semibold text-text-secondary">Evolución mensual · {metricaLabels[comparativaMetrica]}</span>
+                        <div className="flex items-center gap-2 ml-auto">
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-sidebar" /><span className="text-[9px] text-text-muted">Málaga</span></div>
+                          <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-accent-text/50" /><span className="text-[9px] text-text-muted">Madrid</span></div>
+                        </div>
+                      </div>
+                      <div className="flex items-end gap-3 h-28">
+                        {datosEvol.map((d) => {
+                          const hMalaga = Math.round((d.malaga / maxEvol) * 100);
+                          const hMadrid = Math.round((d.madrid / maxEvol) * 100);
+                          const diff = d.malaga - d.madrid;
+                          return (
+                            <div key={d.mes} className="flex-1 flex flex-col items-center gap-1">
+                              <div className="flex items-end gap-1 h-20 w-full justify-center">
+                                <div className="flex flex-col items-center gap-0.5 w-5">
+                                  <span className="text-[8px] font-bold text-sidebar">{d.malaga}%</span>
+                                  <div className="w-full bg-sidebar rounded-t-md" style={{ height: `${hMalaga}%`, minHeight: 4 }} />
+                                </div>
+                                <div className="flex flex-col items-center gap-0.5 w-5">
+                                  <span className="text-[8px] font-bold text-accent-text/70">{d.madrid}%</span>
+                                  <div className="w-full bg-accent-text/50 rounded-t-md" style={{ height: `${hMadrid}%`, minHeight: 4 }} />
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-center gap-0.5">
+                                <span className="text-[8px] text-text-muted">{d.mes}</span>
+                                <span className={`text-[8px] font-bold px-1 rounded ${diff > 0 ? "text-success bg-success-light" : diff < 0 ? "text-urgent bg-urgent-light" : "text-text-muted"}`}>
+                                  {diff > 0 ? `+${diff}` : diff === 0 ? "=" : diff}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Radar competencias por colegio */}
+                    <div className="w-[340px] flex-shrink-0">
+                      <p className="text-[11px] font-semibold text-text-secondary mb-3">Radar competencias LOMLOE</p>
+                      <div className="space-y-1.5">
+                        {comparativaCompetencias.map((c) => {
+                          const diff = c.malaga - c.madrid;
+                          const maxVal = Math.max(c.malaga, c.madrid);
+                          return (
+                            <div key={c.comp} className="flex items-center gap-2">
+                              <span className="text-[9px] font-bold text-text-secondary w-10">{c.comp}</span>
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <div className="flex items-center gap-1">
+                                  <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
+                                    <div className="h-full bg-sidebar rounded-full" style={{ width: `${(c.malaga / maxVal) * 100}%` }} />
+                                  </div>
+                                  <span className="text-[8px] font-bold text-sidebar w-6 text-right">{c.malaga}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <div className="flex-1 h-1.5 bg-background rounded-full overflow-hidden">
+                                    <div className="h-full bg-accent-text/50 rounded-full" style={{ width: `${(c.madrid / maxVal) * 100}%` }} />
+                                  </div>
+                                  <span className="text-[8px] font-bold text-accent-text/60 w-6 text-right">{c.madrid}</span>
+                                </div>
+                              </div>
+                              <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 w-10 text-center ${
+                                diff > 0 ? "bg-success-light text-success" : diff < 0 ? "bg-urgent-light text-urgent" : "bg-background text-text-muted"
+                              }`}>
+                                {diff > 0 ? `+${diff}` : diff === 0 ? "=" : `${diff}`}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center gap-4 mt-3 pt-2 border-t border-card-border">
+                        <div className="flex items-center gap-1"><div className="w-2 h-1.5 rounded-sm bg-sidebar" /><span className="text-[9px] text-text-muted">Málaga</span></div>
+                        <div className="flex items-center gap-1"><div className="w-2 h-1.5 rounded-sm bg-accent-text/50" /><span className="text-[9px] text-text-muted">Madrid</span></div>
+                        <span className="text-[9px] text-text-muted ml-auto">Badge = diferencia Mlg−Mad</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Riesgo de abandono */}
             <div className="bg-card rounded-2xl border border-card-border p-5">
