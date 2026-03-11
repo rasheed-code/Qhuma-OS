@@ -27,6 +27,8 @@ import {
   Cpu,
   TrendingUp,
   Sparkles,
+  Briefcase,
+  MapPin,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -676,6 +678,142 @@ export default function StudentProfile() {
                   {generandoMeta ? lbl("Generando estrategia...", "Generating strategy...") : lbl("Generar estrategia de aprendizaje IA", "Generate AI learning strategy")}
                 </button>
               )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── S35: Industrias Vivas — mi huella profesional ─────────────────── */}
+      {(() => {
+        const industrias = [
+          {
+            id: "turismo",
+            nombre: lbl("Turismo y Hospitalidad", "Tourism & Hospitality"),
+            conexion: lbl("Tu proyecto Airbnb Málaga te ha dado experiencia real en gestión de propiedades, atención al cliente y revenue management.", "Your Airbnb Málaga project gave you real experience in property management, customer service, and revenue management."),
+            roles: [
+              { titulo: lbl("Revenue Manager", "Revenue Manager"), empresa: "Booking.com, Airbnb, Hoteles", match: 87 },
+              { titulo: lbl("Gestor de propiedades", "Property Manager"), empresa: lbl("Agencias inmobiliarias", "Real estate agencies"), match: 82 },
+              { titulo: lbl("Consultor turístico", "Tourism Consultant"), empresa: lbl("Ayuntamientos, tour ops.", "City halls, tour operators"), match: 71 },
+            ],
+            skills: ["CE", "STEM", "CD"],
+            color: "bg-sidebar",
+            textColor: "text-white",
+            badge: lbl("Tu proyecto activo", "Your active project"),
+          },
+          {
+            id: "fintech",
+            nombre: lbl("Finanzas y FinTech", "Finance & FinTech"),
+            conexion: lbl("Tu modelo financiero de Casa Limón (P&L, ROI, márgenes) es exactamente lo que hacen los analistas financieros junior todos los días.", "Your Casa Limón financial model (P&L, ROI, margins) is exactly what junior financial analysts do every day."),
+            roles: [
+              { titulo: lbl("Analista financiero", "Financial Analyst"), empresa: lbl("Bancos, startups FinTech", "Banks, FinTech startups"), match: 74 },
+              { titulo: lbl("Emprendedor", "Entrepreneur"), empresa: lbl("Startups, QHUMA Capital", "Startups, QHUMA Capital"), match: 90 },
+              { titulo: lbl("Gestor de inversiones", "Investment Manager"), empresa: lbl("Fondos, family offices", "Funds, family offices"), match: 61 },
+            ],
+            skills: ["CE", "STEM", "CPSAA"],
+            color: "bg-accent-light",
+            textColor: "text-accent-text",
+            badge: lbl("Alta compatibilidad", "High match"),
+          },
+          {
+            id: "digital",
+            nombre: lbl("Marketing Digital", "Digital Marketing"),
+            conexion: lbl("Tu landing page, brand board y estrategia de precios de temporada son las herramientas de cualquier especialista en marketing digital.", "Your landing page, brand board, and seasonal pricing strategy are the tools of any digital marketing specialist."),
+            roles: [
+              { titulo: lbl("Especialista SEO/SEM", "SEO/SEM Specialist"), empresa: lbl("Agencias, e-commerce", "Agencies, e-commerce"), match: 78 },
+              { titulo: lbl("Community Manager", "Community Manager"), empresa: lbl("Empresas, agencias", "Companies, agencies"), match: 83 },
+              { titulo: lbl("Product Manager", "Product Manager"), empresa: lbl("Startups, tech companies", "Startups, tech companies"), match: 69 },
+            ],
+            skills: ["CD", "CLC", "CCEC"],
+            color: "bg-background",
+            textColor: "text-text-primary",
+            badge: lbl("En desarrollo", "In progress"),
+          },
+        ];
+
+        return (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Industrias Vivas", "Live Industries")}</h2>
+                <p className="text-[11px] text-text-muted mt-0.5">{lbl("Tu proyecto conecta con estos sectores profesionales reales", "Your project connects with these real professional sectors")}</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <MapPin size={11} className="text-text-muted" />
+                <span className="text-[10px] text-text-muted">{lbl("Málaga · ESO", "Málaga · ESO")}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              {industrias.map((ind) => (
+                <div key={ind.id} className={`rounded-2xl border border-card-border ${ind.color === "bg-sidebar" ? "bg-sidebar" : ind.color === "bg-accent-light" ? "bg-accent-light border-accent/30" : "bg-background"} p-4`}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                        ind.color === "bg-sidebar" ? "bg-white/20 text-white" :
+                        ind.color === "bg-accent-light" ? "bg-sidebar text-accent" :
+                        "bg-card border border-card-border text-text-muted"
+                      }`}>{ind.badge}</span>
+                      <p className={`text-[13px] font-bold mt-1.5 leading-tight ${ind.color === "bg-sidebar" ? "text-white" : "text-text-primary"}`}>
+                        {ind.nombre}
+                      </p>
+                    </div>
+                    <Briefcase size={14} className={ind.color === "bg-sidebar" ? "text-accent" : "text-text-muted"} />
+                  </div>
+
+                  {/* Connection */}
+                  <p className={`text-[9px] leading-relaxed mb-3 ${ind.color === "bg-sidebar" ? "text-white/70" : "text-text-secondary"}`}>
+                    {ind.conexion}
+                  </p>
+
+                  {/* Skills used */}
+                  <div className="flex gap-1 mb-3 flex-wrap">
+                    {ind.skills.map((s) => (
+                      <span key={s} className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${
+                        ind.color === "bg-sidebar" ? "bg-white/20 text-white" : "bg-sidebar text-accent"
+                      }`}>{s}</span>
+                    ))}
+                  </div>
+
+                  {/* Roles */}
+                  <div className="space-y-1.5">
+                    {ind.roles.map((r) => (
+                      <div key={r.titulo} className={`rounded-lg px-2.5 py-2 ${
+                        ind.color === "bg-sidebar" ? "bg-white/10" : "bg-card border border-card-border"
+                      }`}>
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className={`text-[9px] font-semibold leading-tight ${ind.color === "bg-sidebar" ? "text-white" : "text-text-primary"}`}>
+                            {r.titulo}
+                          </span>
+                          <span className={`text-[9px] font-bold ${r.match >= 80 ? "text-success" : r.match >= 70 ? "text-warning" : "text-text-muted"}`}>
+                            {r.match}%
+                          </span>
+                        </div>
+                        <p className={`text-[8px] ${ind.color === "bg-sidebar" ? "text-white/50" : "text-text-muted"}`}>{r.empresa}</p>
+                        {/* match bar */}
+                        <div className={`h-1 rounded-full mt-1 ${ind.color === "bg-sidebar" ? "bg-white/20" : "bg-border"}`}>
+                          <div
+                            className={`h-full rounded-full ${r.match >= 80 ? "bg-success" : r.match >= 70 ? "bg-warning" : "bg-border"}`}
+                            style={{ width: `${r.match}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-accent-light border border-accent/20 rounded-xl px-4 py-3">
+              <div className="flex items-start gap-2">
+                <TrendingUp size={12} className="text-accent-text flex-shrink-0 mt-0.5" />
+                <p className="text-[10px] text-accent-text leading-relaxed">
+                  {lbl(
+                    "Tu perfil está alineado con sectores con alta demanda en 2026. El emprendimiento digital, la gestión de experiencias y el marketing de datos crecerán un 34% en los próximos 5 años en España.",
+                    "Your profile aligns with high-demand sectors in 2026. Digital entrepreneurship, experience management, and data marketing will grow 34% in the next 5 years in Spain."
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         );
