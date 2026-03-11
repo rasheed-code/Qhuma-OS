@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Loader2, Brain, Telescope } from "lucide-react";
+import { Send, Sparkles, Loader2, Brain, Telescope, BookOpen, ChevronDown, ChevronUp, Save, CheckCircle2 } from "lucide-react";
 import { chatMessages as initialMessages } from "@/data/students";
 import { Role, ChatMessage } from "@/types";
 import { useLang } from "@/lib/i18n";
@@ -37,13 +37,34 @@ export default function TeacherChat({ role }: { role: Role }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // C24 — Deep Dive enhancements
+  const [deepDiveDepth, setDeepDiveDepth] = useState(0); // 0-100
+  const [deepDiveHilos, setDeepDiveHilos] = useState<string[]>([]);
+  const [deepDiveSesiones, setDeepDiveSesiones] = useState<{ fecha: string; tema: string; profundidad: number; insights: string[] }[]>([]);
+  const [guardandoSesion, setGuardandoSesion] = useState(false);
+  const [sessionGuardada, setSessionGuardada] = useState(false);
+  const [showSesiones, setShowSesiones] = useState(false);
+
   // Auto-activate Deep Dive when student has sent 6+ messages (sustained engagement)
   const studentMsgCount = messages.filter((m) => m.sender === "student").length;
   useEffect(() => {
     if (role === "student" && studentMsgCount >= 6 && !deepDiveMode) {
       setDeepDiveMode(true);
     }
-  }, [studentMsgCount, role, deepDiveMode]);
+    // C24 — update depth meter (0-100 based on messages past 6)
+    if (deepDiveMode) {
+      const extraMsgs = Math.max(0, studentMsgCount - 6);
+      const newDepth = Math.min(100, Math.round((extraMsgs / 10) * 100));
+      setDeepDiveDepth(newDepth);
+      // Extract hilos from last 3 AI responses
+      const aiResponses = messages.filter((m) => m.sender === "teacher" && !m.isTyping).slice(-3);
+      const hilos = aiResponses.map((msg) => {
+        const first = msg.message.split(".")[0].trim();
+        return first.length > 60 ? first.slice(0, 57) + "..." : first;
+      }).filter(Boolean);
+      setDeepDiveHilos(hilos);
+    }
+  }, [studentMsgCount, role, deepDiveMode, messages]);
 
   const title =
     role === "student"
@@ -264,13 +285,128 @@ export default function TeacherChat({ role }: { role: Role }) {
         </div>
       )}
       {role === "student" && deepDiveMode && (
-        <div className="px-3 pb-2">
-          <div className="flex items-center gap-1.5 bg-warning-light rounded-xl px-3 py-2 border border-warning/20">
-            <Telescope size={12} className="text-warning flex-shrink-0" />
-            <p className="text-[10px] text-text-secondary leading-tight">
-              <strong className="text-warning">{lbl("Exploración Profunda activa", "Deep Exploration active")}</strong> — {lbl("La IA irá más a fondo en cada respuesta y conectará con el mercado laboral real.", "The AI will go deeper in each response and connect with the real job market.")}
-            </p>
+        <div className="px-3 pb-2 space-y-2">
+          {/* Profundímetro */}
+          <div className="bg-warning-light rounded-xl px-3 py-2.5 border border-warning/20">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Telescope size={11} className="text-warning flex-shrink-0" />
+              <span className="text-[10px] font-semibold text-warning">{lbl("Exploración Profunda activa", "Deep Exploration active")}</span>
+              <span className="ml-auto text-[9px] font-bold text-warning">{deepDiveDepth}%</span>
+            </div>
+            {/* Barra de profundidad */}
+            <div className="h-1.5 bg-warning/20 rounded-full overflow-hidden mb-1.5">
+              <div
+                className="h-full bg-warning rounded-full transition-all duration-700"
+                style={{ width: `${deepDiveDepth}%` }}
+              />
+            </div>
+            <p className="text-[9px] text-text-muted">{lbl("Profundidad de exploración", "Exploration depth")} · {lbl("Sigue preguntando para ir más lejos", "Keep asking to go deeper")}</p>
           </div>
+
+          {/* Hilos activos */}
+          {deepDiveHilos.length > 0 && (
+            <div className="bg-background rounded-xl px-3 py-2.5 border border-card-border">
+              <div className="flex items-center gap-1.5 mb-2">
+                <BookOpen size={11} className="text-accent-text" />
+                <span className="text-[10px] font-semibold text-text-primary">{lbl("Hilos de exploración activos", "Active exploration threads")}</span>
+              </div>
+              <div className="space-y-1.5">
+                {deepDiveHilos.map((hilo, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
+                    <p className="text-[10px] text-text-secondary flex-1 truncate">{hilo || `${lbl("Hilo", "Thread")} ${idx + 1}`}</p>
+                    <button
+                      onClick={() => {
+                        const preguntasProfundas = [
+                          lbl("¿Puedes profundizar más en ese punto y conectarlo con el mercado real de Málaga?", "Can you go deeper on that point and connect it to Málaga's real market?"),
+                          lbl("¿Qué datos del INE o de AirDNA respaldan esa idea para Casa Limón?", "What INE or AirDNA data supports that idea for Casa Limón?"),
+                          lbl("Si lo analizas desde la perspectiva de un inversor, ¿qué métricas cambiarían?", "If you analyze this from an investor's perspective, what metrics would change?"),
+                        ];
+                        setInput(preguntasProfundas[idx % preguntasProfundas.length]);
+                        inputRef.current?.focus();
+                      }}
+                      className="text-[8px] font-semibold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full hover:bg-accent/20 transition-colors cursor-pointer flex-shrink-0"
+                    >
+                      {lbl("Explorar", "Explore")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Guardar sesión Deep Dive */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (guardandoSesion) return;
+                setGuardandoSesion(true);
+                setTimeout(() => {
+                  const temaDetectado = deepDiveHilos[0]
+                    ? deepDiveHilos[0].slice(0, 40)
+                    : lbl("Exploración Airbnb Málaga", "Airbnb Málaga Exploration");
+                  const nuevaSesion = {
+                    fecha: new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }),
+                    tema: temaDetectado,
+                    profundidad: deepDiveDepth,
+                    insights: [
+                      lbl("Análisis de mercado turístico Málaga completado", "Málaga tourism market analysis completed"),
+                      lbl("Conexión con datos INE explorada", "INE data connection explored"),
+                      lbl("Modelo de precios dinámicos identificado", "Dynamic pricing model identified"),
+                    ],
+                  };
+                  setDeepDiveSesiones((prev) => [nuevaSesion, ...prev].slice(0, 3));
+                  setSessionGuardada(true);
+                  setGuardandoSesion(false);
+                  setTimeout(() => setSessionGuardada(false), 2500);
+                }, 1000);
+              }}
+              className="flex items-center gap-1.5 text-[10px] font-semibold bg-sidebar text-white px-2.5 py-1.5 rounded-xl hover:bg-accent-dark transition-all cursor-pointer disabled:opacity-50 flex-shrink-0"
+            >
+              {guardandoSesion ? (
+                <><Loader2 size={9} className="animate-spin" />{lbl("Guardando...", "Saving...")}</>
+              ) : sessionGuardada ? (
+                <><CheckCircle2 size={9} className="text-accent" />{lbl("Guardada", "Saved")}</>
+              ) : (
+                <><Save size={9} />{lbl("Guardar sesión Deep Dive", "Save Deep Dive session")}</>
+              )}
+            </button>
+            {deepDiveSesiones.length > 0 && (
+              <button
+                onClick={() => setShowSesiones((v) => !v)}
+                className="flex items-center gap-1 text-[9px] text-text-muted hover:text-accent-text transition-colors cursor-pointer"
+              >
+                {showSesiones ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                {deepDiveSesiones.length} {lbl("sesiones guardadas", "saved sessions")}
+              </button>
+            )}
+          </div>
+
+          {/* Panel sesiones guardadas */}
+          {showSesiones && deepDiveSesiones.length > 0 && (
+            <div className="space-y-1.5">
+              {deepDiveSesiones.map((sesion, idx) => (
+                <div key={idx} className="bg-background rounded-xl p-2.5 border border-card-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Telescope size={9} className="text-warning" />
+                    <span className="text-[10px] font-semibold text-text-primary flex-1 truncate">{sesion.tema}</span>
+                    <span className="text-[8px] text-text-muted">{sesion.fecha}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 h-1 bg-background rounded-full overflow-hidden border border-card-border">
+                      <div className="h-full bg-warning rounded-full" style={{ width: `${sesion.profundidad}%` }} />
+                    </div>
+                    <span className="text-[8px] font-bold text-warning">{sesion.profundidad}%</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    {sesion.insights.map((insight, i) => (
+                      <p key={i} className="text-[9px] text-text-muted">· {insight}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
