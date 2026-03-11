@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   Send,
   RefreshCw,
+  BookOpen,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -57,6 +58,10 @@ export default function StudentProfile() {
   );
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // C30 — Diario socrático
+  const [diarioHoy, setDiarioHoy] = useState("");
+  const [diarioGuardado, setDiarioGuardado] = useState(false);
 
   // S28 — Mi red de apoyo
   const [mentorMensaje, setMentorMensaje] = useState<Record<string, string>>({});
@@ -415,6 +420,127 @@ export default function StudentProfile() {
           })}
         </div>
       </div>
+
+      {/* C30 — Diario socrático */}
+      {(() => {
+        const entradas = [
+          {
+            fecha: lbl("Lun 9 mar", "Mon Mar 9"),
+            pregunta: lbl("¿Qué asumí hoy que resultó ser falso?", "What did I assume today that turned out to be false?"),
+            respuesta: lbl(
+              "Asumí que todos mis compañeros entendían el modelo financiero, pero al hacer el ensayo descubrí que Pablo no sabía calcular el punto de equilibrio. Me sirvió para replantear cómo explicamos los números en el pitch.",
+              "I assumed all my classmates understood the financial model, but during rehearsal I found Pablo didn't know how to calculate break-even. It made me rethink how we explain the numbers in our pitch."
+            ),
+            ia: lbl("¿Cómo cambiarías tu siguiente explicación para que sea más accesible?", "How would you change your next explanation to make it more accessible?"),
+          },
+          {
+            fecha: lbl("Mié 4 mar", "Wed Mar 4"),
+            pregunta: lbl("¿Qué evidencia contradice mi idea inicial del proyecto?", "What evidence contradicts my initial project idea?"),
+            respuesta: lbl(
+              "Pensé que el precio de 3€ era perfecto, pero la encuesta de campo mostró que el 60% pagaría máximo 2€. Tuvimos que replantear los costes o buscar volumen.",
+              "I thought €3 was the perfect price, but the field survey showed 60% would pay max €2. We had to rethink costs or pursue volume."
+            ),
+            ia: lbl("¿Qué estructura de costes te permitiría ser rentable a 2€ por unidad?", "What cost structure would allow you to be profitable at €2 per unit?"),
+          },
+          {
+            fecha: lbl("Vie 28 feb", "Fri Feb 28"),
+            pregunta: lbl("¿Qué haría diferente si empezara el proyecto de nuevo?", "What would I do differently if starting the project over?"),
+            respuesta: lbl(
+              "Haría el estudio de mercado antes de diseñar el producto. Perdimos dos semanas haciendo un logo para algo que luego cambió completamente.",
+              "I'd do the market study before designing the product. We lost two weeks making a logo for something that completely changed afterward."
+            ),
+            ia: lbl("¿Cómo documentarías esa lección para el siguiente trimestre?", "How would you document that lesson for next trimester?"),
+          },
+        ];
+
+        const promptsHoy = [
+          lbl("¿Qué momento de hoy te hizo dudar de una creencia que tenías?", "What moment today made you question a belief you held?"),
+          lbl("¿Qué pregunta dejaste sin responder hoy y por qué?", "What question did you leave unanswered today and why?"),
+          lbl("¿Qué harías diferente si repitieras esta sesión de trabajo?", "What would you do differently if you repeated today's work session?"),
+        ];
+        const promptIdx = (new Date().getDate()) % promptsHoy.length;
+        const promptHoy = promptsHoy[promptIdx];
+
+        return (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen size={16} className="text-accent-text" />
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Diario socrático", "Socratic Journal")}</h2>
+            </div>
+
+            <div className="bg-card rounded-2xl border border-card-border p-5 space-y-5">
+              {/* Entrada de hoy */}
+              <div>
+                <p className="text-[11px] font-semibold text-accent-text mb-2 uppercase tracking-wide">
+                  {lbl("Pregunta de hoy", "Today's question")}
+                </p>
+                <p className="text-[13px] font-medium text-text-primary mb-3 leading-snug">
+                  {promptHoy}
+                </p>
+                <textarea
+                  value={diarioHoy}
+                  onChange={(e) => { setDiarioHoy(e.target.value); setDiarioGuardado(false); }}
+                  placeholder={lbl("Escribe tu reflexión aquí…", "Write your reflection here…")}
+                  rows={3}
+                  className="w-full text-[12px] bg-background border border-card-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted outline-none focus:border-accent-text/40 resize-none leading-relaxed"
+                />
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[10px] text-text-muted">
+                    {diarioHoy.length > 0
+                      ? lbl(`${diarioHoy.length} caracteres`, `${diarioHoy.length} characters`)
+                      : lbl("Mínimo 3 líneas para desbloquear seguimiento IA", "Min 3 lines to unlock AI follow-up")}
+                  </span>
+                  <button
+                    disabled={diarioHoy.trim().length < 20 || diarioGuardado}
+                    onClick={() => setDiarioGuardado(true)}
+                    className="flex items-center gap-1.5 bg-sidebar text-white text-[11px] font-bold px-4 py-1.5 rounded-xl cursor-pointer hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {diarioGuardado
+                      ? <><CheckCircle2 size={11} />{lbl("Guardado", "Saved")}</>
+                      : <><Send size={11} />{lbl("Guardar", "Save")}</>}
+                  </button>
+                </div>
+                {diarioGuardado && (
+                  <div className="mt-3 bg-accent-light rounded-xl p-3 border border-accent-text/15">
+                    <p className="text-[10px] font-semibold text-accent-text mb-1">
+                      {lbl("Pregunta de seguimiento IA", "AI follow-up question")}
+                    </p>
+                    <p className="text-[12px] text-text-primary leading-snug">
+                      {lbl(
+                        "Interesante reflexión. ¿Puedes identificar un momento concreto donde esta lección podría haber cambiado una decisión pasada?",
+                        "Interesting reflection. Can you identify a specific moment where this lesson could have changed a past decision?"
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Entradas anteriores */}
+              <div>
+                <p className="text-[11px] font-semibold text-text-muted mb-3 uppercase tracking-wide">
+                  {lbl("Entradas anteriores", "Previous entries")}
+                </p>
+                <div className="space-y-3">
+                  {entradas.map((e, i) => (
+                    <div key={i} className="border border-card-border rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] font-semibold text-text-muted">{e.fecha}</span>
+                      </div>
+                      <p className="text-[11px] font-semibold text-accent-text mb-1">{e.pregunta}</p>
+                      <p className="text-[11px] text-text-secondary leading-snug mb-2">{e.respuesta}</p>
+                      <div className="bg-accent-light rounded-lg px-3 py-2">
+                        <p className="text-[10px] text-accent-text">
+                          <span className="font-semibold">{lbl("IA: ", "AI: ")}</span>{e.ia}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Achievements */}
       <div>
