@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 42 ✅ (push: `8cd8920`)
+- **Último ciclo completo**: Ciclo 43 ✅ (push: `c013bdb`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 43
+- **Próximo ciclo**: Ciclo 44
 
 ---
 
@@ -1343,6 +1343,60 @@
 - Panel narrativa IA (cuando generado): bg-sidebar/5 con cita en cursiva + opción eliminar
 - Nota pedagógica bg-accent-light: Bloque 3 — Narrativa propia
 - Insertado al final de la columna izquierda (último panel antes del cierre `</div>` de la columna)
+
+---
+
+## Sprints completados — Ciclo 43
+
+### [SPRINT-TEACHER][T41] TeacherAnalytics — Evolución competencias T2 · 4 semanas ✅
+- Commit: `c013bdb`
+- Archivo: `src/components/TeacherAnalytics.tsx`
+- `compEvolucion` array de 8 comps LOMLOE con 4 valores (media clase semanas 1–4, escala 1–4)
+- Cabecera con labels Sem 1–4; rows: badge comp + nombre + 4 barras CSS coloreadas por semáforo LOMLOE + delta Δ
+- Colores: bg-success (≥3.5), bg-accent-text (2.8–3.5), bg-warning (2.0–2.8), bg-urgent (<2.0)
+- `growths` derivado: mejor crecimiento CCEC (+1.1) en success-light, peor CPL (+0.2) en urgent-light
+- Leyenda colores + footer 2 cards insight (best/worst)
+- Sin estados nuevos, sin imports nuevos (Layers, ArrowUp, ArrowDown, TrendingUp, AlertTriangle ya presentes)
+- Insertado al FINAL de TeacherAnalytics antes del cierre `</div>` del return
+
+### [SPRINT-STUDENT][S43] StudentDashboard — Progreso T2 · semanas 1 a 4 ✅
+- Commit: `c013bdb`
+- Archivo: `src/components/StudentDashboard.tsx`
+- IIFE puro, sin estados nuevos
+- `semanasT2` array 4 semanas: research STEM/canvas CE/financiero CE/menú CCEC con q-coins y completada boolean
+- Timeline vertical con dot (green/accent/gray), line connector entre semanas, badge comp + QCoins
+- Completadas 3/4 (75%) con barra accent-text + contador en header
+- Semana 4 marcada como "Esta semana" (accent badge)
+- Preview Semana 5 en bg-sidebar: pitch 90s, CLC+CE, +50Q, bloqueado hasta completar S4
+- Bloque 5 Adaptabilidad: la plataforma siempre muestra el siguiente nivel
+- Insertado antes de S42 (segundo desde arriba en bloque T2)
+- Sin imports nuevos (CalendarDays, CheckCircle2, Rocket ya existían)
+
+### [SPRINT-ADMIN][A41] AdminDashboard AI tab — IA en T2 · Interacciones por módulo ✅
+- Commit: `c013bdb`
+- Archivo: `src/components/AdminDashboard.tsx`
+- Sin estados nuevos — IIFE puro
+- `modulosIAT2` array 5 módulos: canvas/finanzas/equipo/menú/pitch con interacciones + tipo predominante
+- `alumnosTopIA` array 5 alumnos top por uso IA en T2 con modulo + tipo + barra CSS
+- 3 KPIs: total interacciones (257), media por alumno, % socrático
+- Función `tipoBadge()` para colores por tipo (socrático=success, narrativa=warning, pitchcoach=blue, tutor=accent)
+- Insight footer: modos socrático = madurez emprendedora
+- Insertado al FINAL del tab IA antes del cierre `</div></div>`)
+- Sin imports nuevos (Bot ya existía)
+
+### [SPRINT-CULTURE][C41] StudentDashboard — Deep Dive · Bloque 1 Mentalidad ✅
+- Commit: `c013bdb`
+- Archivo: `src/components/StudentDashboard.tsx`
+- Principio culture.md Bloque 1: Deep Dive — cuando el alumno lleva tiempo en un tema, la IA profundiza en vez de redirigir
+- `[topicExpandido, setTopicExpandido] = useState<string|null>(null)` — useState dentro del IIFE
+- Estado módulo: `deepDiveEnviado: string | null` en el componente (nuevo estado)
+- `temas` array 3 tópicos detectados de actividad: pricing (CE), branding (CCEC), localización (STEM)
+- Cada tema expandible: resumen contextual + 3 preguntas profundas numeradas + CTA "Explorar con la IA →"
+- CTA → `setDeepDiveEnviado(t.id)` (feedback 2.5s)
+- `compColors` Record para badges por comp
+- Nota pedagógica bg-sidebar/5
+- Insertado antes de S43 (primer panel en orden)
+- Sin imports nuevos (Lightbulb, ChevronRight, Brain, CheckCircle2 ya existían)
 
 ---
 
