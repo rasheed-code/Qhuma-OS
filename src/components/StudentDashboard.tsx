@@ -829,6 +829,86 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           </div>
         </div>
 
+        {/* S22: Economía de mi proyecto */}
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={16} className="text-text-primary" />
+              <h2 className="text-[20px] font-semibold text-text-primary">{lbl("Economía de mi proyecto", "My project economics")}</h2>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-accent-light text-accent-text text-[10px] font-bold border border-accent/20">
+              Casa Limón · Airbnb Málaga
+            </span>
+          </div>
+
+          {/* 4 KPIs financieros */}
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            {[
+              { label: "Ingresos este mes", valor: "1.240€", meta: "1.850€", pct: 67, bg: "bg-success-light", barColor: "bg-success", icon: Coins, info: "vs. objetivo mensual" },
+              { label: "Gastos fijos", valor: "310€", meta: "350€ máx.", pct: 89, bg: "bg-warning-light", barColor: "bg-warning", icon: Receipt, info: "limpieza + suministros" },
+              { label: "Beneficio neto", valor: "930€", meta: "Punto equilibrio: 750€", pct: 100, bg: "bg-accent-light", barColor: "bg-accent-text", icon: TrendingUp, info: "superado ✓" },
+              { label: "ROI del proyecto", valor: "18%", meta: "Objetivo: 15%", pct: 100, bg: "bg-background", barColor: "bg-sidebar", icon: Activity, info: "por encima del objetivo" },
+            ].map((kpi) => (
+              <div key={kpi.label} className={`rounded-xl p-3 ${kpi.bg}`}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <kpi.icon size={12} className="text-text-secondary flex-shrink-0" />
+                  <span className="text-[10px] text-text-muted leading-tight">{kpi.label}</span>
+                </div>
+                <span className="text-[20px] font-bold text-text-primary block">{kpi.valor}</span>
+                <div className="mt-1.5 h-1.5 bg-white/50 rounded-full overflow-hidden">
+                  <div className={`h-full ${kpi.barColor} rounded-full transition-all`} style={{ width: `${Math.min(kpi.pct, 100)}%` }} />
+                </div>
+                <span className="text-[9px] text-text-muted mt-1 block">{kpi.info}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Desglose mensual */}
+          <div className="bg-background rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[12px] font-semibold text-text-primary">{lbl("Desglose de ingresos — marzo 2026", "Revenue breakdown — March 2026")}</span>
+              <span className="text-[10px] text-text-muted bg-card px-2 py-0.5 rounded-full border border-card-border">4 reservas activas</span>
+            </div>
+            <div className="space-y-2">
+              {[
+                { concepto: "Reserva fam. Müller (5 noches × €68)", importe: 340, tipo: "ingreso", semana: "Sem. 1" },
+                { concepto: "Reserva pareja Roca (3 noches × €72)", importe: 216, tipo: "ingreso", semana: "Sem. 2" },
+                { concepto: "Reserva fam. Nakamura (7 noches × €78)", importe: 546, tipo: "ingreso", semana: "Sem. 3" },
+                { concepto: "Reserva Sr. Martins (2 noches × €69)", importe: 138, tipo: "ingreso", semana: "Sem. 4" },
+                { concepto: "Servicio de limpieza (4 limpiezas)", importe: -180, tipo: "gasto", semana: "Variable" },
+                { concepto: "Suministros y extras", importe: -130, tipo: "gasto", semana: "Fijo" },
+              ].map((item) => (
+                <div key={item.concepto} className="flex items-center gap-3">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.tipo === "ingreso" ? "bg-success" : "bg-urgent"}`} />
+                  <span className="text-[11px] text-text-primary flex-1">{item.concepto}</span>
+                  <span className="text-[10px] text-text-muted flex-shrink-0">{item.semana}</span>
+                  <span className={`text-[12px] font-bold flex-shrink-0 tabular-nums ${item.tipo === "ingreso" ? "text-success" : "text-urgent"}`}>
+                    {item.tipo === "ingreso" ? "+" : ""}{item.importe}€
+                  </span>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 pt-2 border-t border-card-border mt-1">
+                <span className="text-[11px] font-bold text-text-primary flex-1">Beneficio neto del mes</span>
+                <span className="text-[14px] font-bold text-success tabular-nums">+930€</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bloque IA conectado */}
+          <div className="bg-accent-light rounded-xl p-4 border border-accent/20 mt-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-5 h-5 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0">
+                <span className="text-accent text-[8px] font-bold">IA</span>
+              </div>
+              <span className="text-[11px] font-semibold text-accent-text">{lbl("Análisis financiero — Proyecto activo", "Financial analysis — Active project")}</span>
+            </div>
+            <p className="text-[12px] text-text-primary leading-relaxed">
+              Tu beneficio de <strong>930€</strong> supera el punto de equilibrio (750€) en un <strong>24%</strong>. La reserva de la familia Nakamura (7 noches) fue clave — las reservas largas mejoran el margen porque el coste de limpieza es fijo por reserva, no por noche.
+              <span className="block mt-1 text-accent-text font-medium">¿Podrías diseñar una tarifa especial de "semana completa" para atraer más reservas de 7+ noches?</span>
+            </p>
+          </div>
+        </div>
+
         {/* S6: Mercado en Tiempo Real */}
         <div className="mt-8">
           <div className="flex items-center gap-3 mb-3">
