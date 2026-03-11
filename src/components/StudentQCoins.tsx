@@ -5,6 +5,7 @@ import {
   Coins, Zap, Flame, Trophy, Sparkles, Timer, Users, Lightbulb,
   Palette, Swords, Star, Lock, TrendingUp, TrendingDown,
   ShoppingCart, X, CheckCircle2, Camera, Cpu, MapPin, Mic, Loader2,
+  BarChart3, Filter, Award,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { playerLevel, coinTransactions, shopItems, achievements } from "@/data/gamification";
@@ -58,6 +59,22 @@ const shopIconMap: Record<string, React.ComponentType<{ size?: number; className
 const achievementIconMap: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
   Swords, Timer, Star, Users, Coins, Zap,
 };
+
+// ─── S24: Evolución mensual Q-Coins ───────────────────────────────────────
+const evolucionMensual = [
+  { mes: "Oct", ganadas: 210, gastadas: 60 },
+  { mes: "Nov", ganadas: 280, gastadas: 100 },
+  { mes: "Dic", ganadas: 190, gastadas: 30 },
+  { mes: "Ene", ganadas: 340, gastadas: 120 },
+  { mes: "Feb", ganadas: 310, gastadas: 180 },
+  { mes: "Mar", ganadas: 420, gastadas: 120 },
+];
+
+// ─── S24: Transacciones pendientes (simuladas) ────────────────────────────
+const transaccionesPendientes = [
+  { id: "p1", descripcion: "Bono grupal — Demo Day viernes", cantidad: 150, fecha: "Pendiente · Vie 14 mar" },
+  { id: "p2", descripcion: "Revisión de evidencias T2",     cantidad: 80,  fecha: "Pendiente · Mar 17 mar" },
+];
 
 const categorias: Categoria[] = ["Todo", "Talleres", "Maker", "Excursiones", "Passion"];
 const catColors: Record<Categoria, string> = {
@@ -127,6 +144,10 @@ export default function StudentQCoins() {
     setCanjeConfirmado(true);
     setTimeout(() => { setCarrito([]); setCanjeConfirmado(false); }, 3000);
   };
+
+  // S24 — Historial de transacciones con filtro
+  type FiltroTx = "todo" | "ganadas" | "gastadas" | "pendientes";
+  const [filtroTx, setFiltroTx] = useState<FiltroTx>("todo");
 
   // suppress unused warning
   void iaVersion;
@@ -476,38 +497,162 @@ export default function StudentQCoins() {
           )}
         </div>
 
-        {/* Historial de transacciones */}
+        {/* S24 — Gráfico evolución mensual */}
         <div className="bg-card rounded-2xl p-4 border border-card-border">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-3">{lbl("Movimientos", "Transactions")}</h3>
-          <div className="flex flex-col gap-1 max-h-[400px] overflow-y-auto">
-            {coinTransactions.map((tx, i) => {
-              const prevDate = i > 0 ? coinTransactions[i - 1].date.split(" ")[0] : "";
-              const currentDate = tx.date.split(" ")[0];
-              const showDivider = currentDate !== prevDate;
-              return (
-                <div key={tx.id}>
-                  {showDivider && (
-                    <div className="flex items-center gap-2 py-1.5 mt-1">
-                      <div className="h-px flex-1 bg-card-border" />
-                      <span className="text-[9px] font-semibold text-text-muted uppercase">{currentDate}</span>
-                      <div className="h-px flex-1 bg-card-border" />
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 py-1.5">
-                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${tx.type === "earned" ? "bg-success-light" : "bg-urgent-light"}`}>
-                      {tx.type === "earned" ? <TrendingUp size={11} className="text-success" /> : <TrendingDown size={11} className="text-urgent" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[10px] text-text-primary block truncate">{tx.description}</span>
-                      <span className="text-[9px] text-text-muted">{tx.date}</span>
-                    </div>
-                    <span className={`text-[11px] font-bold flex-shrink-0 ${tx.type === "earned" ? "text-success" : "text-urgent"}`}>
-                      {tx.type === "earned" ? "+" : ""}{tx.amount}
-                    </span>
-                  </div>
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 size={13} className="text-accent-text" />
+            <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Evolución mensual", "Monthly trend")}</h3>
+          </div>
+          {(() => {
+            const maxVal = Math.max(...evolucionMensual.map((m) => m.ganadas));
+            return (
+              <>
+                <div className="flex items-end gap-1.5 h-20 mb-2">
+                  {evolucionMensual.map((m, i) => {
+                    const isActual = i === evolucionMensual.length - 1;
+                    const hGanadas = Math.round((m.ganadas / maxVal) * 72);
+                    const hGastadas = Math.round((m.gastadas / maxVal) * 72);
+                    return (
+                      <div key={m.mes} className="flex-1 flex flex-col items-center gap-0.5">
+                        <div className="w-full flex flex-col items-center gap-0.5" style={{ height: "72px" }}>
+                          <div className="w-full flex items-end gap-0.5 h-full">
+                            <div
+                              className={`flex-1 rounded-t-sm transition-all ${isActual ? "bg-sidebar" : "bg-accent-text/40"}`}
+                              style={{ height: `${hGanadas}px` }}
+                              title={`Ganadas: ${m.ganadas} QC`}
+                            />
+                            <div
+                              className={`flex-1 rounded-t-sm transition-all ${isActual ? "bg-urgent/60" : "bg-urgent/25"}`}
+                              style={{ height: `${hGastadas}px` }}
+                              title={`Gastadas: ${m.gastadas} QC`}
+                            />
+                          </div>
+                        </div>
+                        <span className={`text-[8px] font-medium ${isActual ? "text-sidebar font-bold" : "text-text-muted"}`}>{m.mes}</span>
+                      </div>
+                    );
+                  })}
                 </div>
+                <div className="flex items-center justify-between text-[9px] text-text-muted">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-sidebar inline-block" /> {lbl("Ganadas", "Earned")}</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-urgent/50 inline-block" /> {lbl("Gastadas", "Spent")}</span>
+                  </div>
+                  <span className="font-semibold text-success">+{evolucionMensual[evolucionMensual.length - 1].ganadas - evolucionMensual[evolucionMensual.length - 2].ganadas} QC vs mes ant.</span>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+
+        {/* S24 — Badge Racha de gasto inteligente */}
+        {(() => {
+          const lastThree = evolucionMensual.slice(-3);
+          const rachaActiva = lastThree.every((m) => m.gastadas / m.ganadas < 0.5);
+          return rachaActiva ? (
+            <div className="bg-sidebar rounded-2xl p-4 border border-white/5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center flex-shrink-0">
+                  <Award size={18} className="text-sidebar" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-[11px] font-bold text-accent uppercase tracking-wide">{lbl("Racha activa", "Active streak")}</span>
+                    <span className="text-[9px] bg-white/10 text-white/60 px-1.5 py-0.5 rounded-full">3 meses</span>
+                  </div>
+                  <p className="text-[12px] font-semibold text-white mb-0.5">{lbl("Gasto inteligente 🏆", "Smart spending 🏆")}</p>
+                  <p className="text-[10px] text-white/55 leading-relaxed">{lbl("Llevas 3 meses gastando menos del 50% de lo que ganas. Estrategia excepcional.", "3 months spending less than 50% of earnings. Exceptional strategy.")}</p>
+                </div>
+              </div>
+            </div>
+          ) : null;
+        })()}
+
+        {/* S24 — Historial de transacciones con filtro */}
+        <div className="bg-card rounded-2xl p-4 border border-card-border">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Filter size={13} className="text-accent-text" />
+              <h3 className="text-[13px] font-semibold text-text-primary">{lbl("Movimientos", "Transactions")}</h3>
+            </div>
+          </div>
+          {/* Filtros */}
+          <div className="flex gap-1 mb-3 flex-wrap">
+            {(["todo", "ganadas", "gastadas", "pendientes"] as const).map((f) => {
+              const labels: Record<typeof f, string> = { todo: lbl("Todo", "All"), ganadas: lbl("Ganadas", "Earned"), gastadas: lbl("Gastadas", "Spent"), pendientes: lbl("Pendientes", "Pending") };
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFiltroTx(f)}
+                  className={`text-[9px] font-bold px-2.5 py-1 rounded-full cursor-pointer transition-all border ${
+                    filtroTx === f
+                      ? f === "ganadas" ? "bg-success-light text-success border-success/20"
+                        : f === "gastadas" ? "bg-urgent-light text-urgent border-urgent/20"
+                        : f === "pendientes" ? "bg-warning-light text-warning border-warning/20"
+                        : "bg-accent-light text-accent-text border-accent/20"
+                      : "bg-background text-text-muted border-card-border"
+                  }`}
+                >
+                  {labels[f]}
+                </button>
               );
             })}
+          </div>
+
+          {/* Transacciones pendientes */}
+          {(filtroTx === "todo" || filtroTx === "pendientes") && (
+            <div className="mb-2">
+              {transaccionesPendientes.map((p) => (
+                <div key={p.id} className="flex items-center gap-2 py-1.5 border-b border-card-border last:border-0">
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 bg-warning-light">
+                    <Coins size={11} className="text-warning" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] text-text-primary block truncate">{p.descripcion}</span>
+                    <span className="text-[9px] text-text-muted">{p.fecha}</span>
+                  </div>
+                  <span className="text-[11px] font-bold flex-shrink-0 text-warning">+{p.cantidad}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-0 max-h-[280px] overflow-y-auto">
+            {coinTransactions
+              .filter((tx) => {
+                if (filtroTx === "ganadas") return tx.type === "earned";
+                if (filtroTx === "gastadas") return tx.type === "spent";
+                if (filtroTx === "pendientes") return false;
+                return true;
+              })
+              .map((tx, i, arr) => {
+                const prevDate = i > 0 ? arr[i - 1].date.split(" ")[0] : "";
+                const currentDate = tx.date.split(" ")[0];
+                const showDivider = currentDate !== prevDate;
+                return (
+                  <div key={tx.id}>
+                    {showDivider && (
+                      <div className="flex items-center gap-2 py-1.5 mt-1">
+                        <div className="h-px flex-1 bg-card-border" />
+                        <span className="text-[9px] font-semibold text-text-muted uppercase">{currentDate}</span>
+                        <div className="h-px flex-1 bg-card-border" />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 py-1.5">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${tx.type === "earned" ? "bg-success-light" : "bg-urgent-light"}`}>
+                        {tx.type === "earned" ? <TrendingUp size={11} className="text-success" /> : <TrendingDown size={11} className="text-urgent" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] text-text-primary block truncate">{tx.description}</span>
+                        <span className="text-[9px] text-text-muted">{tx.date}</span>
+                      </div>
+                      <span className={`text-[11px] font-bold flex-shrink-0 ${tx.type === "earned" ? "text-success" : "text-urgent"}`}>
+                        {tx.type === "earned" ? "+" : ""}{tx.amount}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </div>
