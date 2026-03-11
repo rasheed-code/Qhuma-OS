@@ -50,9 +50,9 @@
 
 ## Estado actual
 
-- **Último ciclo completo**: Ciclo 6 ✅ (push: `3c25bc0`)
+- **Último ciclo completo**: Ciclo 7 ✅ (push: `f07a5b4`)
 - **Fecha**: 2026-03-11
-- **Próximo ciclo**: Ciclo 7
+- **Próximo ciclo**: Ciclo 8
 
 ---
 
@@ -194,21 +194,64 @@
 
 ---
 
-## Sprints pendientes — Ciclo 7
+## Ciclo 7 ✅ completado
 
-- [ ] [T6] TeacherComentarios — sistema de feedback inline en evidencias y tareas del alumno (comentarios inline + historial por tarea)
-- [ ] [S8] IndustriasVivas — inmersión en sector real: tarjeta "Profesional invitado" en StudentDashboard con perfil + video + pregunta para reflexionar (culture.md Bloque 4)
-- [ ] [A6] AdminReportsEnhanced — generador de informe LOMLOE automático: selector alumno/grupo/trimestre, preview PDF simulado, descarga
-- [ ] [C6] NarrativaPropia — potenciar StudentPortfolio: botón "Regenerar narrativa IA" llama a /api/tutor-chat con prompt especial para generar párrafo de aprendizaje contextualizado al proyecto
+### [SPRINT-TEACHER][T6] TeacherComentarios ✅
+- Commit: `2ff420b`
+- Archivo modificado: `src/components/TeacherStudents.tsx`
+- Sistema de comentarios inline en panel expandido de alumnos
+- 3 categorías: ¡Buen trabajo! (success) / Requiere atención (warning) / Entrega pendiente (urgent)
+- Historial de comentarios con colores por categoría; datos mock para Lucas y alumnos en riesgo
+- Input con Enter o botón Send; badge de conteo de notas en la tarjeta del alumno
+- Textos en español (statusLabels, filtros, encabezados)
+
+### [SPRINT-STUDENT][S8] IndustriasVivas ✅
+- Commit: `00e732e`
+- Archivo modificado: `src/components/StudentDashboard.tsx`
+- Nueva sección "Profesional Invitado" en today view (entre Tribe y Mercado Real)
+- Perfil: Marta Sánchez, Revenue Manager Booking.com España, 8 años experiencia
+- Thumbnail de vídeo simulado con Play; bloque "Conectado a tu proyecto"
+- Pregunta de reflexión desplegable: festival de música + dinámica de precios
+- Principio culture.md Bloque 4: Industrias Vivas — inmersión en sector real desde los 14 años
+- Nuevos imports: UserCheck, MessageSquare
+
+### [SPRINT-ADMIN][A6] AdminReportsEnhanced ✅
+- Commit: `adc9556`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- Generador con 3 selectores: alumno (filtrado de usuariosMock alumnos), trimestre, tipo
+- Botón "Generar informe" con carga simulada 1.4s (RefreshCw girando)
+- Preview: estructura de 8 secciones, escala LOMLOE 4 niveles, botón "Descargar PDF"
+- Informes recientes conservados bajo el generador
+- Estado A6 con useState; no afecta otros tabs
+
+### [SPRINT-CULTURE][C6] NarrativaPropia ✅
+- Commit: `f07a5b4`
+- Archivos modificados: `src/components/StudentPortfolio.tsx`, `src/app/api/tutor-chat/route.ts`
+- Botón "Regenerar narrativa IA" en encabezado del portfolio (pill accent-light, RefreshCw)
+- API: nuevo NARRATIVA_SYSTEM_PROMPT — párrafo en primera persona sin modo socrático
+- Card bg-sidebar con narrativa generada, sello IA + timestamp + botón ✕
+- mode="narrativa" en el body — no interfiere con deepDive ni modo socrático existentes
+
+---
+
+## Sprints pendientes — Ciclo 8
+
+- [ ] [T7] TeacherRubrica — sistema de rúbricas de evaluación por competencia: el docente define criterios por tarea, el alumno ve la rúbrica antes de entregar
+- [ ] [S9] QCoinsMarket — vista de canje de Q-Coins: catálogo de recompensas (talleres, equipamiento maker, excursiones), carrito y historial de canjes
+- [ ] [A7] AdminInspection — panel de inspección educativa: vista resumida lista para exportar con datos reales de todos los alumnos, cumplimiento LOMLOE, métricas de proyecto
+- [ ] [C7] PitchCoach — mejora de PitchLab: feedback IA por sección (llama a /api/tutor-chat con contexto de cada sección del pitch), sugerencias específicas en vez de solo puntuación
 
 ---
 
 ## Notas técnicas (leer antes de cada ciclo)
 
-- **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 5)
+- **StudentView type**: "dashboard" | "project" | "task" | "competencies" | "calendar" | "qcoins" | "profile" | "settings" | "evidences" | "achievements" | "streak" | "portfolio" | "pitchlab" (sin cambios en Ciclo 7)
 - **TeacherView type**: "dashboard" | "projects" | "analytics" | "calendar" | "students" | "settings" | "gradebook" | "generator" | "messages"
 - **ParentView type**: "overview" | "progress" | "calendar" | "teachers" | "profile" | "settings"
-- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (sin cambios en Ciclo 6)
+- **AdminView type**: "overview" | "users" | "capital" | "ai" | "schools" | "reports" (sin cambios en Ciclo 7)
+- **TeacherStudents**: C7 modificado (TeacherComentarios). Leer antes de editar en ciclos futuros.
+- **API tutor-chat**: soporta mode="narrativa" (NARRATIVA_SYSTEM_PROMPT sin Socrático), deepDive=true (DEEP_DIVE_ADDON), y modo por defecto (SYSTEM_PROMPT socrático).
+- **StudentDashboard**: S8 añade profesionalInvitado y showPreguntaInvitado state. IndustriasVivas entre Tribe y Mercado.
 - **API tutor-chat**: usa GoogleGenAI con `@google/genai`, modelo gemini-2.0-flash, GEMINI_API_KEY env var. Leer ruta ANTES de modificar. Ya tiene modo socrático activo.
 - **TeacherDashboard**: usa `bg-[#4F8EF7]` (azul) para excelling — es el único color hardcoded fuera del design system. No romper ese patrón en Ciclo 5+, o reemplazar por `bg-accent` si queda bien visualmente.
 - **StudentProfile**: C4 ya modificado (PerfilInteligencias). Leer antes de editar en ciclos futuros.
