@@ -29,6 +29,7 @@ import {
   Sparkles,
   Briefcase,
   MapPin,
+  AlertCircle,
 } from "lucide-react";
 import { currentStudent } from "@/data/students";
 import { competencies } from "@/data/competencies";
@@ -63,6 +64,11 @@ export default function StudentProfile() {
   );
   const { lang } = useLang();
   const lbl = (es: string, en: string) => lang === "es" ? es : en;
+
+  // C34 — Plan de aprendizaje T2
+  const [planT2Generado, setPlanT2Generado] = useState<string[] | null>(null);
+  const [generandoPlanT2, setGenerandoPlanT2] = useState(false);
+  const [planT2Comprometido, setPlanT2Comprometido] = useState(false);
 
   // C31 — Metacognición
   const [metaEstrategia, setMetaEstrategia] = useState<string | null>(null);
@@ -814,6 +820,198 @@ export default function StudentProfile() {
                   )}
                 </p>
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── C34: Plan de aprendizaje T2 — Bloque 5 Aprendizaje continuo ──── */}
+      {(() => {
+        // Detectar competencia más débil de T1 (CCEC: 55 = más baja en mock)
+        const compDebil = competencies.reduce((min, c) => c.progress < min.progress ? c : min);
+        const compDebilKey = compDebil.key;
+
+        const planSemanalFallback = [
+          lbl(
+            `Semana 1 · ${compDebilKey}: Estudia el branding visual de 3 food trucks de referencia y documenta qué elementos hacen su identidad reconocible. Entregable: moodboard de 9 imágenes con anotaciones.`,
+            `Week 1 · ${compDebilKey}: Study the visual branding of 3 reference food trucks and document what makes their identity recognisable. Deliverable: 9-image moodboard with annotations.`
+          ),
+          lbl(
+            `Semana 2 · ${compDebilKey}: Diseña el sistema visual de tu Food Truck: logo (3 propuestas), paleta de colores (máximo 3 colores) y tipografías. Justifica cada decisión con criterios de ${compDebilKey}.`,
+            `Week 2 · ${compDebilKey}: Design your Food Truck's visual system: logo (3 proposals), colour palette (max 3 colours) and typography. Justify each decision with ${compDebilKey} criteria.`
+          ),
+          lbl(
+            `Semana 3 · ${compDebilKey}: Crea el material de comunicación de la semana: menú físico + post de redes sociales (Canva/Figma). Comparte con el grupo y recoge 3 feedbacks estructurados.`,
+            `Week 3 · ${compDebilKey}: Create the week's communication materials: physical menu + social media post (Canva/Figma). Share with the group and collect 3 structured feedback points.`
+          ),
+          lbl(
+            `Semana 4 · ${compDebilKey}: Presenta tu identidad de marca al inversor simulado. Prepara 3 diapositivas: antes/proceso/resultado. Justifica cómo cada decisión visual apoya el modelo de negocio.`,
+            `Week 4 · ${compDebilKey}: Present your brand identity to the simulated investor. Prepare 3 slides: before/process/result. Justify how each visual decision supports the business model.`
+          ),
+        ];
+
+        const recursosFallback = [
+          { tipo: lbl("Lectura", "Reading"), titulo: lbl("\"La marca visual como ventaja competitiva\" — WGSN 2025", '"Visual Branding as Competitive Advantage" — WGSN 2025'), tiempo: "20 min" },
+          { tipo: lbl("Vídeo", "Video"),    titulo: lbl("Cómo diseñó su logo un food truck que factura 200k€/año (YouTube)", "How a food truck making €200k/year designed its logo (YouTube)"), tiempo: "15 min" },
+          { tipo: lbl("Ejercicio", "Exercise"), titulo: lbl("Análisis semiótico del menú de Casa Limón — conectado a tu proyecto", "Semiotic analysis of Casa Limón menu — connected to your project"), tiempo: "30 min" },
+        ];
+
+        const handleGenerarPlan = async () => {
+          setGenerandoPlanT2(true);
+          try {
+            const res = await fetch("/api/tutor-chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                mode: "narrativa",
+                message: `Genera un plan de 4 semanas para que Lucas García (1º ESO, proyecto Food Truck T2) mejore su competencia más débil de T1: ${compDebil.name} (${compDebilKey}, ${compDebil.progress}%). Formato: 4 líneas numeradas (Semana 1, 2, 3, 4), máximo 40 palabras cada una, con acción concreta y entregable vinculado al Food Truck.`,
+              }),
+            });
+            const data = await res.json();
+            const texto: string = data.message || "";
+            const lineas = texto.split("\n").filter((l: string) => l.trim().match(/^[1-4]/));
+            setPlanT2Generado(lineas.length >= 2 ? lineas : planSemanalFallback);
+          } catch {
+            setPlanT2Generado(planSemanalFallback);
+          } finally {
+            setGenerandoPlanT2(false);
+          }
+        };
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <TrendingUp size={16} className="text-accent" />
+                </div>
+                <div>
+                  <h2 className="text-[18px] font-semibold text-text-primary leading-tight">
+                    {lbl("Mi plan de aprendizaje T2", "My T2 Learning Plan")}
+                  </h2>
+                  <p className="text-[11px] text-text-muted">{lbl("Aprendizaje continuo · Bloque 5 culture.md", "Continuous learning · Block 5 culture.md")}</p>
+                </div>
+              </div>
+              {planT2Comprometido && (
+                <span className="flex items-center gap-1 text-[10px] font-bold text-success bg-success-light px-2.5 py-1 rounded-full border border-success/20">
+                  <CheckCircle2 size={10} />
+                  {lbl("Comprometido T2", "T2 Committed")}
+                </span>
+              )}
+            </div>
+
+            {/* Competencia detectada */}
+            <div className="bg-urgent-light border border-urgent/20 rounded-xl p-3 mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <AlertCircle size={13} className="text-urgent flex-shrink-0" />
+                <span className="text-[11px] font-bold text-text-primary">
+                  {lbl("Área de mejora detectada en T1", "T1 improvement area detected")}
+                </span>
+              </div>
+              <p className="text-[11px] text-text-secondary leading-snug">
+                {lbl(
+                  `Tu competencia ${compDebil.name} (${compDebilKey}) terminó T1 en ${compDebil.progress}% — la más baja de tu perfil. El proyecto Food Truck es la oportunidad perfecta para trabajarla: desde el diseño de la marca hasta la presentación al inversor.`,
+                  `Your ${compDebil.name} (${compDebilKey}) competency ended T1 at ${compDebil.progress}% — the lowest in your profile. The Food Truck project is the perfect opportunity to develop it: from brand design to investor presentation.`
+                )}
+              </p>
+            </div>
+
+            {/* Plan o estado vacío */}
+            {!planT2Generado ? (
+              <div className="flex flex-col items-center py-6 gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-accent-light flex items-center justify-center">
+                  <Sparkles size={22} className="text-accent-text" />
+                </div>
+                <div className="text-center">
+                  <p className="text-[13px] font-semibold text-text-primary mb-1">
+                    {lbl("La IA diseña tu plan de 4 semanas", "AI designs your 4-week plan")}
+                  </p>
+                  <p className="text-[11px] text-text-muted leading-snug max-w-xs">
+                    {lbl(
+                      "Basado en tus datos reales de T1 y el proyecto Food Truck. Un reto concreto por semana, conectado al trabajo que ya estás haciendo.",
+                      "Based on your real T1 data and the Food Truck project. One concrete challenge per week, connected to the work you're already doing."
+                    )}
+                  </p>
+                </div>
+                <button
+                  onClick={handleGenerarPlan}
+                  disabled={generandoPlanT2}
+                  className="flex items-center gap-2 bg-sidebar text-white text-[12px] font-bold px-4 py-2 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-60"
+                >
+                  {generandoPlanT2 ? (
+                    <><RefreshCw size={13} className="animate-spin" />{lbl("Generando plan...", "Generating plan...")}</>
+                  ) : (
+                    <><Sparkles size={13} />{lbl("Generar mi plan con IA", "Generate my plan with AI")}</>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Plan semanal */}
+                <div className="flex flex-col gap-2 mb-4">
+                  {planT2Generado.map((semana, idx) => (
+                    <div key={idx} className="flex items-start gap-3 px-3 py-3 rounded-xl border border-card-border bg-background">
+                      <div className="w-6 h-6 rounded-full bg-sidebar flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-[9px] font-bold text-accent">{idx + 1}</span>
+                      </div>
+                      <p className="text-[11px] text-text-secondary leading-snug flex-1">{semana}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Recursos recomendados */}
+                <div className="mb-4">
+                  <p className="text-[11px] font-semibold text-text-primary mb-2">
+                    {lbl("Recursos recomendados", "Recommended resources")}
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {recursosFallback.map((r, idx) => (
+                      <div key={idx} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-accent-light border border-accent/20">
+                        <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar text-accent flex-shrink-0">{r.tipo}</span>
+                        <p className="text-[10px] text-accent-text leading-snug flex-1">{r.titulo}</p>
+                        <span className="text-[9px] text-text-muted flex-shrink-0">{r.tiempo}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className="flex items-center gap-3">
+                  {!planT2Comprometido ? (
+                    <button
+                      onClick={() => setPlanT2Comprometido(true)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-sidebar text-white text-[12px] font-bold py-2.5 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer"
+                    >
+                      <CheckCircle2 size={13} />
+                      {lbl("Comprometerse con el plan T2", "Commit to T2 plan")}
+                    </button>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-center gap-2 bg-success-light border border-success/20 text-success text-[12px] font-bold py-2.5 rounded-xl">
+                      <CheckCircle2 size={13} />
+                      {lbl("¡Compromiso registrado! La IA lo recordará.", "Commitment recorded! AI will remember it.")}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleGenerarPlan}
+                    disabled={generandoPlanT2}
+                    className="flex items-center gap-1.5 bg-background border border-card-border text-text-secondary text-[11px] font-medium px-3 py-2.5 rounded-xl hover:bg-accent-light transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    <RefreshCw size={12} className={generandoPlanT2 ? "animate-spin" : ""} />
+                    {lbl("Regenerar", "Regenerate")}
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Principio pedagógico */}
+            <div className="mt-4 bg-background rounded-xl px-3 py-2 border border-card-border">
+              <p className="text-[10px] text-text-muted leading-relaxed">
+                {lbl(
+                  "La plataforma siempre propone el siguiente nivel. No aprendes competencias en abstracto — las desarrollas porque las necesitas esta semana para tu proyecto.",
+                  "The platform always proposes the next level. You don't learn competencies in the abstract — you develop them because you need them this week for your project."
+                )}
+              </p>
             </div>
           </div>
         );
