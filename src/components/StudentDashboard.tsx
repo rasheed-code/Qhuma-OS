@@ -1854,6 +1854,125 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
         );
       })()}
 
+      {/* ── S36: Semana 1 Food Truck — primeros objetivos T2 ──────────────── */}
+      {(() => {
+        const tareasS1: Array<{
+          dia: string; diaEn: string; titulo: string; tituloEn: string;
+          comp: string; qcoins: number; completada: boolean;
+        }> = [
+          { dia: "Lunes",    diaEn: "Monday",    titulo: "Investiga 3 food trucks de referencia en Málaga",          tituloEn: "Research 3 reference food trucks in Málaga",          comp: "STEM",  qcoins: 20, completada: true  },
+          { dia: "Martes",   diaEn: "Tuesday",   titulo: "Elige tu concepto gastronómico y el nombre del food truck", tituloEn: "Choose your food concept and the name of your truck", comp: "CE",    qcoins: 25, completada: true  },
+          { dia: "Miércoles",diaEn: "Wednesday", titulo: "Primer boceto del logo, colores y eslogan",                tituloEn: "First logo sketch, colors and slogan",               comp: "CCEC",  qcoins: 30, completada: false },
+          { dia: "Jueves",   diaEn: "Thursday",  titulo: "Elabora el menú inicial (5 platos con coste estimado)",    tituloEn: "Draft the initial menu (5 dishes with estimated cost)", comp: "STEM", qcoins: 35, completada: false },
+          { dia: "Viernes",  diaEn: "Friday",    titulo: "Pitch de 90 segundos del concepto ante un compañero",      tituloEn: "90-second concept pitch to a classmate",             comp: "CLC",   qcoins: 40, completada: false },
+        ];
+
+        const completadasCount = tareasS1.filter(t => t.completada).length;
+        const hoy = new Date().getDay(); // 0=dom, 1=lun...
+        const diaIdx = hoy >= 1 && hoy <= 5 ? hoy - 1 : 2; // fallback miércoles
+        const tareaHoy = tareasS1[diaIdx];
+
+        return (
+          <div className="bg-card rounded-2xl border border-card-border p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-sidebar flex items-center justify-center flex-shrink-0">
+                  <span className="text-[16px]">🚚</span>
+                </div>
+                <div>
+                  <h2 className="text-[15px] font-bold text-text-primary leading-tight">
+                    {lbl("Semana 1 · Food Truck", "Week 1 · Food Truck")}
+                  </h2>
+                  <p className="text-[10px] text-text-muted">{lbl("T2 · Tus primeros objetivos", "T2 · Your first goals")}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-accent-text bg-accent-light px-2.5 py-1 rounded-full">
+                  {lbl(`${completadasCount}/5 completadas`, `${completadasCount}/5 done`)}
+                </span>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="bg-border rounded-full h-1.5 overflow-hidden mb-4">
+              <div
+                className="h-full bg-accent-text rounded-full transition-all duration-500"
+                style={{ width: `${(completadasCount / 5) * 100}%` }}
+              />
+            </div>
+
+            {/* Tarea de hoy destacada */}
+            <div className="rounded-xl bg-sidebar text-white p-4 mb-3">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[9px] font-bold text-accent uppercase tracking-widest">{lbl("Tarea de hoy", "Today's task")}</span>
+                <span className="text-[9px] text-white/50">·</span>
+                <span className="text-[9px] text-white/60">{lang === "es" ? tareaHoy.dia : tareaHoy.diaEn}</span>
+              </div>
+              <p className="text-[13px] font-semibold leading-snug mb-3">
+                {lang === "es" ? tareaHoy.titulo : tareaHoy.tituloEn}
+              </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white">{tareaHoy.comp}</span>
+                  <span className="text-[10px] font-bold text-[#F59E0B]">+{tareaHoy.qcoins} Q-Coins</span>
+                </div>
+                <button
+                  onClick={() => alert(lang === "es" ? `¡Empezando tarea: ${tareaHoy.titulo}!` : `Starting: ${tareaHoy.tituloEn}!`)}
+                  className="text-[10px] font-bold bg-accent text-sidebar px-3 py-1.5 rounded-lg hover:bg-accent/80 transition-colors cursor-pointer"
+                >
+                  {lbl("Empezar ahora", "Start now")}
+                </button>
+              </div>
+            </div>
+
+            {/* Lista de los 5 días */}
+            <div className="flex flex-col gap-1.5">
+              {tareasS1.map((tarea, idx) => (
+                <div
+                  key={idx}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border ${
+                    idx === diaIdx
+                      ? "border-accent/40 bg-accent-light"
+                      : tarea.completada
+                      ? "border-success/20 bg-success-light"
+                      : "border-card-border bg-background"
+                  }`}
+                >
+                  {/* Day circle */}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 text-[8px] font-bold ${
+                    tarea.completada ? "bg-success text-white" : idx === diaIdx ? "bg-accent-text text-white" : "bg-border text-text-muted"
+                  }`}>
+                    {tarea.completada ? "✓" : idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[11px] font-medium leading-tight truncate ${
+                      tarea.completada ? "line-through text-text-muted" : idx === diaIdx ? "text-accent-text font-semibold" : "text-text-secondary"
+                    }`}>
+                      {lang === "es" ? tarea.titulo : tarea.tituloEn}
+                    </p>
+                  </div>
+                  <span className="text-[8px] font-bold px-1.5 py-0.5 rounded-full bg-sidebar/10 text-sidebar flex-shrink-0">{tarea.comp}</span>
+                  <span className={`text-[9px] font-bold flex-shrink-0 ${tarea.completada ? "text-text-muted line-through" : "text-[#F59E0B]"}`}>
+                    +{tarea.qcoins}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Nota pedagógica */}
+            <div className="mt-3 bg-background rounded-xl px-3 py-2 border border-card-border">
+              <p className="text-[10px] text-text-secondary leading-snug">
+                {lbl(
+                  "Este orden no es aleatorio: primero investigas (STEM), luego decides (CE), luego creas (CCEC), luego calculas (STEM) y finalmente comunicas (CLC). Es el ciclo emprendedor real.",
+                  "This order is intentional: research (STEM), decide (CE), create (CCEC), calculate (STEM), then communicate (CLC). That's the real entrepreneurial cycle."
+                )}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── S34: Siguiente proyecto — adelanto T2 ────────────────────────── */}
       <div className="bg-card rounded-2xl border border-card-border p-5">
         <div className="flex items-center justify-between mb-4">
