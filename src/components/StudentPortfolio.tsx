@@ -527,6 +527,11 @@ export default function StudentPortfolio() {
   const [exportandoBadges, setExportandoBadges] = useState(false);
   const [badgesExportadas, setBadgesExportadas] = useState(false);
 
+  // C33 — Carta al yo del futuro
+  const [cartaGenerada, setCartaGenerada] = useState<string | null>(null);
+  const [generandoCarta, setGenerandoCarta] = useState(false);
+  const [cartaExportada, setCartaExportada] = useState(false);
+
   const handleAnalizarError = async (entry: ErrorEntry) => {
     if (loadingReflexion) return;
     setLoadingReflexion(entry.id);
@@ -2052,6 +2057,147 @@ ${allEvts.map((e) => `
                   )}
                 </p>
               </div>
+            </div>
+          );
+        })()}
+
+        {/* ── C33: Carta al yo del futuro ──────────────────────────────────── */}
+        {(() => {
+          const cartaMock = lbl(
+            `Querido Lucas del futuro,
+
+Te escribo desde el 11 de marzo de 2026, el día en que terminé el Trimestre 1 de QHUMA OS con un proyecto que nunca olvidaré: "Gestiona tu Airbnb en Málaga — Casa Limón".
+
+Quiero que sepas lo que aprendí porque creo que cuando lo leas, necesitarás recordarlo.
+
+Aprendí que los datos cuentan historias si sabes leerlos. Cuando analicé los precios de Airbnb en Málaga, entendí que el precio no es arbitrario: hay una lógica detrás, y esa lógica se llama demanda, estacionalidad y valor percibido. Lo aprendí porque lo necesitaba, no porque estaba en el temario.
+
+Aprendí que cometer errores no es fracasar. Mi primer modelo financiero tenía el punto de equilibrio mal calculado. En lugar de ocultarlo, lo documenté en mi Error Log. Esa fue la mejor decisión de todo el trimestre: volver atrás, entender dónde falló la lógica, y corregirlo. Ahora sé que el Error Log es mi historial de inteligencia, no de fracasos.
+
+Aprendí que comunicar es tan importante como crear. El día del Demo Day presenté mi proyecto frente a la clase y dos familias invitadas. Estaba nervioso, pero gracias al PitchLab había ensayado lo suficiente. Cuando terminé y vi que la gente entendía mi idea, sentí algo que ningún examen me había dado.
+
+Lo que más me enorgullece: que Casa Limón generaría un beneficio neto de 1.402 € con un ROI del 116% sobre la inversión inicial. Eso no es una nota. Es un resultado real.
+
+Para el Trimestre 2, ya sé lo que viene: "Diseña tu Food Truck". Te digo lo que yo ya sé que necesitarás: aplica lo del modelo financiero desde el principio, no al final. Y cuando la IA te haga una pregunta en lugar de darte la respuesta, es porque confía en que puedes llegar solo.
+
+Con cariño (y datos),
+Lucas García — 1º ESO · Marzo 2026`,
+
+            `Dear future Lucas,
+
+I'm writing to you from March 11, 2026, the day I finished Term 1 at QHUMA OS with a project I'll never forget: "Manage your Airbnb in Málaga — Casa Limón."
+
+I want you to know what I learned, because when you read this, I think you'll need to remember it.
+
+I learned that data tells stories if you know how to read it. When I analyzed Airbnb prices in Málaga, I understood that pricing isn't arbitrary — there's logic behind it: demand, seasonality, and perceived value. I learned this because I needed it, not because it was in a syllabus.
+
+I learned that making mistakes isn't failing. My first financial model had the break-even point wrong. Instead of hiding it, I documented it in my Error Log. That was the best decision of the whole term: go back, understand where the logic broke down, and fix it. Now I know the Error Log is my intelligence history, not my failure record.
+
+I learned that communicating is as important as creating. On Demo Day I presented my project to the class and two guest families. I was nervous, but thanks to PitchLab I had practiced enough. When I finished and saw that people understood my idea, I felt something no exam had ever given me.
+
+What I'm most proud of: Casa Limón would generate a net profit of €1,402 with a 116% ROI on the initial investment. That's not a grade. It's a real result.
+
+For Term 2, I already know what's coming: "Design your Food Truck." Here's what I already know you'll need: apply the financial model from the start, not at the end. And when the AI asks you a question instead of giving you the answer, it's because it trusts you can get there on your own.
+
+With love (and data),
+Lucas García — 1º ESO · March 2026`
+          );
+
+          const handleGenerarCarta = async () => {
+            setGenerandoCarta(true);
+            try {
+              const res = await fetch("/api/tutor-chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  mode: "narrativa",
+                  message: "Genera una carta personal de Lucas García (alumno de 1º ESO, proyecto Airbnb Málaga T1) dirigida a su yo del futuro. La carta debe ser emotiva, reflexiva y hablar de sus aprendizajes reales: modelo financiero (ROI 116%), Error Log documentado, Demo Day superado, competencia CE al 90%. Máximo 4 párrafos. Tono personal, primera persona, sin tecnicismos. Termina con una firma.",
+                  history: [],
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.reply) { setCartaGenerada(data.reply); setGenerandoCarta(false); return; }
+              }
+            } catch { /* noop */ }
+            setCartaGenerada(cartaMock);
+            setGenerandoCarta(false);
+          };
+
+          const handleExportarCarta = () => {
+            const content = cartaGenerada ?? cartaMock;
+            const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Carta al yo del futuro — Lucas García</title><style>body{font-family:Georgia,serif;max-width:640px;margin:60px auto;color:#141414;line-height:1.8;padding:0 20px}h1{font-size:20px;color:#2f574d;margin-bottom:4px}p.sub{font-size:12px;color:#9ca3af;margin-bottom:40px}p{margin-bottom:16px;font-size:15px}p.firma{margin-top:32px;font-style:italic;color:#2f574d}</style></head><body><h1>Carta al yo del futuro</h1><p class="sub">QHUMA OS · Lucas García · 1º ESO · Marzo 2026</p>${content.split("\n\n").map(p => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("")}</body></html>`;
+            const blob = new Blob([html], { type: "text/html" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "carta_futuro_lucas_garcia_T1.html";
+            a.click();
+            URL.revokeObjectURL(url);
+            setCartaExportada(true);
+            setTimeout(() => setCartaExportada(false), 2500);
+          };
+
+          return (
+            <div className="bg-card rounded-2xl border border-card-border p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BookOpen size={13} className="text-accent-text" />
+                  <span className="text-[11px] font-bold text-text-primary">{lbl("Carta al yo del futuro", "Letter to my future self")}</span>
+                  <span className="text-[9px] font-semibold text-accent-text bg-accent-light px-1.5 py-0.5 rounded-full">
+                    {lbl("Cierre T1", "T1 close")}
+                  </span>
+                </div>
+                {cartaGenerada && (
+                  <button
+                    onClick={handleExportarCarta}
+                    className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      cartaExportada ? "bg-success text-white" : "bg-sidebar text-accent hover:bg-accent-dark"
+                    }`}
+                  >
+                    {cartaExportada ? <><CheckCircle2 size={10} />{lbl(" Guardada", " Saved")}</> : <><Download size={10} />{lbl(" Exportar", " Export")}</>}
+                  </button>
+                )}
+              </div>
+
+              {cartaGenerada ? (
+                <div className="bg-background rounded-xl border border-card-border p-4 font-serif">
+                  <div className="text-[11px] text-text-secondary leading-relaxed whitespace-pre-line">
+                    {cartaGenerada}
+                  </div>
+                  <button
+                    onClick={() => setCartaGenerada(null)}
+                    className="mt-3 text-[9px] text-text-muted hover:text-accent-text cursor-pointer transition-colors"
+                  >
+                    {lbl("Regenerar carta", "Regenerate letter")}
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="bg-background rounded-xl border border-dashed border-accent/40 p-5 text-center mb-3">
+                    <BookOpen size={22} className="text-text-muted mx-auto mb-2" />
+                    <p className="text-[12px] font-semibold text-text-primary mb-1">
+                      {lbl("Tu historia de T1, en primera persona", "Your T1 story, in first person")}
+                    </p>
+                    <p className="text-[10px] text-text-muted leading-relaxed">
+                      {lbl(
+                        "La IA redactará una carta de \"Lucas de hoy\" a \"Lucas del futuro\": lo que aprendiste, lo que construiste y lo que no olvidarás del proyecto Casa Limón.",
+                        "The AI will write a letter from \"Lucas today\" to \"Lucas in the future\": what you learned, what you built, and what you won't forget from Casa Limón."
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleGenerarCarta}
+                    disabled={generandoCarta}
+                    className="w-full flex items-center justify-center gap-2 bg-sidebar text-white text-[12px] font-bold py-2.5 rounded-xl hover:bg-accent-dark transition-colors cursor-pointer disabled:opacity-60"
+                  >
+                    {generandoCarta
+                      ? <><RefreshCw size={12} className="animate-spin" />{lbl("Escribiendo carta...", "Writing letter...")}</>
+                      : <><Sparkles size={12} />{lbl("Generar carta IA", "Generate AI letter")}</>
+                    }
+                  </button>
+                </div>
+              )}
             </div>
           );
         })()}
