@@ -1131,6 +1131,110 @@ export default function StudentDashboard({ onOpenProject, onOpenTask }: StudentD
           );
         })()}
 
+        {/* S27: Mi tribu aprende */}
+        {(() => {
+          const actividadDiaria = [
+            { dia: lbl("L","M"), intensidad: 6 },
+            { dia: lbl("M","T"), intensidad: 8 },
+            { dia: lbl("X","W"), intensidad: 10 },
+            { dia: lbl("J","Th"), intensidad: 7 },
+            { dia: lbl("V","F"), intensidad: 9 },
+            { dia: lbl("S","Sa"), intensidad: 3 },
+            { dia: lbl("D","Su"), intensidad: 2 },
+          ];
+          const maxIntensidad = Math.max(...actividadDiaria.map((d) => d.intensidad));
+          const logrosAnonimos = [
+            { id: "l1", texto: lbl("Alumno A subió su mejor evidencia de CE esta semana.", "Student A submitted their best CE evidence this week."), comp: "CE", icono: "🏆" },
+            { id: "l2", texto: lbl("Alumno B completó su pitch en tiempo récord: 4 min 12 s.", "Student B completed their pitch in record time: 4 min 12 s."), comp: "CLC", icono: "⚡" },
+            { id: "l3", texto: lbl("Alumno C superó su error de cálculo y reentregó el modelo financiero.", "Student C fixed their calculation error and resubmitted the financial model."), comp: "STEM", icono: "✨" },
+          ];
+          const compBadge: Record<string, string> = {
+            CE: "bg-urgent-light text-urgent",
+            CLC: "bg-accent-light text-accent-text",
+            STEM: "bg-success-light text-success",
+          };
+          return (
+            <div className="mt-8 mb-8">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <Users size={16} className="text-text-primary" />
+                  <h2 className="text-[20px] font-semibold text-text-primary">
+                    {lbl("Mi tribu aprende", "My tribe is learning")}
+                  </h2>
+                </div>
+                <span className="px-2.5 py-0.5 rounded-full bg-background text-text-muted text-[10px] font-medium border border-card-border">
+                  {lbl("Esta semana en tu clase", "This week in your class")}
+                </span>
+              </div>
+
+              {/* Stats agregados */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[
+                  { valor: "8", label: lbl("Evidencias subidas", "Evidence submitted"), bg: "bg-success-light", text: "text-success" },
+                  { valor: "3", label: lbl("Pitches ensayados", "Pitches rehearsed"), bg: "bg-accent-light", text: "text-accent-text" },
+                  { valor: "12d", label: lbl("Racha media de clase", "Class average streak"), bg: "bg-warning-light", text: "text-warning" },
+                ].map((s) => (
+                  <div key={s.label} className={`rounded-xl p-3 border border-card-border ${s.bg} text-center`}>
+                    <span className={`text-[20px] font-bold ${s.text} block leading-none`}>{s.valor}</span>
+                    <span className="text-[10px] text-text-muted block mt-0.5">{s.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Logros anónimos */}
+              <div className="space-y-2 mb-4">
+                {logrosAnonimos.map((logro) => (
+                  <div key={logro.id} className="flex items-center gap-3 bg-card rounded-xl border border-card-border px-3 py-2.5">
+                    <span className="text-[16px] flex-shrink-0">{logro.icono}</span>
+                    <p className="flex-1 text-[11px] text-text-secondary leading-relaxed">{logro.texto}</p>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${compBadge[logro.comp] ?? "bg-background text-text-muted"}`}>
+                      {logro.comp}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ranking hint */}
+              <div className="bg-sidebar rounded-xl p-3.5 mb-4">
+                <div className="flex items-center gap-2">
+                  <Trophy size={14} className="text-accent flex-shrink-0" />
+                  <p className="text-[12px] text-white leading-relaxed">
+                    {lbl(
+                      "¿Eres tú el más activo? Estás entre los top 3 de tu clase esta semana 🔥",
+                      "Are you the most active? You're in your class's top 3 this week 🔥"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Heatmap de actividad */}
+              {(() => {
+                return (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CalendarDays size={12} className="text-text-muted" />
+                      <span className="text-[11px] font-semibold text-text-primary">
+                        {lbl("Actividad de la clase — últimos 7 días", "Class activity — last 7 days")}
+                      </span>
+                    </div>
+                    <div className="flex items-end gap-1.5 h-12 bg-background rounded-xl px-3 py-2">
+                      {actividadDiaria.map((d) => (
+                        <div key={d.dia} className="flex-1 flex flex-col items-center gap-1">
+                          <div
+                            className="w-full bg-accent-text rounded-sm transition-all"
+                            style={{ height: `${Math.round((d.intensidad / maxIntensidad) * 28)}px`, opacity: 0.3 + (d.intensidad / maxIntensidad) * 0.7 }}
+                          />
+                          <span className="text-[8px] text-text-muted">{d.dia}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          );
+        })()}
+
         {/* S6: Mercado en Tiempo Real */}
         <div className="mt-8">
           <div className="flex items-center gap-3 mb-3">
