@@ -643,12 +643,63 @@
 
 ---
 
-## Sprints pendientes — Ciclo 17
+## Ciclo 17 ✅ completado
 
-- [ ] [T16] TeacherGradeBook — selector de trimestre: añadir un selector en el header ("T1 / T2 / T3") que cambia el conjunto de notas visualizado; el "Comparar" siempre muestra el trimestre inmediatamente anterior; las notas de T1 y T3 son mock estáticas, solo T2 es editable
-- [ ] [S18] StudentPortfolio — panel "Reflexión semanal IA": sección en la columna izquierda con un botón "Generar reflexión de la semana" que llama a /api/tutor-chat con mode="narrativa" y construye 3 bullets de aprendizajes del alumno (semana, competencias trabajadas, logro más destacado); cada bullet es colapsable y el alumno puede añadir su propia nota
-- [ ] [A16] AdminDashboard — pestaña "Métricas" mejorada: añadir un tercer gráfico de barras "Top competencias por clase" mostrando la media de las 8 LOMLOE de todas las clases agrupadas; toggle por clase (1º ESO / 2º ESO) y barra de referencia horizontal en el nivel 3.0
-- [ ] [C16] PitchLab — modo "Inversores en vivo": simular una sesión de preguntas en tiempo real con un inversor aleatorio que hace 3 preguntas encadenadas (la segunda depende de la respuesta a la primera); flujo: pregunta → campo respuesta → enviar → pregunta 2 (generada por IA basada en la anterior) → ... → evaluación final con puntuación 1–10
+### [SPRINT-TEACHER][T16] TeacherGradeBook — selector de trimestre T1/T2/T3 ✅
+- Commit: `2ff5e16`
+- Archivo modificado: `src/components/TeacherGradeBook.tsx`
+- `gradesT3`: const módulo (12×8, valores ligeramente superiores a T2)
+- `trimestre: "T1" | "T2" | "T3"` state con selector de 3 botones en header
+- `activeGrades` derivado: T1→gradesTrimAnterior, T2→grades (editable), T3→gradesT3 (read-only)
+- `prevGrades` derivado: T1→null, T2→gradesTrimAnterior, T3→grades
+- `editingEnabled = trimestre === "T2"`: celdas solo editables en T2, badge "solo lectura" para T1/T3
+- `rowAvg`/`colAvg` usan `activeGrades`; `colAvgPrev` reemplaza `colAvgT1` y devuelve `null` para T1
+- Botón "Comparar Tx" oculto en T1 (sin trimestre previo); label dinámico ("Comparar T1" o "Comparar T2")
+- CSV export incluye trimestre en filename: `notas_lomloe_T2_1eso_FECHA.csv`
+- Cambiar trimestre resetea editing y compareModo
+
+### [SPRINT-STUDENT][S18] StudentPortfolio — panel Reflexión semanal IA ✅
+- Commit: `186ecc5`
+- Archivo modificado: `src/components/StudentPortfolio.tsx`
+- States: `reflexionBullets: string[] | null`, `isGenerandoReflexion`, `expandedBullets: Set<number>`, `notasReflexion: Record<number, string>`
+- `handleGenerarReflexion()`: llama /api/tutor-chat mode="narrativa", pide 3 bullets numerados, parsea por líneas
+- Fallback: 3 bullets hardcoded en caso de error o falta de conexión
+- Sección antes del timeline con botón "Generar reflexión de la semana" / "Regenerar"
+- Estado vacío: icono Sparkles + descripción; spinner durante carga
+- 3 bullets colapsables con etiqueta por posición (Aprendizaje principal / Competencia aplicada / Lección del error)
+- Cada bullet expandido muestra textarea "Mi nota personal" (notasReflexion state)
+- `toggleBullet()` gestiona Set de expandidos
+
+### [SPRINT-ADMIN][A16] AdminDashboard Métricas — gráfico Top competencias por clase ✅
+- Commit: `b3eedc5`
+- Archivo modificado: `src/components/AdminDashboard.tsx`
+- `compClaseVista: "1eso" | "2eso"` state
+- `compData`: mock con medias LOMLOE por clase (1º ESO: CLC:3.2, CPL:2.8, STEM:3.4... | 2º ESO: CLC:3.5, CD:3.6...)
+- Gráfico de barras CSS h-40, colores por nivel (≥3.5=success, 3.0–3.4=accent-text, 2–2.9=warning, <2=urgent)
+- Toggle 1º ESO / 2º ESO (bg-sidebar cuando activo)
+- Línea de referencia horizontal dashed en nivel 3.0 (Logro esperado) con posicionamiento CSS `bottom: refLinePct%`
+- Leyenda de colores al pie
+- Insertado al final del `space-y-5` del tab Métricas, antes del cierre
+
+### [SPRINT-CULTURE][C16] PitchLab — modo Inversores en vivo ✅
+- Commit: `35dbbc1`
+- Archivo modificado: `src/components/PitchLab.tsx`
+- `primerasPreguntasVivo`: Record<string, string> con pregunta inicial hardcoded por perfil inversor
+- States: `vivoInversor`, `vivoPreguntas: string[]`, `vivoRespuestas: string[]`, `vivoStep: 0|1|2|3|4`, `vivoRespuestaActual`, `vivoIsGenerating`, `vivoPuntuacion: number|null`, `vivoComentario: string|null`
+- `handleIniciarSesionVivo()`: selecciona inversor random, carga primera pregunta, resetea estado
+- `handleEnviarRespuestaVivo()`: pasos 1–2 → pitchcoach genera siguiente pregunta; paso 3 → evaluación final (parse PUNTUACIÓN/COMENTARIO)
+- Panel col-span-3 en feedback mode antes del mentor message
+- UI: chat visual con historial Qs/Rs (burbujas), textarea activo, botón "Enviar y continuar/finalizar", spinner generando
+- Evaluación final: puntuación 1–10 en grande con color semáforo (≥8=success, ≥6=accent, <6=warning)
+
+---
+
+## Sprints pendientes — Ciclo 18
+
+- [ ] [T17] TeacherGradeBook — exportar informe PDF: botón "Exportar informe PDF" en el header que genera un documento con tabla de notas del trimestre activo, gráfico de distribución (texto), resumen estadístico (media, alumno top, alumno con alerta) y metadatos (colegio, grupo, fecha); descarga real via Blob + URL.createObjectURL
+- [ ] [S19] StudentPortfolio — modo "Vista pública compartible": botón "Compartir portfolio" en el header que genera una URL mock y muestra un panel de "Vista pública" con los datos más destacados (competencias, hitos, logro top, impacto); toggle para mostrar/ocultar datos personales (nombre completo, notas numéricas)
+- [ ] [A17] AdminDashboard — panel "Notificaciones automáticas": en la pestaña Overview, un widget que lista 5 notificaciones pendientes de enviar (alumno sin actividad, hito completado, inversor aprueba proyecto, informe listo), cada una con destinatario, canal (email/SMS) y botón "Enviar ahora" con feedback visual; estado de enviadas
+- [ ] [C17] PitchLab — historial de sesiones en vivo: guardar en estado las últimas 3 sesiones de "Inversores en vivo" (inversor, puntuación, fecha, pregunta clave), mostrar panel "Historial de sesiones" debajo del panel de inversores en vivo con evolución de puntuación y botón "Repetir con este inversor"
 
 ---
 
@@ -661,10 +712,10 @@
 - **TeacherStudents**: C7 modificado (TeacherComentarios). T11 añade historialPorAlumno (const a nivel módulo) y filtros "Brillando"/"En riesgo". Leer antes de editar en ciclos futuros.
 - **StudentAchievements**: S13 añade misionesCompletadas (const módulo), sharedId state, botón Compartir por logro, panel Próximos desbloqueos en sidebar. Leer antes de editar.
 - **AdminDashboard**: A11 añade plantillasPredefinidas, reportTipo "familia", downloadedFilename state, preview por tipo con IIFE. reportTipo type: "individual"|"grupo"|"lomloe"|"inspeccion"|"familia".
-- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores state. C15 añade preguntasJurado (5 preguntas Airbnb Málaga) + tipoColor + respuestasJurado/evaluacionesJurado/evaluandoJurado states + handleEvaluarRespuesta() → pitchcoach. Panel en feedback mode antes de mentor message.
-- **TeacherGradeBook**: T12 exportCSV. T13 distribución por competencia. T14 HistorialCambio + historialCambios + showHistorial. T15 añade gradesTrimAnterior (const módulo, 12×8 mock T1) + compareModo state + colAvgT1() + toggle "Comparar T1" en leyenda + delta en celdas y fila media.
-- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 añade competenciaMesSemanal (const módulo, 4 semanas × 8 comps) + retosPersonalizados (const módulo) + card "Competencia del mes" en sidebar con gráfico CSS y reto. Reemplaza card "Mejor competencia" simple.
-- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 añade actividadDocente (const módulo, 6 entradas) + showTodasActividades state + widget en overview columna izquierda con toggle Ver todas/menos. Import: MessageSquare.
+- **PitchLab**: C12 ensayoMode timer. C13 guionPorSeccion + guionOpen. C14 computeSectionScores() + sectionScores. C15 preguntasJurado + respuestasJurado/evaluacionesJurado/evaluandoJurado + handleEvaluarRespuesta(). C16 añade primerasPreguntasVivo (Record por perfil) + vivoInversor/vivoPreguntas/vivoRespuestas/vivoStep/vivoRespuestaActual/vivoIsGenerating/vivoPuntuacion/vivoComentario states + handleIniciarSesionVivo()/handleEnviarRespuestaVivo(). Panel col-span-3 en feedback mode antes de mentor message.
+- **TeacherGradeBook**: T12 exportCSV. T13 distribución. T14 HistorialCambio + historialCambios + showHistorial. T15 gradesTrimAnterior + compareModo + colAvgT1(). T16 añade gradesT3 (const módulo) + trimestre state + activeGrades/prevGrades derivados + editingEnabled. colAvgT1→colAvgPrev(). Selector T1/T2/T3 en header. CSV filename dinámico con trimestre.
+- **StudentPortfolio**: S14 timelineHitos. S15 Mi impacto real. S16 evidenciasDestacadas + expandedEvidencia. S17 competenciaMesSemanal + retosPersonalizados + card Competencia del mes. S18 añade reflexionBullets/isGenerandoReflexion/expandedBullets/notasReflexion states + handleGenerarReflexion() → narrativa. Panel antes del timeline con 3 bullets colapsables + nota personal.
+- **AdminDashboard**: A13 metricsVista toggle. A14 agendaGenerada/generandoAgenda + KPI Capital comprometido. A15 actividadDocente (const módulo) + showTodasActividades. A16 añade compClaseVista state + gráfico "Top competencias por clase" en tab Métricas (barras CSS + línea ref nivel 3.0 + toggle 1º/2º ESO).
 - **API tutor-chat**: soporta mode="narrativa", mode="pitchcoach", mode="errorlog", mode="cuerpo" (CUERPO_SYSTEM_PROMPT — 3 frases de reincorporación post-pausa), deepDive=true, y modo por defecto socrático.
 - **ProjectDetail**: Ciclo 11 añade vista Kanban. `kanban` state local inicializado de task.status. `reviewOverride = new Set(["mon-3","mon-5","tue-1"])`. `estimadoMin` mock de minutos por taskId. Drag-and-drop nativo HTML5, no librería.
 - **TeacherDashboard**: Ciclo 11 añade tareasVencidas y alumnosSinLogin mock data a nivel de módulo (fuera del componente). Estado prorrogadas: Set<string>.
